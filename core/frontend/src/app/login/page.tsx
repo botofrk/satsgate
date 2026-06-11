@@ -11,22 +11,22 @@ export default function LoginPage() {
   const router = useRouter();
   const [lnurl, setLnurl] = useState<string>("");
   const [k1, setK1] = useState<string>("");
-  const [status, setStatus] = useState<string>("Cüzdan bağlantısı hazırlanıyor...");
+  const [status, setStatus] = useState<string>("Preparing wallet connection...");
   const [error, setError] = useState<string | null>(null);
 
   const generateLnurl = () => {
     setError(null);
-    setStatus("Cüzdan bağlantısı hazırlanıyor...");
+    setStatus("Preparing wallet connection...");
     fetch(apiUrl("/v1/auth/lnurl/generate"))
       .then((res) => res.json())
       .then((data) => {
         setLnurl(data.lnurl);
         setK1(data.k1);
-        setStatus("QR kodunu cüzdanınızla tarayın");
+        setStatus("Scan the QR code with your wallet");
       })
       .catch(() => {
-        setError("LNURL oturumu oluşturulamadı. Backend bağlantısını kontrol edin.");
-        setStatus("Bağlantı kurulamadı");
+        setError("Could not create an LNURL session. Check the backend connection and API route.");
+        setStatus("Connection failed");
       });
   };
 
@@ -48,14 +48,14 @@ export default function LoginPage() {
         .then((data) => {
           if (data.status === "authenticated") {
             clearInterval(interval);
-            setStatus("Giriş başarılı. Panele yönlendiriliyorsunuz...");
+            setStatus("Login successful. Redirecting to dashboard...");
             setStoredToken(data.token);
             setTimeout(() => {
               router.push("/dashboard");
             }, 1000);
           }
         })
-        .catch(() => setError("Giriş durumu kontrol edilirken bağlantı hatası oluştu."));
+        .catch(() => setError("Connection error while checking login status."));
     }, 2000);
 
     return () => clearInterval(interval);
@@ -68,13 +68,13 @@ export default function LoginPage() {
       <main className="flex-grow flex flex-col items-center justify-center p-8">
         <div className="max-w-md w-full bg-white border-2 border-black p-8 rounded-3xl shadow-[6px_6px_0px_#000] flex flex-col items-center text-center hover:-translate-y-1 hover:-translate-x-1 hover:shadow-[10px_10px_0px_#000] transition-all">
           <h1 className="text-4xl font-extrabold mb-4 font-logo tracking-wide">
-            Giriş
+            Login
           </h1>
           <p className="text-gray-700 font-medium mb-2">
-            Lightning cüzdanınızla QR kodu tarayarak güvenli giriş yapın.
+            Scan the QR code with your Lightning wallet for secure sign-in.
           </p>
           <p className="text-xs text-gray-500 font-semibold mb-6">
-            ⚡ Desteklenen cüzdanlar: Zeus, Alby, Blixt, Phoenix
+            ⚡ Supported wallets: Zeus, Alby, Blixt, Phoenix
           </p>
 
           {lnurl ? (
@@ -83,7 +83,7 @@ export default function LoginPage() {
             </div>
           ) : (
             <div className="w-64 h-64 border-4 border-dashed border-black rounded-2xl mb-6 flex items-center justify-center bg-gray-50">
-              <span className="text-black font-bold animate-pulse">Hazırlanıyor...</span>
+              <span className="text-black font-bold animate-pulse">Loading...</span>
             </div>
           )}
 
@@ -101,7 +101,7 @@ export default function LoginPage() {
             onClick={generateLnurl}
             className="w-full py-4 px-4 rounded-xl border-2 border-black text-black font-bold text-sm hover:bg-black hover:text-[#c8f53c] transition-colors shadow-[2px_2px_0px_#000] active:translate-y-1 active:translate-x-1 active:shadow-none"
           >
-            Yeni giriş isteği oluştur
+            Generate a new login request
           </button>
         </div>
       </main>

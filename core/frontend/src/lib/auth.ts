@@ -49,11 +49,11 @@ export function clearStoredApiKey() {
 }
 
 export function decodeTokenSubject(token: string | null): string {
-  if (!token) return "Yükleniyor...";
+  if (!token) return "Loading...";
   try {
-    return JSON.parse(atob(token.split(".")[1] ?? "")).sub ?? "bilinmeyen_cüzdan";
+    return JSON.parse(atob(token.split(".")[1] ?? "")).sub ?? "unknown_wallet";
   } catch {
-    return "bilinmeyen_cüzdan";
+    return "unknown_wallet";
   }
 }
 

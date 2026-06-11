@@ -31,7 +31,7 @@ function UsageSection({ apiKey, apiBase, refreshTrigger }: { apiKey: string; api
         setLoading(false);
       })
       .catch(() => {
-        setUsageError('Kullanım verileri yüklenemedi. Geçerli ve kredili bir API anahtarı gerekiyor olabilir.');
+        setUsageError('Could not load usage data. A valid API key with credits may be required.');
         setLoading(false);
       });
   }, [apiKey, apiBase, refreshTrigger]);
@@ -39,10 +39,10 @@ function UsageSection({ apiKey, apiBase, refreshTrigger }: { apiKey: string; api
   if (loading) {
     return (
       <div className="bg-white border-2 border-black p-8 md:p-10 rounded-3xl shadow-[8px_8px_0px_#000] mb-10">
-        <h2 className="text-3xl font-extrabold mb-4">Kullanım ve harcama</h2>
+        <h2 className="text-3xl font-extrabold mb-4">Usage & Spending</h2>
         <div className="flex items-center gap-3 text-gray-500 font-bold">
           <div className="w-5 h-5 border-2 border-black border-t-transparent rounded-full animate-spin" />
-          Kullanım verileri yükleniyor...
+          Loading usage data...
         </div>
       </div>
     );
@@ -50,9 +50,9 @@ function UsageSection({ apiKey, apiBase, refreshTrigger }: { apiKey: string; api
 
   return (
     <div className="bg-white border-2 border-black p-8 md:p-10 rounded-3xl shadow-[8px_8px_0px_#000] transition-all hover:-translate-y-1 hover:-translate-x-1 hover:shadow-[12px_12px_0px_#000] mb-10">
-      <h2 className="text-3xl font-extrabold mb-4">Kullanım ve harcama</h2>
+      <h2 className="text-3xl font-extrabold mb-4">Usage & Spending</h2>
       <p className="text-gray-700 font-medium mb-6 text-lg leading-relaxed">
-        Kredi bakiyenizi, harcama hızınızı ve kullanım trendlerinizi takip edin.
+        Track your credit balance, spending rate, and usage trends.
       </p>
 
       {usageError ? (
@@ -62,24 +62,24 @@ function UsageSection({ apiKey, apiBase, refreshTrigger }: { apiKey: string; api
       ) : (
         <div className="grid md:grid-cols-2 gap-6">
           <div className="bg-gray-50 border-2 border-black rounded-2xl p-6">
-            <p className="text-sm font-bold text-gray-500 uppercase tracking-wider mb-1">Bakiye</p>
+            <p className="text-sm font-bold text-gray-500 uppercase tracking-wider mb-1">Balance</p>
             <p className="text-4xl font-extrabold">{balance != null ? String(balance) : '\u2014'}</p>
-            <p className="text-sm text-gray-500 font-semibold mt-1">kalan kredi</p>
+            <p className="text-sm text-gray-500 font-semibold mt-1">credits remaining</p>
           </div>
           <div className="bg-gray-50 border-2 border-black rounded-2xl p-6">
-            <p className="text-sm font-bold text-gray-500 uppercase tracking-wider mb-1">Doğrulamalar (7g)</p>
+            <p className="text-sm font-bold text-gray-500 uppercase tracking-wider mb-1">Verifications (7d)</p>
             <p className="text-4xl font-extrabold">{summary?.verify_events != null ? String(summary.verify_events) : '\u2014'}</p>
-            <p className="text-sm text-gray-500 font-semibold mt-1">doğrulanan API çağrısı</p>
+            <p className="text-sm text-gray-500 font-semibold mt-1">verified API calls</p>
           </div>
           <div className="bg-gray-50 border-2 border-black rounded-2xl p-6">
-            <p className="text-sm font-bold text-gray-500 uppercase tracking-wider mb-1">Harcanan kredi (7g)</p>
+            <p className="text-sm font-bold text-gray-500 uppercase tracking-wider mb-1">Credits Spent (7d)</p>
             <p className="text-4xl font-extrabold">{summary?.credits_out != null ? String(summary.credits_out) : '\u2014'}</p>
-            <p className="text-sm text-gray-500 font-semibold mt-1">tüketilen kredi</p>
+            <p className="text-sm text-gray-500 font-semibold mt-1">credits consumed</p>
           </div>
           <div className="bg-gray-50 border-2 border-black rounded-2xl p-6">
-            <p className="text-sm font-bold text-gray-500 uppercase tracking-wider mb-1">Eklenen kredi (7g)</p>
+            <p className="text-sm font-bold text-gray-500 uppercase tracking-wider mb-1">Credits Added (7d)</p>
             <p className="text-4xl font-extrabold">{summary?.credits_in != null ? String(summary.credits_in) : '\u2014'}</p>
-            <p className="text-sm text-gray-500 font-semibold mt-1">yüklemelerden gelen</p>
+            <p className="text-sm text-gray-500 font-semibold mt-1">from top-ups</p>
           </div>
         </div>
       )}
@@ -163,11 +163,11 @@ export default function Dashboard() {
         } else {
           clearStoredApiKey();
           setApiKey(null);
-          setError('Tarayıcıda kayıtlı API anahtarı artık geçerli değil. Yeni bir anahtar oluşturmanız gerekiyor.');
+          setError('The API key stored in this browser is no longer valid. Please generate a new key.');
         }
       }
     } catch {
-      setError('Oturum doğrulanamadı. API bağlantısını ve backend servisinin çalıştığını kontrol edin.');
+      setError('Could not validate the session. Check the API route and confirm the backend is running.');
     } finally {
       setSessionLoading(false);
     }
@@ -186,7 +186,7 @@ export default function Dashboard() {
     setLoading(true);
     setError(null);
     setNotice(null);
-    setProvisioningStatus('API anahtarı oluşturuluyor...');
+    setProvisioningStatus('Provisioning API key...');
     
     try {
       const response = await fetch(apiUrl('/v1/auth/provision'), {
@@ -217,18 +217,18 @@ export default function Dashboard() {
         setRefreshTrigger(prev => prev + 1);
         setNotice(
           data.is_new_account
-            ? `Hesabınız oluşturuldu. ${data.free_credits_granted ?? 0} deneme kredisi tanımlandı ve API anahtarınız bu cihazda kaydedildi.`
-            : 'Yeni API anahtarı oluşturuldu. Eski anahtar iptal edildi ve bu cihazdaki kayıt güncellendi.',
+            ? `Your account has been created. ${data.free_credits_granted ?? 0} trial credits were added and your API key was saved on this device.`
+            : 'A new API key was generated. The old key has been revoked and this device was updated.',
         );
         setProvisioningStatus(null);
       } else {
         const errData = await response.json().catch(() => null);
         const errMsg = errData?.detail || errData?.error || `HTTP ${response.status}`;
-        setError(`API anahtarı oluşturulamadı: ${errMsg}`);
+        setError(`Could not provision API key: ${errMsg}`);
         setProvisioningStatus(null);
       }
     } catch {
-      setError('Ağa ulaşılamadı. Frontend ile backend bağlantısını kontrol edin.');
+      setError('Network error. Check the frontend-to-backend API route.');
       setProvisioningStatus(null);
     } finally {
       setLoading(false);
@@ -243,10 +243,10 @@ export default function Dashboard() {
         <Navbar />
         <main className="flex-grow max-w-5xl mx-auto w-full px-6 py-12">
           <div className="bg-white border-2 border-black p-8 md:p-10 rounded-3xl shadow-[8px_8px_0px_#000]">
-            <h1 className="text-4xl font-extrabold mb-4">Müşteri paneli hazırlanıyor</h1>
+            <h1 className="text-4xl font-extrabold mb-4">Preparing dashboard</h1>
             <div className="flex items-center gap-3 text-gray-500 font-bold">
               <div className="w-5 h-5 border-2 border-black border-t-transparent rounded-full animate-spin" />
-              Oturum ve API anahtarı kontrol ediliyor...
+              Validating session and API key...
             </div>
           </div>
         </main>
@@ -263,21 +263,21 @@ export default function Dashboard() {
           <h1 className="text-5xl font-extrabold tracking-tight">Dashboard</h1>
           <div className="flex items-center gap-3 flex-wrap">
             <div className="bg-white border-2 border-black px-6 py-3 rounded-full shadow-[4px_4px_0px_#000] flex items-center gap-3">
-              <span className="font-bold">Cüzdan:</span>
+              <span className="font-bold">Wallet:</span>
               <span className="font-mono font-bold text-gray-700 bg-gray-100 px-3 py-1 rounded-lg border border-black/10">
                 {pubkey.substring(0, 16)}...
               </span>
             </div>
             {session?.account.exists && (
               <div className="bg-white border-2 border-black px-4 py-3 rounded-full shadow-[2px_2px_0px_#000] text-sm font-bold">
-                Müşteri hesabı aktif
+                Customer account active
               </div>
             )}
             <button
               onClick={handleLogout}
               className="bg-white text-black font-bold px-5 py-3 rounded-full border-2 border-black shadow-[2px_2px_0px_#000] hover:bg-black hover:text-[#c8f53c] transition-all active:translate-y-1 active:translate-x-1 active:shadow-none text-sm"
             >
-              Çıkış yap
+              Logout
             </button>
           </div>
         </div>
@@ -294,16 +294,16 @@ export default function Dashboard() {
         )}
         
         <div className="bg-white border-2 border-black p-8 md:p-10 rounded-3xl shadow-[8px_8px_0px_#000] mb-10 transition-all hover:-translate-y-1 hover:-translate-x-1 hover:shadow-[12px_12px_0px_#000]">
-          <h2 className="text-3xl font-extrabold mb-4">Müşteri erişimi ve API anahtarı</h2>
+          <h2 className="text-3xl font-extrabold mb-4">Customer access and API key</h2>
           <p className="text-gray-700 font-medium mb-8 text-lg leading-relaxed max-w-3xl">
-            LNURL ile oturum açtınız. API anahtarınız AI ajanlarının Lightning tabanlı faturalama ile servislere erişmesini sağlar. Üretilen anahtar bu cihazda yerel olarak saklanır ve çıkışta temizlenir.
+            You are signed in with LNURL. Your API key allows AI agents to access services with Lightning-based billing. Generated keys are stored locally on this device and cleared on logout.
           </p>
           
           {apiKey ? (
             <div className="space-y-6">
               {keyRevoked && (
                 <div className="bg-yellow-50 border-2 border-yellow-400 p-4 rounded-2xl text-yellow-800 font-semibold">
-                  Önceki API anahtarı iptal edildi. Aşağıdaki yeni anahtarı kullanın.
+                  Your previous API key has been revoked. Use the new key below.
                 </div>
               )}
               <div className="bg-gray-50 p-6 rounded-2xl border-2 border-black flex flex-col md:flex-row justify-between items-start md:items-center gap-4 relative overflow-hidden">
@@ -313,19 +313,19 @@ export default function Dashboard() {
                   onClick={() => navigator.clipboard.writeText(apiKey)}
                   className="bg-black text-[#c8f53c] font-bold px-6 py-3 rounded-xl border-2 border-black shadow-[2px_2px_0px_#000] hover:bg-[#1a1a1a] active:translate-y-1 active:translate-x-1 active:shadow-none transition-all whitespace-nowrap"
                 >
-                  Anahtarı kopyala
+                  Copy key
                 </button>
               </div>
               <div className="flex flex-col md:flex-row md:items-center gap-3">
                 <p className="text-sm text-gray-500 font-semibold flex-1">
-                  Anahtarınız bu cihazda kayıtlı. Yeni anahtar üretirseniz eski anahtar iptal edilir.
+                  Your key is stored on this device. If you generate a new key, the old one will be revoked.
                 </p>
                 <button
                   onClick={handleGenerateKey}
                   disabled={loading}
                   className="bg-white text-black font-bold px-5 py-3 rounded-full border-2 border-black shadow-[2px_2px_0px_#000] hover:bg-black hover:text-[#c8f53c] transition-all active:translate-y-1 active:translate-x-1 active:shadow-none text-sm disabled:opacity-50"
                 >
-                  {loading ? 'Yenileniyor...' : 'Yeni anahtar üret'}
+                  {loading ? 'Refreshing...' : 'Generate new key'}
                 </button>
               </div>
             </div>
@@ -334,13 +334,13 @@ export default function Dashboard() {
               <div className="bg-gray-50 border-2 border-black rounded-2xl p-5 w-full max-w-3xl">
                 <p className="font-bold mb-2">
                   {session?.account.exists
-                    ? 'Bu cüzdana bağlı bir müşteri hesabı var.'
-                    : 'İlk kez giriş yapıyorsunuz. Bu adımda müşteri hesabı ve ilk API anahtarı oluşturulacak.'}
+                    ? 'There is already a customer account linked to this wallet.'
+                    : 'This is your first login. A customer account and your first API key will be created in the next step.'}
                 </p>
                 <p className="text-sm text-gray-600 font-medium">
                   {session?.account.exists
-                    ? 'Anahtar bu tarayıcıda kayıtlı değilse yeni bir anahtar üretmeniz gerekir. Yeni anahtar oluşturulduğunda eski anahtar iptal edilir.'
-                    : 'İlk üretimde ücretsiz deneme kredileri hesabınıza tanımlanır.'}
+                    ? 'If the key is not stored in this browser, you need to generate a new one. Generating a new key revokes the old one.'
+                    : 'Trial credits will be added automatically when your first key is created.'}
                 </p>
               </div>
               <button 
@@ -354,9 +354,9 @@ export default function Dashboard() {
                       <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                       <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                     </svg>
-                    Oluşturuluyor...
+                    Provisioning...
                   </>
-                ) : session?.account.exists ? 'Yeni API anahtarı oluştur' : 'Hesabı oluştur ve API anahtarı ver'}
+                ) : session?.account.exists ? 'Generate new API key' : 'Create account and issue API key'}
               </button>
               {provisioningStatus && (
                 <div className="text-black font-bold mt-4 animate-pulse flex items-center gap-2">
