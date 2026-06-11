@@ -199,3 +199,8 @@ async def get_balance(session: AsyncSession, *, client_id: int) -> int:
     result = await session.execute(stmt)
     credits = result.scalar_one_or_none()
     return credits if credits is not None else 0
+
+
+def init_db(path: str) -> None:
+    """Legacy init - no-op, handled by SQLAlchemy lifespan."""
+    pass

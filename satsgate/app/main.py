@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import os
 import time
 from datetime import datetime, timezone
 from math import ceil
@@ -70,10 +71,6 @@ def _get_wallet() -> Any:
 # In production, prefer dependency injection with lifespan and a reusable HTTP client.
 WALLET = _get_wallet()
 
-try:
-    db.init_db(config.DB_PATH)
-except Exception as e:  # noqa: BLE001
-    raise RuntimeError(f"Failed to initialize DB at {config.DB_PATH}: {e}") from e
 
 # Rate limiters have been migrated to Redis (see rate_limit.py)
 
