@@ -1,0 +1,93 @@
+@import url('https://fonts.googleapis.com/css2?family=Permanent+Marker&family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
+@import "tailwindcss";
+
+:root {
+  --bg-color: #c8f53c;
+  --bg-card: #ffffff;
+  --border-color: #000000;
+  --text-primary: #000000;
+  --text-secondary: #1a1a1a;
+  --text-muted: #4b5563;
+  
+  --shadow-glow: 4px 4px 0px #000;
+  --shadow-hover: 8px 8px 0px #000;
+  --shadow-cyan-glow: 4px 4px 0px #000;
+}
+
+@theme inline {
+  --color-aipp-lime: #c8f53c;
+  --color-aipp-card: var(--bg-card);
+  --color-aipp-border: var(--border-color);
+  --color-aipp-text: var(--text-primary);
+  
+  --font-sans: "Inter", sans-serif;
+  --font-mono: "JetBrains Mono", monospace;
+  --font-logo: "Permanent Marker", cursive;
+}
+
+@layer base {
+  body {
+    background-color: var(--bg-color);
+    color: var(--text-primary);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    line-height: 1.6;
+    overflow-x: hidden;
+  }
+}
+
+@layer components {
+  /* Cards */
+  .brutal-card {
+    @apply bg-white border-2 border-black rounded-2xl p-7 transition-all duration-200;
+    box-shadow: var(--shadow-glow);
+  }
+  .brutal-card:hover {
+    transform: translate(-4px, -4px);
+    box-shadow: var(--shadow-hover);
+  }
+
+  /* Buttons */
+  .brutal-btn {
+    @apply inline-flex items-center justify-center gap-2 px-6 py-3 border-2 border-black rounded-full font-extrabold transition-all duration-100 cursor-pointer;
+    box-shadow: 2px 2px #000;
+  }
+  .brutal-btn:hover {
+    transform: translate(-2px, -2px);
+    box-shadow: 5px 5px #000;
+  }
+  .brutal-btn:active {
+    transform: translate(1px, 1px);
+    box-shadow: 1px 1px #000;
+  }
+  .brutal-btn-primary {
+    @apply bg-black text-[#c8f53c] hover:bg-white hover:text-black;
+  }
+  .brutal-btn-cyan {
+    @apply bg-black text-white hover:bg-white hover:text-black;
+  }
+  .brutal-btn-outline {
+    @apply bg-transparent text-black border-2 border-black;
+  }
+  .brutal-btn-outline:hover {
+    @apply bg-white;
+  }
+
+  /* Terminal */
+  .terminal-box {
+    @apply font-mono text-left bg-black border-2 border-black rounded-2xl max-w-3xl mx-auto overflow-hidden;
+    box-shadow: 6px 6px #000;
+  }
+  .terminal-header {
+    @apply bg-[#111] border-b-2 border-[#222] px-5 py-3 flex items-center gap-2;
+  }
+}
+
+.text-gradient {
+  background: transparent;
+  -webkit-background-clip: unset;
+  -webkit-text-fill-color: unset;
+  color: #000;
+  text-decoration: underline #000;
+  text-decoration-thickness: 5px;
+}

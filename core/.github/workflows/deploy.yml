@@ -1,0 +1,98 @@
+name: Deploy to VPS
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  test-backend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          
+      - name: Install dependencies
+        working-directory: ./satsgate
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install -r requirements-dev.txt
+          
+      - name: Run tests
+        working-directory: ./satsgate
+        run: |
+          pytest tests/ -v
+
+  test-frontend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          
+      - name: Install dependencies
+        working-directory: ./frontend
+        run: |
+          npm ci
+          
+      - name: TypeScript check
+        working-directory: ./frontend
+        run: |
+          npx tsc --noEmit
+          
+      - name: Lint
+        working-directory: ./frontend
+        run: |
+          npx eslint . --max-warnings=0
+          
+      - name: Build
+        working-directory: ./frontend
+        run: |
+          npm run build
+
+  deploy:
+    needs: [test-backend, test-frontend]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.HOST_IP }}
+          username: root
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: 2222
+          
+          script: |
+            cd /root/aipp
+
+            # Pull latest changes
+            git pull origin main
+
+            # Rebuild and restart containers
+            docker compose up -d --build
+
+            # Wait for services to be healthy
+            echo "Waiting for satsgate to start..."
+            sleep 10
+
+            # Run database migrations inside the running container
+            echo "Running Alembic migrations..."
+            docker compose exec -T satsgate alembic upgrade head
+
+            # Post-deploy health check
+            echo "Running health check..."
+            HEALTH=$(docker compose exec -T satsgate python -c "import urllib.request; print(urllib.request.urlopen('http://localhost:8000/health').read().decode())" 2>/dev/null)
+            if echo "$HEALTH" | grep -q '"ok": true'; then
+              echo "Deploy successful: satsgate is healthy"
+            else
+              echo "WARNING: satsgate health check failed"
+              docker compose logs --tail=20 satsgate
+            fi

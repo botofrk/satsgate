@@ -1,0 +1,25 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "aipp-langchain"
+version = "0.1.0"
+description = "LangChain Tools for AIPP (AI Payment Protocol)"
+readme = "README.md"
+requires-python = ">=3.8"
+license = { text = "MIT" }
+authors = [
+  { name="AIPP Core", email="aippcore@gmail.com" },
+]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+]
+dependencies = [
+    "langchain-core>=0.1.0",
+    "httpx>=0.24.0"
+]
+
+[project.urls]
+Homepage = "https://github.com/aippcore/aipp-langchain"

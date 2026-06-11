@@ -1,0 +1,16 @@
+{
+  "name": "satsgate",
+  "version": "0.2.0",
+  "description": "Lightning L402 paywall + prepaid payment verifications (credits) for AI agents",
+  "private": true,
+  "scripts": {
+    "test": "pytest tests/ -v",
+    "dev": "uvicorn app.main:app --reload --port 8000"
+  },
+  "keywords": ["satsgate", "l402", "lightning", "paywall", "bitcoin", "ai"],
+  "author": "",
+  "license": "Apache-2.0",
+  "dependencies": {
+    "@getalby/sdk": "^7.0.0"
+  }
+}

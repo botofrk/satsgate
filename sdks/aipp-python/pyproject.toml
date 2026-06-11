@@ -1,0 +1,30 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "aipp-python"
+version = "0.1.0"
+description = "AIPP (AI Payment Protocol) Python SDK"
+readme = "README.md"
+requires-python = ">=3.8"
+license = { text = "MIT" }
+authors = [
+  { name="AIPP Core", email="aippcore@gmail.com" },
+]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
+dependencies = [
+    "httpx>=0.24.0",
+    "pydantic>=2.0.0"
+]
+
+[project.urls]
+Homepage = "https://github.com/aippcore/aipp-python"
+Repository = "https://github.com/aippcore/aipp-python.git"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/aipp"]

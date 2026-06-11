@@ -1,0 +1,31 @@
+{
+  "name": "@satsgate/sdk",
+  "version": "0.2.0",
+  "description": "TypeScript SDK for satsgate — L402 paywall + prepaid payment verifications",
+  "type": "module",
+  "main": "dist/src/index.js",
+  "types": "dist/src/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/src/index.d.ts",
+      "import": "./dist/src/index.js"
+    }
+  },
+  "files": ["dist", "README.md"],
+  "scripts": {
+    "build": "tsc",
+    "test": "node --test dist/tests/test_client.js",
+    "prepublishOnly": "npm run build"
+  },
+  "keywords": ["satsgate", "l402", "lightning", "paywall", "bitcoin", "sdk"],
+  "license": "MIT",
+  "engines": { "node": ">=18" },
+  "devDependencies": {
+    "typescript": "^5.4.0",
+    "@types/node": "^20.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/aippdev/satsgate"
+  }
+}

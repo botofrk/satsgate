@@ -1,0 +1,34 @@
+{
+  "name": "@satsgate/vercel-ai",
+  "version": "0.2.0",
+  "description": "Vercel AI SDK integration for satsgate — L402 paywalled AI endpoints",
+  "type": "module",
+  "main": "dist/src/index.js",
+  "types": "dist/src/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/src/index.d.ts",
+      "import": "./dist/src/index.js"
+    }
+  },
+  "files": ["dist", "README.md"],
+  "scripts": {
+    "build": "tsc",
+    "test": "node --test dist/tests/test_middleware.js",
+    "prepublishOnly": "npm run build"
+  },
+  "keywords": ["vercel", "ai-sdk", "satsgate", "l402", "paywall", "lightning"],
+  "license": "MIT",
+  "engines": { "node": ">=18" },
+  "peerDependencies": {
+    "ai": ">=4.0.0"
+  },
+  "peerDependenciesMeta": {
+    "ai": { "optional": true }
+  },
+  "devDependencies": {
+    "typescript": "^5.4.0",
+    "@types/node": "^20.0.0",
+    "ai": "^4.0.0"
+  }
+}

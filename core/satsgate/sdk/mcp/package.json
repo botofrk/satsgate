@@ -1,0 +1,29 @@
+{
+  "name": "@satsgate/mcp",
+  "version": "0.4.0",
+  "description": "MCP server for satsgate — L402 Lightning paywall for AI agents",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "bin": {
+    "satsgate-mcp": "dist/cli.js"
+  },
+  "files": ["dist", "README.md"],
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/cli.js",
+    "test": "node --test dist/tests/test_server.js",
+    "prepublishOnly": "npm run build"
+  },
+  "keywords": ["mcp", "satsgate", "lightning", "l402", "bitcoin", "ai", "paywall"],
+  "license": "MIT",
+  "engines": { "node": ">=18" },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.11.0",
+    "zod": "^3.24.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.4.0",
+    "@types/node": "^20.0.0"
+  }
+}

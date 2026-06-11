@@ -1,0 +1,13 @@
+{
+  "name": "satsgate-payer-nwc",
+  "version": "0.1.0",
+  "private": true,
+  "description": "NWC-based automated payer for satsgate L402 integration tests",
+  "type": "module",
+  "dependencies": {
+    "@getalby/sdk": "^3.0.0"
+  },
+  "scripts": {
+    "pay": "node payer_nwc.mjs"
+  }
+}
