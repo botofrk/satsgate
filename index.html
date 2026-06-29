@@ -446,19 +446,42 @@
   </div>
 </section>
 
-<section class="section">
-  <div class="label">Integration</div>
-  <h2>One simple HTTP call.</h2>
-  <div class="code-wrap">
-    <pre><span class="c-comment"># Create a 500 satoshis payment invoice</span>
-curl -X POST http://api.aipp.dev/invoice/create \
-  -H <span class="c-str">"X-AIPP-Key: aipp_merch_yourkey"</span> \
-  -d '{
-    "amount_sats": 500,
-    "callback_url": "https://yoursite.com/webhook"
-  }'
+<section class="section" id="integration" style="background:var(--bg); border-top:3px solid #000;">
+  <div class="label">Integration Paths</div>
+  <h2>How do I actually use this API Key?</h2>
+  <p style="font-size: 18px; margin-bottom: 40px; color: #000; font-weight: 500;">
+    Whether you are a seasoned developer, a non-technical shop owner, or an autonomous AI, using your AIPP Key is incredibly simple.
+  </p>
+  
+  <div class="integration-grid" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(300px, 1fr)); gap:24px;">
+    
+    <!-- Path 1: AI Agents -->
+    <div class="int-card" style="background:#fff; border:3px solid #000; border-radius:16px; padding:32px; box-shadow:5px 5px 0px #000;">
+      <div style="font-size:48px; margin-bottom:16px;">🤖</div>
+      <h3 style="font-weight:900; font-size:20px; margin-bottom:12px;">I use an AI Agent</h3>
+      <p style="color:var(--muted); font-size:14px; font-weight:500; line-height:1.6; margin-bottom:20px;">
+        You don't need to know how to code! Simply paste your <code>aipp_merch_...</code> key into your AI Agent's system prompt or knowledge base. Tell the agent: <i>"Use AIPP to charge users for my service."</i> The AI will read our documentation and integrate it autonomously.
+      </p>
+    </div>
 
-<span class="c-comment"># Returns: {"payment_request": "lnbc...", "payment_hash": "..."}</span></pre>
+    <!-- Path 2: No-code / Plugins -->
+    <div class="int-card" style="background:#fff; border:3px solid #000; border-radius:16px; padding:32px; box-shadow:5px 5px 0px #000;">
+      <div style="font-size:48px; margin-bottom:16px;">🛍️</div>
+      <h3 style="font-weight:900; font-size:20px; margin-bottom:12px;">I use WordPress / Shopify</h3>
+      <p style="color:var(--muted); font-size:14px; font-weight:500; line-height:1.6; margin-bottom:20px;">
+        No coding required. Just download our official eCommerce plugin, go to the settings page, and paste your API key into the "AIPP Key" field. Your checkout page will instantly support Bitcoin Lightning payments. <br><br><i>(Plugins are currently in development)</i>
+      </p>
+    </div>
+
+    <!-- Path 3: Developers -->
+    <div class="int-card" style="background:#fff; border:3px solid #000; border-radius:16px; padding:32px; box-shadow:5px 5px 0px #000;">
+      <div style="font-size:48px; margin-bottom:16px;">💻</div>
+      <h3 style="font-weight:900; font-size:20px; margin-bottom:12px;">I am a Developer</h3>
+      <p style="color:var(--muted); font-size:14px; font-weight:500; line-height:1.6; margin-bottom:20px;">
+        Pass the key as an HTTP header <code>X-AIPP-Key</code>. Create an invoice with one REST call and poll for status. It takes 5 lines of code. Check our <a href="docs.html" style="color:var(--success); font-weight:700;">API Docs</a> for copy-paste examples.
+      </p>
+    </div>
+
   </div>
 </section>
 
