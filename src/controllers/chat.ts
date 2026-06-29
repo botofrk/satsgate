@@ -1,0 +1,103 @@
+import { Request, Response, NextFunction } from 'express';
+import { getDb } from '../config/database';
+import { DEEPSEEK_API_KEY } from '../config/env';
+import { AppError } from '../utils/error';
+import crypto from 'crypto';
+import fs from 'fs';
+import path from 'path';
+import OpenAI from 'openai';
+
+let knowledgeBase = '';
+try {
+  knowledgeBase = fs.readFileSync(path.join(process.cwd(), 'AIPP_KNOWLEDGE.md'), 'utf8');
+} catch (e) {
+  console.error('Warning: AIPP_KNOWLEDGE.md not found');
+}
+
+const openai = new OpenAI({
+  baseURL: 'https://api.deepseek.com',
+  apiKey: DEEPSEEK_API_KEY
+});
+
+const SYSTEM_PROMPT = `
+You are the official AIPP (aipp.dev) Support Assistant.
+Answer questions based ONLY on the following knowledge base:
+
+${knowledgeBase}
+
+If the user asks something completely outside of this knowledge base, you MUST reply exactly with the word "TICKET_REQUIRED", and nothing else.
+If you know the answer, respond in a helpful, concise manner. Use Turkish if the user speaks Turkish, otherwise English. Use markdown formatting.
+`;
+
+export const handleChat = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { messages } = req.body;
+    if (!messages || !Array.isArray(messages)) {
+      throw new AppError('Messages array is required', 400, 'BAD_REQUEST');
+    }
+
+    if (!DEEPSEEK_API_KEY) {
+      return res.json({ 
+        role: 'assistant', 
+        content: 'Chat system is currently offline (Missing API Key).' 
+      });
+    }
+
+    const apiMessages = [
+      { role: 'system', content: SYSTEM_PROMPT },
+      ...messages.map((m: any) => ({
+        role: m.role === 'user' ? 'user' : 'assistant',
+        content: m.content
+      }))
+    ];
+
+    const completion = await openai.chat.completions.create({
+      messages: apiMessages as any,
+      model: 'deepseek-chat',
+      temperature: 0.1,
+    });
+
+    const reply = completion.choices[0].message.content || '';
+
+    if (reply.includes('TICKET_REQUIRED')) {
+      return res.json({
+        role: 'assistant',
+        content: "Maalesef bu sorunun cevabı bilgi bankamda yok. Ancak teknik ekibimiz size hemen yardımcı olabilir. Sorunuzu ekibimize iletmemi ister misiniz? Lütfen **e-posta adresinizi** yazın.",
+        ticket_required: true
+      });
+    }
+
+    res.json({
+      role: 'assistant',
+      content: reply
+    });
+  } catch (error) {
+    console.error('Chat error:', error);
+    next(error);
+  }
+};
+
+export const createTicket = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { email, question } = req.body;
+    if (!email || !question) {
+      throw new AppError('Email and question are required', 400, 'BAD_REQUEST');
+    }
+
+    const db = getDb();
+    const ticketId = crypto.randomUUID();
+    
+    await db.run(
+      'INSERT INTO tickets (id, email, question, status, created_at) VALUES (?, ?, ?, ?, ?)',
+      ticketId,
+      email,
+      question,
+      'open',
+      new Date().toISOString()
+    );
+
+    res.json({ status: 'ok', ticket_id: ticketId });
+  } catch (error) {
+    next(error);
+  }
+};

@@ -66,6 +66,14 @@ export async function initDb(): Promise<Database> {
       next_retry_at TEXT NOT NULL,
       created_at TEXT NOT NULL
     );
+
+    CREATE TABLE IF NOT EXISTS tickets (
+      id TEXT PRIMARY KEY,
+      email TEXT NOT NULL,
+      question TEXT NOT NULL,
+      status TEXT NOT NULL DEFAULT 'open',
+      created_at TEXT NOT NULL
+    );
   `);
 
   console.log('⚡ SQLite Database file initialized (aipp.db).');

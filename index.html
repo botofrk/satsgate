@@ -235,6 +235,51 @@
   footer{border-top:3px solid #000;padding:20px 40px;display:flex;justify-content:space-between;align-items:center;color:#000;font-size:13px;font-weight:700;flex-wrap:wrap;gap:12px;max-width:1200px;margin:40px auto 0}
   footer a{color:#000}
   
+  /* CHAT WIDGET */
+  .chat-widget-btn {
+    position: fixed; bottom: 24px; right: 24px; width: 64px; height: 64px;
+    background: #000; border: 3px solid #a3dc21; border-radius: 50%;
+    box-shadow: 4px 4px 0px #000; display: flex; align-items: center; justify-content: center;
+    font-size: 32px; cursor: pointer; z-index: 1000; transition: all 0.2s;
+  }
+  .chat-widget-btn:hover { transform: translate(-2px, -2px); box-shadow: 6px 6px 0px #000; }
+  .chat-window {
+    position: fixed; bottom: 100px; right: 24px; width: 350px; max-height: 550px;
+    background: #fff; border: 3px solid #000; border-radius: 16px;
+    box-shadow: 8px 8px 0px #000; z-index: 1000; display: none; flex-direction: column; overflow: hidden;
+  }
+  .chat-header {
+    background: #000; color: #a3dc21; padding: 16px; font-family: 'Space Grotesk', sans-serif;
+    font-weight: 800; display: flex; justify-content: space-between; align-items: center;
+  }
+  .chat-close { color: #fff; cursor: pointer; font-size: 20px; }
+  .chat-body {
+    flex: 1; padding: 16px; overflow-y: auto; max-height: 350px; display: flex;
+    flex-direction: column; gap: 12px; background: #f9fafb;
+  }
+  .chat-msg {
+    padding: 10px 14px; border-radius: 12px; font-size: 14px; line-height: 1.5;
+    font-weight: 600; border: 2px solid #000; max-width: 85%; word-break: break-word;
+  }
+  .chat-msg.bot { background: #fff; align-self: flex-start; border-bottom-left-radius: 2px; }
+  .chat-msg.user { background: #a3dc21; align-self: flex-end; border-bottom-right-radius: 2px; }
+  .chat-input-area {
+    padding: 16px; background: #fff; border-top: 3px solid #000; display: flex; gap: 8px; flex-direction:column;
+  }
+  .chat-input-row { display:flex; gap:8px; }
+  .chat-input-row input {
+    flex: 1; padding: 8px 12px; border: 2px solid #000; border-radius: 8px; font-size: 14px; outline: none; font-family: inherit; font-weight:600;
+  }
+  .chat-input-row button {
+    background: #000; color: #a3dc21; border: none; border-radius: 8px; padding: 0 16px; font-weight: 800; cursor: pointer;
+  }
+  .chat-options { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+  .chat-option-btn {
+    background: #fff; border: 2px solid #000; padding: 6px 10px; border-radius: 20px;
+    font-size: 12px; font-weight: 800; cursor: pointer; box-shadow: 2px 2px 0px #000; transition:all 0.15s;
+  }
+  .chat-option-btn:hover { transform: translate(-1px, -1px); box-shadow: 3px 3px 0px #000; }
+  
   @media(max-width:800px){
     .hero{flex-direction:column-reverse;text-align:center;gap:40px}
     .hero-mascot{width:280px;height:280px}
@@ -513,6 +558,29 @@
   </span>
 </footer>
 
+<!-- AI CHAT WIDGET -->
+<div class="chat-widget-btn" onclick="toggleChat()" id="chat-btn">🤖</div>
+<div class="chat-window" id="chat-window">
+  <div class="chat-header">
+    <div>AIPP Assistant ⚡</div>
+    <div class="chat-close" onclick="toggleChat()">✕</div>
+  </div>
+  <div class="chat-body" id="chat-body">
+    <div class="chat-msg bot">Hi! I'm AIPP Assistant. How can I help you today?</div>
+    <div class="chat-options" id="chat-options">
+      <button class="chat-option-btn" onclick="sendChat('How does AIPP work?')">⚡ How it works?</button>
+      <button class="chat-option-btn" onclick="sendChat('What are the fees and limits?')">💰 Fees & Limits</button>
+      <button class="chat-option-btn" onclick="sendChat('How do I integrate this?')">💻 Integration</button>
+    </div>
+  </div>
+  <div class="chat-input-area">
+    <div class="chat-input-row">
+      <input type="text" id="chat-input" placeholder="Type your message..." onkeypress="if(event.key==='Enter') sendChat()">
+      <button onclick="sendChat()">Send</button>
+    </div>
+  </div>
+</div>
+
 <script>
 // ── CONFIG ──────────────────────────────────────────────
 const AIPP_API = window.location.origin; // AIPP backend
@@ -677,6 +745,96 @@ function copyInvoice() {
       document.getElementById('invoice-str').textContent = txt.slice(0, 28) + '...' + txt.slice(-28);
     }, 1500);
   });
+}
+
+// ── AI CHATBOT LOGIC ────────────────────────────────────
+let chatMessages = [];
+let ticketMode = false;
+let pendingQuestion = "";
+
+function toggleChat() {
+  const w = document.getElementById('chat-window');
+  w.style.display = w.style.display === 'flex' ? 'none' : 'flex';
+}
+
+function appendMsg(role, text) {
+  const body = document.getElementById('chat-body');
+  const div = document.createElement('div');
+  div.className = `chat-msg ${role}`;
+  // Basic markdown formatting
+  let formatted = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>').replace(/\n/g, '<br>');
+  div.innerHTML = formatted;
+  body.appendChild(div);
+  body.scrollTop = body.scrollHeight;
+}
+
+async function sendChat(forcedText) {
+  const inputEl = document.getElementById('chat-input');
+  const text = forcedText || inputEl.value.trim();
+  if (!text) return;
+
+  inputEl.value = '';
+  document.getElementById('chat-options').style.display = 'none';
+
+  appendMsg('user', text);
+
+  // Ticket mode logic
+  if (ticketMode) {
+    if (text.includes('@')) {
+      appendMsg('bot', '<em>Creating ticket...</em>');
+      try {
+        await fetch(`${AIPP_API}/ticket`, {
+          method: 'POST',
+          headers: {'Content-Type':'application/json'},
+          body: JSON.stringify({ email: text, question: pendingQuestion })
+        });
+        appendMsg('bot', '✅ Your ticket has been created! Our team will email you shortly.');
+      } catch (e) {
+        appendMsg('bot', '❌ Failed to create ticket. Please contact support manually.');
+      }
+      ticketMode = false;
+      pendingQuestion = "";
+    } else {
+      appendMsg('bot', 'Please provide a valid email address (e.g. you@domain.com).');
+    }
+    return;
+  }
+
+  chatMessages.push({ role: 'user', content: text });
+  
+  // Loading indicator
+  const loadDiv = document.createElement('div');
+  loadDiv.className = 'chat-msg bot';
+  loadDiv.id = 'chat-loading';
+  loadDiv.innerHTML = '<em>Thinking...</em>';
+  document.getElementById('chat-body').appendChild(loadDiv);
+  document.getElementById('chat-body').scrollTop = document.getElementById('chat-body').scrollHeight;
+
+  try {
+    const res = await fetch(`${AIPP_API}/chat`, {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({ messages: chatMessages })
+    });
+    
+    document.getElementById('chat-loading').remove();
+    
+    if (res.ok) {
+      const data = await res.json();
+      appendMsg('bot', data.content);
+      chatMessages.push({ role: 'assistant', content: data.content });
+      
+      if (data.ticket_required) {
+        ticketMode = true;
+        pendingQuestion = text;
+      }
+    } else {
+      appendMsg('bot', 'Error connecting to brain. Try again later.');
+    }
+  } catch(e) {
+    document.getElementById('chat-loading').remove();
+    appendMsg('bot', 'Connection error.');
+  }
 }
 </script>
 </body>
