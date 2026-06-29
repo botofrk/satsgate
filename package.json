@@ -2,11 +2,11 @@
   "name": "aipp-backend",
   "version": "1.0.0",
   "description": "Lightning L402 payment gateway API for AI agents",
-  "main": "dist/index.js",
+  "main": "src/server.ts",
   "scripts": {
-    "dev": "tsx watch index.ts",
+    "dev": "tsx watch src/server.ts",
     "build": "tsc",
-    "start": "node dist/index.js"
+    "start": "tsx src/server.ts"
   },
   "dependencies": {
     "cors": "^2.8.5",

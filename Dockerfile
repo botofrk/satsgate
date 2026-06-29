@@ -13,4 +13,4 @@ EXPOSE 3000
 
 ENV NODE_ENV=production
 
-CMD ["npx", "tsx", "index.ts"]
+CMD ["npx", "tsx", "src/server.ts"]
