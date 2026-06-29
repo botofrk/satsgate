@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { registerMerchant } from '../controllers/merchant';
+import { registerMerchant, getMerchantStats, getMerchantTransactions } from '../controllers/merchant';
 import { createInvoice, checkInvoiceStatus } from '../controllers/invoice';
 import { handleLnbitsWebhook } from '../controllers/webhook';
 
@@ -7,6 +7,8 @@ const router = Router();
 
 // Merchant routes
 router.post('/merchant/register', registerMerchant);
+router.get('/merchant/stats', getMerchantStats);
+router.get('/merchant/transactions', getMerchantTransactions);
 
 // Invoice routes
 router.post('/invoice/create', createInvoice);

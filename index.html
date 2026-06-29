@@ -542,7 +542,7 @@ async function demoCreateInvoice() {
 // ── POLL PAYMENT ────────────────────────────────────────
 async function checkPayment(hash) {
   try {
-    const response = await fetch(`${AIPP_API}/confirm/${hash}`);
+    const response = await fetch(`${AIPP_API}/invoice/status/${hash}`);
     const data = await response.json();
     if (data.paid) {
       clearInterval(pollTimer);

@@ -50,3 +50,54 @@ export const registerMerchant = async (req: Request, res: Response, next: NextFu
     next(error);
   }
 };
+
+export const getMerchantStats = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const apiKey = (req.headers['x-api-key'] as string) || (req.headers.authorization?.replace('Bearer ', '').trim());
+    if (!apiKey) throw new AppError('Missing API key', 401, 'UNAUTHORIZED');
+    
+    const db = getDb();
+    const merchant = await db.get('SELECT * FROM merchants WHERE api_key = ?', apiKey);
+    if (!merchant) throw new AppError('Merchant not found', 404, 'NOT_FOUND');
+
+    const stats = await db.all(`
+      SELECT 
+        date(created_at) as date,
+        COUNT(payment_hash) as transactions_count,
+        SUM(amount_sats) as total_volume,
+        SUM(commission_sats) as total_commission
+      FROM invoices 
+      WHERE api_key = ? AND status = 'settled'
+      GROUP BY date(created_at)
+      ORDER BY date(created_at) ASC
+      LIMIT 30
+    `, apiKey);
+
+    res.json({
+      ln_address: merchant.ln_address,
+      stats: stats
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getMerchantTransactions = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const apiKey = (req.headers['x-api-key'] as string) || (req.headers.authorization?.replace('Bearer ', '').trim());
+    if (!apiKey) throw new AppError('Missing API key', 401, 'UNAUTHORIZED');
+    
+    const db = getDb();
+    const merchant = await db.get('SELECT * FROM merchants WHERE api_key = ?', apiKey);
+    if (!merchant) throw new AppError('Merchant not found', 404, 'NOT_FOUND');
+
+    const txs = await db.all(
+      'SELECT * FROM invoices WHERE api_key = ? ORDER BY created_at DESC LIMIT 50',
+      apiKey
+    );
+
+    res.json(txs);
+  } catch (error) {
+    next(error);
+  }
+};

@@ -202,8 +202,8 @@
       <p>You can also poll the status of any invoice from the frontend using the payment hash:</p>
       
       <div class="code-block">
-        <div class="code-header">HTTP GET /confirm/:hash <button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
-        <pre><code>curl https://www.aipp.dev/confirm/e93fca1029ab8...</code></pre>
+        <div class="code-header">HTTP GET /invoice/status/:hash <button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+        <pre><code>curl https://www.aipp.dev/invoice/status/e93fca1029ab8...</code></pre>
       </div>
 
       <p><strong>Response format:</strong></p>
@@ -262,7 +262,7 @@ async function getInvoice(sats) {
 }
 
 async function checkStatus(hash) {
-  const response = await axios.get(`https://www.aipp.dev/confirm/${hash}`);
+  const response = await axios.get(`https://www.aipp.dev/invoice/status/${hash}`);
   return response.data; // { paid: true, status: 'settled' }
 }</code></pre>
       </div>
