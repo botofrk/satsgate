@@ -12,19 +12,48 @@ dotenv.config();
 
 const LNBITS_URL = process.env.LNBITS_URL || 'https://demo.lnbits.com';
 const LNBITS_INVOICE_KEY = process.env.LNBITS_INVOICE_KEY || '';
+const LNBITS_ADMIN_KEY = process.env.LNBITS_ADMIN_KEY || '';
+const LNBITS_WEBHOOK_SECRET = process.env.LNBITS_WEBHOOK_SECRET || '';
 const FEE_PER_REQUEST_SATS = parseInt(process.env.FEE_PER_REQUEST_SATS || '5');
 const DAILY_LIMIT_USD = parseFloat(process.env.DAILY_LIMIT_USD || '100');
 const MIN_TOPUP_SATS = parseInt(process.env.MIN_TOPUP_SATS || '100');
-const BTC_USD_RATE = parseFloat(process.env.BTC_USD_RATE || '60000');
 const PORT = process.env.PORT || 3000;
+const IS_PRODUCTION = process.env.NODE_ENV === 'production';
+
+// Live BTC/USD rate cache (refreshed every 5 minutes)
+let BTC_USD_RATE = 100000;
+async function refreshBtcRate() {
+  try {
+    const res = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd');
+    if (res.ok) {
+      const data = (await res.json()) as any;
+      const newRate = data?.bitcoin?.usd;
+      if (newRate && typeof newRate === 'number') {
+        BTC_USD_RATE = newRate;
+        console.log(`[BTC Rate] Updated: $${BTC_USD_RATE.toLocaleString()} USD/BTC`);
+      }
+    }
+  } catch (e) {
+    console.warn('[BTC Rate] Refresh failed, keeping last known rate:', BTC_USD_RATE);
+  }
+}
 
 // Database instance
 let db: Database<sqlite3.Database, sqlite3.Statement>;
 
 const app = express();
 
+// Trust Nginx reverse proxy — required for correct IP extraction behind proxy
+app.set('trust proxy', 1);
+
 // Middlewares
-app.use(cors());
+app.use(cors({
+  origin: IS_PRODUCTION
+    ? ['https://aipp.dev', 'https://www.aipp.dev']
+    : true, // Allow all in development
+  methods: ['GET', 'POST'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-AIPP-Key', 'X-Api-Key'],
+}));
 // Parse raw body for proxy forwarding to maintain exact payloads
 app.use(express.raw({ type: '*/*', limit: '10mb' }));
 // Serve static HTML frontend files from root workspace directory
@@ -44,7 +73,7 @@ const ipRateLimiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
   skip: (req) => {
-    const ip = req.ip || (typeof req.headers['x-forwarded-for'] === 'string' ? req.headers['x-forwarded-for'] : '');
+    const ip = req.ip || '';
     return ip.includes('127.0.0.1') || ip === '::1' || ip === '::ffff:127.0.0.1';
   }
 });
@@ -97,6 +126,17 @@ async function checkLimit(apiKey: string, costUsd: number): Promise<void> {
       code: 'DAILY_LIMIT_EXCEEDED',
     };
   }
+}
+
+// Helper: Verify LNBits webhook HMAC signature
+function verifyWebhookSignature(rawBody: Buffer, signature: string | undefined): boolean {
+  if (!LNBITS_WEBHOOK_SECRET) return true; // Skip verification if no secret configured
+  if (!signature) return false;
+  const expected = crypto
+    .createHmac('sha256', LNBITS_WEBHOOK_SECRET)
+    .update(rawBody)
+    .digest('hex');
+  return crypto.timingSafeEqual(Buffer.from(signature), Buffer.from(expected));
 }
 
 // Helper: Verify if a Lightning Address exists (LNURL-pay resolution check)
@@ -191,9 +231,14 @@ async function payLightningAddress(lnAddress: string, amountSats: number, isDemo
 
 // ── ENDPOINTS ─────────────────────────────────────────────────────────────
 
-// Health Check
-app.get('/health', (req: Request, res: Response) => {
-  res.json({ status: 'ok', timestamp: new Date().toISOString() });
+// Health Check — also verifies DB connectivity
+app.get('/health', async (req: Request, res: Response) => {
+  try {
+    await db.get('SELECT 1');
+    res.json({ status: 'ok', timestamp: new Date().toISOString(), db: 'ok', btc_usd_rate: BTC_USD_RATE });
+  } catch (e) {
+    res.status(503).json({ status: 'error', timestamp: new Date().toISOString(), db: 'down' });
+  }
 });
 
 // 1. POST /merchant/register (Zero-friction merchant registration with LNURL resolution check)
@@ -277,6 +322,14 @@ app.post('/invoice/create', async (req: Request, res: Response) => {
       error: 'Transaction amount must be between 100 and 100,000 satoshis',
       code: 'INVALID_AMOUNT'
     });
+  }
+
+  // Enforce daily spend limit per merchant key
+  try {
+    const costUsd = (amount_sats / 100_000_000) * BTC_USD_RATE;
+    await checkLimit(apiKey, costUsd);
+  } catch (limitErr: any) {
+    return res.status(limitErr.status || 429).json({ error: limitErr.error, code: limitErr.code });
   }
 
   const callback_url = body.callback_url || null;
@@ -363,6 +416,14 @@ async function triggerWebhookWithRetry(callbackUrl: string, payload: any, attemp
 
 // 3. POST /lnbits-webhook (Payment confirmed, instant/accumulated split & payout routing)
 app.post('/lnbits-webhook', async (req: Request, res: Response) => {
+  // Verify HMAC signature from LNBits to prevent spoofed webhook calls
+  const signature = req.headers['x-lnbits-webhook-secret'] as string | undefined
+    || req.headers['x-webhook-signature'] as string | undefined;
+  if (LNBITS_WEBHOOK_SECRET && !verifyWebhookSignature(req.body as Buffer, signature)) {
+    console.warn('[Webhook] Invalid signature from:', req.ip);
+    return res.status(401).json({ error: 'Invalid webhook signature', code: 'UNAUTHORIZED' });
+  }
+
   let body: any = {};
   try {
     if (req.body && req.body.length > 0) {
@@ -455,8 +516,10 @@ app.post('/lnbits-webhook', async (req: Request, res: Response) => {
         res.status(500).json({ error: 'Failed to forward payout', reason: payoutErr.message, code: 'FORWARD_FAILED' });
       }
     } else {
-      // Recommendation 2: Payout threshold logic (Accumulated Payouts)
+      // Payout threshold logic (Accumulated Payouts) — uses EXCLUSIVE transaction to prevent race conditions
       try {
+        await db.run('BEGIN EXCLUSIVE');
+
         await db.run(
           'UPDATE invoices SET status = ?, payout_status = ? WHERE payment_hash = ?',
           'settled',
@@ -464,7 +527,7 @@ app.post('/lnbits-webhook', async (req: Request, res: Response) => {
           paymentHash
         );
 
-        // Fetch total accumulated pending threshold payouts
+        // Fetch total accumulated pending threshold payouts (within the exclusive transaction)
         const accumRecord = await db.get(
           "SELECT SUM(forwarded_amount_sats) as total, SUM(commission_sats) as commission, SUM(amount_sats) as amount FROM invoices WHERE api_key = ? AND status = 'settled' AND payout_status = 'pending_threshold'",
           invoice.api_key
@@ -476,11 +539,18 @@ app.post('/lnbits-webhook', async (req: Request, res: Response) => {
         console.log(`[Threshold Queue] Accumulated ${accumTotalForwarded} sats. Target threshold: ${merchant.payout_threshold_sats} sats.`);
 
         if (accumTotalForwarded >= merchant.payout_threshold_sats) {
+          // Mark all pending as 'paying' to prevent double-spend before async payout call
+          await db.run(
+            "UPDATE invoices SET payout_status = 'paying' WHERE api_key = ? AND status = 'settled' AND payout_status = 'pending_threshold'",
+            invoice.api_key
+          );
+          await db.run('COMMIT');
+
           console.log(`⚡ Threshold met! Executing single payout of ${accumTotalForwarded} sats to ${merchant.ln_address}...`);
           const payoutHash = await payLightningAddress(merchant.ln_address, accumTotalForwarded, isDemo);
 
           await db.run(
-            "UPDATE invoices SET payout_status = 'forwarded' WHERE api_key = ? AND status = 'settled' AND payout_status = 'pending_threshold'",
+            "UPDATE invoices SET payout_status = 'forwarded' WHERE api_key = ? AND status = 'settled' AND payout_status = 'paying'",
             invoice.api_key
           );
 
@@ -508,6 +578,7 @@ app.post('/lnbits-webhook', async (req: Request, res: Response) => {
           }
           res.json({ status: 'ok', payout_hash: payoutHash, threshold_met: true });
         } else {
+          await db.run('COMMIT');
           // Send notification payload showing pending payout state
           if (invoice.callback_url) {
             triggerWebhookWithRetry(invoice.callback_url, {
@@ -523,6 +594,8 @@ app.post('/lnbits-webhook', async (req: Request, res: Response) => {
           res.json({ status: 'ok', payout_status: 'pending_threshold', accumulated_sats: accumTotalForwarded });
         }
       } catch (err: any) {
+        // Rollback on any error
+        try { await db.run('ROLLBACK'); } catch (_) {}
         console.error('Threshold processing failed:', err);
         res.status(500).json({ error: 'Threshold processing failed', code: 'SERVER_ERROR' });
       }
@@ -659,7 +732,7 @@ async function startServer() {
   await db.exec(`
     CREATE TABLE IF NOT EXISTS merchants (
       api_key TEXT PRIMARY KEY,
-      ln_address TEXT NOT NULL,
+      ln_address TEXT NOT NULL UNIQUE,
       payout_mode TEXT NOT NULL DEFAULT 'instant',
       payout_threshold_sats INTEGER NOT NULL DEFAULT 0,
       created_at TEXT NOT NULL
@@ -685,54 +758,72 @@ async function startServer() {
       commission_sats INTEGER NOT NULL,
       timestamp TEXT NOT NULL
     );
+
+    CREATE TABLE IF NOT EXISTS daily_spend (
+      api_key TEXT NOT NULL,
+      date TEXT NOT NULL,
+      usd_amount REAL NOT NULL DEFAULT 0,
+      requests_count INTEGER NOT NULL DEFAULT 0,
+      PRIMARY KEY (api_key, date)
+    );
   `);
 
   console.log('⚡ SQLite Database file initialized (aipp.db).');
 
-  // Pre-seed a developer test key for local dashboard testing
-  const devKey = 'aipp_devtest';
-  const existingDevKey = await db.get('SELECT * FROM merchants WHERE api_key = ?', devKey);
-  if (!existingDevKey) {
-    await db.run(
-      'INSERT INTO merchants (api_key, ln_address, payout_mode, payout_threshold_sats, created_at) VALUES (?, ?, ?, ?, ?)',
-      devKey,
-      'devtest@aipp.dev',
-      'instant',
-      0,
-      new Date().toISOString()
-    );
-    
-    // Add mock transaction
-    const mockHash = 'demo_mock_payout_' + crypto.randomBytes(8).toString('hex');
-    await db.run(
-      'INSERT INTO invoices (payment_hash, api_key, amount_sats, commission_sats, forwarded_amount_sats, status, payout_status, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
-      mockHash,
-      devKey,
-      25000,
-      250,
-      24750,
-      'settled',
-      'forwarded',
-      new Date().toISOString()
-    );
+  // Pre-seed a developer test key — only in development mode
+  if (!IS_PRODUCTION) {
+    const devKey = 'aipp_devtest';
+    const existingDevKey = await db.get('SELECT * FROM merchants WHERE api_key = ?', devKey);
+    if (!existingDevKey) {
+      await db.run(
+        'INSERT OR IGNORE INTO merchants (api_key, ln_address, payout_mode, payout_threshold_sats, created_at) VALUES (?, ?, ?, ?, ?)',
+        devKey,
+        'devtest@aipp.dev',
+        'instant',
+        0,
+        new Date().toISOString()
+      );
 
-    await db.run(
-      'INSERT INTO ledgers (id, payment_hash, api_key, amount_sats, commission_sats, timestamp) VALUES (?, ?, ?, ?, ?, ?)',
-      crypto.randomUUID(),
-      mockHash,
-      devKey,
-      25000,
-      250,
-      new Date().toISOString()
-    );
+      // Add mock transaction
+      const mockHash = 'demo_mock_payout_' + crypto.randomBytes(8).toString('hex');
+      await db.run(
+        'INSERT INTO invoices (payment_hash, api_key, amount_sats, commission_sats, forwarded_amount_sats, status, payout_status, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+        mockHash,
+        devKey,
+        25000,
+        250,
+        24750,
+        'settled',
+        'forwarded',
+        new Date().toISOString()
+      );
 
-    console.log(`⚡ Pre-seeded developer testing merchant: ${devKey} for Lightning Address devtest@aipp.dev.`);
+      await db.run(
+        'INSERT INTO ledgers (id, payment_hash, api_key, amount_sats, commission_sats, timestamp) VALUES (?, ?, ?, ?, ?, ?)',
+        crypto.randomUUID(),
+        mockHash,
+        devKey,
+        25000,
+        250,
+        new Date().toISOString()
+      );
+
+      console.log(`⚡ Pre-seeded developer testing merchant: ${devKey} for Lightning Address devtest@aipp.dev.`);
+    }
   }
+
+  // Fetch initial BTC/USD rate, then refresh every 5 minutes
+  await refreshBtcRate();
+  setInterval(refreshBtcRate, 5 * 60 * 1000);
 
   // Listen
   app.listen(PORT, () => {
     console.log(`⚡ AIPP Generic Payment Bridge listening on port ${PORT}`);
     console.log(`⚡ LNBits API configured: ${LNBITS_INVOICE_KEY ? 'YES' : 'NO'}`);
+    console.log(`⚡ Admin key configured (payouts): ${LNBITS_ADMIN_KEY ? 'YES' : '❌ NO — payouts will fail!'}`);
+    console.log(`⚡ Webhook secret: ${LNBITS_WEBHOOK_SECRET ? 'SET ✅' : '⚠️ NOT SET — webhook spoofing possible'}`);
+    console.log(`⚡ Mode: ${IS_PRODUCTION ? 'PRODUCTION' : 'DEVELOPMENT'}`);
+    console.log(`⚡ BTC/USD Rate: $${BTC_USD_RATE.toLocaleString()}`);
     console.log(`⚡ Rate limit: 10 req/min, Default fee: ${FEE_PER_REQUEST_SATS} sats, Daily limit: $${DAILY_LIMIT_USD}`);
 
     // Auto-poller: every 15 seconds, check pending invoices against LNbits

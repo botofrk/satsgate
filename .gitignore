@@ -1,10 +1,23 @@
-node_modules/
+# Environment — NEVER commit real credentials
 .env
-*.db
-*.log
+
+# Database file — contains live merchant & transaction data
+aipp.db
+aipp.db-shm
+aipp.db-wal
+
+# Node
+node_modules/
+dist/
+npm-debug.log*
+
+# OS
 .DS_Store
-*.jpg
-*.jpeg
-*.png
-*.gif
-*.ico
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+
+# PM2
+.pm2/
