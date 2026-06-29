@@ -1,4 +1,4 @@
-import fetch from 'node-fetch';
+
 import crypto from 'crypto';
 import { LNBITS_ADMIN_KEY, LNBITS_URL } from '../config/env';
 

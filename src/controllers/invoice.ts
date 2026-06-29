@@ -1,6 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
 import crypto from 'crypto';
-import fetch from 'node-fetch';
 import { getDb } from '../config/database';
 import { checkLimit } from '../services/limiter';
 import { getBtcUsdRate } from '../services/price';

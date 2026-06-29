@@ -1,4 +1,4 @@
-import fetch from 'node-fetch';
+
 
 let currentBtcRate = 60000;
 

@@ -1,6 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
 import crypto from 'crypto';
-import fetch from 'node-fetch';
 import { getDb } from '../config/database';
 import { LNBITS_WEBHOOK_SECRET, LNBITS_INVOICE_KEY, LNBITS_URL } from '../config/env';
 import { AppError } from '../utils/error';
