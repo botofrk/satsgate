@@ -104,6 +104,7 @@
     <h4>Getting Started</h4>
     <ul>
       <li><a href="#intro" class="active" onclick="activateLink(this)">Introduction</a></li>
+      <li><a href="#integration-paths" onclick="activateLink(this)">Integration Paths</a></li>
       <li><a href="#register" onclick="activateLink(this)">Merchant Register</a></li>
       <li><a href="#invoice-create" onclick="activateLink(this)">Create Invoice</a></li>
       <li><a href="#webhooks" onclick="activateLink(this)">Webhook Callbacks</a></li>
@@ -127,6 +128,35 @@
       <div class="alert">
         <div class="alert-title">💡 Pure Non-Custodial Flow</div>
         <div class="alert-body">AIPP does not custody or hold your earnings. Payments are programmatically split on-the-fly and routed to your destination wallet (via Lightning Address) in miliseconds.</div>
+      </div>
+    </section>
+
+    <!-- INTEGRATION PATHS -->
+    <section id="integration-paths">
+      <h2>Integration Paths</h2>
+      <p>Depending on your technical expertise, there are 3 main ways to integrate your AIPP Merchant Key into your workflow:</p>
+      
+      <div style="display:flex; flex-direction:column; gap:24px; margin-top:24px;">
+        <div style="background:#fff; border:3px solid #000; border-radius:12px; padding:24px; box-shadow:4px 4px 0px #000;">
+          <h3 style="font-size:18px; font-weight:900; margin-bottom:12px; color:#000;">🤖 1. For AI Agents (No-Code)</h3>
+          <p style="color:var(--muted); font-size:14px; font-weight:500; margin-bottom:0;">
+            If you are building an autonomous AI agent or using an LLM platform, you don't need to write any code. Simply paste your API Key into your Agent's system prompt or tool configuration, and instruct it: <i>"Use the AIPP API at aipp.dev to charge users for my tasks."</i> The AI will automatically read this documentation and handle the REST API calls.
+          </p>
+        </div>
+
+        <div style="background:#fff; border:3px solid #000; border-radius:12px; padding:24px; box-shadow:4px 4px 0px #000;">
+          <h3 style="font-size:18px; font-weight:900; margin-bottom:12px; color:#000;">🛍️ 2. For WordPress / Shopify (No-Code)</h3>
+          <p style="color:var(--muted); font-size:14px; font-weight:500; margin-bottom:0;">
+            If you are running an eCommerce store, you can use our upcoming official plugins. Just install the plugin, navigate to settings, and paste your API key. The checkout page will automatically display Lightning QR codes to your customers. <i>(Plugins are currently in development).</i>
+          </p>
+        </div>
+
+        <div style="background:#fff; border:3px solid #000; border-radius:12px; padding:24px; box-shadow:4px 4px 0px #000;">
+          <h3 style="font-size:18px; font-weight:900; margin-bottom:12px; color:#000;">💻 3. For Developers (REST API)</h3>
+          <p style="color:var(--muted); font-size:14px; font-weight:500; margin-bottom:0;">
+            If you are building a custom application, you can use our REST API. Just pass your API Key as an HTTP header <code>X-AIPP-Key</code>. The rest of this documentation explains the exact endpoints you need to call to generate invoices and verify payments.
+          </p>
+        </div>
       </div>
     </section>
 
