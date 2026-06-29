@@ -353,6 +353,7 @@ app.post('/invoice/create', async (req: Request, res: Response) => {
           out: false,
           amount: amount_sats,
           memo: `AIPP Invoice (Merch: ${apiKey.slice(-6)})`,
+          webhook: LNBITS_WEBHOOK_SECRET ? `https://aipp.dev/lnbits-webhook?secret=${LNBITS_WEBHOOK_SECRET}` : undefined
         }),
       });
 
@@ -416,12 +417,19 @@ async function triggerWebhookWithRetry(callbackUrl: string, payload: any, attemp
 
 // 3. POST /lnbits-webhook (Payment confirmed, instant/accumulated split & payout routing)
 app.post('/lnbits-webhook', async (req: Request, res: Response) => {
-  // Verify HMAC signature from LNBits to prevent spoofed webhook calls
+  // Verify HMAC signature from LNBits or Query Secret to prevent spoofed webhook calls
   const signature = req.headers['x-lnbits-webhook-secret'] as string | undefined
     || req.headers['x-webhook-signature'] as string | undefined;
-  if (LNBITS_WEBHOOK_SECRET && !verifyWebhookSignature(req.body as Buffer, signature)) {
-    console.warn('[Webhook] Invalid signature from:', req.ip);
-    return res.status(401).json({ error: 'Invalid webhook signature', code: 'UNAUTHORIZED' });
+  const querySecret = req.query.secret as string | undefined;
+  
+  if (LNBITS_WEBHOOK_SECRET) {
+    const isSignatureValid = verifyWebhookSignature(req.body as Buffer, signature);
+    const isQueryValid = querySecret === LNBITS_WEBHOOK_SECRET;
+    
+    if (!isSignatureValid && !isQueryValid) {
+      console.warn('[Webhook] Invalid signature/secret from:', req.ip);
+      return res.status(401).json({ error: 'Invalid webhook signature or secret', code: 'UNAUTHORIZED' });
+    }
   }
 
   let body: any = {};
