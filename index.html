@@ -1,0 +1,585 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>aipp.dev — Give your AI agent a wallet</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap');
+  
+  *{margin:0;padding:0;box-sizing:border-box}
+  :root{
+    --bg:#a3dc21; /* Match exact background color of the mascot image */
+    --fg:#000000; /* High contrast black */
+    --muted:#3f3f46;
+    --accent:#000000;
+    --border:#000000;
+    --card:#ffffff;
+    --radius:16px;
+  }
+  body{
+    background:var(--bg);
+    color:var(--fg);
+    font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    padding-bottom: 60px;
+    overflow-x: hidden;
+  }
+  a{color:var(--fg);text-decoration:none}
+  
+  nav{display:flex;align-items:center;justify-content:space-between;padding:24px 40px;max-width:1200px;margin:0 auto;position:relative;z-index:10}
+  .logo{font-family: 'Space Grotesk', sans-serif;font-weight:900;font-size:22px;letter-spacing:-.8px;background:#fff;border:3px solid #000;padding:6px 20px;border-radius:12px;box-shadow:3px 3px 0px #000;color:#000;display:inline-block;transition:all 0.2s}
+  .logo:hover{transform:translate(-2px,-2px);box-shadow:5px 5px 0px #000}
+  .logo span{color:#a3dc21; -webkit-text-stroke: 1.5px #000;}
+  nav div{display:flex;align-items:center;gap:16px}
+  nav a{color:var(--fg);font-size:14px;font-weight:700;transition:all 0.2s}
+  nav a:hover{color:#000;transform:translateY(-1px)}
+  .nav-docs{background:#fff;border:3px solid #000;padding:8px 20px;border-radius:24px;box-shadow:2px 2px 0px #000}
+  .nav-docs:hover{transform:translate(-2px,-2px);box-shadow:4px 4px 0px #000}
+  .nav-cta{background:#000;color:#a3dc21!important;border:3px solid #000;padding:8px 20px;border-radius:24px;box-shadow:2px 2px 0px #a3dc21;font-weight:700;display:flex;align-items:center;gap:4px}
+  .nav-cta:hover{transform:translate(-2px,-2px);box-shadow:4px 4px 0px #a3dc21}
+  
+  /* HERO SECTION */
+  .hero{display:flex;align-items:center;justify-content:center;gap:60px;padding:80px 20px 60px;max-width:1150px;margin:0 auto;text-align:left;position:relative;z-index:2}
+  .hero-content{flex:1;max-width:620px}
+  .hero-mascot{
+    flex-shrink:0;
+    width:360px;
+    height:360px;
+    position:relative;
+    transition:transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+    cursor:pointer;
+  }
+  .hero-mascot:hover{
+    transform:scale(1.05) rotate(2deg);
+  }
+  .hero-mascot::after{
+    content:'';
+    position:absolute;
+    width:130%;
+    height:130%;
+    background:radial-gradient(circle, rgba(255,255,255,0.7) 0%, rgba(255,255,255,0) 70%);
+    z-index:-1;
+    top:-15%;
+    left:-15%;
+    pointer-events:none;
+  }
+  .hero-mascot img{width:100%;height:100%;object-fit:cover;border-radius:24px;border:3px solid #000;box-shadow:6px 6px 0px #000}
+  .badge{display:inline-block;background:#fff;border:3px solid #000;color:#000;font-size:12px;font-weight:700;padding:6px 16px;border-radius:99px;margin-bottom:28px;box-shadow:2px 2px 0px #000;transition:all 0.2s}
+  .badge:hover{transform:rotate(-1deg)}
+  
+  h1{font-family: 'Space Grotesk', sans-serif;font-size:clamp(32px,5vw,52px);font-weight:900;letter-spacing:-2px;line-height:1.05;margin-bottom:24px;text-transform:uppercase}
+  h1 span{text-decoration:underline;text-underline-offset:8px;text-decoration-color:#fff}
+  .hero p{font-size:18px;color:#1a1a1a;margin-bottom:40px;font-weight:500;line-height:1.6}
+  .cta-row{display:flex;gap:16px;justify-content:flex-start;flex-wrap:wrap}
+  
+  /* BUTTONS & ANIMATION */
+  .btn{padding:14px 28px;border-radius:var(--radius);font-size:15px;font-weight:800;cursor:pointer;border:3px solid #000;transition:transform 0.15s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.15s cubic-bezier(0.34, 1.56, 0.64, 1);display:inline-block}
+  .btn:active{transform:translate(2px, 2px);box-shadow:1px 1px 0px #000}
+  .btn-primary{background:#000;color:#a3dc21;box-shadow:4px 4px 0px #fff}
+  .btn-primary:hover{transform:translate(-2px,-2px);box-shadow:6px 6px 0px #fff}
+  .btn-ghost{background:#fff;color:#000;box-shadow:4px 4px 0px #000}
+  .btn-ghost:hover{transform:translate(-2px,-2px);box-shadow:6px 6px 0px #000}
+  
+  /* BRUTALIST BOUNCE CARDS */
+  .section{padding:80px 20px;max-width:1000px;margin:0 auto;position:relative}
+  .label{font-size:12px;letter-spacing:2px;color:#000;font-weight:800;text-transform:uppercase;margin-bottom:12px;display:inline-block;background:#fff;border:2px solid #000;padding:4px 12px;border-radius:6px;box-shadow:2px 2px 0px #000;transition:all 0.2s}
+  .label:hover{transform:rotate(1deg)}
+  h2{font-family: 'Space Grotesk', sans-serif;font-size:clamp(24px,4vw,36px);font-weight:900;letter-spacing:-1.5px;margin-bottom:48px}
+  
+  .steps{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:24px}
+  .step{background:var(--card);border:3px solid #000;border-radius:var(--radius);padding:28px;box-shadow:5px 5px 0px #000;transition:transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.25s cubic-bezier(0.34, 1.56, 0.64, 1)}
+  .step:hover{transform:translate(-4px,-4px);box-shadow:9px 9px 0px #000}
+  .step-num{font-size:14px;font-weight:800;color:#000;margin-bottom:12px;background:#a3dc21;border:2px solid #000;padding:2px 8px;border-radius:6px;width:fit-content;box-shadow:1.5px 1.5px 0px #000}
+  .step h3{font-size:18px;font-weight:800;margin-bottom:8px}
+  .step p{font-size:14px;color:var(--muted);font-weight:500}
+  
+  .pains{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:24px}
+  .pain{background:var(--card);border:3px solid #000;border-radius:var(--radius);padding:24px;box-shadow:5px 5px 0px #000;transition:transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.25s cubic-bezier(0.34, 1.56, 0.64, 1)}
+  .pain:hover{transform:translate(-4px,-4px);box-shadow:9px 9px 0px #000}
+  .pain .before{font-size:13px;color:#ef4444;margin-bottom:8px;text-decoration:line-through;font-weight:700}
+  .pain .after{font-size:15px;color:var(--fg);font-weight:800;display:flex;align-items:center;gap:4px}
+  
+  /* MAC IDE LAYOUT FOR CODE BLOCKS */
+  .code-wrap{background:#16161a;border:3px solid #000;border-radius:var(--radius);padding:24px;overflow-x:auto;box-shadow:5px 5px 0px #000;position:relative}
+  .code-wrap::before{
+    content:'';
+    position:absolute;
+    top:12px;
+    left:16px;
+    width:36px;
+    height:10px;
+    background:radial-gradient(circle, #ff5f56 0%, #ff5f56 25%, #ffbd2e 26%, #ffbd2e 50%, #27c93f 51%, #27c93f 75%, transparent 76%);
+    background-size:12px 10px;
+    opacity:0.8;
+  }
+  .code-wrap pre{margin-top:12px;font-family:'Fira Code', 'JetBrains Mono', monospace;font-size:13px;line-height:1.7;color:#e5e7eb}
+  .c-comment{color:#6b7280}.c-key{color:#93c5fd}.c-str{color:#fcd34d}
+  
+  .pricing-card{background:var(--card);border:3px solid #000;border-radius:var(--radius);padding:40px;text-align:center;max-width:400px;margin:0 auto;box-shadow:6px 6px 0px #000;transition:transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.25s cubic-bezier(0.34, 1.56, 0.64, 1)}
+  .pricing-card:hover{transform:translate(-4px,-4px);box-shadow:10px 10px 0px #000}
+  .price{font-family: 'Space Grotesk', sans-serif;font-size:48px;font-weight:900;letter-spacing:-2.5px;margin:16px 0 4px}
+  .price sub{font-size:18px;font-weight:400;color:var(--muted)}
+  .price-note{font-size:13px;color:var(--muted);margin-bottom:28px;font-weight:500}
+  .features{text-align:left;margin-bottom:28px}
+  .features li{display:flex;gap:10px;padding:12px 0;border-bottom:2px solid #f3f4f6;font-size:14px;list-style:none;font-weight:600}
+  .features li:last-child{border:none}
+  .check{color:#000;font-weight:800}
+  
+  /* LIVE INTERACTIVE DEMO */
+  .demo-wrap{background:var(--card);border:3px solid #000;border-radius:var(--radius);padding:40px;max-width:580px;margin:0 auto;box-shadow:6px 6px 0px #000;transition:transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1)}
+  .demo-tabs{display:flex;gap:8px;margin-bottom:28px}
+  .tab{flex:1;padding:12px;text-align:center;font-size:13px;font-weight:800;cursor:pointer;background:#fff;color:#000;border:3px solid #000;border-radius:8px;box-shadow:2px 2px 0px #000;transition:all .15s}
+  .tab.active{background:#000;color:#a3dc21;box-shadow:2px 2px 0px #a3dc21}
+  .demo-step{display:none}
+  .demo-step.active{display:block;animation:fadeInUp 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards}
+  
+  @keyframes fadeInUp {
+    from{opacity:0;transform:translateY(10px)}
+    to{opacity:1;transform:translateY(0)}
+  }
+  
+  .demo-input{display:flex;gap:12px;margin-bottom:16px}
+  .demo-input input{flex:1;background:#fff;border:3px solid #000;border-radius:8px;padding:12px 14px;color:var(--fg);font-size:14px;font-weight:700;outline:none;box-shadow:2px 2px 0px #000;transition:all 0.2s}
+  .demo-input input:focus{border-color:#000;box-shadow:3px 3px 0px #a3dc21}
+  .demo-input button,.demo-btn{background:#000;color:#a3dc21;border:3px solid #000;border-radius:8px;padding:12px 20px;font-weight:800;font-size:14px;cursor:pointer;white-space:nowrap;box-shadow:2px 2px 0px #fff;transition:all 0.2s}
+  .demo-input button:hover{transform:translate(-1px,-1px);box-shadow:3px 3px 0px #fff}
+  .demo-btn{width:100%;padding:14px;margin-top:8px;background:#000;color:#a3dc21;box-shadow:3px 3px 0px #000}
+  .demo-btn:hover{transform:translate(-2px,-2px);box-shadow:5px 5px 0px #000}
+  .qr-box{text-align:center;padding:24px 0}
+  .qr-box canvas{border:3px solid #000;border-radius:8px;margin-bottom:12px;box-shadow:3px 3px 0px #000;transition:transform 0.2s}
+  .qr-box canvas:hover{transform:scale(1.02)}
+  .invoice-str{font-family:ui-monospace,monospace;font-size:10px;color:#000;word-break:break-all;background:#f3f4f6;padding:12px;border-radius:8px;margin-bottom:12px;cursor:pointer;border:3px solid #000;font-weight:700;box-shadow:2px 2px 0px #000;transition:all 0.2s}
+  .invoice-str:hover{border-color:#000;box-shadow:3px 3px 0px #a3dc21}
+  .status-row{display:flex;align-items:center;gap:8px;font-size:13px;color:#000;font-weight:700;justify-content:center;margin-top:8px}
+  .dot{width:10px;height:10px;border-radius:50%;background:#000;border:1px solid #000}
+  .dot.pending{background:#f59e0b;animation:pulse 1.5s infinite}
+  .dot.paid{background:#22c55e}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+  .key-box{background:#f0fdf4;border:3px solid #22c55e;border-radius:8px;padding:16px;font-family:ui-monospace,monospace;font-size:13px;color:#15803d;font-weight:700;word-break:break-all;cursor:pointer;margin:12px 0;box-shadow:3px 3px 0px #000;transition:all 0.2s}
+  .key-box:hover{background:#dcfce7;transform:translate(-2px,-2px);box-shadow:5px 5px 0px #000}
+  .success-icon{font-size:40px;text-align:center;margin-bottom:12px}
+  .demo-note{font-size:12px;color:var(--muted);text-align:center;margin-top:16px;font-weight:500}
+  .chat-box{background:#f9fafb;border:3px solid #000;border-radius:8px;padding:16px;min-height:85px;font-size:13px;line-height:1.7;margin-bottom:12px;color:#000;font-weight:600;box-shadow:3px 3px 0px #000}
+  .chat-thinking{color:var(--muted);font-style:italic}
+  .balance-row{display:flex;justify-content:space-between;font-size:13px;color:#000;font-weight:700;margin-bottom:16px;padding:12px 14px;background:#f3f4f6;border:3px solid #000;border-radius:8px;box-shadow:2px 2px 0px #000}
+  .balance-row span:last-child{color:#15803d;font-weight:800}
+
+  /* FLOATING BOLTS BACKGROUND ANIMATION */
+  @keyframes floatBolt {
+    0%, 100%{transform:translateY(0px) rotate(0deg)}
+    50%{transform:translateY(-20px) rotate(8deg)}
+  }
+  .floating-bolt {
+    position: absolute;
+    pointer-events: none;
+    z-index: 0;
+    opacity: 0.12;
+    animation: floatBolt 4s ease-in-out infinite;
+  }
+
+  .use-case-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 24px;
+    margin-top: 30px;
+  }
+  @media(max-width: 800px) {
+    .use-case-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+  
+  footer{border-top:3px solid #000;padding:28px 40px;display:flex;justify-content:space-between;align-items:center;color:#000;font-size:13px;font-weight:700;flex-wrap:wrap;gap:12px;max-width:1200px;margin:80px auto 0}
+  footer a{color:#000}
+  
+  @media(max-width:800px){
+    .hero{flex-direction:column-reverse;text-align:center;gap:40px}
+    .hero-mascot{width:280px;height:280px}
+    .cta-row{justify-content:center}
+  }
+  @media(max-width:600px){
+    nav{padding:16px 20px}
+    .pains{grid-template-columns:1fr}
+    footer{flex-direction:column;text-align:center}
+  }
+</style>
+<script src="https://cdn.jsdelivr.net/npm/qrcode@1.4.4/build/qrcode.min.js"></script>
+</head>
+<body>
+
+<nav>
+  <div class="logo">aipp<span>.</span>dev</div>
+  <div>
+    <a href="#how">How it works</a>
+    <a href="#use-cases">Use Cases</a>
+    <a href="#demo">Try it</a>
+    <a href="#pricing">Pricing</a>
+    <a href="docs.html" class="nav-docs">Docs</a>
+    <a href="dashboard.html" class="nav-cta">Dashboard ⚡</a>
+  </div>
+</nav>
+
+<section class="hero" style="position:relative">
+  <!-- Premium Floating bolts -->
+  <svg class="floating-bolt" style="top:10%;left:5%;width:40px;height:40px;animation-delay:0s" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+  <svg class="floating-bolt" style="top:70%;left:45%;width:30px;height:30px;animation-delay:1.5s" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+  <svg class="floating-bolt" style="top:25%;right:8%;width:45px;height:45px;animation-delay:0.8s" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+
+  <div class="hero-mascot">
+    <img src="robot_mascot_real.jpg" alt="aipp.dev Mascot">
+  </div>
+  <div class="hero-content">
+    <div class="badge">⚡ Built on Lightning L402</div>
+    <h1>Accept Lightning<br>payments in <span>seconds</span>.</h1>
+    <p>The non-custodial split-payment gateway for online shops, apps, and AI agents. Cash out instantly to your wallet — no cards, no KYC, no registration.</p>
+    <div class="cta-row">
+      <a href="#demo" class="btn btn-primary">Try live demo →</a>
+      <a href="docs.html" class="btn btn-ghost">Read the docs</a>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="how">
+  <div class="label">How it works</div>
+  <h2>Three steps, completely non-custodial.</h2>
+  <div class="steps">
+    <div class="step">
+      <div class="step-num">01</div>
+      <h3>Enter your Wallet</h3>
+      <p>Provide your personal Lightning Address. No signups, no KYC, no approvals.</p>
+    </div>
+    <div class="step">
+      <div class="step-num">02</div>
+      <h3>Create an Invoice</h3>
+      <p>Use your AIPP key to generate client invoices (100 to 100,000 sats).</p>
+    </div>
+    <div class="step">
+      <div class="step-num">03</div>
+      <h3>Instant Split Forward</h3>
+      <p>Customer pays. 1% commission is kept; 99% lands in your wallet instantly.</p>
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="label">Why aipp.dev</div>
+  <h2>Everything you hated about online billing, gone.</h2>
+  <div class="pains">
+    <div class="pain"><div class="before">Stripe setup took 3 weeks</div><div class="after">⚡ Wallet address in, key out in 3 seconds</div></div>
+    <div class="pain"><div class="before">Hold funds for 14 days</div><div class="after">⚡ Settlement is instant (under 1 second)</div></div>
+    <div class="pain"><div class="before">High merchant chargeback fraud</div><div class="after">⚡ Bitcoin Lightning has zero chargebacks</div></div>
+    <div class="pain"><div class="before">Can't pay from Turkey/Iran/Argentina</div><div class="after">⚡ Lightning network has no borders</div></div>
+    <div class="pain"><div class="before">Custody audit & regulatory compliance</div><div class="after">⚡ Non-custodial proxy. We never hold your money</div></div>
+    <div class="pain"><div class="before">Hidden gateway fees</div><div class="after">⚡ Flat 1% transaction fee, zero maintenance cost</div></div>
+  </div>
+</section>
+
+<!-- USE CASES -->
+<section class="section" id="use-cases" style="background:#fff;border-top:3px solid #000">
+  <div class="label">Use Cases</div>
+  <h2>Built for any digital payment scenario.</h2>
+  <div class="use-case-grid">
+    
+    <div style="background:#fff;border:3px solid #000;padding:24px;border-radius:var(--radius);box-shadow:4px 4px 0px #000;text-align:left">
+      <div style="font-size:32px;margin-bottom:12px">🛒</div>
+      <h3 style="margin-bottom:8px;color:#000;font-size:16px;font-weight:900">E-Commerce & Shop checkout</h3>
+      <p style="color:var(--muted);font-size:13px;line-height:1.6">Sell T-shirts, e-books, game keys, or software licenses. Customers pay in one tap, and funds settle directly into your wallet with zero chargeback risk.</p>
+    </div>
+
+    <div style="background:#fff;border:3px solid #000;padding:24px;border-radius:var(--radius);box-shadow:4px 4px 0px #000;text-align:left">
+      <div style="font-size:32px;margin-bottom:12px">🤖</div>
+      <h3 style="margin-bottom:8px;color:#000;font-size:16px;font-weight:900">Autonomous AI Agents</h3>
+      <p style="color:var(--muted);font-size:13px;line-height:1.6">Equip your AI agent with a web wallet. The agent can receive payment for tasks it completes, or pay other online APIs to query datasets, completely autonomously.</p>
+    </div>
+
+    <div style="background:#fff;border:3px solid #000;padding:24px;border-radius:var(--radius);box-shadow:4px 4px 0px #000;text-align:left">
+      <div style="font-size:32px;margin-bottom:12px">🔑</div>
+      <h3 style="margin-bottom:8px;color:#000;font-size:16px;font-weight:900">Pay-Per-Use APIs</h3>
+      <p style="color:var(--muted);font-size:13px;line-height:1.6">Build developer APIs and charge per individual request (e.g. 50 sats/call). Eliminate credit card fraud, recurring billing setups, and login subscription walls.</p>
+    </div>
+
+    <div style="background:#fff;border:3px solid #000;padding:24px;border-radius:var(--radius);box-shadow:4px 4px 0px #000;text-align:left">
+      <div style="font-size:32px;margin-bottom:12px">📰</div>
+      <h3 style="margin-bottom:8px;color:#000;font-size:16px;font-weight:900">Micropayments & Paywalls</h3>
+      <p style="color:var(--muted);font-size:13px;line-height:1.6">Charge micro-amounts for individual premium articles, video access, or tipping. Perfect for amounts under $1 where credit card processing fees are too high.</p>
+    </div>
+
+  </div>
+</section>
+
+<!-- LIVE DEMO -->
+<section class="section" id="demo">
+  <div class="label">Live demo</div>
+  <h2>Register a mock shop. Pay an invoice. Get paid.</h2>
+  <div class="demo-wrap">
+
+    <div class="demo-tabs">
+      <button class="tab active" onclick="switchTab(0)">① Setup Shop</button>
+      <button class="tab" onclick="switchTab(1)">② Checkout</button>
+      <button class="tab" onclick="switchTab(2)">③ Payout Status</button>
+    </div>
+
+    <!-- STEP 1: Setup Shop -->
+    <div class="demo-step active" id="step0">
+      <p style="color:var(--muted);font-size:14px;margin-bottom:20px">Link your Lightning Address to get your AIPP Merchant API Key:</p>
+      <div class="demo-input">
+        <input type="text" id="demo-ln-address" value="devtest@aipp.dev" placeholder="username@domain.com">
+        <button onclick="demoRegisterMerchant()">Get API Key</button>
+      </div>
+      <div class="demo-note">Input your real Lightning Address (e.g. Phoenix/Alby) to test real payouts!</div>
+    </div>
+
+    <!-- STEP 2: Checkout -->
+    <div class="demo-step" id="step1">
+      <p style="color:var(--muted);font-size:14px;margin-bottom:20px">Simulate a customer purchase. Click pay to generate a Lightning invoice:</p>
+      <div class="shop-card" style="background:#fff;border:3px solid #000;border-radius:var(--radius);padding:16px;box-shadow:4px 4px 0px #000;margin:0 auto;max-width:320px;text-align:center">
+        <img src="robot_mascot_real.jpg" alt="AIPP Cyber Tee" style="width:100%;height:180px;object-fit:cover;border:3px solid #000;border-radius:var(--radius);margin-bottom:12px">
+        <h3 style="margin-bottom:4px;font-size:16px;color:#000">AIPP Cyber Tee (Ltd. Edition)</h3>
+        <p style="color:var(--muted);font-size:12px;margin-bottom:12px">Hyper-realistic design printed on heavy cotton.</p>
+        <div class="price" style="font-size:20px;font-weight:900;margin-bottom:12px;color:#000">500 <span style="font-size:14px">sats</span></div>
+        <button class="demo-btn" onclick="demoCreateInvoice()" style="width:100%">Buy Now with Lightning</button>
+      </div>
+    </div>
+
+    <!-- STEP 3: Payout Status -->
+    <div class="demo-step" id="step2">
+      <div id="qr-area" style="display:none">
+        <div class="qr-box">
+          <canvas id="qr-canvas"></canvas>
+          <div class="invoice-str" id="invoice-str" onclick="copyInvoice()" title="Click to copy">Click to copy invoice</div>
+          <div class="status-row">
+            <div class="dot pending" id="pay-dot"></div>
+            <span id="pay-status">Waiting for payment...</span>
+          </div>
+        </div>
+      </div>
+      
+      <div id="payout-result" style="display:none;background:#fff;border:3px solid #000;border-radius:var(--radius);padding:20px;box-shadow:4px 4px 0px #000;margin:0 auto;max-width:350px">
+        <div class="success-icon" style="text-align:center;font-size:32px;margin-bottom:8px">🎉</div>
+        <h3 style="text-align:center;margin-bottom:16px;color:#000">Split & Forward Completed!</h3>
+        <div style="font-size:13px;line-height:1.8;color:#000">
+          <div style="display:flex;justify-content:space-between;border-bottom:1px solid #ddd;padding:4px 0"><strong>Total Paid:</strong> <span>500 sats</span></div>
+          <div style="display:flex;justify-content:space-between;border-bottom:1px solid #ddd;padding:4px 0;color:#d32f2f"><strong>AIPP Fee (1%):</strong> <span>5 sats</span></div>
+          <div style="display:flex;justify-content:space-between;border-bottom:1px solid #ddd;padding:4px 0;color:#2e7d32"><strong>Payout Forwarded:</strong> <span id="demo-payout-sent">495 sats</span></div>
+          <div style="display:flex;justify-content:space-between;border-bottom:1px solid #ddd;padding:4px 0"><strong>Destination Address:</strong> <span id="demo-dest-address" style="font-weight:700"></span></div>
+          <div style="padding-top:12px;font-size:11px;color:var(--muted);word-break:break-all"><strong>Payout Tx ID:</strong> <br><span id="demo-payout-hash" style="font-family:monospace"></span></div>
+        </div>
+        <button class="demo-btn" onclick="switchTab(0)" style="width:100%;margin-top:16px">Test Another Address →</button>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<section class="section">
+  <div class="label">Integration</div>
+  <h2>One simple HTTP call.</h2>
+  <div class="code-wrap">
+    <pre><span class="c-comment"># Create a 500 satoshis payment invoice</span>
+curl -X POST http://api.aipp.dev/invoice/create \
+  -H <span class="c-str">"X-AIPP-Key: aipp_merch_yourkey"</span> \
+  -d '{
+    "amount_sats": 500,
+    "callback_url": "https://yoursite.com/webhook"
+  }'
+
+<span class="c-comment"># Returns: {"payment_request": "lnbc...", "payment_hash": "..."}</span></pre>
+  </div>
+</section>
+
+<section class="section" id="pricing">
+  <div class="label">Pricing</div>
+  <h2>Flat fee. Zero friction.</h2>
+  <div class="pricing-card">
+    <div>Standard Rate</div>
+    <div class="price">1% <sub>commission</sub></div>
+    <div class="price-note">taken on payment success · no processing limits</div>
+    <ul class="features">
+      <li><span class="check">⚡</span> Settled instantly to your cüzdan</li>
+      <li><span class="check">⚡</span> Non-custodial — zero regulatory risk</li>
+      <li><span class="check">⚡</span> Min transaction: 100 sats</li>
+      <li><span class="check">⚡</span> Max transaction: 100,000 sats</li>
+      <li><span class="check">⚡</span> Zero monthly maintenance fees</li>
+    </ul>
+    <a href="#demo" class="btn btn-primary" style="display:block;text-align:center">Start Processing →</a>
+  </div>
+</section>
+
+<footer>
+  <span>© 2026 aipp.dev</span>
+  <span>
+    <a href="docs.html" style="color:var(--muted);margin-right:20px">Docs</a>
+    <a href="dashboard.html" style="color:var(--muted)">Dashboard</a>
+  </span>
+</footer>
+
+<script>
+// ── CONFIG ──────────────────────────────────────────────
+const AIPP_API = 'http://127.0.0.1:3000'; // Local AIPP backend
+
+// ── STATE ───────────────────────────────────────────────
+let currentMerchantKey = '';
+let currentLnAddress = '';
+let currentPaymentHash = '';
+let pollTimer = null;
+
+// ── TABS ────────────────────────────────────────────────
+function switchTab(i) {
+  document.querySelectorAll('.tab').forEach((t,j)=>t.classList.toggle('active',i===j));
+  document.querySelectorAll('.demo-step').forEach((s,j)=>s.classList.toggle('active',i===j));
+}
+
+// ── QR CODE GENERATOR ───────────────────────────────────
+function drawQR(canvas, text) {
+  QRCode.toCanvas(canvas, text, {
+    width: 180,
+    margin: 1,
+    color: {
+      dark: '#000000',
+      light: '#ffffff'
+    }
+  }, function(error) {
+    if (error) {
+      console.error('QR code generation failed:', error);
+    }
+  });
+}
+
+// ── REGISTER MERCHANT ───────────────────────────────────
+async function demoRegisterMerchant() {
+  const addressInput = document.getElementById('demo-ln-address').value.trim();
+  if (!addressInput || !addressInput.includes('@')) {
+    alert('Please enter a valid Lightning Address (e.g. username@domain.com)');
+    return;
+  }
+
+  try {
+    const response = await fetch(`${AIPP_API}/merchant/register`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ln_address: addressInput })
+    });
+    
+    if (!response.ok) {
+      const errData = await response.json();
+      alert('Error: ' + errData.error);
+      return;
+    }
+
+    const data = await response.json();
+    currentMerchantKey = data.api_key;
+    currentLnAddress = data.ln_address;
+
+    // Save to LocalStorage for dashboard demo usage convenience
+    localStorage.setItem('aipp_api_key', currentMerchantKey);
+    localStorage.setItem('aipp_ln_address', currentLnAddress);
+
+    alert(`🎉 Merchant Registered!\n\nYour API Key: ${currentMerchantKey}\nPayout Address: ${currentLnAddress}`);
+    switchTab(1); // Proceed to checkout tab
+  } catch (err) {
+    console.error('Failed to register merchant:', err);
+    alert('Failed to connect to AIPP backend server. Make sure it is running locally on port 3000.');
+  }
+}
+
+// ── CREATE INVOICE ──────────────────────────────────────
+async function demoCreateInvoice() {
+  if (!currentMerchantKey) {
+    alert('Please complete Step 1 (Setup Shop) first!');
+    switchTab(0);
+    return;
+  }
+
+  document.getElementById('qr-area').style.display = 'none';
+  document.getElementById('payout-result').style.display = 'none';
+
+  try {
+    const response = await fetch(`${AIPP_API}/invoice/create`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-AIPP-Key': currentMerchantKey
+      },
+      body: JSON.stringify({ amount_sats: 500 })
+    });
+
+    if (!response.ok) {
+      const errData = await response.json();
+      alert('Error: ' + errData.error);
+      return;
+    }
+
+    const data = await response.json();
+    const invoice = data.payment_request;
+    currentPaymentHash = data.payment_hash;
+
+    // Truncate invoice text display
+    const strEl = document.getElementById('invoice-str');
+    strEl.textContent = invoice.slice(0, 28) + '...' + invoice.slice(-28);
+    strEl.dataset.full = invoice;
+
+    // Draw QR Code
+    const canvas = document.getElementById('qr-canvas');
+    drawQR(canvas, invoice);
+
+    document.getElementById('qr-area').style.display = 'block';
+    document.getElementById('pay-status').textContent = 'Waiting for payment...';
+    document.getElementById('pay-dot').className = 'dot pending';
+
+    switchTab(2); // Proceed to Payout status tab
+
+    // Poll for payment
+    if (pollTimer) clearInterval(pollTimer);
+    pollTimer = setInterval(() => checkPayment(currentPaymentHash), 2000);
+  } catch (err) {
+    console.error('Failed to create invoice:', err);
+    alert('Failed to connect to AIPP backend to generate invoice.');
+  }
+}
+
+// ── POLL PAYMENT ────────────────────────────────────────
+async function checkPayment(hash) {
+  try {
+    const response = await fetch(`${AIPP_API}/confirm/${hash}`);
+    const data = await response.json();
+    if (data.paid) {
+      clearInterval(pollTimer);
+      onPaymentConfirmed(hash);
+    }
+  } catch (err) {}
+}
+
+// ── ON PAYMENT CONFIRMED ───────────────────────────────
+function onPaymentConfirmed(hash) {
+  document.getElementById('pay-dot').className = 'dot paid';
+  document.getElementById('pay-status').textContent = 'Paid! Forwarding payout...';
+
+  setTimeout(() => {
+    document.getElementById('qr-area').style.display = 'none';
+    
+    // Fill payout details
+    document.getElementById('demo-dest-address').textContent = currentLnAddress;
+    
+    // Fake payout transaction hash for visual display if local mock payout occurred
+    const payoutHash = hash.replace('demo_', 'tx_forwarded_');
+    document.getElementById('demo-payout-hash').textContent = payoutHash;
+
+    document.getElementById('payout-result').style.display = 'block';
+  }, 1000);
+}
+
+// ── COPY INVOICE ────────────────────────────────────────
+function copyInvoice() {
+  const txt = document.getElementById('invoice-str').dataset.full;
+  navigator.clipboard.writeText(txt).then(() => {
+    document.getElementById('invoice-str').textContent = '✓ Copied!';
+    setTimeout(() => {
+      document.getElementById('invoice-str').textContent = txt.slice(0, 28) + '...' + txt.slice(-28);
+    }, 1500);
+  });
+}
+</script>
+</body>
+</html>

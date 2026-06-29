@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>aipp.dev — Developer Documentation</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap');
+  
+  *{margin:0;padding:0;box-sizing:border-box}
+  :root{
+    --bg:#a3dc21; /* Solid Lime Green matching the landing page */
+    --fg:#000000;
+    --muted:#3f3f46;
+    --accent:#000000;
+    --border:#000000;
+    --card:#ffffff;
+    --radius:16px;
+  }
+  body{
+    background:var(--bg);
+    color:var(--fg);
+    font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+    line-height:1.6;
+    -webkit-font-smoothing:antialiased;
+    min-height:100vh;
+    padding-bottom:60px;
+    overflow-x:hidden;
+  }
+  
+  header{display:flex;align-items:center;justify-content:space-between;padding:24px 40px;border-bottom:3px solid var(--border);background:#000;color:#fff;position:sticky;top:0;z-index:50}
+  .logo{font-family: 'Space Grotesk', sans-serif;font-weight:900;font-size:22px;letter-spacing:-.8px;text-decoration:none;color:#000;background:#fff;border:3px solid #000;padding:4px 16px;border-radius:10px;box-shadow:3px 3px 0px #000;transition:all 0.2s}
+  .logo:hover{transform:translate(-2px,-2px);box-shadow:5px 5px 0px #000}
+  .logo span{color:#a3dc21; -webkit-text-stroke: 1px #000;}
+  .nav-btn{background:#fff;color:#000;border:3px solid #000;padding:8px 20px;border-radius:20px;font-size:13px;font-weight:800;cursor:pointer;text-decoration:none;box-shadow:2px 2px 0px #000;transition:all .15s}
+  .nav-btn:hover{transform:translate(-2px,-2px);box-shadow:4px 4px 0px #000}
+  .nav-btn:active{transform:translate(1px,1px);box-shadow:1px 1px 0px #000}
+
+  .layout{max-width:1100px;margin:0 auto;display:grid;grid-template-columns:250px 1fr;gap:40px;padding:40px 20px}
+  @media(max-width:800px){ .layout{grid-template-columns:1fr;padding:20px} }
+
+  /* SIDEBAR */
+  aside{position:sticky;top:120px;height:fit-content}
+  @media(max-width:800px){ aside{position:static;margin-bottom:20px} }
+  aside h4{font-family: 'Space Grotesk', sans-serif;font-size:11px;text-transform:uppercase;color:var(--fg);letter-spacing:1px;margin-bottom:12px;font-weight:900}
+  aside ul{list-style:none;margin-bottom:24px}
+  aside li{margin-bottom:8px}
+  aside a{color:var(--muted);text-decoration:none;font-size:14px;transition:all .15s;display:block;padding:4px 0;font-weight:700}
+  aside a:hover, aside a.active{color:#000;font-weight:900;padding-left:4px;border-left:3px solid #000}
+
+  /* CONTENT */
+  main{min-width:0}
+  section{margin-bottom:60px;scroll-margin-top:120px}
+  h1{font-family: 'Space Grotesk', sans-serif;font-size:38px;font-weight:900;letter-spacing:-1.8px;margin-bottom:12px;text-transform:uppercase}
+  h2{font-family: 'Space Grotesk', sans-serif;font-size:26px;font-weight:800;letter-spacing:-1.2px;margin-top:40px;margin-bottom:16px;padding-bottom:8px;border-bottom:3px solid var(--border);text-transform:uppercase}
+  p{color:var(--muted);font-size:15px;margin-bottom:20px;line-height:1.7;font-weight:500}
+  
+  /* CODE BLOCKS WITH MAC LAYOUT */
+  .code-block{background:#16161a;border:3px solid #000;border-radius:var(--radius);margin:24px 0;position:relative;overflow:hidden;box-shadow:4px 4px 0px #000;transition:transform 0.2s}
+  .code-block:hover{transform:translate(-2px,-2px);box-shadow:6px 6px 0px #000}
+  .code-header{display:flex;justify-content:space-between;align-items:center;background:#1b1b1f;padding:10px 16px 10px 48px;border-bottom:3px solid var(--border);font-size:11px;color:#a1a1aa;font-family:monospace;font-weight:700;position:relative}
+  .code-header::before{
+    content:'';
+    position:absolute;
+    top:14px;
+    left:16px;
+    width:26px;
+    height:8px;
+    background:radial-gradient(circle, #ff5f56 0%, #ff5f56 25%, #ffbd2e 26%, #ffbd2e 50%, #27c93f 51%, #27c93f 75%, transparent 76%);
+    background-size:9px 8px;
+    opacity:0.8;
+  }
+  .copy-btn{background:#000;color:#a3dc21;border:2px solid #a3dc21;cursor:pointer;font-size:11px;padding:3px 10px;border-radius:4px;font-weight:800;transition:all .15s}
+  .copy-btn:hover{background:#a3dc21;color:#000}
+  pre{font-family:'Fira Code', 'JetBrains Mono', monospace;font-size:13px;line-height:1.6;color:#e5e7eb;padding:18px;overflow-x:auto}
+  
+  .c-comment{color:#6b7280}
+  .c-key{color:#93c5fd}
+  .c-str{color:#fcd34d}
+  .c-num{color:#fca5a5}
+
+  /* INFO ALERTS */
+  .alert{background:var(--card);border:3px solid var(--border);border-left:8px solid #000;border-radius:var(--radius);padding:20px;margin:24px 0;box-shadow:4px 4px 0px #000;color:#000;transition:transform 0.2s}
+  .alert:hover{transform:translate(-2px,-2px);box-shadow:6px 6px 0px #000}
+  .alert-title{font-weight:900;margin-bottom:6px;color:#000;text-transform:uppercase;font-size:12px;letter-spacing:0.5px}
+  .alert-body{color:var(--muted);line-height:1.6;font-size:14px;font-weight:600}
+
+  footer{text-align:center;padding:40px;color:var(--muted);font-size:12px;border-top:3px solid var(--border);margin-top:80px;font-weight:700}
+</style>
+</head>
+<body>
+
+<header>
+  <a href="index.html" class="logo">aipp<span>.</span>dev</a>
+  <div>
+    <a href="dashboard.html" class="nav-btn">Dashboard ⚡</a>
+  </div>
+</header>
+
+<div class="layout">
+  
+  <!-- LEFT SIDEBAR -->
+  <aside>
+    <h4>Getting Started</h4>
+    <ul>
+      <li><a href="#intro" class="active" onclick="activateLink(this)">Introduction</a></li>
+      <li><a href="#register" onclick="activateLink(this)">Merchant Register</a></li>
+      <li><a href="#invoice-create" onclick="activateLink(this)">Create Invoice</a></li>
+      <li><a href="#webhooks" onclick="activateLink(this)">Webhook Callbacks</a></li>
+      <li><a href="#status-poll" onclick="activateLink(this)">Polling Status</a></li>
+    </ul>
+    <h4 style="margin-top:24px">Code Snippets</h4>
+    <ul>
+      <li><a href="#python-example" onclick="activateLink(this)">Python Integration</a></li>
+      <li><a href="#node-example" onclick="activateLink(this)">Node.js Integration</a></li>
+    </ul>
+  </aside>
+
+  <!-- MAIN DOCUMENTATION -->
+  <main>
+    
+    <!-- INTRODUCTION -->
+    <section id="intro">
+      <h1>Developer Documentation</h1>
+      <p>aipp.dev is a high-performance, non-custodial **Bitcoin Lightning split-payment gateway** built for online shops, digital services, and autonomous AI agents. By integrating our gateway, you can accept Lightning payments from customers and route payouts directly to your own wallet in real-time, paying only a flat **1% fee**.</p>
+      
+      <div class="alert">
+        <div class="alert-title">💡 Pure Non-Custodial Flow</div>
+        <div class="alert-body">AIPP does not custody or hold your earnings. Payments are programmatically split on-the-fly and routed to your destination wallet (via Lightning Address) in miliseconds.</div>
+      </div>
+    </section>
+
+    <!-- MERCHANT REGISTRATION -->
+    <section id="register">
+      <h2>1. Merchant Registration</h2>
+      <p>To register your shop or service, send a POST request with your destination Lightning Address. You will instantly receive your Merchant API Key:</p>
+      
+      <div class="code-block">
+        <div class="code-header">HTTP POST /merchant/register <button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+        <pre><code>curl -X POST http://localhost:3000/merchant/register \
+  -H "Content-Type: application/json" \
+  -d '{
+    "ln_address": "mehmet@phoenixwallet.me"
+  }'</code></pre>
+      </div>
+
+      <p><strong>Response format:</strong></p>
+      <div class="code-block">
+        <div class="code-header">JSON Response <button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+        <pre><code>{
+  "api_key": "aipp_merch_72a391fbce",
+  "ln_address": "mehmet@phoenixwallet.me"
+}</code></pre>
+      </div>
+    </section>
+
+    <!-- CREATE INVOICE -->
+    <section id="invoice-create">
+      <h2>2. Create Invoice</h2>
+      <p>To charge a customer, call the invoice creation endpoint. Invoices must be between **100 satoshis** and **100,000 satoshis**:</p>
+      
+      <div class="code-block">
+        <div class="code-header">HTTP POST /invoice/create <button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+        <pre><code>curl -X POST http://localhost:3000/invoice/create \
+  -H "Content-Type: application/json" \
+  -H "X-AIPP-Key: aipp_merch_72a391fbce" \
+  -d '{
+    "amount_sats": 500,
+    "callback_url": "https://yourshop.com/webhook/aipp"
+  }'</code></pre>
+      </div>
+
+      <p><strong>Response format:</strong></p>
+      <div class="code-block">
+        <div class="code-header">JSON Response <button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+        <pre><code>{
+  "payment_request": "lnbc5u1p4y...",
+  "payment_hash": "e93fca1029ab8..."
+}</code></pre>
+      </div>
+    </section>
+
+    <!-- WEBHOOKS -->
+    <section id="webhooks">
+      <h2>3. Webhook Callbacks</h2>
+      <p>When the customer pays the Lightning invoice, AIPP automatically splits the payment, sends 99% of the amount to your Lightning Address, and fires a POST notification to your specified <code>callback_url</code>:</p>
+      
+      <div class="code-block">
+        <div class="code-header">Webhook POST Payload <button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+        <pre><code>{
+  "payment_hash": "e93fca1029ab8...",
+  "amount_sats": 500,
+  "forwarded_amount_sats": 495,
+  "status": "settled"
+}</code></pre>
+      </div>
+    </section>
+
+    <!-- POLLING STATUS -->
+    <section id="status-poll">
+      <h2>4. Polling Payout Status</h2>
+      <p>You can also poll the status of any invoice from the frontend using the payment hash:</p>
+      
+      <div class="code-block">
+        <div class="code-header">HTTP GET /confirm/:hash <button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+        <pre><code>curl http://localhost:3000/confirm/e93fca1029ab8...</code></pre>
+      </div>
+
+      <p><strong>Response format:</strong></p>
+      <div class="code-block">
+        <div class="code-header">JSON Response <button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+        <pre><code>{
+  "paid": true,
+  "status": "settled"
+}</code></pre>
+      </div>
+    </section>
+
+    <!-- PYTHON RECIPE -->
+    <section id="python-example">
+      <h2>Python Integration Example</h2>
+      <p>Complete backend Python code to generate a payment request and handle callbacks:</p>
+      
+      <div class="code-block">
+        <div class="code-header">Python <button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+        <pre><code>import requests
+
+aipp_key = "aipp_merch_72a391fbce"
+
+def create_checkout_session(amount_sats, order_id):
+    url = "http://localhost:3000/invoice/create"
+    headers = {
+        "X-AIPP-Key": aipp_key,
+        "Content-Type": "application/json"
+    }
+    payload = {
+        "amount_sats": amount_sats,
+        "callback_url": f"https://myonlinebuttique.com/webhook?order={order_id}"
+    }
+    response = requests.post(url, json=payload, headers=headers)
+    return response.json() # Returns {"payment_request": "lnbc...", "payment_hash": "..."}</code></pre>
+      </div>
+    </section>
+
+    <!-- NODE RECIPE -->
+    <section id="node-example">
+      <h2>Node.js Integration Example</h2>
+      <p>Complete Node.js / Express snippet to generate invoices and poll payout status:</p>
+      
+      <div class="code-block">
+        <div class="code-header">Node.js / Express <button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+        <pre><code>const axios = require('axios');
+
+async function getInvoice(sats) {
+  const response = await axios.post('http://localhost:3000/invoice/create', {
+    amount_sats: sats,
+    callback_url: 'https://myshop.com/payout-webhook'
+  }, {
+    headers: { 'X-AIPP-Key': 'aipp_merch_72a391fbce' }
+  });
+  return response.data; // { payment_request, payment_hash }
+}
+
+async function checkStatus(hash) {
+  const response = await axios.get(`http://localhost:3000/confirm/${hash}`);
+  return response.data; // { paid: true, status: 'settled' }
+}</code></pre>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<footer>
+  <p>© 2026 aipp.dev · Built for AI Agents</p>
+</footer>
+
+<script>
+function activateLink(el) {
+  document.querySelectorAll('aside a').forEach(a => a.classList.remove('active'));
+  el.classList.add('active');
+}
+
+function copyCode(btn) {
+  const pre = btn.parentElement.nextElementSibling;
+  const code = pre.textContent;
+  navigator.clipboard.writeText(code).then(() => {
+    btn.textContent = '✓ Copied!';
+    setTimeout(() => btn.textContent = 'Copy', 1500);
+  });
+}
+</script>
+</body>
+</html>

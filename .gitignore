@@ -1,0 +1,10 @@
+node_modules/
+.env
+*.db
+*.log
+.DS_Store
+*.jpg
+*.jpeg
+*.png
+*.gif
+*.ico

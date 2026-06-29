@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>aipp.dev — Developer Dashboard</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style> @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap');
+  
+  *{margin:0;padding:0;box-sizing:border-box}
+  :root{
+    --bg:#a3dc21; /* Solid Lime Green matching the landing page */
+    --fg:#000000;
+    --muted:#3f3f46;
+    --accent:#000000;
+    --border:#000000;
+    --card:#ffffff;
+    --success:#16803d;
+    --danger:#ef4444;
+    --radius:16px;
+  }
+  body{
+    background:var(--bg);
+    color:var(--fg);
+    font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+    line-height:1.6;
+    -webkit-font-smoothing:antialiased;
+    min-height:100vh;
+    display:flex;
+    flex-direction:column;
+    padding-bottom:60px;
+    overflow-x:hidden;
+  }
+  
+  header{display:flex;align-items:center;justify-content:space-between;padding:24px 40px;border-bottom:3px solid var(--border);background:#000;color:#fff;position:sticky;top:0;z-index:50}
+  .logo{font-family: 'Space Grotesk', sans-serif;font-weight:900;font-size:22px;letter-spacing:-.8px;text-decoration:none;color:#000;background:#fff;border:3px solid #000;padding:4px 16px;border-radius:10px;box-shadow:3px 3px 0px #000;transition:all 0.2s}
+  .logo:hover{transform:translate(-2px,-2px);box-shadow:5px 5px 0px #000}
+  .logo span{color:#a3dc21; -webkit-text-stroke: 1px #000;}
+  .nav-btn{background:#fff;color:#000;border:3px solid #000;padding:8px 20px;border-radius:20px;font-size:13px;font-weight:800;cursor:pointer;text-decoration:none;box-shadow:2px 2px 0px #000;transition:all .15s}
+  .nav-btn:hover{transform:translate(-2px,-2px);box-shadow:4px 4px 0px #000}
+  .nav-btn:active{transform:translate(1px,1px);box-shadow:1px 1px 0px #000}
+
+  .container{max-width:1100px;width:100%;margin:0 auto;padding:40px 20px;flex:1}
+
+  /* LOGIN VIEW */
+  .login-wrap{max-width:420px;margin:100px auto 0;background:var(--card);border:3px solid var(--border);border-radius:var(--radius);padding:40px;text-align:center;box-shadow:5px 5px 0px #000;transition:transform 0.2s}
+  .login-wrap:hover{transform:translate(-2px,-2px);box-shadow:7px 7px 0px #000}
+  .login-wrap h1{font-family: 'Space Grotesk', sans-serif;font-size:26px;font-weight:900;margin-bottom:8px;letter-spacing:-1.2px;text-transform:uppercase}
+  .login-wrap p{color:var(--muted);font-size:14px;margin-bottom:24px;font-weight:500}
+  .login-input{width:100%;background:#fff;border:3px solid var(--border);border-radius:8px;padding:12px 16px;color:var(--fg);font-family:monospace;font-size:14px;outline:none;margin-bottom:20px;text-align:center;font-weight:700;box-shadow:2px 2px 0px #000;transition:all 0.2s}
+  .login-input:focus{border-color:#000;box-shadow:3px 3px 0px #a3dc21}
+  
+  .btn-primary{background:#000;color:#a3dc21;border:3px solid #000;border-radius:8px;padding:14px 24px;font-weight:800;font-size:14px;cursor:pointer;width:100%;box-shadow:3px 3px 0px #fff;transition:transform 0.15s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.15s cubic-bezier(0.34, 1.56, 0.64, 1)}
+  .btn-primary:hover{transform:translate(-2px,-2px);box-shadow:5px 5px 0px #fff}
+  .btn-primary:active{transform:translate(2px,2px);box-shadow:1px 1px 0px #fff}
+
+  /* DASHBOARD VIEW */
+  .dashboard-view{display:none}
+  .dashboard-view.active{display:block;animation:fadeInUp 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards}
+
+  @keyframes fadeInUp {
+    from{opacity:0;transform:translateY(10px)}
+    to{opacity:1;transform:translateY(0)}
+  }
+
+  .stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:24px;margin-bottom:30px}
+  .stat-card{background:var(--card);border:3px solid var(--border);border-radius:var(--radius);padding:24px;position:relative;overflow:hidden;box-shadow:4px 4px 0px #000;color:#000;transition:transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.25s cubic-bezier(0.34, 1.56, 0.64, 1)}
+  .stat-card:hover{transform:translate(-4px,-4px);box-shadow:8px 8px 0px #000}
+  
+  .stat-card .label{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;font-weight:800}
+  .stat-card .val{font-family: 'Space Grotesk', sans-serif;font-size:32px;font-weight:900;letter-spacing:-1.5px}
+  .stat-card .val sub{font-size:14px;font-weight:400;color:var(--muted)}
+  .stat-card .footer{font-size:12px;color:var(--muted);margin-top:12px;display:flex;align-items:center;justify-content:space-between;font-weight:700}
+  .progress-bg{width:100%;height:10px;background:#f3f4f6;border:2px solid #000;border-radius:6px;margin-top:8px;overflow:hidden}
+  .progress-bar{height:100%;background:#000;border-radius:2px;width:0%;transition:width .4s}
+
+  .grid-two-col{display:grid;grid-template-columns:2fr 1fr;gap:24px;margin-bottom:30px}
+  @media(max-width:900px){ .grid-two-col{grid-template-columns:1fr} }
+
+  .chart-card{background:var(--card);border:3px solid var(--border);border-radius:var(--radius);padding:24px;box-shadow:4px 4px 0px #000;color:#000;transition:transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.25s cubic-bezier(0.34, 1.56, 0.64, 1)}
+  .chart-card:hover{transform:translate(-2px,-2px);box-shadow:6px 6px 0px #000}
+  .chart-card h3{font-family: 'Space Grotesk', sans-serif;font-size:18px;font-weight:800;margin-bottom:20px;text-transform:uppercase;letter-spacing:-0.5px}
+  .chart-container{position:relative;height:240px;width:100%}
+
+  .ledger-card{background:var(--card);border:3px solid var(--border);border-radius:var(--radius);padding:24px;margin-top:30px;box-shadow:4px 4px 0px #000;color:#000}
+  .ledger-card h3{font-family: 'Space Grotesk', sans-serif;font-size:18px;font-weight:800;margin-bottom:20px;text-transform:uppercase;letter-spacing:-0.5px}
+  .table-wrap{overflow-x:auto}
+  table{width:100%;border-collapse:collapse;text-align:left;font-size:13px}
+  th{color:#000;font-weight:900;padding:12px;border-bottom:3px solid var(--border);text-transform:uppercase;font-size:11px;letter-spacing:0.5px}
+  td{padding:12px;border-bottom:2px solid #f3f4f6;font-weight:700}
+  tr:last-child td{border-bottom:none}
+  .badge-type{display:inline-block;padding:2px 8px;border-radius:4px;font-size:10px;font-weight:800;text-transform:uppercase;border:2px solid #000}
+  .badge-type.settled{background:#dcfce7;color:var(--success);border-color:var(--success)}
+  .badge-type.pending{background:#fef3c7;color:#d97706;border-color:#d97706}
+  .badge-type.pending_threshold{background:#e0f2fe;color:#0284c7;border-color:#0284c7}
+  .badge-type.forward_failed{background:#fee2e2;color:var(--danger);border-color:var(--danger)}
+  
+  .sats-val{font-family:monospace;font-weight:900;font-size:14px}
+  .sats-val.negative{color:#ef4444}
+  .sats-val.positive{color:var(--success)}
+
+  footer{text-align:center;padding:40px;color:#000;font-size:12px;border-top:3px solid var(--border);font-weight:700;max-width:1100px;margin:80px auto 0}
+</style>
+<script src="https://cdn.jsdelivr.net/npm/qrcode@1.4.4/build/qrcode.min.js"></script>
+</head>
+<body>
+
+<header>
+  <a href="index.html" class="logo">aipp<span>.</span>dev</a>
+  <div style="display:flex;align-items:center;gap:12px">
+    <a href="docs.html" class="nav-btn" style="text-decoration:none;display:inline-block">Docs</a>
+    <button class="nav-btn" id="logout-btn" style="display:none" onclick="logout()">Logout</button>
+  </div>
+</header>
+
+<div class="container">
+
+  <!-- PASSWORDLESS LOGIN VIEW -->
+  <div id="login-view" class="login-wrap">
+    <h1>Access your Wallet</h1>
+    <p>Enter your AIPP API Key to load your real-time developer statistics and wallet balance.</p>
+    <input type="text" id="aipp-key-input" class="login-input" placeholder="aipp_xxxxxxxxxxxxxxxx" autocomplete="off">
+    <button onclick="login()" class="btn-primary">Enter Dashboard →</button>
+    <div style="font-size:12px;color:var(--muted);margin-top:16px">Don't have a key? Go to <a href="aipp (1).html#demo" style="color:var(--accent)">Home</a> to create one.</div>
+  </div>
+
+  <!-- MAIN DASHBOARD VIEW -->
+  <div id="dashboard-view" class="dashboard-view">
+    
+    <!-- Active API Key Display -->
+    <div style="background:#fff;border:3px solid #000;padding:12px 16px;box-shadow:4px 4px 0px #000;border-radius:var(--radius);margin-bottom:24px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px">
+      <div style="font-size:14px;color:#000">
+        <strong>Active API Key:</strong> 
+        <code id="display-api-key" style="background:#f3f4f6;padding:6px 10px;border-radius:4px;font-family:monospace;font-weight:900;margin-left:6px;border:1px solid #ddd">aipp_...</code>
+      </div>
+      <button class="nav-btn" onclick="copyActiveKey(this)" style="padding:6px 12px;font-size:12px;font-weight:bold;background:#fff;cursor:pointer">Copy Key 📋</button>
+    </div>
+
+    <!-- STATS ROW -->
+    <div class="stats-grid">
+      <!-- Volume Routed Card -->
+      <div class="stat-card">
+        <div class="label notranslate" translate="no">Volume Routed</div>
+        <div class="val notranslate" translate="no" id="volume-val">— <sub>sats</sub></div>
+        <div class="footer">
+          <span id="merchant-ln-address" style="font-weight:700">Destination: —</span>
+        </div>
+      </div>
+      
+      <!-- Commission Card -->
+      <div class="stat-card">
+        <div class="label notranslate" translate="no">AIPP Commission (1%)</div>
+        <div class="val notranslate" translate="no" id="commission-val">— <sub>sats</sub></div>
+        <div class="footer">
+          <span>Total platform fees paid</span>
+        </div>
+      </div>
+
+      <!-- Transactions Card -->
+      <div class="stat-card">
+        <div class="label notranslate" translate="no">Transactions Routed</div>
+        <div class="val notranslate" translate="no" id="tx-count-val">0</div>
+        <div class="footer">
+          <span style="color:var(--success)" id="key-active-dot">● Active Merchant Gateway</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- GRAPH PANEL -->
+    <div class="chart-card">
+      <h3>Last 7 Days Usage</h3>
+      <div class="chart-container">
+        <canvas id="usageChart"></canvas>
+      </div>
+    </div>
+
+    <!-- TRANSACTION LEDGER -->
+    <div class="ledger-card">
+      <h3>Transaction History & Ledger</h3>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Date & Time (UTC)</th>
+              <th>Payment Hash</th>
+              <th>Status</th>
+              <th>Split Details</th>
+              <th>Total Paid</th>
+            </tr>
+          </thead>
+          <tbody id="ledger-body">
+            <tr>
+              <td colspan="5" style="text-align:center;color:var(--muted);padding:24px">Loading transactions...</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<footer>
+  <p>© 2026 aipp.dev · Built for AI Agents</p>
+</footer>
+
+<script>
+// ── CONFIG ──────────────────────────────────────────────
+const AIPP_API = 'http://localhost:3000'; // Target local API
+
+// ── STATE ───────────────────────────────────────────────
+let activeKey = '';
+let pollTimer = null;
+let usageChart = null;
+
+// On load, check LocalStorage
+window.addEventListener('DOMContentLoaded', () => {
+  const savedKey = localStorage.getItem('aipp_api_key');
+  if (savedKey) {
+    activeKey = savedKey;
+    document.getElementById('aipp-key-input').value = savedKey;
+    showDashboard();
+  }
+});
+
+// QR Code utility
+function drawQR(canvas, text) {
+  QRCode.toCanvas(canvas, text, {
+    width: 160,
+    margin: 1,
+    color: {
+      dark: '#000000',
+      light: '#ffffff'
+    }
+  }, function(error) {
+    if (error) {
+      console.error('QR code generation failed:', error);
+    }
+  });
+}
+
+// ── LOGIN / LOGOUT ──────────────────────────────────────
+function login() {
+  const val = document.getElementById('aipp-key-input').value.trim();
+  if (!val.startsWith('aipp_')) {
+    alert('Please enter a valid AIPP API key starting with aipp_');
+    return;
+  }
+  activeKey = val;
+  localStorage.setItem('aipp_api_key', val);
+  showDashboard();
+}
+
+function logout() {
+  activeKey = '';
+  localStorage.removeItem('aipp_api_key');
+  if(pollTimer) clearInterval(pollTimer);
+  document.getElementById('aipp-key-input').value = '';
+  document.getElementById('login-view').style.display = 'block';
+  document.getElementById('dashboard-view').classList.remove('active');
+  document.getElementById('logout-btn').style.display = 'none';
+}
+
+// ── LOAD DASHBOARD DATA ─────────────────────────────────
+async function showDashboard() {
+  document.getElementById('login-view').style.display = 'none';
+  document.getElementById('dashboard-view').classList.add('active');
+  document.getElementById('logout-btn').style.display = 'block';
+  document.getElementById('display-api-key').textContent = activeKey;
+
+  await refreshDashboardData();
+  await loadStatsAndDrawChart();
+  await loadLedger();
+}
+
+function copyActiveKey(btn) {
+  navigator.clipboard.writeText(activeKey).then(() => {
+    const origText = btn.textContent;
+    btn.textContent = '✓ Copied!';
+    setTimeout(() => btn.textContent = origText, 1500);
+  });
+}
+
+async function refreshDashboardData() {
+  try {
+    const r = await fetch(`${AIPP_API}/merchant/stats`, {
+      headers: { 'X-AIPP-Key': activeKey }
+    });
+    if (!r.ok) {
+      if(r.status === 401 || r.status === 404) {
+        alert('Invalid API key.');
+        logout();
+        return;
+      }
+      throw new Error();
+    }
+    const d = await r.json();
+    
+    // Calculate total stats
+    const stats = d.stats || [];
+    const totalVolume = stats.reduce((acc, curr) => acc + (curr.total_volume || 0), 0);
+    const totalCommission = stats.reduce((acc, curr) => acc + (curr.total_commission || 0), 0);
+    const totalTransactions = stats.reduce((acc, curr) => acc + (curr.transactions_count || 0), 0);
+
+    // Update UI elements
+    document.getElementById('volume-val').innerHTML = `${totalVolume.toLocaleString()} <sub class="notranslate" translate="no">sats</sub>`;
+    document.getElementById('commission-val').innerHTML = `${totalCommission.toLocaleString()} <sub class="notranslate" translate="no">sats</sub>`;
+    document.getElementById('tx-count-val').textContent = totalTransactions.toLocaleString();
+    document.getElementById('merchant-ln-address').textContent = `Destination: ${d.ln_address || '—'}`;
+  } catch(e) {
+    console.error('Failed to load dashboard metrics', e);
+  }
+}
+
+async function loadLedger() {
+  try {
+    const r = await fetch(`${AIPP_API}/merchant/transactions`, {
+      headers: { 'X-AIPP-Key': activeKey }
+    });
+    const txs = await r.json();
+    const body = document.getElementById('ledger-body');
+    body.innerHTML = '';
+
+    if (txs.length === 0) {
+      body.innerHTML = `<tr><td colspan="5" style="text-align:center;color:var(--muted);padding:24px">No transactions recorded yet.</td></tr>`;
+      return;
+    }
+
+    txs.forEach(tx => {
+      const date = new Date(tx.created_at).toLocaleString();
+      const truncatedHash = tx.payment_hash.slice(0, 16) + '...';
+      const statusBadge = `<span class="badge-type ${tx.status}">${tx.status}</span>`;
+      
+      const splitDetails = `${tx.forwarded_amount_sats} forwarded / ${tx.commission_sats} fee`;
+      const amountVal = `${tx.amount_sats} sats`;
+      
+      const row = `
+        <tr>
+          <td style="color:var(--muted)">${date}</td>
+          <td style="font-family:monospace;font-size:12px" title="${tx.payment_hash}">${truncatedHash}</td>
+          <td>${statusBadge}</td>
+          <td style="font-size:13px;font-weight:700">${splitDetails}</td>
+          <td class="sats-val positive notranslate" translate="no">${amountVal}</td>
+        </tr>
+      `;
+      body.insertAdjacentHTML('beforeend', row);
+    });
+  } catch (e) {
+    console.error('Failed to load ledger', e);
+  }
+}
+
+async function loadStatsAndDrawChart() {
+  try {
+    const r = await fetch(`${AIPP_API}/merchant/stats`, {
+      headers: { 'X-AIPP-Key': activeKey }
+    });
+    const d = await r.json();
+    const data = d.stats || [];
+
+    // Parse data for Chart.js
+    const labels = [];
+    const volumeData = [];
+    const txCountData = [];
+
+    data.forEach(item => {
+      labels.push(item.date);
+      volumeData.push(item.total_volume || 0);
+      txCountData.push(item.transactions_count || 0);
+    });
+
+    // Fallback if data is empty (mock values for aesthetic preview)
+    if (data.length === 0) {
+      const today = new Date().toISOString().split('T')[0];
+      labels.push(today);
+      volumeData.push(0);
+      txCountData.push(0);
+    }
+
+    const ctx = document.getElementById('usageChart').getContext('2d');
+    
+    if (usageChart) {
+      usageChart.destroy();
+    }
+
+    usageChart = new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels: labels,
+        datasets: [
+          {
+            label: 'Transactions Count',
+            data: txCountData,
+            backgroundColor: '#a8f63588',
+            borderColor: '#a8f635',
+            borderWidth: 2,
+            yAxisID: 'y'
+          },
+          {
+            label: 'Volume (Sats)',
+            type: 'line',
+            data: volumeData,
+            borderColor: '#00f0ff',
+            backgroundColor: '#00f0ffaa',
+            tension: 0.2,
+            borderWidth: 3,
+            yAxisID: 'y1'
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+          x: {
+            grid: { color: '#e5e7eb' },
+            ticks: { color: '#000000', font: { weight: 'bold' } }
+          },
+          y: {
+            position: 'left',
+            grid: { color: '#e5e7eb' },
+            ticks: { color: '#000000', stepSize: 1, font: { weight: 'bold' } },
+            title: { display: true, text: 'Transactions', color: '#000000', font: { weight: 'bold' } }
+          },
+          y1: {
+            position: 'right',
+            grid: { drawOnChartArea: false },
+            ticks: { color: '#000000', font: { weight: 'bold' } },
+            title: { display: true, text: 'Sats Volume', color: '#000000', font: { weight: 'bold' } }
+          }
+        },
+        plugins: {
+          legend: {
+            labels: { color: '#000000', font: { weight: 'bold' } }
+          }
+        }
+      }
+    });
+
+  } catch(e) {
+    console.error('Failed to load chart stats', e);
+  }
+}
+function copyInvoice() {
+  const txt = document.getElementById('modal-invoice-str').dataset.full;
+  navigator.clipboard.writeText(txt).then(() => {
+    document.getElementById('modal-invoice-str').textContent = '✓ Copied!';
+    setTimeout(() => document.getElementById('modal-invoice-str').textContent = txt.slice(0, 28) + '...' + txt.slice(-28), 1500);
+  });
+}
+</script>
+</body>
+</html>
