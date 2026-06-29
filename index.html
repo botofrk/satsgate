@@ -281,17 +281,17 @@
 </section>
 
 <section class="section" id="how">
-  <div class="label">Nasıl Çalışır? (Çok Basit)</div>
-  <h2>Tıpkı kredi kartı pos cihazı gibi... Ama anında ve kripto ile!</h2>
+  <div class="label">How it works? (Simply explained)</div>
+  <h2>Like a credit card POS terminal... but instant and for crypto!</h2>
   <p style="font-size: 18px; margin-bottom: 20px; color: var(--muted); max-width: 850px; font-weight: 500;">
-    Müşteriniz size ödeme yapmak istediğinde, AIPP araya girer. Parayı alır, kendi <b>%1'lik komisyonunu</b> keser ve kalan <b>%99'luk kısmı ışık hızında doğrudan sizin cüzdanınıza yollar.</b> Biz paranızı asla tutmayız!
+    When your customer wants to pay you, AIPP acts as the routing middleman. It receives the payment, automatically deducts a <b>flat 1% fee</b>, and forwards the remaining <b>99% directly to your personal wallet at lightning speed.</b> We never hold your funds!
   </p>
   
   <div class="animated-flow">
     <div class="flow-box">
       <div class="icon">🧑‍💻</div>
-      <h3>1. Müşteri</h3>
-      <p>Ödemeyi (Örn: 100₺) Lightning ile gönderir.</p>
+      <h3>1. Customer</h3>
+      <p>Sends a Lightning payment (e.g. 10,000 sats).</p>
     </div>
     <div class="flow-arrow">
       <div class="dot-move"></div>
@@ -300,7 +300,7 @@
     <div class="flow-box aipp-box">
       <div class="icon">⚡</div>
       <h3>2. AIPP Gateway</h3>
-      <p>Anında %1 (1₺) komisyon kesilir.</p>
+      <p>Instantly deducts a 1% fee (100 sats).</p>
     </div>
     <div class="flow-arrow">
       <div class="dot-move delay"></div>
@@ -308,8 +308,22 @@
     </div>
     <div class="flow-box success-box">
       <div class="icon">🏦</div>
-      <h3>3. Sizin Cüzdanınız</h3>
-      <p>Kalan %99 (99₺) saniyeler içinde hesabınıza düşer.</p>
+      <h3>3. Your Wallet</h3>
+      <p>The remaining 99% (9,900 sats) lands in your account in milliseconds.</p>
+    </div>
+  </div>
+
+  <div style="margin-top: 60px; background:#fff; border:3px solid #000; border-radius:16px; padding:32px; box-shadow:6px 6px 0px #000;">
+    <h3 style="font-size: 22px; font-weight: 900; margin-bottom: 16px;">Wait, how do I actually use the API Key? 🔑</h3>
+    <p style="color:var(--muted); font-size:15px; font-weight:500; margin-bottom:20px;">
+      Once you register your wallet, you get a unique <code>aipp_merch_...</code> API key. You simply paste this key into your application's backend. When a user clicks "Buy" on your website, your app makes a single HTTP request using this key. AIPP returns a Lightning QR Code for your user to scan!
+    </p>
+    <div style="display:flex; gap:16px; align-items:center; flex-wrap:wrap;">
+      <div style="flex:1; background:#f3f4f6; border:2px solid #000; padding:16px; border-radius:8px; text-align:center; font-weight:700;">1. User clicks "Pay" on your site</div>
+      <div style="font-weight:900">➔</div>
+      <div style="flex:1; background:#000; color:#a3dc21; border:2px solid #000; padding:16px; border-radius:8px; text-align:center; font-weight:700;">2. Your backend calls AIPP with your Key</div>
+      <div style="font-weight:900">➔</div>
+      <div style="flex:1; background:#dcfce7; color:#15803d; border:2px solid #15803d; padding:16px; border-radius:8px; text-align:center; font-weight:700;">3. You display the generated QR code</div>
     </div>
   </div>
 </section>
@@ -329,39 +343,39 @@
 
 <!-- USE CASES -->
 <section class="section" id="use-cases" style="background:#fff;border-top:3px solid #000">
-  <div class="label">Kullanım Alanları</div>
-  <h2>Herkes için anında ödeme alma yöntemi.</h2>
+  <div class="label">Use Cases</div>
+  <h2>An instant checkout method for everyone.</h2>
   <div class="use-case-grid">
     
     <div class="uc-card">
-      <img src="usecase_ecommerce_1782748856926.jpg" alt="E-Ticaret">
+      <img src="usecase_ecommerce_1782748856926.jpg" alt="E-Commerce">
       <div class="uc-content">
-        <h3>🛍️ E-Ticaret ve Online Satış</h3>
-        <p>E-kitap, yazılım, oyun pini veya fiziksel ürün satın. Stripe veya PayPal bağlamak için haftalarca onay beklemeyin. 3 saniyede cüzdanınızı bağlayıp ödeme almaya başlayın.</p>
+        <h3>🛍️ E-Commerce & Online Sales</h3>
+        <p>Sell e-books, software, game pins, or physical goods. Don't wait weeks for Stripe or PayPal approval. Connect your wallet in 3 seconds and start accepting payments immediately.</p>
       </div>
     </div>
 
     <div class="uc-card">
-      <img src="usecase_ai_agents_1782748866463.jpg" alt="Yapay Zeka Ajanları">
+      <img src="usecase_ai_agents_1782748866463.jpg" alt="AI Agents">
       <div class="uc-content">
-        <h3>🤖 Otonom Yapay Zeka Ajanları</h3>
-        <p>Yapay zeka asistanınıza bir cüzdan verin. Sizin adınıza internette araştırma yapıp rapor sattığında ödemesini otonom olarak tahsil edebilsin.</p>
+        <h3>🤖 Autonomous AI Agents</h3>
+        <p>Give your AI assistant its own wallet. When it researches the web and sells a report on your behalf, it can autonomously collect the payment directly to your account.</p>
       </div>
     </div>
 
     <div class="uc-card">
-      <img src="usecase_apis_1782748873859.jpg" alt="API Ödemeleri">
+      <img src="usecase_apis_1782748873859.jpg" alt="APIs">
       <div class="uc-content">
-        <h3>🔑 Kullandıkça Öde (Pay-Per-Use) API'ler</h3>
-        <p>Kullanıcılarınızı aylık abonelik paketlerine zorlamayın. Geliştirdiğiniz yazılıma her istek attıklarında sadece kullandıkları kadar (örn: 10 kuruş) anında ödeme yapsınlar.</p>
+        <h3>🔑 Pay-Per-Use APIs</h3>
+        <p>Don't force your users into monthly subscription tiers. Let them pay instantly for exactly what they use (e.g., $0.01 per request) without recurring credit card charges.</p>
       </div>
     </div>
 
     <div class="uc-card">
-      <img src="usecase_micropayments_1782748883164.jpg" alt="Mikro Ödemeler">
+      <img src="usecase_micropayments_1782748883164.jpg" alt="Micropayments">
       <div class="uc-content">
-        <h3>📰 Mikro Ödemeler (Bahşiş / İçerik)</h3>
-        <p>Sitenizdeki tek bir premium makaleyi okumak için 1 TL'lik ödeme duvarı (paywall) koyun. Kredi kartı komisyonları 1 TL'yi kurtarmaz, ancak AIPP ile bu mümkün!</p>
+        <h3>📰 Micropayments & Paywalls</h3>
+        <p>Put a $0.10 paywall on a single premium article on your blog. Credit card fees make this impossible, but with AIPP's Lightning integration, micropayments are a reality!</p>
       </div>
     </div>
 
