@@ -185,9 +185,48 @@
     gap: 24px;
     margin-top: 30px;
   }
+  .uc-card {
+    background:#fff;border:3px solid #000;border-radius:var(--radius);
+    box-shadow:4px 4px 0px #000;overflow:hidden;text-align:left;
+    transition:transform 0.25s, box-shadow 0.25s;
+  }
+  .uc-card:hover { transform:translate(-4px,-4px); box-shadow:8px 8px 0px #000; }
+  .uc-card img { width:100%; height:200px; object-fit:cover; border-bottom:3px solid #000; }
+  .uc-content { padding:24px; }
+  .uc-content h3 { font-size:18px; font-weight:900; margin-bottom:8px; color:#000; }
+  .uc-content p { color:var(--muted); font-size:14px; line-height:1.6; font-weight:600; }
   @media(max-width: 800px) {
-    .use-case-grid {
-      grid-template-columns: 1fr;
+    .use-case-grid { grid-template-columns: 1fr; }
+  }
+  
+  /* ANIMATED FLOW DIAGRAM */
+  .animated-flow { display:flex; align-items:center; justify-content:space-between; gap:16px; margin-top:24px; padding:20px; flex-wrap:wrap; }
+  .flow-box { flex:1; background:var(--card); border:3px solid #000; border-radius:12px; padding:24px; text-align:center; box-shadow:5px 5px 0px #000; min-width:200px; }
+  .flow-box.aipp-box { background:#000; color:#fff; box-shadow:5px 5px 0px #a3dc21; }
+  .flow-box.aipp-box h3 { color:#a3dc21; }
+  .flow-box.aipp-box p { color:#ccc; }
+  .flow-box.success-box { background:#dcfce7; border-color:#15803d; box-shadow:5px 5px 0px #15803d; }
+  .flow-box.success-box h3 { color:#15803d; }
+  .flow-box .icon { font-size:40px; margin-bottom:12px; }
+  .flow-box h3 { font-size:18px; font-weight:900; margin-bottom:8px; }
+  .flow-box p { font-size:13px; font-weight:600; color:var(--muted); line-height:1.5; }
+  .flow-arrow { font-size:24px; font-weight:900; color:#000; position:relative; display:flex; align-items:center; justify-content:center; }
+  .dot-move { position:absolute; width:12px; height:12px; background:#ef4444; border-radius:50%; border:2px solid #000; animation:moveDot 2s infinite linear; }
+  .dot-move.delay { background:#22c55e; animation-delay:1s; }
+  @keyframes moveDot {
+    0% { transform:translateX(-30px); opacity:0; }
+    20% { opacity:1; }
+    80% { opacity:1; }
+    100% { transform:translateX(30px); opacity:0; }
+  }
+  @media(max-width: 800px) {
+    .animated-flow { flex-direction:column; gap:32px; }
+    .flow-arrow { transform:rotate(90deg); }
+    @keyframes moveDot {
+      0% { transform:translateX(-20px); opacity:0; }
+      20% { opacity:1; }
+      80% { opacity:1; }
+      100% { transform:translateX(20px); opacity:0; }
     }
   }
   
@@ -242,23 +281,35 @@
 </section>
 
 <section class="section" id="how">
-  <div class="label">How it works</div>
-  <h2>Three steps, completely non-custodial.</h2>
-  <div class="steps">
-    <div class="step">
-      <div class="step-num">01</div>
-      <h3>Enter your Wallet</h3>
-      <p>Provide your personal Lightning Address. No signups, no KYC, no approvals.</p>
+  <div class="label">Nasıl Çalışır? (Çok Basit)</div>
+  <h2>Tıpkı kredi kartı pos cihazı gibi... Ama anında ve kripto ile!</h2>
+  <p style="font-size: 18px; margin-bottom: 20px; color: var(--muted); max-width: 850px; font-weight: 500;">
+    Müşteriniz size ödeme yapmak istediğinde, AIPP araya girer. Parayı alır, kendi <b>%1'lik komisyonunu</b> keser ve kalan <b>%99'luk kısmı ışık hızında doğrudan sizin cüzdanınıza yollar.</b> Biz paranızı asla tutmayız!
+  </p>
+  
+  <div class="animated-flow">
+    <div class="flow-box">
+      <div class="icon">🧑‍💻</div>
+      <h3>1. Müşteri</h3>
+      <p>Ödemeyi (Örn: 100₺) Lightning ile gönderir.</p>
     </div>
-    <div class="step">
-      <div class="step-num">02</div>
-      <h3>Create an Invoice</h3>
-      <p>Use your AIPP key to generate client invoices (100 to 100,000 sats).</p>
+    <div class="flow-arrow">
+      <div class="dot-move"></div>
+      ➔
     </div>
-    <div class="step">
-      <div class="step-num">03</div>
-      <h3>Instant Split Forward</h3>
-      <p>Customer pays. 1% commission is kept; 99% lands in your wallet instantly.</p>
+    <div class="flow-box aipp-box">
+      <div class="icon">⚡</div>
+      <h3>2. AIPP Gateway</h3>
+      <p>Anında %1 (1₺) komisyon kesilir.</p>
+    </div>
+    <div class="flow-arrow">
+      <div class="dot-move delay"></div>
+      ➔
+    </div>
+    <div class="flow-box success-box">
+      <div class="icon">🏦</div>
+      <h3>3. Sizin Cüzdanınız</h3>
+      <p>Kalan %99 (99₺) saniyeler içinde hesabınıza düşer.</p>
     </div>
   </div>
 </section>
@@ -278,32 +329,40 @@
 
 <!-- USE CASES -->
 <section class="section" id="use-cases" style="background:#fff;border-top:3px solid #000">
-  <div class="label">Use Cases</div>
-  <h2>Built for any digital payment scenario.</h2>
+  <div class="label">Kullanım Alanları</div>
+  <h2>Herkes için anında ödeme alma yöntemi.</h2>
   <div class="use-case-grid">
     
-    <div style="background:#fff;border:3px solid #000;padding:24px;border-radius:var(--radius);box-shadow:4px 4px 0px #000;text-align:left">
-      <div style="font-size:32px;margin-bottom:12px">🛒</div>
-      <h3 style="margin-bottom:8px;color:#000;font-size:16px;font-weight:900">E-Commerce & Shop checkout</h3>
-      <p style="color:var(--muted);font-size:13px;line-height:1.6">Sell T-shirts, e-books, game keys, or software licenses. Customers pay in one tap, and funds settle directly into your wallet with zero chargeback risk.</p>
+    <div class="uc-card">
+      <img src="usecase_ecommerce_1782748856926.jpg" alt="E-Ticaret">
+      <div class="uc-content">
+        <h3>🛍️ E-Ticaret ve Online Satış</h3>
+        <p>E-kitap, yazılım, oyun pini veya fiziksel ürün satın. Stripe veya PayPal bağlamak için haftalarca onay beklemeyin. 3 saniyede cüzdanınızı bağlayıp ödeme almaya başlayın.</p>
+      </div>
     </div>
 
-    <div style="background:#fff;border:3px solid #000;padding:24px;border-radius:var(--radius);box-shadow:4px 4px 0px #000;text-align:left">
-      <div style="font-size:32px;margin-bottom:12px">🤖</div>
-      <h3 style="margin-bottom:8px;color:#000;font-size:16px;font-weight:900">Autonomous AI Agents</h3>
-      <p style="color:var(--muted);font-size:13px;line-height:1.6">Equip your AI agent with a web wallet. The agent can receive payment for tasks it completes, or pay other online APIs to query datasets, completely autonomously.</p>
+    <div class="uc-card">
+      <img src="usecase_ai_agents_1782748866463.jpg" alt="Yapay Zeka Ajanları">
+      <div class="uc-content">
+        <h3>🤖 Otonom Yapay Zeka Ajanları</h3>
+        <p>Yapay zeka asistanınıza bir cüzdan verin. Sizin adınıza internette araştırma yapıp rapor sattığında ödemesini otonom olarak tahsil edebilsin.</p>
+      </div>
     </div>
 
-    <div style="background:#fff;border:3px solid #000;padding:24px;border-radius:var(--radius);box-shadow:4px 4px 0px #000;text-align:left">
-      <div style="font-size:32px;margin-bottom:12px">🔑</div>
-      <h3 style="margin-bottom:8px;color:#000;font-size:16px;font-weight:900">Pay-Per-Use APIs</h3>
-      <p style="color:var(--muted);font-size:13px;line-height:1.6">Build developer APIs and charge per individual request (e.g. 50 sats/call). Eliminate credit card fraud, recurring billing setups, and login subscription walls.</p>
+    <div class="uc-card">
+      <img src="usecase_apis_1782748873859.jpg" alt="API Ödemeleri">
+      <div class="uc-content">
+        <h3>🔑 Kullandıkça Öde (Pay-Per-Use) API'ler</h3>
+        <p>Kullanıcılarınızı aylık abonelik paketlerine zorlamayın. Geliştirdiğiniz yazılıma her istek attıklarında sadece kullandıkları kadar (örn: 10 kuruş) anında ödeme yapsınlar.</p>
+      </div>
     </div>
 
-    <div style="background:#fff;border:3px solid #000;padding:24px;border-radius:var(--radius);box-shadow:4px 4px 0px #000;text-align:left">
-      <div style="font-size:32px;margin-bottom:12px">📰</div>
-      <h3 style="margin-bottom:8px;color:#000;font-size:16px;font-weight:900">Micropayments & Paywalls</h3>
-      <p style="color:var(--muted);font-size:13px;line-height:1.6">Charge micro-amounts for individual premium articles, video access, or tipping. Perfect for amounts under $1 where credit card processing fees are too high.</p>
+    <div class="uc-card">
+      <img src="usecase_micropayments_1782748883164.jpg" alt="Mikro Ödemeler">
+      <div class="uc-content">
+        <h3>📰 Mikro Ödemeler (Bahşiş / İçerik)</h3>
+        <p>Sitenizdeki tek bir premium makaleyi okumak için 1 TL'lik ödeme duvarı (paywall) koyun. Kredi kartı komisyonları 1 TL'yi kurtarmaz, ancak AIPP ile bu mümkün!</p>
+      </div>
     </div>
 
   </div>
