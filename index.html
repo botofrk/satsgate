@@ -417,7 +417,7 @@ curl -X POST http://api.aipp.dev/invoice/create \
 
 <script>
 // ── CONFIG ──────────────────────────────────────────────
-const AIPP_API = 'http://127.0.0.1:3000'; // Local AIPP backend
+const AIPP_API = window.location.origin; // AIPP backend
 
 // ── STATE ───────────────────────────────────────────────
 let currentMerchantKey = '';

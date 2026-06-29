@@ -137,7 +137,7 @@
       
       <div class="code-block">
         <div class="code-header">HTTP POST /merchant/register <button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
-        <pre><code>curl -X POST http://localhost:3000/merchant/register \
+        <pre><code>curl -X POST https://www.aipp.dev/merchant/register \
   -H "Content-Type: application/json" \
   -d '{
     "ln_address": "mehmet@phoenixwallet.me"
@@ -161,7 +161,7 @@
       
       <div class="code-block">
         <div class="code-header">HTTP POST /invoice/create <button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
-        <pre><code>curl -X POST http://localhost:3000/invoice/create \
+        <pre><code>curl -X POST https://www.aipp.dev/invoice/create \
   -H "Content-Type: application/json" \
   -H "X-AIPP-Key: aipp_merch_72a391fbce" \
   -d '{
@@ -203,7 +203,7 @@
       
       <div class="code-block">
         <div class="code-header">HTTP GET /confirm/:hash <button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
-        <pre><code>curl http://localhost:3000/confirm/e93fca1029ab8...</code></pre>
+        <pre><code>curl https://www.aipp.dev/confirm/e93fca1029ab8...</code></pre>
       </div>
 
       <p><strong>Response format:</strong></p>
@@ -228,7 +228,7 @@
 aipp_key = "aipp_merch_72a391fbce"
 
 def create_checkout_session(amount_sats, order_id):
-    url = "http://localhost:3000/invoice/create"
+    url = "https://www.aipp.dev/invoice/create"
     headers = {
         "X-AIPP-Key": aipp_key,
         "Content-Type": "application/json"
@@ -252,7 +252,7 @@ def create_checkout_session(amount_sats, order_id):
         <pre><code>const axios = require('axios');
 
 async function getInvoice(sats) {
-  const response = await axios.post('http://localhost:3000/invoice/create', {
+  const response = await axios.post('https://www.aipp.dev/invoice/create', {
     amount_sats: sats,
     callback_url: 'https://myshop.com/payout-webhook'
   }, {
@@ -262,7 +262,7 @@ async function getInvoice(sats) {
 }
 
 async function checkStatus(hash) {
-  const response = await axios.get(`http://localhost:3000/confirm/${hash}`);
+  const response = await axios.get(`https://www.aipp.dev/confirm/${hash}`);
   return response.data; // { paid: true, status: 'settled' }
 }</code></pre>
       </div>

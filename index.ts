@@ -543,9 +543,8 @@ app.get('/confirm/:hash', async (req: Request, res: Response) => {
       return res.status(404).json({ error: 'Invoice not found', code: 'NOT_FOUND' });
     }
 
-    // In local demo mode, we simulate payment confirmations for hashes starting with 'demo_'
+    // For demo hashes: simulate payment locally
     if (invoice.status === 'pending' && hash.startsWith('demo_')) {
-      // Trigger webhook routing internally for mock payment simulation
       const lnbitsWebhookUrl = `http://127.0.0.1:${PORT}/lnbits-webhook`;
       await fetch(lnbitsWebhookUrl, {
         method: 'POST',
@@ -553,9 +552,33 @@ app.get('/confirm/:hash', async (req: Request, res: Response) => {
         body: JSON.stringify({ payment_hash: hash })
       });
       
-      // Reload updated invoice status
       const updatedInvoice = await db.get('SELECT * FROM invoices WHERE payment_hash = ?', hash);
       return res.json({ paid: updatedInvoice.status === 'settled', status: updatedInvoice.status });
+    }
+
+    // For real LNbits invoices: verify payment status with LNbits
+    if (invoice.status === 'pending' && !hash.startsWith('demo_') && LNBITS_INVOICE_KEY) {
+      try {
+        const verifyRes = await fetch(`${LNBITS_URL}/api/v1/payments/${hash}`, {
+          headers: { 'X-Api-Key': LNBITS_INVOICE_KEY }
+        });
+        if (verifyRes.ok) {
+          const verifyData = (await verifyRes.json()) as any;
+          if (verifyData.paid) {
+            // Payment confirmed! Trigger webhook to settle the invoice
+            const lnbitsWebhookUrl = `http://127.0.0.1:${PORT}/lnbits-webhook`;
+            await fetch(lnbitsWebhookUrl, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ payment_hash: hash })
+            });
+            const updatedInvoice = await db.get('SELECT * FROM invoices WHERE payment_hash = ?', hash);
+            return res.json({ paid: updatedInvoice.status === 'settled', status: updatedInvoice.status });
+          }
+        }
+      } catch (e) {
+        console.error('LNbits verification failed:', e);
+      }
     }
 
     res.json({ paid: invoice.status === 'settled', status: invoice.status });
@@ -711,6 +734,39 @@ async function startServer() {
     console.log(`⚡ AIPP Generic Payment Bridge listening on port ${PORT}`);
     console.log(`⚡ LNBits API configured: ${LNBITS_INVOICE_KEY ? 'YES' : 'NO'}`);
     console.log(`⚡ Rate limit: 10 req/min, Default fee: ${FEE_PER_REQUEST_SATS} sats, Daily limit: $${DAILY_LIMIT_USD}`);
+
+    // Auto-poller: every 15 seconds, check pending invoices against LNbits
+    if (LNBITS_INVOICE_KEY) {
+      setInterval(async () => {
+        try {
+          const pendingInvoices = await db.all("SELECT payment_hash FROM invoices WHERE status = 'pending' AND payment_hash NOT LIKE 'demo_%'");
+          for (const inv of pendingInvoices) {
+            try {
+              const verifyRes = await fetch(`${LNBITS_URL}/api/v1/payments/${inv.payment_hash}`, {
+                headers: { 'X-Api-Key': LNBITS_INVOICE_KEY }
+              });
+              if (verifyRes.ok) {
+                const data = (await verifyRes.json()) as any;
+                if (data.paid) {
+                  console.log(`⚡ Auto-poller: Payment detected for ${inv.payment_hash}. Processing...`);
+                  // Trigger webhook to settle
+                  await fetch(`http://127.0.0.1:${PORT}/lnbits-webhook`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ payment_hash: inv.payment_hash })
+                  });
+                }
+              }
+            } catch (e) {
+              // Silently skip failed verifications
+            }
+          }
+        } catch (e) {
+          // Silently skip DB errors
+        }
+      }, 15000);
+      console.log('⚡ Auto-poller active: checking pending payments every 15s');
+    }
   });
 }
 
