@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>aipp.dev — L402 Demo</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,700;1,600&family=Inter:wght@400;500;600;700&display=swap');
+  
+  *{margin:0;padding:0;box-sizing:border-box}
+  
+  :root {
+    --bg: #0a0a0b;
+    --fg: #f4f4f5;
+    --muted: #a1a1aa;
+    --border: #27272a;
+    --accent: #f59e0b;
+    --card: #18181b;
+  }
+  
+  body {
+    background-color: var(--bg);
+    color: var(--fg);
+    font-family: 'Inter', -apple-system, sans-serif;
+    line-height: 1.7;
+    -webkit-font-smoothing: antialiased;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+  
+  header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 24px 40px;
+    border-bottom: 1px solid var(--border);
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    background: rgba(10,10,11,0.8);
+    backdrop-filter: blur(8px);
+  }
+  
+  .logo {
+    font-family: 'Inter', sans-serif;
+    font-weight: 700;
+    font-size: 20px;
+    letter-spacing: -0.5px;
+    text-decoration: none;
+    color: var(--fg);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .logo span { color: var(--accent); }
+  
+  .nav-links {
+    display: flex;
+    gap: 24px;
+    align-items: center;
+  }
+  .nav-links a {
+    color: var(--muted);
+    text-decoration: none;
+    font-size: 14px;
+    font-weight: 500;
+    transition: color 0.2s;
+  }
+  .nav-links a:hover { color: var(--fg); }
+  .nav-btn {
+    background: var(--accent);
+    color: #000;
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 600;
+    text-decoration: none;
+    transition: opacity 0.2s;
+  }
+  .nav-btn:hover { opacity: 0.9; }
+
+  main {
+    flex: 1;
+    max-width: 800px;
+    margin: 80px auto;
+    padding: 0 24px;
+  }
+
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: #18181b;
+    border: 1px solid var(--border);
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--muted);
+    margin-bottom: 40px;
+  }
+  .badge::before {
+    content: '';
+    width: 8px;
+    height: 8px;
+    background: #22c55e;
+    border-radius: 50%;
+    box-shadow: 0 0 10px #22c55e;
+  }
+
+  h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: 64px;
+    font-weight: 600;
+    line-height: 1.1;
+    letter-spacing: -2px;
+    margin-bottom: 24px;
+  }
+  h1 em {
+    color: var(--accent);
+    font-style: italic;
+  }
+  
+  .subtitle {
+    color: var(--muted);
+    font-size: 18px;
+    line-height: 1.6;
+    margin-bottom: 60px;
+    max-width: 700px;
+  }
+
+  .demo-box {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 32px;
+    position: relative;
+    overflow: hidden;
+  }
+  .demo-step {
+    font-family: 'Inter', sans-serif;
+    font-weight: 700;
+    font-size: 14px;
+    color: var(--fg);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 12px;
+  }
+  .demo-step-num {
+    background: transparent;
+    border: 1px solid var(--accent);
+    color: var(--accent);
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+  }
+  
+  .demo-desc {
+    color: var(--muted);
+    font-size: 14px;
+    margin-bottom: 24px;
+  }
+
+  .action-btn {
+    background: var(--accent);
+    color: #000;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 24px;
+    font-size: 14px;
+    font-weight: 700;
+    font-family: 'Inter', sans-serif;
+    cursor: pointer;
+    transition: transform 0.2s;
+  }
+  .action-btn:hover { transform: scale(1.02); }
+
+  .terminal {
+    background: #000;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 16px;
+    font-family: 'Fira Code', monospace;
+    font-size: 13px;
+    color: #e4e4e7;
+    margin-top: 24px;
+    display: none;
+  }
+  .terminal-header { color: #f87171; margin-bottom: 8px; font-weight: bold; }
+  .terminal-success { color: #4ade80; margin-bottom: 8px; font-weight: bold; }
+  
+  .qr-container {
+    background: #fff;
+    padding: 16px;
+    border-radius: 8px;
+    display: inline-block;
+    margin-top: 16px;
+  }
+  #qr-canvas { width: 200px !important; height: 200px !important; }
+  .spinner {
+    display: inline-block;
+    width: 16px; height: 16px;
+    border: 2px solid rgba(255,255,255,0.2);
+    border-radius: 50%;
+    border-top-color: #fff;
+    animation: spin 1s ease-in-out infinite;
+    vertical-align: middle;
+    margin-right: 8px;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .invoice-text {
+    word-break: break-all;
+    color: var(--muted);
+    font-size: 11px;
+    margin-top: 12px;
+    max-width: 400px;
+  }
+
+  footer {
+    text-align: center;
+    padding: 32px;
+    color: var(--muted);
+    font-size: 13px;
+    border-top: 1px solid var(--border);
+    font-family: 'Inter', sans-serif;
+    margin-top: auto;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <a href="index.html" class="logo"><span>⚡</span> AIPP</a>
+  <div class="nav-links">
+    <a href="docs.html">Docs</a>
+    <a href="l402.html" style="color:var(--fg)">L402 Demo</a>
+    <a href="dashboard.html">Dashboard</a>
+    <a href="index.html#get-started" class="nav-btn">Get API key &rarr;</a>
+  </div>
+</header>
+
+<main>
+  <div class="badge">RFC 8908 + HTTP 402 + Lightning</div>
+  
+  <h1>The web's <em>missing</em> payment status code.</h1>
+  
+  <p class="subtitle">
+    Below is a live, end-to-end L402 challenge. Hit the endpoint &rarr; get <code>402 Payment Required</code> 
+    with a Lightning invoice and macaroon &rarr; pay it &rarr; return the preimage &rarr; unlock the content.
+  </p>
+
+  <div class="demo-box" id="demo-box">
+    <div id="step-1">
+      <div class="demo-step">
+        <div class="demo-step-num">01</div>
+        Request the resource
+      </div>
+      <p class="demo-desc">Click below to mint a fresh L402 challenge.</p>
+      <button class="action-btn" onclick="startL402Demo()" id="start-btn">GET /api/l402/resource</button>
+    </div>
+
+    <div class="terminal" id="terminal-view">
+      <div class="terminal-header" id="terminal-status">HTTP/1.1 402 Payment Required</div>
+      <div>Www-Authenticate: L402 macaroon="..."</div>
+      
+      <div id="qr-section">
+        <div class="qr-container">
+          <canvas id="qr-canvas"></canvas>
+        </div>
+        <div class="invoice-text" id="invoice-string"></div>
+        <div style="margin-top: 16px; color: var(--accent);">
+          <span class="spinner"></span> Waiting for payment...
+        </div>
+      </div>
+      
+      <div id="success-section" style="display:none; margin-top:20px; border-top:1px dashed #333; padding-top:16px;">
+        <div class="terminal-success">HTTP/1.1 200 OK</div>
+        <div style="color:#fff; font-size:16px; margin-top:8px;">
+          🎉 <strong>Resource Unlocked!</strong>
+        </div>
+        <div style="color:var(--muted); margin-top:8px;">
+          "The future of AI is micropayments."
+        </div>
+        <button class="action-btn" style="margin-top:20px; font-size:12px; padding: 8px 16px;" onclick="location.reload()">Reset Demo</button>
+      </div>
+    </div>
+  </div>
+</main>
+
+<footer>
+  Powered by ⚡ Bitcoin Lightning · LNBits · L402
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/qrcode@1.4.4/build/qrcode.min.js"></script>
+<script>
+  let pollInterval;
+  const API_URL = 'https://aipp.dev';
+
+  async function ensureMerchantKey() {
+    // Register the mock merchant (fetches existing key if already registered)
+    const res = await fetch(`${API_URL}/merchant/register`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ln_address: 'angrycow39@zeuspay.com' })
+    });
+    
+    if (!res.ok) throw new Error("Failed to create mock merchant");
+    const data = await res.json();
+    return data.api_key;
+  }
+
+  async function startL402Demo() {
+    const btn = document.getElementById('start-btn');
+    btn.innerText = "Processing...";
+    btn.disabled = true;
+
+    try {
+      const apiKey = await ensureMerchantKey();
+      
+      // 1. Create a 500 sat invoice
+      const res = await fetch(`${API_URL}/invoice/create`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Api-Key': apiKey
+        },
+        body: JSON.stringify({ amount_sats: 500, memo: 'AIPP L402 Demo' })
+      });
+      
+      const charge = await res.json();
+      if (!charge.payment_request) throw new Error("Invoice creation failed");
+
+      // 2. Hide step 1, show terminal
+      document.getElementById('step-1').style.display = 'none';
+      document.getElementById('terminal-view').style.display = 'block';
+      
+      // 3. Render QR Code (Important: add lightning: prefix for strict wallets and uppercase for alphanumeric QR encoding)
+      const invoiceStr = 'lightning:' + charge.payment_request.toUpperCase();
+      document.getElementById('invoice-string').innerText = charge.payment_request;
+      
+      const canvas = document.getElementById('qr-canvas');
+      QRCode.toCanvas(canvas, invoiceStr, {
+        width: 250,
+        margin: 1,
+        color: { dark: '#000000', light: '#ffffff' }
+      });
+
+      // 4. Start polling
+      startPolling(charge.payment_hash);
+      
+    } catch (err) {
+      alert("Error starting demo: " + err.message);
+      btn.innerText = "GET /api/l402/resource";
+      btn.disabled = false;
+    }
+  }
+
+  function startPolling(paymentHash) {
+    pollInterval = setInterval(async () => {
+      try {
+        const res = await fetch(`${API_URL}/invoice/status/${paymentHash}`);
+        const data = await res.json();
+        
+        if (data.status === 'settled') {
+          clearInterval(pollInterval);
+          showSuccess();
+        }
+      } catch(e) {
+        console.error("Polling error", e);
+      }
+    }, 2000);
+  }
+
+  function showSuccess() {
+    document.getElementById('qr-section').style.display = 'none';
+    document.getElementById('terminal-status').innerText = 'HTTP/1.1 200 OK (Payment Verified)';
+    document.getElementById('terminal-status').style.color = '#4ade80';
+    document.getElementById('success-section').style.display = 'block';
+  }
+</script>
+</body>
+</html>

@@ -3,463 +3,344 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>aipp.dev — Give your AI agent a wallet</title>
-<style>
-  @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap');
+<title>aipp.dev — Give your AI agent a wallet</title><style>
+  @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,700;1,600&family=Inter:wght@400;500;600;700&display=swap');
   
   *{margin:0;padding:0;box-sizing:border-box}
   :root{
-    --bg:#a3dc21; /* Match exact background color of the mascot image */
-    --fg:#000000; /* High contrast black */
-    --muted:#3f3f46;
-    --accent:#000000;
-    --border:#000000;
-    --card:#ffffff;
-    --radius:16px;
+    --bg: #0a0a0b;
+    --fg: #f4f4f5;
+    --muted: #a1a1aa;
+    --accent: #f59e0b;
+    --border: #27272a;
+    --card: #18181b;
+    --radius: 12px;
   }
+  
   body{
-    background-color:var(--bg);
-    background-image:radial-gradient(#0000001a 1px, transparent 1px);
-    background-size:16px 16px;
-    color:var(--fg);
-    font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+    background-color: var(--bg);
+    color: var(--fg);
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
     line-height: 1.6;
     -webkit-font-smoothing: antialiased;
     padding-bottom: 40px;
     overflow-x: hidden;
   }
   a{color:var(--fg);text-decoration:none}
+  html { scroll-behavior: smooth; }
   
-  nav{display:flex;align-items:center;justify-content:space-between;padding:24px 40px;max-width:1200px;margin:0 auto;position:relative;z-index:10}
-  .logo{font-family: 'Space Grotesk', sans-serif;font-weight:900;font-size:22px;letter-spacing:-.8px;background:#fff;border:3px solid #000;padding:6px 20px;border-radius:12px;box-shadow:3px 3px 0px #000;color:#000;display:inline-block;transition:all 0.2s}
-  .logo:hover{transform:translate(-2px,-2px);box-shadow:5px 5px 0px #000}
-  .logo span{color:#a3dc21; -webkit-text-stroke: 1.5px #000;}
-  nav div{display:flex;align-items:center;gap:16px}
-  nav a{color:var(--fg);font-size:14px;font-weight:700;transition:all 0.2s}
-  nav a:hover{color:#000;transform:translateY(-1px)}
-  .nav-docs{background:#fff;border:3px solid #000;padding:8px 20px;border-radius:24px;box-shadow:2px 2px 0px #000}
-  .nav-docs:hover{transform:translate(-2px,-2px);box-shadow:4px 4px 0px #000}
-  .nav-cta{background:#000;color:#a3dc21!important;border:3px solid #000;padding:8px 20px;border-radius:24px;box-shadow:2px 2px 0px #a3dc21;font-weight:700;display:flex;align-items:center;gap:4px}
-  .nav-cta:hover{transform:translate(-2px,-2px);box-shadow:4px 4px 0px #a3dc21}
+  nav{display:flex;align-items:center;justify-content:space-between;padding:24px 40px;max-width:1200px;margin:0 auto;position:relative;z-index:10; gap:20px;}
+  .logo{font-family: 'Inter', sans-serif;font-weight:700;font-size:20px;letter-spacing:-0.5px;text-decoration:none;color:var(--fg);display:flex;align-items:center;gap:8px; white-space:nowrap; flex-shrink:0;}
+  .logo span { color: var(--accent); }
   
+  .nav-links{display:flex;align-items:center;gap:24px; overflow-x:auto; padding-bottom:8px; -webkit-overflow-scrolling:touch; width:100%;}
+  .nav-links::-webkit-scrollbar { display:none; }
+  .nav-links a{color:var(--muted);font-size:14px;font-weight:500;transition:all 0.2s; white-space:nowrap;}
+  .nav-links a:hover{color:var(--fg);}
+  .nav-cta{background:var(--accent);color:#000!important;padding:8px 16px;border-radius:20px;font-weight:600;transition:opacity 0.2s;}
+  .nav-cta:hover{opacity:0.9}
+  
+  /* MODAL CSS */
+  .modal-overlay { position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.8); display:none; justify-content:center; align-items:center; z-index:9999; backdrop-filter:blur(8px); }
+  .modal-overlay.active { display:flex; animation: fadeIn 0.2s; }
+  .modal-box { background:var(--card); border:1px solid var(--border); border-radius:16px; padding:32px; width:90%; max-width:480px; position:relative; animation: slideUp 0.3s ease; }
+  @keyframes slideUp { from{transform:translateY(20px);opacity:0} to{transform:translateY(0);opacity:1} }
+  @keyframes fadeIn { from{opacity:0} to{opacity:1} }
+  .modal-box h2 { font-family:'Playfair Display',serif; font-size:28px; font-weight:600; margin-bottom:12px; }
+  .modal-box p { font-size:14px; color:var(--muted); font-weight:400; margin-bottom:20px; }
+  .modal-key-wrap { display:flex; gap:8px; margin-bottom:20px; }
+  .modal-key-input { flex:1; background:var(--bg); border:1px solid var(--border); border-radius:8px; padding:12px 14px; font-family:'Fira Code',monospace; font-size:14px; color:var(--fg); outline:none; text-align:center; }
+  .modal-actions { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+  .modal-actions button, .modal-actions a { text-align:center; padding:12px; border:1px solid var(--border); border-radius:8px; font-weight:600; font-size:14px; cursor:pointer; transition:opacity 0.2s; text-decoration:none; display:block; background:var(--bg); color:var(--fg); }
+  .modal-actions .btn-test { background:var(--accent); color:#000; border:none; }
+  .modal-actions *:hover { opacity:0.9; }
+
   /* HERO SECTION */
-  .hero{display:flex;align-items:center;justify-content:center;gap:40px;padding:40px 20px 40px;max-width:1150px;margin:0 auto;text-align:left;position:relative;z-index:2}
+  .hero{display:flex;align-items:center;justify-content:center;gap:60px;padding:60px 24px;max-width:1150px;margin:0 auto;text-align:left;position:relative;z-index:2}
   .hero-content{flex:1;max-width:620px}
   .hero-mascot{
-    flex-shrink:0;
-    width:360px;
-    height:360px;
-    position:relative;
-    transition:transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
-    cursor:pointer;
+    flex-shrink:0; width:320px; height:320px; position:relative;
+    transition:transform 0.4s ease; border-radius:24px; overflow:hidden;
   }
-  .hero-mascot:hover{
-    transform:scale(1.05) rotate(2deg);
-  }
-  .hero-mascot::after{
-    content:'';
-    position:absolute;
-    width:130%;
-    height:130%;
-    background:radial-gradient(circle, rgba(255,255,255,0.7) 0%, rgba(255,255,255,0) 70%);
-    z-index:-1;
-    top:-15%;
-    left:-15%;
-    pointer-events:none;
-  }
-  .hero-mascot img{width:100%;height:100%;object-fit:cover;border-radius:24px;border:3px solid #000;box-shadow:6px 6px 0px #000}
-  .badge{display:inline-block;background:#fff;border:3px solid #000;color:#000;font-size:12px;font-weight:700;padding:6px 16px;border-radius:99px;margin-bottom:28px;box-shadow:2px 2px 0px #000;transition:all 0.2s}
-  .badge:hover{transform:rotate(-1deg)}
+  .hero-mascot:hover{ transform:scale(1.02); }
+  .hero-mascot img{width:100%;height:100%;object-fit:cover;border:1px solid var(--border);border-radius:24px; opacity:0.85; mix-blend-mode:luminosity;}
+  .badge{display:inline-flex;align-items:center;gap:8px;background:var(--card);border:1px solid var(--border);color:var(--muted);font-size:12px;font-weight:600;padding:6px 12px;border-radius:20px;margin-bottom:28px;}
   
-  h1{font-family: 'Space Grotesk', sans-serif;font-size:clamp(32px,5vw,52px);font-weight:900;letter-spacing:-2px;line-height:1.05;margin-bottom:24px;text-transform:uppercase}
-  h1 span{text-decoration:underline;text-underline-offset:8px;text-decoration-color:#fff}
-  .hero p{font-size:18px;color:#1a1a1a;margin-bottom:40px;font-weight:500;line-height:1.6}
+  h1{font-family: 'Playfair Display', serif;font-size:clamp(40px,6vw,64px);font-weight:600;letter-spacing:-1px;line-height:1.1;margin-bottom:24px;}
+  h1 span{font-style:italic; color:var(--accent);}
+  .hero p{font-size:16px;color:var(--muted);margin-bottom:40px;line-height:1.7}
   .cta-row{display:flex;gap:16px;justify-content:flex-start;flex-wrap:wrap}
   
   /* BUTTONS & ANIMATION */
-  .btn{padding:14px 28px;border-radius:var(--radius);font-size:15px;font-weight:800;cursor:pointer;border:3px solid #000;transition:transform 0.15s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.15s cubic-bezier(0.34, 1.56, 0.64, 1);display:inline-block}
-  .btn:active{transform:translate(2px, 2px);box-shadow:1px 1px 0px #000}
-  .btn-primary{background:#000;color:#a3dc21;box-shadow:4px 4px 0px #fff}
-  .btn-primary:hover{transform:translate(-2px,-2px);box-shadow:6px 6px 0px #fff}
-  .btn-ghost{background:#fff;color:#000;box-shadow:4px 4px 0px #000}
-  .btn-ghost:hover{transform:translate(-2px,-2px);box-shadow:6px 6px 0px #000}
+  .btn{padding:12px 24px;border-radius:24px;font-size:14px;font-weight:600;cursor:pointer;transition:all 0.2s;display:inline-block; border:1px solid transparent;}
+  .btn-primary{background:var(--accent);color:#000;}
+  .btn-primary:hover{opacity:0.9;transform:translateY(-1px);}
+  .btn-ghost{background:transparent;color:var(--fg);border:1px solid var(--border);}
+  .btn-ghost:hover{background:var(--card);color:var(--fg);}
   
-  /* BRUTALIST BOUNCE CARDS */
-  .section{padding:40px 20px;max-width:1000px;margin:0 auto;position:relative}
-  .label{font-size:12px;letter-spacing:2px;color:#000;font-weight:800;text-transform:uppercase;margin-bottom:8px;display:inline-block;background:#fff;border:2px solid #000;padding:4px 12px;border-radius:6px;box-shadow:2px 2px 0px #000;transition:all 0.2s}
-  .label:hover{transform:rotate(1deg)}
-  h2{font-family: 'Space Grotesk', sans-serif;font-size:clamp(24px,4vw,36px);font-weight:900;letter-spacing:-1.5px;margin-bottom:32px}
+  /* CARDS */
+  .section{padding:60px 24px;max-width:1000px;margin:0 auto;position:relative}
+  .label{font-size:12px;letter-spacing:1px;color:var(--accent);font-weight:600;text-transform:uppercase;margin-bottom:16px;display:inline-block;}
+  h2{font-family: 'Playfair Display', serif;font-size:clamp(28px,4vw,40px);font-weight:600;letter-spacing:-0.5px;margin-bottom:40px}
   
   .steps{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:24px}
-  .step{background:var(--card);border:3px solid #000;border-radius:var(--radius);padding:28px;box-shadow:5px 5px 0px #000;transition:transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.25s cubic-bezier(0.34, 1.56, 0.64, 1)}
-  .step:hover{transform:translate(-4px,-4px);box-shadow:9px 9px 0px #000}
-  .step-num{font-size:14px;font-weight:800;color:#000;margin-bottom:12px;background:#a3dc21;border:2px solid #000;padding:2px 8px;border-radius:6px;width:fit-content;box-shadow:1.5px 1.5px 0px #000}
-  .step h3{font-size:18px;font-weight:800;margin-bottom:8px}
-  .step p{font-size:14px;color:var(--muted);font-weight:500}
+  .step{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:32px;transition:transform 0.2s}
+  .step:hover{transform:translateY(-4px);}
+  .step-num{font-size:12px;font-weight:600;color:var(--accent);margin-bottom:16px; border:1px solid var(--accent); width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;}
+  .step h3{font-size:18px;font-weight:600;margin-bottom:12px; color:var(--fg);}
+  .step p{font-size:14px;color:var(--muted);line-height:1.6;}
   
   .pains{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:24px}
-  .pain{background:var(--card);border:3px solid #000;border-radius:var(--radius);padding:24px;box-shadow:5px 5px 0px #000;transition:transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.25s cubic-bezier(0.34, 1.56, 0.64, 1)}
-  .pain:hover{transform:translate(-4px,-4px);box-shadow:9px 9px 0px #000}
-  .pain .before{font-size:13px;color:#ef4444;margin-bottom:8px;text-decoration:line-through;font-weight:700}
-  .pain .after{font-size:15px;color:var(--fg);font-weight:800;display:flex;align-items:center;gap:4px}
+  .pain{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:24px;transition:transform 0.2s}
+  .pain:hover{transform:translateY(-4px);}
+  .pain .before{font-size:13px;color:#ef4444;margin-bottom:12px;text-decoration:line-through;}
+  .pain .after{font-size:14px;color:var(--fg);font-weight:500;display:flex;align-items:center;gap:8px}
   
   /* MAC IDE LAYOUT FOR CODE BLOCKS */
-  .code-wrap{background:#16161a;border:3px solid #000;border-radius:var(--radius);padding:24px;overflow-x:auto;box-shadow:5px 5px 0px #000;position:relative}
-  .code-wrap::before{
-    content:'';
-    position:absolute;
-    top:12px;
-    left:16px;
-    width:36px;
-    height:10px;
-    background:radial-gradient(circle, #ff5f56 0%, #ff5f56 25%, #ffbd2e 26%, #ffbd2e 50%, #27c93f 51%, #27c93f 75%, transparent 76%);
-    background-size:12px 10px;
-    opacity:0.8;
-  }
-  .code-wrap pre{margin-top:12px;font-family:'Fira Code', 'JetBrains Mono', monospace;font-size:13px;line-height:1.7;color:#e5e7eb}
+  .code-wrap{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:16px;overflow-x:auto;}
+  .code-wrap pre{font-family:'Fira Code', 'JetBrains Mono', monospace;font-size:13px;line-height:1.7;color:#e5e7eb}
   .c-comment{color:#6b7280}.c-key{color:#93c5fd}.c-str{color:#fcd34d}
   
-  .pricing-card{background:var(--card);border:3px solid #000;border-radius:var(--radius);padding:40px;text-align:center;max-width:400px;margin:0 auto;box-shadow:6px 6px 0px #000;transition:transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.25s cubic-bezier(0.34, 1.56, 0.64, 1)}
-  .pricing-card:hover{transform:translate(-4px,-4px);box-shadow:10px 10px 0px #000}
-  .price{font-family: 'Space Grotesk', sans-serif;font-size:48px;font-weight:900;letter-spacing:-2.5px;margin:16px 0 4px}
-  .price sub{font-size:18px;font-weight:400;color:var(--muted)}
-  .price-note{font-size:13px;color:var(--muted);margin-bottom:28px;font-weight:500}
-  .features{text-align:left;margin-bottom:28px}
-  .features li{display:flex;gap:10px;padding:12px 0;border-bottom:2px solid #f3f4f6;font-size:14px;list-style:none;font-weight:600}
-  .features li:last-child{border:none}
-  .check{color:#000;font-weight:800}
+  /* USE CASES */
+  .use-case-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 24px; margin-top: 24px; }
+  .uc-card { background:var(--card);border:1px solid var(--border);border-radius:var(--radius); overflow:hidden; transition:transform 0.2s; }
+  .uc-card:hover { transform:translateY(-4px); }
+  .uc-card img { width:100%; height:200px; object-fit:cover; border-bottom:1px solid var(--border); filter:grayscale(30%); }
+  .uc-content { padding:24px; }
+  .uc-content h3 { font-size:18px; font-weight:600; margin-bottom:12px; color:var(--fg); }
+  .uc-content p { color:var(--muted); font-size:14px; line-height:1.6; }
   
   /* LIVE INTERACTIVE DEMO */
-  .demo-wrap{background:var(--card);border:3px solid #000;border-radius:var(--radius);padding:40px;max-width:580px;margin:0 auto;box-shadow:6px 6px 0px #000;transition:transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1)}
-  .demo-tabs{display:flex;gap:8px;margin-bottom:28px}
-  .tab{flex:1;padding:12px;text-align:center;font-size:13px;font-weight:800;cursor:pointer;background:#fff;color:#000;border:3px solid #000;border-radius:8px;box-shadow:2px 2px 0px #000;transition:all .15s}
-  .tab.active{background:#000;color:#a3dc21;box-shadow:2px 2px 0px #a3dc21}
+  .demo-wrap{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:40px;max-width:580px;margin:0 auto;}
+  .demo-tabs{display:flex;gap:8px;margin-bottom:32px;border-bottom:1px solid var(--border);padding-bottom:16px;}
+  .tab{background:transparent;border:none;color:var(--muted);font-size:14px;font-weight:500;cursor:pointer;padding:8px 16px;border-radius:20px;transition:all 0.2s;}
+  .tab.active{background:var(--bg);color:var(--fg);border:1px solid var(--border);}
   .demo-step{display:none}
-  .demo-step.active{display:block;animation:fadeInUp 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards}
-  
-  @keyframes fadeInUp {
-    from{opacity:0;transform:translateY(10px)}
-    to{opacity:1;transform:translateY(0)}
-  }
+  .demo-step.active{display:block;animation:fadeInUp 0.3s ease forwards}
   
   .demo-input{display:flex;gap:12px;margin-bottom:16px}
-  .demo-input input{flex:1;background:#fff;border:3px solid #000;border-radius:8px;padding:12px 14px;color:var(--fg);font-size:14px;font-weight:700;outline:none;box-shadow:2px 2px 0px #000;transition:all 0.2s}
-  .demo-input input:focus{border-color:#000;box-shadow:3px 3px 0px #a3dc21}
-  .demo-input button,.demo-btn{background:#000;color:#a3dc21;border:3px solid #000;border-radius:8px;padding:12px 20px;font-weight:800;font-size:14px;cursor:pointer;white-space:nowrap;box-shadow:2px 2px 0px #fff;transition:all 0.2s}
-  .demo-input button:hover{transform:translate(-1px,-1px);box-shadow:3px 3px 0px #fff}
-  .demo-btn{width:100%;padding:14px;margin-top:8px;background:#000;color:#a3dc21;box-shadow:3px 3px 0px #000}
-  .demo-btn:hover{transform:translate(-2px,-2px);box-shadow:5px 5px 0px #000}
+  .demo-input input{flex:1;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:12px 16px;color:var(--fg);font-size:14px;outline:none;}
+  .demo-input input:focus{border-color:var(--accent);}
+  .demo-input button,.demo-btn{background:var(--accent);color:#000;border:none;border-radius:8px;padding:12px 20px;font-weight:600;font-size:14px;cursor:pointer;}
+  .demo-btn{width:100%;margin-top:12px;}
+  
   .qr-box{text-align:center;padding:24px 0}
-  .qr-box canvas{border:3px solid #000;border-radius:8px;margin-bottom:12px;box-shadow:3px 3px 0px #000;transition:transform 0.2s}
-  .qr-box canvas:hover{transform:scale(1.02)}
-  .invoice-str{font-family:ui-monospace,monospace;font-size:10px;color:#000;word-break:break-all;background:#f3f4f6;padding:12px;border-radius:8px;margin-bottom:12px;cursor:pointer;border:3px solid #000;font-weight:700;box-shadow:2px 2px 0px #000;transition:all 0.2s}
-  .invoice-str:hover{border-color:#000;box-shadow:3px 3px 0px #a3dc21}
-  .status-row{display:flex;align-items:center;gap:8px;font-size:13px;color:#000;font-weight:700;justify-content:center;margin-top:8px}
-  .dot{width:10px;height:10px;border-radius:50%;background:#000;border:1px solid #000}
+  .qr-box canvas{border:1px solid var(--border);border-radius:8px;margin-bottom:16px;}
+  .invoice-str{font-family:'Fira Code',monospace;font-size:11px;color:var(--muted);background:var(--bg);padding:12px;border-radius:8px;margin-bottom:16px;cursor:pointer;border:1px solid var(--border);word-break:break-all;}
+  .status-row{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--fg);justify-content:center;margin-top:8px}
+  .dot{width:8px;height:8px;border-radius:50%;background:var(--muted);}
   .dot.pending{background:#f59e0b;animation:pulse 1.5s infinite}
   .dot.paid{background:#22c55e}
   @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
-  .key-box{background:#f0fdf4;border:3px solid #22c55e;border-radius:8px;padding:16px;font-family:ui-monospace,monospace;font-size:13px;color:#15803d;font-weight:700;word-break:break-all;cursor:pointer;margin:12px 0;box-shadow:3px 3px 0px #000;transition:all 0.2s}
-  .key-box:hover{background:#dcfce7;transform:translate(-2px,-2px);box-shadow:5px 5px 0px #000}
+  
+  .key-box{background:var(--bg);border:1px solid var(--success);border-radius:8px;padding:16px;font-family:'Fira Code',monospace;font-size:13px;color:var(--success);word-break:break-all;cursor:pointer;margin:16px 0;}
   .success-icon{font-size:40px;text-align:center;margin-bottom:12px}
-  .demo-note{font-size:12px;color:var(--muted);text-align:center;margin-top:16px;font-weight:500}
-  .chat-box{background:#f9fafb;border:3px solid #000;border-radius:8px;padding:16px;min-height:85px;font-size:13px;line-height:1.7;margin-bottom:12px;color:#000;font-weight:600;box-shadow:3px 3px 0px #000}
-  .chat-thinking{color:var(--muted);font-style:italic}
-  .balance-row{display:flex;justify-content:space-between;font-size:13px;color:#000;font-weight:700;margin-bottom:16px;padding:12px 14px;background:#f3f4f6;border:3px solid #000;border-radius:8px;box-shadow:2px 2px 0px #000}
-  .balance-row span:last-child{color:#15803d;font-weight:800}
+  .demo-note{font-size:12px;color:var(--muted);text-align:center;margin-top:16px;}
 
-  /* FLOATING BOLTS BACKGROUND ANIMATION */
-  @keyframes floatBolt {
-    0%, 100%{transform:translateY(0px) rotate(0deg)}
-    50%{transform:translateY(-20px) rotate(8deg)}
-  }
-  .floating-bolt {
-    position: absolute;
-    pointer-events: none;
-    z-index: 0;
-    opacity: 0.12;
-    animation: floatBolt 4s ease-in-out infinite;
-  }
-
-  .use-case-grid {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 16px;
-    margin-top: 20px;
-  }
-  .uc-card {
-    background:#fff;border:3px solid #000;border-radius:var(--radius);
-    box-shadow:4px 4px 0px #000;overflow:hidden;text-align:left;
-    transition:transform 0.25s, box-shadow 0.25s;
-  }
-  .uc-card:hover { transform:translate(-4px,-4px); box-shadow:8px 8px 0px #000; }
-  .uc-card img { width:100%; height:200px; object-fit:cover; border-bottom:3px solid #000; }
-  .uc-content { padding:24px; }
-  .uc-content h3 { font-size:18px; font-weight:900; margin-bottom:8px; color:#000; }
-  .uc-content p { color:var(--muted); font-size:14px; line-height:1.6; font-weight:600; }
-  @media(max-width: 800px) {
-    .use-case-grid { grid-template-columns: 1fr; }
-  }
-  
-  /* ANIMATED FLOW DIAGRAM */
-  .animated-flow { display:flex; align-items:center; justify-content:space-between; gap:16px; margin-top:24px; padding:20px; flex-wrap:wrap; }
-  .flow-box { flex:1; background:var(--card); border:3px solid #000; border-radius:12px; padding:24px; text-align:center; box-shadow:5px 5px 0px #000; min-width:200px; }
-  .flow-box.aipp-box { background:#000; color:#fff; box-shadow:5px 5px 0px #a3dc21; }
-  .flow-box.aipp-box h3 { color:#a3dc21; }
-  .flow-box.aipp-box p { color:#ccc; }
-  .flow-box.success-box { background:#dcfce7; border-color:#15803d; box-shadow:5px 5px 0px #15803d; }
-  .flow-box.success-box h3 { color:#15803d; }
-  .flow-box .icon { font-size:40px; margin-bottom:12px; }
-  .flow-box h3 { font-size:18px; font-weight:900; margin-bottom:8px; }
-  .flow-box p { font-size:13px; font-weight:600; color:var(--muted); line-height:1.5; }
-  .flow-arrow { font-size:24px; font-weight:900; color:#000; position:relative; display:flex; align-items:center; justify-content:center; }
-  .dot-move { position:absolute; width:12px; height:12px; background:#ef4444; border-radius:50%; border:2px solid #000; animation:moveDot 2s infinite linear; }
-  .dot-move.delay { background:#22c55e; animation-delay:1s; }
-  @keyframes moveDot {
-    0% { transform:translateX(-30px); opacity:0; }
-    20% { opacity:1; }
-    80% { opacity:1; }
-    100% { transform:translateX(30px); opacity:0; }
-  }
-  @media(max-width: 800px) {
-    .animated-flow { flex-direction:column; gap:32px; }
-    .flow-arrow { transform:rotate(90deg); }
-    @keyframes moveDot {
-      0% { transform:translateX(-20px); opacity:0; }
-      20% { opacity:1; }
-      80% { opacity:1; }
-      100% { transform:translateX(20px); opacity:0; }
-    }
-  }
-  
-  footer{border-top:3px solid #000;padding:20px 40px;display:flex;justify-content:space-between;align-items:center;color:#000;font-size:13px;font-weight:700;flex-wrap:wrap;gap:12px;max-width:1200px;margin:40px auto 0}
-  footer a{color:#000}
-  
   /* CHAT WIDGET */
   .chat-widget-btn {
-    position: fixed; bottom: 24px; right: 24px; width: 64px; height: 64px;
-    background: #000; border: 3px solid #a3dc21; border-radius: 50%;
-    box-shadow: 4px 4px 0px #000; display: flex; align-items: center; justify-content: center;
-    font-size: 32px; cursor: pointer; z-index: 1000; transition: all 0.2s;
+    position: fixed; bottom: 24px; right: 24px; width: 56px; height: 56px;
+    background: var(--card); border: 1px solid var(--border); border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 24px; cursor: pointer; z-index: 1000; transition: transform 0.2s;
   }
-  .chat-widget-btn:hover { transform: translate(-2px, -2px); box-shadow: 6px 6px 0px #000; }
-  .chat-window {
-    position: fixed; bottom: 100px; right: 24px; width: 350px; max-height: 550px;
-    background: #fff; border: 3px solid #000; border-radius: 16px;
-    box-shadow: 8px 8px 0px #000; z-index: 1000; display: none; flex-direction: column; overflow: hidden;
-  }
-  .chat-header {
-    background: #000; color: #a3dc21; padding: 16px; font-family: 'Space Grotesk', sans-serif;
-    font-weight: 800; display: flex; justify-content: space-between; align-items: center;
-  }
-  .chat-close { color: #fff; cursor: pointer; font-size: 20px; }
-  .chat-body {
-    flex: 1; padding: 16px; overflow-y: auto; max-height: 350px; display: flex;
-    flex-direction: column; gap: 12px; background: #f9fafb;
-  }
-  .chat-msg {
-    padding: 10px 14px; border-radius: 12px; font-size: 14px; line-height: 1.5;
-    font-weight: 600; border: 2px solid #000; max-width: 85%; word-break: break-word;
-  }
-  .chat-msg.bot { background: #fff; align-self: flex-start; border-bottom-left-radius: 2px; }
-  .chat-msg.user { background: #a3dc21; align-self: flex-end; border-bottom-right-radius: 2px; }
-  .chat-input-area {
-    padding: 16px; background: #fff; border-top: 3px solid #000; display: flex; gap: 8px; flex-direction:column;
-  }
-  .chat-input-row { display:flex; gap:8px; }
-  .chat-input-row input {
-    flex: 1; padding: 8px 12px; border: 2px solid #000; border-radius: 8px; font-size: 14px; outline: none; font-family: inherit; font-weight:600;
-  }
-  .chat-input-row button {
-    background: #000; color: #a3dc21; border: none; border-radius: 8px; padding: 0 16px; font-weight: 800; cursor: pointer;
-  }
-  .chat-options { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
-  .chat-option-btn {
-    background: #fff; border: 2px solid #000; padding: 6px 10px; border-radius: 20px;
-    font-size: 12px; font-weight: 800; cursor: pointer; box-shadow: 2px 2px 0px #000; transition:all 0.15s;
-  }
-  .chat-option-btn:hover { transform: translate(-1px, -1px); box-shadow: 3px 3px 0px #000; }
   
+  /* INTEGRATION GRID */
+  .integration-grid { display:grid; grid-template-columns:repeat(3, 1fr); gap:24px; }
+  
+  /* BENTO GRID */
+  .bento-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 24px;
+    margin-bottom: 60px;
+  }
+  .bento-item {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 32px;
+    transition: transform 0.2s, border-color 0.2s;
+  }
+  .bento-item:hover {
+    border-color: var(--accent);
+    transform: translateY(-2px);
+  }
+  .bento-item h3 {
+    font-weight: 600;
+    font-size: 18px;
+    margin-bottom: 12px;
+    color: var(--fg);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .bento-item h3 svg { color: var(--accent); }
+  .bento-item p { color: var(--muted); font-size: 14px; line-height: 1.6; }
+  .bento-wide { grid-column: span 2; }
+  .bento-tall { grid-row: span 2; }
+  
+  @media(max-width:900px){
+    .bento-grid { grid-template-columns: repeat(2, 1fr); }
+    .bento-wide { grid-column: span 2; }
+  }
   @media(max-width:800px){
-    .hero{flex-direction:column-reverse;text-align:center;gap:40px}
+    .hero{flex-direction:column-reverse;text-align:center;gap:40px;padding:40px 24px;}
     .hero-mascot{width:280px;height:280px}
     .cta-row{justify-content:center}
+    .modal-actions { grid-template-columns: 1fr; }
+    .integration-grid { grid-template-columns: 1fr; }
   }
   @media(max-width:600px){
-    nav{padding:16px 20px}
+    .bento-grid { grid-template-columns: 1fr; }
+    .bento-wide { grid-column: span 1; }
+    nav{padding:16px 20px; flex-direction:column; gap:16px; align-items:flex-start;}
+    .nav-links { padding-bottom: 4px; }
     .pains{grid-template-columns:1fr}
-    footer{flex-direction:column;text-align:center}
+    .steps{grid-template-columns:1fr}
+    .demo-input { flex-direction:column; gap:8px; }
+    footer{flex-direction:column;text-align:center;gap:16px}
+    h1 { font-size: 36px; }
   }
+  footer{display:flex;align-items:center;justify-content:space-between;padding:40px;max-width:1200px;margin:0 auto;border-top:1px solid var(--border);color:var(--muted);font-size:14px;}
 </style>
 <script src="https://cdn.jsdelivr.net/npm/qrcode@1.4.4/build/qrcode.min.js"></script>
 </head>
 <body>
 
 <nav>
-  <div class="logo">aipp<span>.</span>dev</div>
-  <div>
+  <a href="/" class="logo"><span>⚡</span> AIPP</a>
+  <div class="nav-links">
     <a href="#how">How it works</a>
-    <a href="#use-cases">Use Cases</a>
-    <a href="#demo">Try it</a>
-    <a href="#pricing">Pricing</a>
-    <a href="docs.html" class="nav-docs">Docs</a>
-    <a href="dashboard.html" class="nav-cta">Dashboard ⚡</a>
+    <a href="#get-started">Get Started</a>
+    <a href="docs.html">Docs</a>
+    <a href="l402.html">L402 Demo</a>
+    <a href="dashboard.html" class="nav-cta">Dashboard</a>
   </div>
 </nav>
 
-<section class="hero" style="position:relative">
-  <!-- Premium Floating bolts -->
-  <svg class="floating-bolt" style="top:10%;left:5%;width:40px;height:40px;animation-delay:0s" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
-  <svg class="floating-bolt" style="top:70%;left:45%;width:30px;height:30px;animation-delay:1.5s" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
-  <svg class="floating-bolt" style="top:25%;right:8%;width:45px;height:45px;animation-delay:0.8s" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
-
-  <div class="hero-mascot">
-    <img src="robot_mascot_real.jpg" alt="aipp.dev Mascot">
-  </div>
-  <div class="hero-content">
+<section class="hero">
+  <div class="hero-content" style="max-width:800px; margin:0 auto; text-align:center; display:flex; flex-direction:column; align-items:center;">
     <div class="badge">⚡ Built on Lightning L402</div>
-    <h1>Accept Lightning<br>payments in <span>seconds</span>.</h1>
-    <p>The non-custodial split-payment gateway for online shops, apps, and AI agents. Cash out instantly to your wallet — no cards, no KYC, no registration.</p>
-    <div class="cta-row">
-      <a href="#demo" class="btn btn-primary">Try live demo →</a>
+    <h1 style="text-align:center;">Accept Lightning<br>payments in <span>seconds</span>.</h1>
+    <p style="text-align:center;">The non-custodial split-payment gateway for online shops, apps, and AI agents. Cash out instantly to your wallet — no cards, no KYC, no registration.</p>
+    <div class="cta-row" style="justify-content:center;">
+      <a href="#get-started" class="btn btn-primary">Get API Key →</a>
       <a href="docs.html" class="btn btn-ghost">Read the docs</a>
     </div>
   </div>
 </section>
 
 <section class="section" id="how">
-  <div class="label">How it works? (Simply explained)</div>
+  <div class="label">How it works</div>
   <h2>Like a credit card POS terminal... but instant and for crypto!</h2>
-  <p style="font-size: 18px; margin-bottom: 20px; color: var(--muted); max-width: 850px; font-weight: 500;">
-    When your customer wants to pay you, AIPP acts as the routing middleman. It receives the payment, automatically deducts a <b>flat 1% fee</b>, and forwards the remaining <b>99% directly to your personal wallet at lightning speed.</b> We never hold your funds!
+  <p style="font-size: 16px; margin-bottom: 40px; color: var(--muted); max-width: 850px;">
+    When your customer wants to pay you, AIPP acts as the routing middleman. It receives the payment, automatically deducts a <b>flat 1% fee</b>, and forwards the remaining <b>99% directly to your personal wallet at lightning speed.</b> We never hold your funds.
   </p>
   
-  <div class="animated-flow">
-    <div class="flow-box">
-      <div class="icon">🧑‍💻</div>
-      <h3>1. Customer</h3>
+  <div class="steps">
+    <div class="step">
+      <div class="step-num">1</div>
+      <h3>Customer</h3>
       <p>Sends a Lightning payment (e.g. 10,000 sats).</p>
     </div>
-    <div class="flow-arrow">
-      <div class="dot-move"></div>
-      ➔
-    </div>
-    <div class="flow-box aipp-box">
-      <div class="icon">⚡</div>
-      <h3>2. AIPP Gateway</h3>
+    <div class="step">
+      <div class="step-num" style="border-color:var(--accent);color:var(--accent)">2</div>
+      <h3>AIPP Gateway</h3>
       <p>Instantly deducts a 1% fee (100 sats).</p>
     </div>
-    <div class="flow-arrow">
-      <div class="dot-move delay"></div>
-      ➔
-    </div>
-    <div class="flow-box success-box">
-      <div class="icon">🏦</div>
-      <h3>3. Your Wallet</h3>
+    <div class="step">
+      <div class="step-num" style="border-color:#22c55e;color:#22c55e">3</div>
+      <h3>Your Wallet</h3>
       <p>The remaining 99% (9,900 sats) lands in your account in milliseconds.</p>
     </div>
   </div>
 
-  <div style="margin-top: 32px; background:#fff; border:3px solid #000; border-radius:16px; padding:24px; box-shadow:6px 6px 0px #000;">
-    <h3 style="font-size: 22px; font-weight: 900; margin-bottom: 16px;">Wait, how do I actually use the API Key? 🔑</h3>
-    <p style="color:var(--muted); font-size:15px; font-weight:500; margin-bottom:20px;">
-      Once you register your wallet, you get a unique <code>aipp_merch_...</code> API key. You simply paste this key into your application's backend. When a user clicks "Buy" on your website, your app makes a single HTTP request using this key. AIPP returns a Lightning QR Code for your user to scan!
+  <div style="margin-top: 40px; background:var(--card); border:1px solid var(--border); border-radius:var(--radius); padding:32px;">
+    <h3 style="font-size: 20px; font-weight: 600; margin-bottom: 12px; color:var(--fg)">Wait, how do I actually use the API Key?</h3>
+    <p style="color:var(--muted); font-size:14px; margin-bottom:24px; line-height:1.6">
+      Once you register your wallet, you get a unique <code style="background:var(--bg);padding:2px 6px;border-radius:4px;border:1px solid var(--border);font-family:'Fira Code',monospace">aipp_merch_...</code> API key. You simply paste this key into your application's backend. When a user clicks "Buy" on your website, your app makes a single HTTP request using this key. AIPP returns a Lightning QR Code for your user to scan.
     </p>
-    <div style="display:flex; gap:16px; align-items:center; flex-wrap:wrap;">
-      <div style="flex:1; background:#f3f4f6; border:2px solid #000; padding:16px; border-radius:8px; text-align:center; font-weight:700;">1. User clicks "Pay" on your site</div>
-      <div style="font-weight:900">➔</div>
-      <div style="flex:1; background:#000; color:#a3dc21; border:2px solid #000; padding:16px; border-radius:8px; text-align:center; font-weight:700;">2. Your backend calls AIPP with your Key</div>
-      <div style="font-weight:900">➔</div>
-      <div style="flex:1; background:#dcfce7; color:#15803d; border:2px solid #15803d; padding:16px; border-radius:8px; text-align:center; font-weight:700;">3. You display the generated QR code</div>
+    <div class="steps" style="gap:16px;">
+      <div class="step" style="padding:16px 24px;">
+        <h4 style="font-size:14px; font-weight:600; color:var(--muted); margin-bottom:4px">Step 1</h4>
+        <p style="font-size:14px; color:var(--fg)">User clicks "Pay" on your site</p>
+      </div>
+      <div class="step" style="padding:16px 24px; border-color:var(--accent);">
+        <h4 style="font-size:14px; font-weight:600; color:var(--accent); margin-bottom:4px">Step 2</h4>
+        <p style="font-size:14px; color:var(--fg)">Your backend calls AIPP with your Key</p>
+      </div>
+      <div class="step" style="padding:16px 24px; border-color:#22c55e;">
+        <h4 style="font-size:14px; font-weight:600; color:#22c55e; margin-bottom:4px">Step 3</h4>
+        <p style="font-size:14px; color:var(--fg)">You display the generated QR code</p>
+      </div>
     </div>
   </div>
 </section>
 
 <section class="section">
+<section class="section">
   <div class="label">Why aipp.dev</div>
   <h2>Everything you hated about online billing, gone.</h2>
   <div class="pains">
-    <div class="pain"><div class="before">Stripe setup took 3 weeks</div><div class="after">⚡ Wallet address in, key out in 3 seconds</div></div>
-    <div class="pain"><div class="before">Hold funds for 14 days</div><div class="after">⚡ Settlement is instant (under 1 second)</div></div>
-    <div class="pain"><div class="before">High merchant chargeback fraud</div><div class="after">⚡ Bitcoin Lightning has zero chargebacks</div></div>
-    <div class="pain"><div class="before">Can't pay from Turkey/Iran/Argentina</div><div class="after">⚡ Lightning network has no borders</div></div>
-    <div class="pain"><div class="before">Custody audit & regulatory compliance</div><div class="after">⚡ Non-custodial proxy. We never hold your money</div></div>
-    <div class="pain"><div class="before">Hidden gateway fees</div><div class="after">⚡ Flat 1% transaction fee, zero maintenance cost</div></div>
+    <div class="pain">
+      <div class="before" style="color:var(--muted); margin-bottom:8px; font-size:13px; text-decoration:line-through;">Stripe setup took 3 weeks</div>
+      <div class="after" style="color:var(--fg); font-size:14px; font-weight:500;">⚡ Wallet address in, key out in 3 seconds</div>
+    </div>
+    <div class="pain">
+      <div class="before" style="color:var(--muted); margin-bottom:8px; font-size:13px; text-decoration:line-through;">Hold funds for 14 days</div>
+      <div class="after" style="color:var(--fg); font-size:14px; font-weight:500;">⚡ Settlement is instant (under 1 second)</div>
+    </div>
+    <div class="pain">
+      <div class="before" style="color:var(--muted); margin-bottom:8px; font-size:13px; text-decoration:line-through;">High merchant chargeback fraud</div>
+      <div class="after" style="color:var(--fg); font-size:14px; font-weight:500;">⚡ Bitcoin Lightning has zero chargebacks</div>
+    </div>
+    <div class="pain">
+      <div class="before" style="color:var(--muted); margin-bottom:8px; font-size:13px; text-decoration:line-through;">Can't pay from Turkey/Iran/Argentina</div>
+      <div class="after" style="color:var(--fg); font-size:14px; font-weight:500;">⚡ Lightning network has no borders</div>
+    </div>
+    <div class="pain">
+      <div class="before" style="color:var(--muted); margin-bottom:8px; font-size:13px; text-decoration:line-through;">Custody audit & regulatory compliance</div>
+      <div class="after" style="color:var(--fg); font-size:14px; font-weight:500;">⚡ Non-custodial proxy. We never hold your money</div>
+    </div>
+    <div class="pain">
+      <div class="before" style="color:var(--muted); margin-bottom:8px; font-size:13px; text-decoration:line-through;">Hidden gateway fees</div>
+      <div class="after" style="color:var(--fg); font-size:14px; font-weight:500;">⚡ Flat 1% transaction fee, zero maintenance cost</div>
+    </div>
   </div>
 </section>
 
-<!-- USE CASES -->
-<section class="section" id="use-cases" style="background:#fff;border-top:3px solid #000">
-  <div class="label">Use Cases</div>
-  <h2>An instant checkout method for everyone.</h2>
-  <div class="use-case-grid">
-    
-    <div class="uc-card">
-      <img src="usecase_ecommerce_1782748856926.jpg" alt="E-Commerce">
-      <div class="uc-content">
-        <h3>🛍️ E-Commerce & Online Sales</h3>
-        <p>Sell e-books, software, game pins, or physical goods. Don't wait weeks for Stripe or PayPal approval. Connect your wallet in 3 seconds and start accepting payments immediately.</p>
-      </div>
-    </div>
-
-    <div class="uc-card">
-      <img src="usecase_ai_agents_1782748866463.jpg" alt="AI Agents">
-      <div class="uc-content">
-        <h3>🤖 Autonomous AI Agents</h3>
-        <p>Give your AI assistant its own wallet. When it researches the web and sells a report on your behalf, it can autonomously collect the payment directly to your account.</p>
-      </div>
-    </div>
-
-    <div class="uc-card">
-      <img src="usecase_apis_1782748873859.jpg" alt="APIs">
-      <div class="uc-content">
-        <h3>🔑 Pay-Per-Use APIs</h3>
-        <p>Don't force your users into monthly subscription tiers. Let them pay instantly for exactly what they use (e.g., $0.01 per request) without recurring credit card charges.</p>
-      </div>
-    </div>
-
-    <div class="uc-card">
-      <img src="usecase_micropayments_1782748883164.jpg" alt="Micropayments">
-      <div class="uc-content">
-        <h3>📰 Micropayments & Paywalls</h3>
-        <p>Put a $0.10 paywall on a single premium article on your blog. Credit card fees make this impossible, but with AIPP's Lightning integration, micropayments are a reality!</p>
-      </div>
-    </div>
-
-  </div>
-</section>
-
-<!-- LIVE DEMO -->
-<section class="section" id="demo">
-  <div class="label">Live demo</div>
-  <h2>Register a mock shop. Pay an invoice. Get paid.</h2>
+<!-- GET STARTED FLOW -->
+<section class="section" id="get-started">
+  <div class="label">Get Started</div>
+  <h2>Link your wallet and get your API Key in seconds.</h2>
   <div class="demo-wrap">
 
     <div class="demo-tabs">
-      <button class="tab active" onclick="switchTab(0)">① Setup Shop</button>
-      <button class="tab" onclick="switchTab(1)">② Checkout</button>
-      <button class="tab" onclick="switchTab(2)">③ Payout Status</button>
+      <button class="tab active" onclick="switchTab(0)">① Get API Key</button>
+      <button class="tab" onclick="switchTab(1)">② Test Checkout (Optional)</button>
+      <button class="tab" onclick="switchTab(2)">③ Test Payout</button>
     </div>
 
-    <!-- STEP 1: Setup Shop -->
+    <!-- STEP 1: Get API Key -->
     <div class="demo-step active" id="step0">
       <p style="color:var(--muted);font-size:14px;margin-bottom:20px">Link your Lightning Address to get your AIPP Merchant API Key:</p>
       <div class="demo-input">
         <input type="text" id="demo-ln-address" value="" placeholder="e.g. satoshi@getalby.com">
         <button onclick="demoRegisterMerchant()">Link Wallet & Get Key</button>
       </div>
-      <div class="demo-note">Input your real Lightning Address (e.g. Phoenix/Alby) to test real payouts!</div>
+      <div class="demo-note">Input your real Lightning Address to get your permanent API key.</div>
     </div>
 
     <!-- STEP 2: Checkout -->
     <div class="demo-step" id="step1">
-      <p style="color:var(--muted);font-size:14px;margin-bottom:20px">Simulate a customer purchase. Click pay to generate a Lightning invoice:</p>
+      <p style="color:var(--muted);font-size:14px;margin-bottom:20px">Simulate a test checkout on your newly generated API key:</p>
       <div class="shop-card" style="background:#fff;border:3px solid #000;border-radius:var(--radius);padding:16px;box-shadow:4px 4px 0px #000;margin:0 auto;max-width:320px;text-align:center">
-        <img src="robot_mascot_real.jpg" alt="AIPP Cyber Tee" style="width:100%;height:180px;object-fit:cover;border:3px solid #000;border-radius:var(--radius);margin-bottom:12px">
-        <h3 style="margin-bottom:4px;font-size:16px;color:#000">AIPP Cyber Tee (Ltd. Edition)</h3>
-        <p style="color:var(--muted);font-size:12px;margin-bottom:12px">Hyper-realistic design printed on heavy cotton.</p>
+        <img src="api_token.jpg" alt="API Inference Token" style="width:100%;height:180px;object-fit:cover;border:3px solid #000;border-radius:var(--radius);margin-bottom:12px">
+        <h3 style="margin-bottom:4px;font-size:16px;color:#000">Premium LLM Inference</h3>
+        <p style="color:var(--muted);font-size:12px;margin-bottom:12px">Execute 10k tokens of highly optimized AI inference.</p>
         <div class="price" style="font-size:20px;font-weight:900;margin-bottom:12px;color:#000">500 <span style="font-size:14px">sats</span></div>
-        <button class="demo-btn" onclick="demoCreateInvoice()" style="width:100%">Buy Now with Lightning</button>
+        <button class="demo-btn" onclick="demoCreateInvoice()" style="width:100%">Pay for Compute</button>
       </div>
     </div>
 
@@ -481,7 +362,7 @@
         <h3 style="text-align:center;margin-bottom:16px;color:#000">Split & Forward Completed!</h3>
         <div style="font-size:13px;line-height:1.8;color:#000">
           <div style="display:flex;justify-content:space-between;border-bottom:1px solid #ddd;padding:4px 0"><strong>Total Paid:</strong> <span>500 sats</span></div>
-          <div style="display:flex;justify-content:space-between;border-bottom:1px solid #ddd;padding:4px 0;color:#d32f2f"><strong>AIPP Fee (1%):</strong> <span>5 sats</span></div>
+          <p style="margin:4px 0; color:#b0bec5; font-size:12px">AIPP Fee (1% or min 5 sats): <span style="float:right">-<span id="demo-fee">0</span> sats</span></p>
           <div style="display:flex;justify-content:space-between;border-bottom:1px solid #ddd;padding:4px 0;color:#2e7d32"><strong>Payout Forwarded:</strong> <span id="demo-payout-sent">495 sats</span></div>
           <div style="display:flex;justify-content:space-between;border-bottom:1px solid #ddd;padding:4px 0"><strong>Destination Address:</strong> <span id="demo-dest-address" style="font-weight:700"></span></div>
           <div style="padding-top:12px;font-size:11px;color:var(--muted);word-break:break-all"><strong>Payout Tx ID:</strong> <br><span id="demo-payout-hash" style="font-family:monospace"></span></div>
@@ -493,39 +374,118 @@
   </div>
 </section>
 
-<section class="section" id="integration" style="background:var(--bg); border-top:3px solid #000;">
+<section class="section" id="use-cases">
+  <div class="label">Use Cases</div>
+  <h2>Built for the Machine Economy.</h2>
+  <p style="font-size: 16px; margin-bottom: 40px; color: var(--muted);">
+    AIPP creates a robust financial layer bridging traditional web services with emerging machine economies.
+  </p>
+  
+  <div class="bento-grid">
+    <!-- 1. AI Agent Economy (Wide) -->
+    <div class="bento-item bento-wide">
+      <h3>
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 8V4H8"/><rect width="16" height="12" x="4" y="8" rx="2"/><path d="M2 14h2"/><path d="M20 14h2"/><path d="M15 13v2"/><path d="M9 13v2"/></svg>
+        Autonomous AI Agent Economy
+      </h3>
+      <p>Currently the fastest-growing sector. L402 creates a machine economy where AI agents can autonomously pay for inference, data oracles, computing, and storage in real-time. AIPP gives AI agents the ability to act as "customers" without needing a centralized billing system, bank account, or credit card.</p>
+    </div>
+
+    <!-- 2. API Monetization -->
+    <div class="bento-item">
+      <h3>
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 8v13H3V8"/><path d="M1 3h22v5H1z"/><path d="M10 12h4"/></svg>
+        API Monetization
+      </h3>
+      <p>Ideal for SaaS founders. Traditional billing (credit cards, subscriptions) fails for automated micro-transactions. AIPP unlocks frictionless Pay-Per-Call monetization with zero chargeback risk.</p>
+    </div>
+
+    <!-- 5. AI Infrastructure Market (Tall) -->
+    <div class="bento-item bento-tall">
+      <h3>
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="8" rx="2" ry="2"/><rect x="2" y="14" width="20" height="8" rx="2" ry="2"/><line x1="6" y1="6" x2="6.01" y2="6"/><line x1="6" y1="18" x2="6.01" y2="18"/></svg>
+        AI Infrastructure Market
+      </h3>
+      <p>As of late 2025, over 1 billion `402 Payment Required` responses are processed daily. Instead of blocking AI crawlers, publishers now charge them micro-fees for instant data access. This L402 standard is a massive and direct market for AIPP.</p>
+    </div>
+
+    <!-- 3. Borderless E-commerce -->
+    <div class="bento-item">
+      <h3>
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+        Borderless E-Commerce
+      </h3>
+      <p>Many emerging markets are restricted by legacy giants like Stripe. Powered by the Lightning Network, AIPP completely eliminates geographical constraints. Sell globally.</p>
+    </div>
+
+    <!-- 4. Content Micropayments -->
+    <div class="bento-item">
+      <h3>
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+        Content Micropayments
+      </h3>
+      <p>Payments like $0.05 per article or $0.10 per video are physically impossible with credit cards. AIPP makes micro-content monetization naturally viable.</p>
+    </div>
+
+    <!-- 6. Digital Product Sales -->
+    <div class="bento-item">
+      <h3>
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
+        Digital Products
+      </h3>
+      <p>Zero Chargeback risk. Lightning payments are mathematically irreversible. Delivery is instant, wait times are non-existent, and borders vanish.</p>
+    </div>
+
+    <!-- 7. Freelance & Micro-work -->
+    <div class="bento-item">
+      <h3>
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg>
+        Freelance & Micro-work
+      </h3>
+      <p>Instant, zero-friction payouts for completed tasks or bounties. Shrinks the slow 3-5% fee, multi-day legacy flow into seconds with a flat 1% network fee.</p>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="integration">
   <div class="label">Integration Paths</div>
   <h2>How do I actually use this API Key?</h2>
-  <p style="font-size: 18px; margin-bottom: 40px; color: #000; font-weight: 500;">
+  <p style="font-size: 16px; margin-bottom: 40px; color: var(--muted);">
     Whether you are a seasoned developer, a non-technical shop owner, or an autonomous AI, using your AIPP Key is incredibly simple.
   </p>
   
-  <div class="integration-grid" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(300px, 1fr)); gap:24px;">
+  <div class="integration-grid">
     
     <!-- Path 1: AI Agents -->
-    <div class="int-card" style="background:#fff; border:3px solid #000; border-radius:16px; padding:32px; box-shadow:5px 5px 0px #000;">
-      <div style="font-size:48px; margin-bottom:16px;">🤖</div>
-      <h3 style="font-weight:900; font-size:20px; margin-bottom:12px;">I use an AI Agent</h3>
-      <p style="color:var(--muted); font-size:14px; font-weight:500; line-height:1.6; margin-bottom:20px;">
-        You don't need to know how to code! Simply paste your <code>aipp_merch_...</code> key into your AI Agent's system prompt or knowledge base. Tell the agent: <i>"Use AIPP to charge users for my service."</i> The AI will read our documentation and integrate it autonomously.
+    <div class="int-card" style="background:var(--card); border:1px solid var(--border); border-radius:var(--radius); padding:32px; transition:transform 0.2s;">
+      <div style="margin-bottom:20px; color:var(--accent);">
+        <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 8V4H8"/><rect width="16" height="12" x="4" y="8" rx="2"/><path d="M2 14h2"/><path d="M20 14h2"/><path d="M15 13v2"/><path d="M9 13v2"/></svg>
+      </div>
+      <h3 style="font-weight:600; font-size:18px; margin-bottom:12px; color:var(--fg);">I use an AI Agent</h3>
+      <p style="color:var(--muted); font-size:14px; line-height:1.6; margin-bottom:20px;">
+        You don't need to know how to code! Simply paste your <code style="background:var(--bg);border:1px solid var(--border);padding:2px 4px;border-radius:4px">aipp_merch_...</code> key into your AI Agent's system prompt or knowledge base. Tell the agent: <i>"Use AIPP to charge users for my service."</i> The AI will read our documentation and integrate it autonomously.
       </p>
     </div>
 
     <!-- Path 2: No-code / Plugins -->
-    <div class="int-card" style="background:#fff; border:3px solid #000; border-radius:16px; padding:32px; box-shadow:5px 5px 0px #000;">
-      <div style="font-size:48px; margin-bottom:16px;">🛍️</div>
-      <h3 style="font-weight:900; font-size:20px; margin-bottom:12px;">I use WordPress / Shopify</h3>
-      <p style="color:var(--muted); font-size:14px; font-weight:500; line-height:1.6; margin-bottom:20px;">
+    <div class="int-card" style="background:var(--card); border:1px solid var(--border); border-radius:var(--radius); padding:32px; transition:transform 0.2s;">
+      <div style="margin-bottom:20px; color:var(--accent);">
+        <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+      </div>
+      <h3 style="font-weight:600; font-size:18px; margin-bottom:12px; color:var(--fg);">I use WordPress / Shopify</h3>
+      <p style="color:var(--muted); font-size:14px; line-height:1.6; margin-bottom:20px;">
         No coding required. Just download our official eCommerce plugin, go to the settings page, and paste your API key into the "AIPP Key" field. Your checkout page will instantly support Bitcoin Lightning payments. <br><br><i>(Plugins are currently in development)</i>
       </p>
     </div>
 
     <!-- Path 3: Developers -->
-    <div class="int-card" style="background:#fff; border:3px solid #000; border-radius:16px; padding:32px; box-shadow:5px 5px 0px #000;">
-      <div style="font-size:48px; margin-bottom:16px;">💻</div>
-      <h3 style="font-weight:900; font-size:20px; margin-bottom:12px;">I am a Developer</h3>
-      <p style="color:var(--muted); font-size:14px; font-weight:500; line-height:1.6; margin-bottom:20px;">
-        Pass the key as an HTTP header <code>X-AIPP-Key</code>. Create an invoice with one REST call and poll for status. It takes 5 lines of code. Check our <a href="docs.html" style="color:var(--success); font-weight:700;">API Docs</a> for copy-paste examples.
+    <div class="int-card" style="background:var(--card); border:1px solid var(--border); border-radius:var(--radius); padding:32px; transition:transform 0.2s;">
+      <div style="margin-bottom:20px; color:var(--accent);">
+        <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 17 10 11 4 5"/><line x1="12" x2="20" y1="19" y2="19"/></svg>
+      </div>
+      <h3 style="font-weight:600; font-size:18px; margin-bottom:12px; color:var(--fg);">I am a Developer</h3>
+      <p style="color:var(--muted); font-size:14px; line-height:1.6; margin-bottom:20px;">
+        Pass the key as an HTTP header <code style="background:var(--bg);border:1px solid var(--border);padding:2px 4px;border-radius:4px">X-Api-Key</code>. Create an invoice with one REST call and poll for status. It takes 5 lines of code. Check our <a href="docs.html" style="color:var(--accent); font-weight:600;">API Docs</a> for copy-paste examples.
       </p>
     </div>
 
@@ -535,48 +495,48 @@
 <section class="section" id="pricing">
   <div class="label">Pricing</div>
   <h2>Flat fee. Zero friction.</h2>
-  <div class="pricing-card">
-    <div>Standard Rate</div>
-    <div class="price">1% <sub>commission</sub></div>
-    <div class="price-note">taken on payment success · no processing limits</div>
-    <ul class="features">
-      <li><span class="check">⚡</span> Settled instantly to your cüzdan</li>
-      <li><span class="check">⚡</span> Non-custodial — zero regulatory risk</li>
-      <li><span class="check">⚡</span> Min transaction: 100 sats</li>
-      <li><span class="check">⚡</span> Max transaction: 100,000 sats</li>
-      <li><span class="check">⚡</span> Zero monthly maintenance fees</li>
+  <div style="background:var(--card); border:1px solid var(--border); border-radius:var(--radius); padding:40px; max-width:500px; margin:0 auto; text-align:center;">
+    <div style="font-weight:600; color:var(--muted); text-transform:uppercase; letter-spacing:1px; margin-bottom:12px;">Standard Rate</div>
+    <div style="font-size:48px; font-weight:700; color:var(--fg); margin-bottom:8px;">1% <span style="font-size:16px; color:var(--muted); font-weight:400;">commission</span></div>
+    <div style="font-size:14px; color:var(--muted); margin-bottom:32px;">taken on payment success · no processing limits</div>
+    <ul style="list-style:none; text-align:left; margin-bottom:32px; display:flex; flex-direction:column; gap:12px;">
+      <li style="display:flex; align-items:center; gap:12px; color:var(--fg);"><span style="color:var(--accent);">⚡</span> Settled instantly to your cüzdan</li>
+      <li style="display:flex; align-items:center; gap:12px; color:var(--fg);"><span style="color:var(--accent);">⚡</span> Non-custodial — zero regulatory risk</li>
+      <li style="display:flex; align-items:center; gap:12px; color:var(--fg);"><span style="color:var(--accent);">⚡</span> Min transaction: 100 sats</li>
+      <li style="display:flex; align-items:center; gap:12px; color:var(--fg);"><span style="color:var(--accent);">⚡</span> Max transaction: 100,000 sats</li>
+      <li style="display:flex; align-items:center; gap:12px; color:var(--fg);"><span style="color:var(--accent);">⚡</span> Zero monthly maintenance fees</li>
     </ul>
-    <a href="#demo" class="btn btn-primary" style="display:block;text-align:center">Start Processing →</a>
+    <a href="#get-started" class="btn btn-primary" style="display:block; text-align:center; width:100%;">Start Processing →</a>
   </div>
 </section>
 
 <footer>
   <span>© 2026 aipp.dev</span>
+  <span style="flex: 1; text-align: center;">
+    <a href="mailto:aippdev@proton.me" style="color:var(--muted);">aippdev@proton.me</a>
+  </span>
   <span>
     <a href="docs.html" style="color:var(--muted);margin-right:20px">Docs</a>
     <a href="dashboard.html" style="color:var(--muted)">Dashboard</a>
   </span>
 </footer>
 
-<!-- AI CHAT WIDGET -->
-<div class="chat-widget-btn" onclick="toggleChat()" id="chat-btn">🤖</div>
-<div class="chat-window" id="chat-window">
-  <div class="chat-header">
-    <div>AIPP Assistant ⚡</div>
-    <div class="chat-close" onclick="toggleChat()">✕</div>
-  </div>
-  <div class="chat-body" id="chat-body">
-    <div class="chat-msg bot">Hi! I'm AIPP Assistant. How can I help you today?</div>
-    <div class="chat-options" id="chat-options">
-      <button class="chat-option-btn" onclick="sendChat('How does AIPP work?')">⚡ How it works?</button>
-      <button class="chat-option-btn" onclick="sendChat('What are the fees and limits?')">💰 Fees & Limits</button>
-      <button class="chat-option-btn" onclick="sendChat('How do I integrate this?')">💻 Integration</button>
+<!-- SUCCESS MODAL -->
+<div class="modal-overlay" id="success-modal">
+  <div class="modal-box">
+    <div style="font-size:48px;text-align:center;margin-bottom:8px">🎉</div>
+    <h2 style="text-align:center">Mağazanız Kuruldu!</h2>
+    <p style="text-align:center">
+      Bu API anahtarını tarayıcınıza otomatik kaydettik. Dashboard'a giriş yapmak için ezberlemenize gerek yok. Başka bir cihazda kullanmak isterseniz indirebilirsiniz.
+    </p>
+    <div class="modal-key-wrap">
+      <input type="text" class="modal-key-input" id="modal-api-key" readonly>
+      <button class="modal-btn-download" onclick="downloadKey()" title="Anahtarı İndir">💾</button>
+      <button class="modal-btn-download" onclick="copyModalKey()" title="Kopyala">📋</button>
     </div>
-  </div>
-  <div class="chat-input-area">
-    <div class="chat-input-row">
-      <input type="text" id="chat-input" placeholder="Type your message..." onkeypress="if(event.key==='Enter') sendChat()">
-      <button onclick="sendChat()">Send</button>
+    <div class="modal-actions">
+      <button class="btn-test" onclick="closeModalAndTest()">Test Checkout (Optional)</button>
+      <a href="dashboard.html" class="btn-dash">Dashboard'a Git ⚡</a>
     </div>
   </div>
 </div>
@@ -600,7 +560,7 @@ function switchTab(i) {
 // ── QR CODE GENERATOR ───────────────────────────────────
 function drawQR(canvas, text) {
   QRCode.toCanvas(canvas, text, {
-    width: 180,
+    width: 250,
     margin: 1,
     color: {
       dark: '#000000',
@@ -642,12 +602,44 @@ async function demoRegisterMerchant() {
     localStorage.setItem('aipp_api_key', currentMerchantKey);
     localStorage.setItem('aipp_ln_address', currentLnAddress);
 
-    alert(`🎉 Merchant Registered!\n\nYour API Key: ${currentMerchantKey}\nPayout Address: ${currentLnAddress}`);
-    switchTab(1); // Proceed to checkout tab
+    // Show beautiful modal instead of alert
+    document.getElementById('modal-api-key').value = currentMerchantKey;
+    document.getElementById('success-modal').classList.add('active');
+    
   } catch (err) {
     console.error('Failed to register merchant:', err);
     alert('Failed to connect to AIPP backend server. Make sure it is running locally on port 3000.');
   }
+}
+
+function closeModalAndTest() {
+  document.getElementById('success-modal').classList.remove('active');
+  switchTab(1);
+}
+
+function copyModalKey() {
+  const k = document.getElementById('modal-api-key').value;
+  navigator.clipboard.writeText(k);
+  // We can show a small toast, but alert is ok for a quick copy confirmation, or better just update text
+  const btn = event.target;
+  const oldText = btn.textContent;
+  btn.textContent = '✓';
+  setTimeout(() => btn.textContent = oldText, 1500);
+}
+
+function downloadKey() {
+  const k = document.getElementById('modal-api-key').value;
+  const ln = currentLnAddress;
+  const content = `AIPP Merchant Details\n----------------------\nAPI Key: ${k}\nLightning Address: ${ln}\n\nKeep this file safe!`;
+  const blob = new Blob([content], { type: 'text/plain' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'aipp-key.txt';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
 }
 
 // ── CREATE INVOICE ──────────────────────────────────────
@@ -666,7 +658,7 @@ async function demoCreateInvoice() {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'X-AIPP-Key': currentMerchantKey
+        'X-Api-Key': currentMerchantKey
       },
       body: JSON.stringify({ amount_sats: 500 })
     });
@@ -688,7 +680,7 @@ async function demoCreateInvoice() {
 
     // Draw QR Code
     const canvas = document.getElementById('qr-canvas');
-    drawQR(canvas, invoice);
+    drawQR(canvas, 'LIGHTNING:' + invoice.toUpperCase());
 
     document.getElementById('qr-area').style.display = 'block';
     document.getElementById('pay-status').textContent = 'Waiting for payment...';
@@ -722,18 +714,44 @@ function onPaymentConfirmed(hash) {
   document.getElementById('pay-dot').className = 'dot paid';
   document.getElementById('pay-status').textContent = 'Paid! Forwarding payout...';
 
-  setTimeout(() => {
-    document.getElementById('qr-area').style.display = 'none';
-    
-    // Fill payout details
-    document.getElementById('demo-dest-address').textContent = currentLnAddress;
-    
-    // Fake payout transaction hash for visual display if local mock payout occurred
-    const payoutHash = hash.replace('demo_', 'tx_forwarded_');
-    document.getElementById('demo-payout-hash').textContent = payoutHash;
-
-    document.getElementById('payout-result').style.display = 'block';
-  }, 1000);
+  let pollCount = 0;
+  const payoutTimer = setInterval(async () => {
+    try {
+      const res = await fetch(`${AIPP_API}/merchant/payout-status/${hash}`);
+      const data = await res.json();
+      
+      if (data.status === 'completed' || data.status === 'failed') {
+        clearInterval(payoutTimer);
+        document.getElementById('qr-area').style.display = 'none';
+        
+        document.getElementById('demo-dest-address').textContent = currentLnAddress;
+        document.getElementById('demo-payout-hash').textContent = hash.replace('demo_', 'tx_forwarded_');
+        
+        const resultDiv = document.getElementById('payout-result');
+        if (data.status === 'failed') {
+          resultDiv.innerHTML = `
+            <div class="success-icon" style="text-align:center;font-size:32px;margin-bottom:8px">⚠️</div>
+            <h3 style="text-align:center;margin-bottom:16px;color:#d32f2f">Routing Error</h3>
+            <div style="font-size:13px;line-height:1.8;color:#000;text-align:center;margin-bottom:16px;">
+              Your invoice was paid, but the Lightning Network could not find a route to forward the payout to <strong>${currentLnAddress}</strong>.<br><br>
+              The funds remain safely in your AIPP node.
+            </div>
+            <button class="demo-btn" onclick="switchTab(0)" style="width:100%">Try Another Address →</button>
+          `;
+        }
+        
+        resultDiv.style.display = 'block';
+      } else {
+        pollCount++;
+        if (pollCount > 15) { // 30 seconds timeout
+          clearInterval(payoutTimer);
+          document.getElementById('pay-status').textContent = 'Payout queued. Check dashboard later.';
+        }
+      }
+    } catch (e) {
+      console.error('Error polling payout status', e);
+    }
+  }, 2000);
 }
 
 // ── COPY INVOICE ────────────────────────────────────────
@@ -747,95 +765,6 @@ function copyInvoice() {
   });
 }
 
-// ── AI CHATBOT LOGIC ────────────────────────────────────
-let chatMessages = [];
-let ticketMode = false;
-let pendingQuestion = "";
-
-function toggleChat() {
-  const w = document.getElementById('chat-window');
-  w.style.display = w.style.display === 'flex' ? 'none' : 'flex';
-}
-
-function appendMsg(role, text) {
-  const body = document.getElementById('chat-body');
-  const div = document.createElement('div');
-  div.className = `chat-msg ${role}`;
-  // Basic markdown formatting
-  let formatted = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>').replace(/\n/g, '<br>');
-  div.innerHTML = formatted;
-  body.appendChild(div);
-  body.scrollTop = body.scrollHeight;
-}
-
-async function sendChat(forcedText) {
-  const inputEl = document.getElementById('chat-input');
-  const text = forcedText || inputEl.value.trim();
-  if (!text) return;
-
-  inputEl.value = '';
-  document.getElementById('chat-options').style.display = 'none';
-
-  appendMsg('user', text);
-
-  // Ticket mode logic
-  if (ticketMode) {
-    if (text.includes('@')) {
-      appendMsg('bot', '<em>Creating ticket...</em>');
-      try {
-        await fetch(`${AIPP_API}/ticket`, {
-          method: 'POST',
-          headers: {'Content-Type':'application/json'},
-          body: JSON.stringify({ email: text, question: pendingQuestion })
-        });
-        appendMsg('bot', '✅ Your ticket has been created! Our team will email you shortly.');
-      } catch (e) {
-        appendMsg('bot', '❌ Failed to create ticket. Please contact support manually.');
-      }
-      ticketMode = false;
-      pendingQuestion = "";
-    } else {
-      appendMsg('bot', 'Please provide a valid email address (e.g. you@domain.com).');
-    }
-    return;
-  }
-
-  chatMessages.push({ role: 'user', content: text });
-  
-  // Loading indicator
-  const loadDiv = document.createElement('div');
-  loadDiv.className = 'chat-msg bot';
-  loadDiv.id = 'chat-loading';
-  loadDiv.innerHTML = '<em>Thinking...</em>';
-  document.getElementById('chat-body').appendChild(loadDiv);
-  document.getElementById('chat-body').scrollTop = document.getElementById('chat-body').scrollHeight;
-
-  try {
-    const res = await fetch(`${AIPP_API}/chat`, {
-      method: 'POST',
-      headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({ messages: chatMessages })
-    });
-    
-    document.getElementById('chat-loading').remove();
-    
-    if (res.ok) {
-      const data = await res.json();
-      appendMsg('bot', data.content);
-      chatMessages.push({ role: 'assistant', content: data.content });
-      
-      if (data.ticket_required) {
-        ticketMode = true;
-        pendingQuestion = text;
-      }
-    } else {
-      appendMsg('bot', 'Error connecting to brain. Try again later.');
-    }
-  } catch(e) {
-    document.getElementById('chat-loading').remove();
-    appendMsg('bot', 'Connection error.');
-  }
-}
 </script>
 </body>
 </html>

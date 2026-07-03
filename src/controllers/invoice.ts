@@ -4,7 +4,8 @@ import { getDb } from '../config/database';
 import { checkLimit } from '../services/limiter';
 import { getBtcUsdRate } from '../services/price';
 import { AppError } from '../utils/error';
-import { LNBITS_INVOICE_KEY, LNBITS_URL, LNBITS_WEBHOOK_SECRET, PORT } from '../config/env';
+import { LNBITS_INVOICE_KEY, LNBITS_URL, LNBITS_WEBHOOK_SECRET, PORT, FEE_PER_REQUEST_SATS } from '../config/env';
+
 
 function getAippKey(req: Request): string | null {
   const authHeader = req.headers.authorization;
@@ -27,21 +28,29 @@ export const createInvoice = async (req: Request, res: Response, next: NextFunct
       throw new AppError('Invalid AIPP API key', 401, 'UNAUTHORIZED');
     }
 
-    let body: any = {};
-    if (req.body && req.body.length > 0) {
+    let body: any = req.body;
+    if (Buffer.isBuffer(req.body) && req.body.length > 0) {
       body = JSON.parse(req.body.toString('utf8'));
     }
 
-    const amount_sats = body.amount_sats;
+    let amount_sats = body.amount_sats;
+
+    if (body.amount_usd !== undefined) {
+      if (typeof body.amount_usd !== 'number' || isNaN(body.amount_usd) || body.amount_usd <= 0) {
+        throw new AppError('amount_usd must be a positive number', 400, 'INVALID_AMOUNT');
+      }
+      amount_sats = Math.ceil((body.amount_usd / getBtcUsdRate()) * 100_000_000);
+    }
+
     if (typeof amount_sats !== 'number' || isNaN(amount_sats) || amount_sats < 100 || amount_sats > 100000) {
-      throw new AppError('Transaction amount must be between 100 and 100,000 satoshis', 400, 'INVALID_AMOUNT');
+      throw new AppError('Transaction amount must be between 100 and 100,000 satoshis (or equivalent USD)', 400, 'INVALID_AMOUNT');
     }
 
     const costUsd = (amount_sats / 100_000_000) * getBtcUsdRate();
     await checkLimit(apiKey, costUsd);
 
     const callback_url = body.callback_url || null;
-    const commission = Math.max(1, Math.floor(amount_sats * 0.01));
+    const commission = amount_sats <= 1000 ? 20 : 100;
     const forwarded = amount_sats - commission;
 
     let paymentHash = '';

@@ -5,170 +5,259 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>aipp.dev — Developer Dashboard</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<style> @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap');
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,700;1,600&family=Inter:wght@400;500;600;700&display=swap');
   
   *{margin:0;padding:0;box-sizing:border-box}
-  :root{
-    --bg:#a3dc21; /* Solid Lime Green matching the landing page */
-    --fg:#000000;
-    --muted:#3f3f46;
-    --accent:#000000;
-    --border:#000000;
-    --card:#ffffff;
-    --success:#16803d;
-    --danger:#ef4444;
-    --radius:16px;
-  }
-  body{
-    background-color:var(--bg);
-    background-image:radial-gradient(#0000001a 1px, transparent 1px);
-    background-size:16px 16px;
-    color:var(--fg);
-    font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
-    line-height:1.6;
-    -webkit-font-smoothing:antialiased;
-    min-height:100vh;
-    display:flex;
-    flex-direction:column;
-    padding-bottom:40px;
-    overflow-x:hidden;
+  
+  :root {
+    --bg: #0a0a0b;
+    --fg: #f4f4f5;
+    --muted: #a1a1aa;
+    --border: #27272a;
+    --accent: #f59e0b;
+    --card: #18181b;
+    --success: #22c55e;
+    --danger: #ef4444;
   }
   
-  header{display:flex;align-items:center;justify-content:space-between;padding:24px 40px;border-bottom:3px solid var(--border);background:#000;color:#fff;position:sticky;top:0;z-index:50}
-  .logo{font-family: 'Space Grotesk', sans-serif;font-weight:900;font-size:22px;letter-spacing:-.8px;text-decoration:none;color:#000;background:#fff;border:3px solid #000;padding:4px 16px;border-radius:10px;box-shadow:3px 3px 0px #000;transition:all 0.2s}
-  .logo:hover{transform:translate(-2px,-2px);box-shadow:5px 5px 0px #000}
-  .logo span{color:#a3dc21; -webkit-text-stroke: 1px #000;}
-  .nav-btn{background:#fff;color:#000;border:3px solid #000;padding:8px 20px;border-radius:20px;font-size:13px;font-weight:800;cursor:pointer;text-decoration:none;box-shadow:2px 2px 0px #000;transition:all .15s}
-  .nav-btn:hover{transform:translate(-2px,-2px);box-shadow:4px 4px 0px #000}
-  .nav-btn:active{transform:translate(1px,1px);box-shadow:1px 1px 0px #000}
+  body {
+    background-color: var(--bg);
+    color: var(--fg);
+    font-family: 'Inter', -apple-system, sans-serif;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+  
+  header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 24px 40px;
+    border-bottom: 1px solid var(--border);
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    background: rgba(10,10,11,0.8);
+    backdrop-filter: blur(8px);
+  }
+  
+  .logo {
+    font-family: 'Inter', sans-serif;
+    font-weight: 700;
+    font-size: 20px;
+    letter-spacing: -0.5px;
+    text-decoration: none;
+    color: var(--fg);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .logo span { color: var(--accent); }
+  
+  .nav-links {
+    display: flex;
+    gap: 24px;
+    align-items: center;
+  }
+  .nav-links a {
+    color: var(--muted);
+    text-decoration: none;
+    font-size: 14px;
+    font-weight: 500;
+    transition: color 0.2s;
+  }
+  .nav-links a:hover { color: var(--fg); }
+  
+  .nav-btn {
+    background: transparent;
+    color: var(--muted);
+    border: none;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    font-family: 'Inter', sans-serif;
+  }
+  .nav-btn:hover { color: var(--fg); }
 
-  .container{max-width:1100px;width:100%;margin:0 auto;padding:30px 20px;flex:1}
+  .container {
+    max-width: 1000px;
+    width: 100%;
+    margin: 0 auto;
+    padding: 40px 24px;
+    flex: 1;
+  }
 
   /* LOGIN VIEW */
-  .login-wrap{max-width:420px;margin:60px auto 0;background:var(--card);border:3px solid var(--border);border-radius:var(--radius);padding:32px;text-align:center;box-shadow:5px 5px 0px #000;transition:transform 0.2s}
-  .login-wrap:hover{transform:translate(-2px,-2px);box-shadow:7px 7px 0px #000}
-  .login-wrap h1{font-family: 'Space Grotesk', sans-serif;font-size:26px;font-weight:900;margin-bottom:8px;letter-spacing:-1.2px;text-transform:uppercase}
-  .login-wrap p{color:var(--muted);font-size:14px;margin-bottom:24px;font-weight:500}
-  .login-input{width:100%;background:#fff;border:3px solid var(--border);border-radius:8px;padding:12px 16px;color:var(--fg);font-family:monospace;font-size:14px;outline:none;margin-bottom:20px;text-align:center;font-weight:700;box-shadow:2px 2px 0px #000;transition:all 0.2s}
-  .login-input:focus{border-color:#000;box-shadow:3px 3px 0px #a3dc21}
+  .login-wrap {
+    max-width: 480px;
+    margin: 80px auto 0;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 40px;
+    text-align: center;
+  }
+  .login-wrap h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: 32px;
+    font-weight: 600;
+    margin-bottom: 12px;
+  }
+  .login-wrap p {
+    color: var(--muted);
+    font-size: 14px;
+    margin-bottom: 32px;
+  }
+  .login-input {
+    width: 100%;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 14px 16px;
+    color: var(--fg);
+    font-family: 'Fira Code', monospace;
+    font-size: 14px;
+    outline: none;
+    margin-bottom: 24px;
+    text-align: center;
+    transition: border-color 0.2s;
+  }
+  .login-input:focus { border-color: var(--accent); }
   
-  .btn-primary{background:#000;color:#a3dc21;border:3px solid #000;border-radius:8px;padding:14px 24px;font-weight:800;font-size:14px;cursor:pointer;width:100%;box-shadow:3px 3px 0px #fff;transition:transform 0.15s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.15s cubic-bezier(0.34, 1.56, 0.64, 1)}
-  .btn-primary:hover{transform:translate(-2px,-2px);box-shadow:5px 5px 0px #fff}
-  .btn-primary:active{transform:translate(2px,2px);box-shadow:1px 1px 0px #fff}
+  .btn-primary {
+    background: var(--accent);
+    color: #000;
+    border: none;
+    border-radius: 8px;
+    padding: 14px 24px;
+    font-weight: 600;
+    font-size: 14px;
+    cursor: pointer;
+    width: 100%;
+    font-family: 'Inter', sans-serif;
+    transition: opacity 0.2s;
+  }
+  .btn-primary:hover { opacity: 0.9; }
 
   /* DASHBOARD VIEW */
-  .dashboard-view{display:none}
-  .dashboard-view.active{display:block;animation:fadeInUp 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards}
+  .dashboard-view { display: none; }
+  .dashboard-view.active {
+    display: block;
+    animation: fadeInUp 0.4s ease forwards;
+  }
 
   @keyframes fadeInUp {
     from{opacity:0;transform:translateY(10px)}
     to{opacity:1;transform:translateY(0)}
   }
 
-  .stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px;margin-bottom:20px}
-  .stat-card{background:var(--card);border:3px solid var(--border);border-radius:var(--radius);padding:24px;position:relative;overflow:hidden;box-shadow:4px 4px 0px #000;color:#000;transition:transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.25s cubic-bezier(0.34, 1.56, 0.64, 1)}
-  .stat-card:hover{transform:translate(-4px,-4px);box-shadow:8px 8px 0px #000}
-  
-  .stat-card .label{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;font-weight:800}
-  .stat-card .val{font-family: 'Space Grotesk', sans-serif;font-size:32px;font-weight:900;letter-spacing:-1.5px}
-  .stat-card .val sub{font-size:14px;font-weight:400;color:var(--muted)}
-  .stat-card .footer{font-size:12px;color:var(--muted);margin-top:12px;display:flex;align-items:center;justify-content:space-between;font-weight:700}
-  .progress-bg{width:100%;height:10px;background:#f3f4f6;border:2px solid #000;border-radius:6px;margin-top:8px;overflow:hidden}
-  .progress-bar{height:100%;background:#000;border-radius:2px;width:0%;transition:width .4s}
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 24px;
+    margin-bottom: 24px;
+  }
+  .stat-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 24px;
+  }
+  .stat-card .label { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px; font-weight: 600; }
+  .stat-card .val { font-family: 'Inter', sans-serif; font-size: 32px; font-weight: 700; letter-spacing: -1px; }
+  .stat-card .val sub { font-size: 14px; font-weight: 400; color: var(--muted); }
+  .stat-card .footer { font-size: 13px; color: var(--success); margin-top: 16px; font-weight: 500; }
 
-  .grid-two-col{display:grid;grid-template-columns:2fr 1fr;gap:16px;margin-bottom:20px}
+  .grid-two-col { display: grid; grid-template-columns: 2fr 1fr; gap: 24px; margin-bottom: 24px; }
   @media(max-width:900px){ .grid-two-col{grid-template-columns:1fr} }
 
-  .chart-card{background:var(--card);border:3px solid var(--border);border-radius:var(--radius);padding:24px;box-shadow:4px 4px 0px #000;color:#000;transition:transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.25s cubic-bezier(0.34, 1.56, 0.64, 1)}
-  .chart-card:hover{transform:translate(-2px,-2px);box-shadow:6px 6px 0px #000}
-  .chart-card h3{font-family: 'Space Grotesk', sans-serif;font-size:18px;font-weight:800;margin-bottom:20px;text-transform:uppercase;letter-spacing:-0.5px}
-  .chart-container{position:relative;height:240px;width:100%}
+  .chart-card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 24px; }
+  .chart-card h3 { font-family: 'Inter', sans-serif; font-size: 16px; font-weight: 600; margin-bottom: 24px; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; }
+  .chart-container { position: relative; height: 260px; width: 100%; }
 
-  .ledger-card{background:var(--card);border:3px solid var(--border);border-radius:var(--radius);padding:24px;margin-top:20px;box-shadow:4px 4px 0px #000;color:#000}
-  .ledger-card h3{font-family: 'Space Grotesk', sans-serif;font-size:18px;font-weight:800;margin-bottom:20px;text-transform:uppercase;letter-spacing:-0.5px}
-  .table-wrap{overflow-x:auto}
-  table{width:100%;border-collapse:collapse;text-align:left;font-size:13px}
-  th{color:#000;font-weight:900;padding:12px;border-bottom:3px solid var(--border);text-transform:uppercase;font-size:11px;letter-spacing:0.5px}
-  td{padding:12px;border-bottom:2px solid #f3f4f6;font-weight:700}
-  tr:last-child td{border-bottom:none}
-  .badge-type{display:inline-block;padding:2px 8px;border-radius:4px;font-size:10px;font-weight:800;text-transform:uppercase;border:2px solid #000}
-  .badge-type.settled{background:#dcfce7;color:var(--success);border-color:var(--success)}
-  .badge-type.pending{background:#fef3c7;color:#d97706;border-color:#d97706}
-  .badge-type.pending_threshold{background:#e0f2fe;color:#0284c7;border-color:#0284c7}
-  .badge-type.forward_failed{background:#fee2e2;color:var(--danger);border-color:var(--danger)}
+  .ledger-card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 24px; margin-top: 24px; }
+  .ledger-card h3 { font-family: 'Inter', sans-serif; font-size: 16px; font-weight: 600; margin-bottom: 24px; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; }
   
-  .sats-val{font-family:monospace;font-weight:900;font-size:14px}
-  .sats-val.negative{color:#ef4444}
-  .sats-val.positive{color:var(--success)}
+  .table-wrap { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; text-align: left; font-size: 13px; }
+  th { color: var(--muted); font-weight: 600; padding: 16px 12px; border-bottom: 1px solid var(--border); text-transform: uppercase; font-size: 11px; letter-spacing: 0.5px; }
+  td { padding: 16px 12px; border-bottom: 1px solid var(--border); color: var(--fg); }
+  tr:last-child td { border-bottom: none; }
+  
+  .badge-type { display: inline-block; padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; }
+  .badge-type.settled { background: rgba(34, 197, 94, 0.1); color: var(--success); }
+  .badge-type.pending { background: rgba(245, 158, 11, 0.1); color: #f59e0b; }
+  .badge-type.pending_threshold { background: rgba(56, 189, 248, 0.1); color: #38bdf8; }
+  
+  .sats-val { font-family: 'Fira Code', monospace; font-size: 13px; }
+  .sats-val.positive { color: var(--success); }
 
-  footer{text-align:center;padding:20px;color:#000;font-size:12px;border-top:3px solid var(--border);font-weight:700;max-width:1100px;margin:40px auto 0}
+  footer { text-align: center; padding: 32px; color: var(--muted); font-size: 13px; border-top: 1px solid var(--border); margin-top: auto; font-family: 'Inter', sans-serif; }
 </style>
-<script src="https://cdn.jsdelivr.net/npm/qrcode@1.4.4/build/qrcode.min.js"></script>
 </head>
 <body>
 
 <header>
-  <a href="index.html" class="logo">aipp<span>.</span>dev</a>
-  <div style="display:flex;align-items:center;gap:12px">
-    <a href="docs.html" class="nav-btn" style="text-decoration:none;display:inline-block">Docs</a>
-    <button class="nav-btn" id="logout-btn" style="display:none" onclick="logout()">Logout</button>
+  <a href="index.html" class="logo"><span>⚡</span> AIPP</a>
+  <div class="nav-links">
+    <a href="docs.html">Docs</a>
+    <a href="l402.html">L402 Demo</a>
+    <a href="dashboard.html" style="color:var(--fg)">Dashboard</a>
+    <button class="nav-btn" id="logout-btn" style="display:none" onclick="logout()">Sign out</button>
   </div>
 </header>
 
 <div class="container">
 
-  <!-- PASSWORDLESS LOGIN VIEW -->
+  <!-- LOGIN VIEW -->
   <div id="login-view" class="login-wrap">
-    <h1>Access your Wallet</h1>
-    <p>Enter your AIPP API Key to load your real-time developer statistics and wallet balance.</p>
-    <input type="text" id="aipp-key-input" class="login-input" placeholder="aipp_xxxxxxxxxxxxxxxx" autocomplete="off">
-    <button onclick="login()" class="btn-primary">Enter Dashboard →</button>
-    <div style="font-size:12px;color:var(--muted);margin-top:16px">Don't have a key? Go to <a href="aipp (1).html#demo" style="color:var(--accent)">Home</a> to create one.</div>
+    <h1>Sign in to Dashboard</h1>
+    <p>Enter your Lightning Address (email) or API Key.</p>
+    <input type="text" id="aipp-key-input" class="login-input" placeholder="e.g. you@domain.com or aipp_merch_..." autocomplete="off">
+    <button onclick="login()" class="btn-primary" id="login-btn">Unlock dashboard</button>
+    <div style="font-size:13px;color:var(--muted);margin-top:24px">
+      No account? <a href="index.html#get-started" style="color:var(--accent);text-decoration:none">Onboard in 3 seconds &rarr;</a>
+    </div>
   </div>
 
   <!-- MAIN DASHBOARD VIEW -->
   <div id="dashboard-view" class="dashboard-view">
     
-    <!-- Active API Key Display -->
-    <div style="background:#fff;border:3px solid #000;padding:12px 16px;box-shadow:4px 4px 0px #000;border-radius:var(--radius);margin-bottom:24px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px">
-      <div style="font-size:14px;color:#000">
-        <strong>Active API Key:</strong> 
-        <code id="display-api-key" style="background:#f3f4f6;padding:6px 10px;border-radius:4px;font-family:monospace;font-weight:900;margin-left:6px;border:1px solid #ddd">aipp_...</code>
+    <div style="background:var(--card);border:1px solid var(--border);padding:16px 24px;border-radius:12px;margin-bottom:32px;display:flex;justify-content:space-between;align-items:center;gap:12px">
+      <div style="font-size:14px;color:var(--muted)">
+        Active API Key: 
+        <code id="display-api-key" style="background:var(--bg);color:var(--fg);padding:6px 12px;border-radius:6px;font-family:'Fira Code',monospace;font-size:13px;margin-left:8px;border:1px solid var(--border)">aipp_...</code>
       </div>
-      <button class="nav-btn" onclick="copyActiveKey(this)" style="padding:6px 12px;font-size:12px;font-weight:bold;background:#fff;cursor:pointer">Copy Key 📋</button>
+      <button onclick="copyActiveKey(this)" style="padding:8px 16px;font-size:13px;font-weight:600;background:var(--bg);color:var(--fg);border:1px solid var(--border);border-radius:6px;cursor:pointer;font-family:'Inter',sans-serif">Copy Key</button>
     </div>
 
     <!-- STATS ROW -->
     <div class="stats-grid">
       <!-- Volume Routed Card -->
       <div class="stat-card">
-        <div class="label notranslate" translate="no">Volume Routed</div>
-        <div class="val notranslate" translate="no" id="volume-val">— <sub>sats</sub></div>
-        <div class="footer">
-          <span id="merchant-ln-address" style="font-weight:700">Destination: —</span>
-        </div>
+        <div class="label">Volume Routed</div>
+        <div class="val" id="volume-val">— <sub class="notranslate" translate="no">sats</sub></div>
+        <div class="footer" id="merchant-ln-address">Destination: —</div>
       </div>
-      
       <!-- Commission Card -->
       <div class="stat-card">
-        <div class="label notranslate" translate="no">AIPP Commission (1%)</div>
-        <div class="val notranslate" translate="no" id="commission-val">— <sub>sats</sub></div>
-        <div class="footer">
-          <span>Total platform fees paid</span>
-        </div>
+        <div class="label">AIPP Commission (1%)</div>
+        <div class="val" id="commission-val">— <sub class="notranslate" translate="no">sats</sub></div>
+        <div class="footer" style="color:var(--muted)">Total platform fees paid</div>
       </div>
-
       <!-- Transactions Card -->
       <div class="stat-card">
-        <div class="label notranslate" translate="no">Transactions Routed</div>
-        <div class="val notranslate" translate="no" id="tx-count-val">0</div>
-        <div class="footer">
-          <span style="color:var(--success)" id="key-active-dot">● Active Merchant Gateway</span>
-        </div>
+        <div class="label">Transactions Routed</div>
+        <div class="val" id="tx-count-val">0</div>
+        <div class="footer">● Active Merchant Gateway</div>
       </div>
     </div>
 
-    <!-- GRAPH PANEL -->
+    <!-- CHART ROW -->
     <div class="chart-card">
       <h3>Last 7 Days Usage</h3>
       <div class="chart-container">
@@ -176,24 +265,22 @@
       </div>
     </div>
 
-    <!-- TRANSACTION LEDGER -->
+    <!-- LEDGER ROW -->
     <div class="ledger-card">
-      <h3>Transaction History & Ledger</h3>
+      <h3>Recent Transactions</h3>
       <div class="table-wrap">
         <table>
           <thead>
             <tr>
-              <th>Date & Time (UTC)</th>
-              <th>Payment Hash</th>
+              <th>Date</th>
+              <th>Hash</th>
               <th>Status</th>
               <th>Split Details</th>
-              <th>Total Paid</th>
+              <th>Amount</th>
             </tr>
           </thead>
           <tbody id="ledger-body">
-            <tr>
-              <td colspan="5" style="text-align:center;color:var(--muted);padding:24px">Loading transactions...</td>
-            </tr>
+            <tr><td colspan="5" style="text-align:center;color:var(--muted)">Loading...</td></tr>
           </tbody>
         </table>
       </div>
@@ -203,53 +290,67 @@
 </div>
 
 <footer>
-  <p>© 2026 aipp.dev · Built for AI Agents</p>
+  Powered by ⚡ Bitcoin Lightning · LNBits · L402
 </footer>
 
 <script>
-// ── CONFIG ──────────────────────────────────────────────
-const AIPP_API = window.location.origin; // Target API
+const AIPP_API = window.location.origin;
 
-// ── STATE ───────────────────────────────────────────────
 let activeKey = '';
-let pollTimer = null;
 let usageChart = null;
+let pollTimer = null;
 
-// On load, check LocalStorage
-window.addEventListener('DOMContentLoaded', () => {
-  const savedKey = localStorage.getItem('aipp_api_key');
-  if (savedKey) {
-    activeKey = savedKey;
-    document.getElementById('aipp-key-input').value = savedKey;
+// Initialize
+window.onload = () => {
+  const saved = localStorage.getItem('aipp_api_key');
+  if (saved) {
+    activeKey = saved;
     showDashboard();
   }
-});
-
-// QR Code utility
-function drawQR(canvas, text) {
-  QRCode.toCanvas(canvas, text, {
-    width: 160,
-    margin: 1,
-    color: {
-      dark: '#000000',
-      light: '#ffffff'
-    }
-  }, function(error) {
-    if (error) {
-      console.error('QR code generation failed:', error);
-    }
-  });
-}
+};
 
 // ── LOGIN / LOGOUT ──────────────────────────────────────
-function login() {
+async function login() {
   const val = document.getElementById('aipp-key-input').value.trim();
-  if (!val.startsWith('aipp_')) {
-    alert('Please enter a valid AIPP API key starting with aipp_');
+  if (val.length < 5) {
+    alert('Please enter a valid Lightning Address or API key.');
     return;
   }
-  activeKey = val;
-  localStorage.setItem('aipp_api_key', val);
+  
+  const btn = document.getElementById('login-btn');
+  const originalText = btn.textContent;
+  btn.textContent = 'Verifying...';
+  btn.disabled = true;
+
+  if (val.includes('@')) {
+    // It's a Lightning Address (email), let's get the API key
+    try {
+      const response = await fetch(`${AIPP_API}/merchant/register`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ln_address: val })
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to retrieve API Key');
+      }
+      
+      const data = await response.json();
+      activeKey = data.api_key;
+    } catch (e) {
+      alert('Error signing in with this Lightning Address.');
+      btn.textContent = originalText;
+      btn.disabled = false;
+      return;
+    }
+  } else {
+    // It's already an API key
+    activeKey = val;
+  }
+
+  localStorage.setItem('aipp_api_key', activeKey);
+  btn.textContent = originalText;
+  btn.disabled = false;
   showDashboard();
 }
 
@@ -267,7 +368,7 @@ function logout() {
 async function showDashboard() {
   document.getElementById('login-view').style.display = 'none';
   document.getElementById('dashboard-view').classList.add('active');
-  document.getElementById('logout-btn').style.display = 'block';
+  document.getElementById('logout-btn').style.display = 'inline-block';
   document.getElementById('display-api-key').textContent = activeKey;
 
   await refreshDashboardData();
@@ -278,7 +379,7 @@ async function showDashboard() {
 function copyActiveKey(btn) {
   navigator.clipboard.writeText(activeKey).then(() => {
     const origText = btn.textContent;
-    btn.textContent = '✓ Copied!';
+    btn.textContent = 'Copied!';
     setTimeout(() => btn.textContent = origText, 1500);
   });
 }
@@ -286,7 +387,7 @@ function copyActiveKey(btn) {
 async function refreshDashboardData() {
   try {
     const r = await fetch(`${AIPP_API}/merchant/stats`, {
-      headers: { 'X-AIPP-Key': activeKey }
+      headers: { 'X-Api-Key': activeKey }
     });
     if (!r.ok) {
       if(r.status === 401 || r.status === 404) {
@@ -317,7 +418,7 @@ async function refreshDashboardData() {
 async function loadLedger() {
   try {
     const r = await fetch(`${AIPP_API}/merchant/transactions`, {
-      headers: { 'X-AIPP-Key': activeKey }
+      headers: { 'X-Api-Key': activeKey }
     });
     const txs = await r.json();
     const body = document.getElementById('ledger-body');
@@ -338,10 +439,10 @@ async function loadLedger() {
       
       const row = `
         <tr>
-          <td style="color:var(--muted)">${date}</td>
-          <td style="font-family:monospace;font-size:12px" title="${tx.payment_hash}">${truncatedHash}</td>
+          <td style="color:var(--muted);font-size:12px">${date}</td>
+          <td style="font-family:'Fira Code',monospace;font-size:12px;color:var(--muted)" title="${tx.payment_hash}">${truncatedHash}</td>
           <td>${statusBadge}</td>
-          <td style="font-size:13px;font-weight:700">${splitDetails}</td>
+          <td style="font-size:12px">${splitDetails}</td>
           <td class="sats-val positive notranslate" translate="no">${amountVal}</td>
         </tr>
       `;
@@ -355,7 +456,7 @@ async function loadLedger() {
 async function loadStatsAndDrawChart() {
   try {
     const r = await fetch(`${AIPP_API}/merchant/stats`, {
-      headers: { 'X-AIPP-Key': activeKey }
+      headers: { 'X-Api-Key': activeKey }
     });
     const d = await r.json();
     const data = d.stats || [];
@@ -371,7 +472,6 @@ async function loadStatsAndDrawChart() {
       txCountData.push(item.transactions_count || 0);
     });
 
-    // Fallback if data is empty (mock values for aesthetic preview)
     if (data.length === 0) {
       const today = new Date().toISOString().split('T')[0];
       labels.push(today);
@@ -385,6 +485,7 @@ async function loadStatsAndDrawChart() {
       usageChart.destroy();
     }
 
+    // Chart styled for dark mode
     usageChart = new Chart(ctx, {
       type: 'bar',
       data: {
@@ -393,19 +494,20 @@ async function loadStatsAndDrawChart() {
           {
             label: 'Transactions Count',
             data: txCountData,
-            backgroundColor: '#a8f63588',
-            borderColor: '#a8f635',
-            borderWidth: 2,
+            backgroundColor: 'rgba(245, 158, 11, 0.2)',
+            borderColor: '#f59e0b',
+            borderWidth: 1,
             yAxisID: 'y'
           },
           {
             label: 'Volume (Sats)',
             type: 'line',
             data: volumeData,
-            borderColor: '#00f0ff',
-            backgroundColor: '#00f0ffaa',
-            tension: 0.2,
-            borderWidth: 3,
+            borderColor: '#38bdf8',
+            backgroundColor: 'rgba(56, 189, 248, 0.1)',
+            tension: 0.3,
+            borderWidth: 2,
+            fill: true,
             yAxisID: 'y1'
           }
         ]
@@ -415,25 +517,25 @@ async function loadStatsAndDrawChart() {
         maintainAspectRatio: false,
         scales: {
           x: {
-            grid: { color: '#e5e7eb' },
-            ticks: { color: '#000000', font: { weight: 'bold' } }
+            grid: { color: '#27272a' },
+            ticks: { color: '#a1a1aa', font: { family: 'Inter' } }
           },
           y: {
             position: 'left',
-            grid: { color: '#e5e7eb' },
-            ticks: { color: '#000000', stepSize: 1, font: { weight: 'bold' } },
-            title: { display: true, text: 'Transactions', color: '#000000', font: { weight: 'bold' } }
+            grid: { color: '#27272a' },
+            ticks: { color: '#a1a1aa', stepSize: 1, font: { family: 'Inter' } },
+            title: { display: false }
           },
           y1: {
             position: 'right',
             grid: { drawOnChartArea: false },
-            ticks: { color: '#000000', font: { weight: 'bold' } },
-            title: { display: true, text: 'Sats Volume', color: '#000000', font: { weight: 'bold' } }
+            ticks: { color: '#a1a1aa', font: { family: 'Inter' } },
+            title: { display: false }
           }
         },
         plugins: {
           legend: {
-            labels: { color: '#000000', font: { weight: 'bold' } }
+            labels: { color: '#a1a1aa', font: { family: 'Inter' }, usePointStyle: true }
           }
         }
       }
@@ -442,13 +544,6 @@ async function loadStatsAndDrawChart() {
   } catch(e) {
     console.error('Failed to load chart stats', e);
   }
-}
-function copyInvoice() {
-  const txt = document.getElementById('modal-invoice-str').dataset.full;
-  navigator.clipboard.writeText(txt).then(() => {
-    document.getElementById('modal-invoice-str').textContent = '✓ Copied!';
-    setTimeout(() => document.getElementById('modal-invoice-str').textContent = txt.slice(0, 28) + '...' + txt.slice(-28), 1500);
-  });
 }
 </script>
 </body>

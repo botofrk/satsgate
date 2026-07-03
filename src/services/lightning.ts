@@ -2,6 +2,18 @@
 import crypto from 'crypto';
 import { LNBITS_ADMIN_KEY, LNBITS_URL } from '../config/env';
 
+// Timeout wrapper for fetch to prevent hanging requests
+async function fetchWithTimeout(url: string, options: RequestInit = {}, timeoutMs: number = 10000): Promise<Response> {
+  const controller = new AbortController();
+  const id = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    const response = await fetch(url, { ...options, signal: controller.signal });
+    return response;
+  } finally {
+    clearTimeout(id);
+  }
+}
+
 // Verify if a Lightning Address exists (LNURL-pay resolution check)
 export async function verifyLightningAddress(lnAddress: string): Promise<boolean> {
   const cleanAddr = lnAddress.trim();
@@ -14,7 +26,9 @@ export async function verifyLightningAddress(lnAddress: string): Promise<boolean
     const username = parts[0];
     const domain = parts[1];
     const lnurlpUrl = `https://${domain}/.well-known/lnurlp/${username}`;
-    const res = await fetch(lnurlpUrl);
+    
+    // 5 second timeout for verification
+    const res = await fetchWithTimeout(lnurlpUrl, {}, 5000);
     if (!res.ok) return false;
     const data = (await res.json()) as any;
     return !!data.callback;
@@ -40,8 +54,8 @@ export async function payLightningAddress(lnAddress: string, amountSats: number,
   const domain = parts[1];
   const lnurlpUrl = `https://${domain}/.well-known/lnurlp/${username}`;
 
-  // Step 1: Resolve LNURLp endpoint
-  const lnurlpRes = await fetch(lnurlpUrl);
+  // Step 1: Resolve LNURLp endpoint (10s timeout)
+  const lnurlpRes = await fetchWithTimeout(lnurlpUrl, {}, 10000);
   if (!lnurlpRes.ok) {
     throw new Error(`Failed to resolve LNURLp for ${lnAddress}`);
   }
@@ -51,10 +65,10 @@ export async function payLightningAddress(lnAddress: string, amountSats: number,
     throw new Error('LNURLp callback URL not found in response');
   }
 
-  // Step 2: Fetch BOLT11 payment request from callback
+  // Step 2: Fetch BOLT11 payment request from callback (10s timeout)
   const amountMsats = amountSats * 1000;
   const separator = callbackUrl.includes('?') ? '&' : '?';
-  const callbackRes = await fetch(`${callbackUrl}${separator}amount=${amountMsats}`);
+  const callbackRes = await fetchWithTimeout(`${callbackUrl}${separator}amount=${amountMsats}`, {}, 10000);
   if (!callbackRes.ok) {
     throw new Error(`LNURLp callback request failed: ${callbackRes.statusText}`);
   }

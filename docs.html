@@ -5,322 +5,330 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>aipp.dev — Developer Documentation</title>
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap');
+  @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,700;1,600&family=Inter:wght@400;500;600;700&display=swap');
   
   *{margin:0;padding:0;box-sizing:border-box}
-  :root{
-    --bg:#a3dc21; /* Solid Lime Green matching the landing page */
-    --fg:#000000;
-    --muted:#3f3f46;
-    --accent:#000000;
-    --border:#000000;
-    --card:#ffffff;
-    --radius:16px;
-  }
-  body{
-    background-color:var(--bg);
-    background-image:radial-gradient(#0000001a 1px, transparent 1px);
-    background-size:16px 16px;
-    color:var(--fg);
-    font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
-    line-height:1.6;
-    -webkit-font-smoothing:antialiased;
-    min-height:100vh;
-    padding-bottom:40px;
-    overflow-x:hidden;
+  
+  :root {
+    --bg: #0a0a0b;
+    --fg: #f4f4f5;
+    --muted: #a1a1aa;
+    --border: #27272a;
+    --accent: #f59e0b;
+    --card: #18181b;
   }
   
-  header{display:flex;align-items:center;justify-content:space-between;padding:24px 40px;border-bottom:3px solid var(--border);background:#000;color:#fff;position:sticky;top:0;z-index:50}
-  .logo{font-family: 'Space Grotesk', sans-serif;font-weight:900;font-size:22px;letter-spacing:-.8px;text-decoration:none;color:#000;background:#fff;border:3px solid #000;padding:4px 16px;border-radius:10px;box-shadow:3px 3px 0px #000;transition:all 0.2s}
-  .logo:hover{transform:translate(-2px,-2px);box-shadow:5px 5px 0px #000}
-  .logo span{color:#a3dc21; -webkit-text-stroke: 1px #000;}
-  .nav-btn{background:#fff;color:#000;border:3px solid #000;padding:8px 20px;border-radius:20px;font-size:13px;font-weight:800;cursor:pointer;text-decoration:none;box-shadow:2px 2px 0px #000;transition:all .15s}
-  .nav-btn:hover{transform:translate(-2px,-2px);box-shadow:4px 4px 0px #000}
-  .nav-btn:active{transform:translate(1px,1px);box-shadow:1px 1px 0px #000}
+  body {
+    background-color: var(--bg);
+    color: var(--fg);
+    font-family: 'Inter', -apple-system, sans-serif;
+    line-height: 1.7;
+    -webkit-font-smoothing: antialiased;
+    min-height: 100vh;
+  }
+  
+  header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 24px 40px;
+    border-bottom: 1px solid var(--border);
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    background: rgba(10,10,11,0.8);
+    backdrop-filter: blur(8px);
+  }
+  
+  .logo {
+    font-family: 'Inter', sans-serif;
+    font-weight: 700;
+    font-size: 20px;
+    letter-spacing: -0.5px;
+    text-decoration: none;
+    color: var(--fg);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .logo span { color: var(--accent); }
+  
+  .nav-links {
+    display: flex;
+    gap: 24px;
+    align-items: center;
+  }
+  .nav-links a {
+    color: var(--muted);
+    text-decoration: none;
+    font-size: 14px;
+    font-weight: 500;
+    transition: color 0.2s;
+  }
+  .nav-links a:hover { color: var(--fg); }
+  .nav-btn {
+    background: var(--accent);
+    color: #000;
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 600;
+    text-decoration: none;
+    transition: opacity 0.2s;
+  }
+  .nav-btn:hover { opacity: 0.9; }
 
-  .layout{max-width:1100px;margin:0 auto;display:grid;grid-template-columns:250px 1fr;gap:24px;padding:20px 20px}
-  @media(max-width:800px){ .layout{grid-template-columns:1fr;padding:20px} }
+  .layout {
+    max-width: 1000px;
+    margin: 40px auto;
+    display: grid;
+    grid-template-columns: 220px 1fr;
+    gap: 60px;
+    padding: 0 24px;
+  }
+  @media(max-width:800px) { .layout { grid-template-columns: 1fr; gap: 40px; } }
 
   /* SIDEBAR */
-  aside{position:sticky;top:120px;height:fit-content}
-  @media(max-width:800px){ aside{position:static;margin-bottom:20px} }
-  aside h4{font-family: 'Space Grotesk', sans-serif;font-size:11px;text-transform:uppercase;color:var(--fg);letter-spacing:1px;margin-bottom:12px;font-weight:900}
-  aside ul{list-style:none;margin-bottom:24px}
-  aside li{margin-bottom:8px}
-  aside a{color:var(--muted);text-decoration:none;font-size:14px;transition:all .15s;display:block;padding:4px 0;font-weight:700}
-  aside a:hover, aside a.active{color:#000;font-weight:900;padding-left:4px;border-left:3px solid #000}
+  aside { position: sticky; top: 100px; height: fit-content; }
+  @media(max-width:800px) { aside { position: static; display:none; } }
+  aside h4 { font-size: 12px; text-transform: uppercase; color: var(--muted); letter-spacing: 1px; margin-bottom: 16px; font-weight: 600; }
+  aside ul { list-style: none; }
+  aside li { margin-bottom: 12px; }
+  aside a { color: var(--muted); text-decoration: none; font-size: 14px; font-weight: 500; transition: color 0.2s; }
+  aside a:hover, aside a.active { color: var(--fg); }
 
   /* CONTENT */
-  main{min-width:0}
-  section{margin-bottom:40px;scroll-margin-top:120px}
-  h1{font-family: 'Space Grotesk', sans-serif;font-size:38px;font-weight:900;letter-spacing:-1.8px;margin-bottom:12px;text-transform:uppercase}
-  h2{font-family: 'Space Grotesk', sans-serif;font-size:26px;font-weight:800;letter-spacing:-1.2px;margin-top:40px;margin-bottom:16px;padding-bottom:8px;border-bottom:3px solid var(--border);text-transform:uppercase}
-  p{color:var(--muted);font-size:15px;margin-bottom:20px;line-height:1.7;font-weight:500}
+  main { min-width: 0; padding-bottom: 60px; }
+  h1 { font-family: 'Playfair Display', serif; font-size: 48px; font-weight: 600; letter-spacing: -1px; margin-bottom: 16px; }
+  .subtitle { color: var(--muted); font-size: 16px; margin-bottom: 48px; font-weight: 400; }
+  h2 { font-family: 'Playfair Display', serif; font-size: 28px; font-weight: 600; margin-top: 48px; margin-bottom: 20px; }
+  p { color: var(--muted); font-size: 15px; margin-bottom: 24px; }
   
-  /* CODE BLOCKS WITH MAC LAYOUT */
-  .code-block{background:#16161a;border:3px solid #000;border-radius:var(--radius);margin:24px 0;position:relative;overflow:hidden;box-shadow:4px 4px 0px #000;transition:transform 0.2s}
-  .code-block:hover{transform:translate(-2px,-2px);box-shadow:6px 6px 0px #000}
-  .code-header{display:flex;justify-content:space-between;align-items:center;background:#1b1b1f;padding:10px 16px 10px 48px;border-bottom:3px solid var(--border);font-size:11px;color:#a1a1aa;font-family:monospace;font-weight:700;position:relative}
-  .code-header::before{
-    content:'';
-    position:absolute;
-    top:14px;
-    left:16px;
-    width:26px;
-    height:8px;
-    background:radial-gradient(circle, #ff5f56 0%, #ff5f56 25%, #ffbd2e 26%, #ffbd2e 50%, #27c93f 51%, #27c93f 75%, transparent 76%);
-    background-size:9px 8px;
-    opacity:0.8;
+  ol { margin-bottom: 24px; padding-left: 20px; color: var(--muted); }
+  ol li { margin-bottom: 12px; font-size: 15px; }
+  ol li strong { color: var(--fg); }
+  code { font-family: 'Fira Code', monospace; font-size: 13px; background: var(--card); padding: 2px 6px; border-radius: 4px; border: 1px solid var(--border); color: #e4e4e7; }
+  
+  /* CODE BLOCKS */
+  .code-block {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    margin: 24px 0;
+    overflow: hidden;
   }
-  .copy-btn{background:#000;color:#a3dc21;border:2px solid #a3dc21;cursor:pointer;font-size:11px;padding:3px 10px;border-radius:4px;font-weight:800;transition:all .15s}
-  .copy-btn:hover{background:#a3dc21;color:#000}
-  pre{font-family:'Fira Code', 'JetBrains Mono', monospace;font-size:13px;line-height:1.6;color:#e5e7eb;padding:18px;overflow-x:auto}
-  
-  .c-comment{color:#6b7280}
-  .c-key{color:#93c5fd}
-  .c-str{color:#fcd34d}
-  .c-num{color:#fca5a5}
+  .code-header {
+    display: flex;
+    justify-content: space-between;
+    padding: 8px 16px;
+    border-bottom: 1px solid var(--border);
+    font-size: 12px;
+    color: var(--muted);
+    font-family: 'Inter', sans-serif;
+  }
+  pre { padding: 16px; overflow-x: auto; font-family: 'Fira Code', monospace; font-size: 13px; color: #d4d4d8; line-height: 1.6; }
+  .c-comment { color: #52525b; }
+  .c-key { color: #60a5fa; }
+  .c-str { color: #fde047; }
+  .c-num { color: #f87171; }
 
-  /* INFO ALERTS */
-  .alert{background:var(--card);border:3px solid var(--border);border-left:8px solid #000;border-radius:var(--radius);padding:20px;margin:24px 0;box-shadow:4px 4px 0px #000;color:#000;transition:transform 0.2s}
-  .alert:hover{transform:translate(-2px,-2px);box-shadow:6px 6px 0px #000}
-  .alert-title{font-weight:900;margin-bottom:6px;color:#000;text-transform:uppercase;font-size:12px;letter-spacing:0.5px}
-  .alert-body{color:var(--muted);line-height:1.6;font-size:14px;font-weight:600}
-
-  footer{text-align:center;padding:20px;color:var(--muted);font-size:12px;border-top:3px solid var(--border);margin-top:40px;font-weight:700}
+  footer {
+    text-align: center;
+    padding: 32px;
+    color: var(--muted);
+    font-size: 13px;
+    border-top: 1px solid var(--border);
+    font-family: 'Inter', sans-serif;
+  }
 </style>
 </head>
 <body>
 
 <header>
-  <a href="index.html" class="logo">aipp<span>.</span>dev</a>
-  <div>
-    <a href="dashboard.html" class="nav-btn">Dashboard ⚡</a>
+  <a href="index.html" class="logo"><span>⚡</span> AIPP</a>
+  <div class="nav-links">
+    <a href="docs.html" style="color:var(--fg)">Docs</a>
+    <a href="l402.html">L402 Demo</a>
+    <a href="dashboard.html">Dashboard</a>
+    <a href="index.html#get-started" class="nav-btn">Get API key &rarr;</a>
   </div>
 </header>
 
 <div class="layout">
-  
-  <!-- LEFT SIDEBAR -->
   <aside>
-    <h4>Getting Started</h4>
+    <h4>Reference</h4>
     <ul>
-      <li><a href="#intro" class="active" onclick="activateLink(this)">Introduction</a></li>
-      <li><a href="#integration-paths" onclick="activateLink(this)">Integration Paths</a></li>
-      <li><a href="#register" onclick="activateLink(this)">Merchant Register</a></li>
-      <li><a href="#invoice-create" onclick="activateLink(this)">Create Invoice</a></li>
-      <li><a href="#webhooks" onclick="activateLink(this)">Webhook Callbacks</a></li>
-      <li><a href="#status-poll" onclick="activateLink(this)">Polling Status</a></li>
-    </ul>
-    <h4 style="margin-top:24px">Code Snippets</h4>
-    <ul>
-      <li><a href="#python-example" onclick="activateLink(this)">Python Integration</a></li>
-      <li><a href="#node-example" onclick="activateLink(this)">Node.js Integration</a></li>
+      <li><a href="#quick-start" class="active">Quick start</a></li>
+      <li><a href="#sdks">Official SDKs</a></li>
+      <li><a href="#authentication">Authentication</a></li>
+      <li><a href="#post-register">POST /merchant/register</a></li>
+      <li><a href="#post-charge">POST /invoice/create</a></li>
+      <li><a href="#get-charge">GET /invoice/status/:hash</a></li>
+      <li><a href="#post-payout">POST /merchant/payout</a></li>
+      <li><a href="#l402">L402 protocol</a></li>
+      <li><a href="#webhooks">Webhooks</a></li>
+      <li><a href="#errors">Errors</a></li>
     </ul>
   </aside>
 
-  <!-- MAIN DOCUMENTATION -->
   <main>
-    
-    <!-- INTRODUCTION -->
-    <section id="intro">
-      <h1>Developer Documentation</h1>
-      <p>aipp.dev is a high-performance, non-custodial **Bitcoin Lightning split-payment gateway** built for online shops, digital services, and autonomous AI agents. By integrating our gateway, you can accept Lightning payments from customers and route payouts directly to your own wallet in real-time, paying only a flat **1% fee**.</p>
-      
-      <div class="alert">
-        <div class="alert-title">💡 Pure Non-Custodial Flow</div>
-        <div class="alert-body">AIPP does not custody or hold your earnings. Payments are programmatically split on-the-fly and routed to your destination wallet (via Lightning Address) in miliseconds.</div>
-      </div>
+    <h1>AIPP Documentation</h1>
+    <div class="subtitle">A flat 1% fee. Non-custodial routing. Built for humans and machines.</div>
+
+    <section id="quick-start">
+      <h2>Quick start</h2>
+      <ol>
+        <li>Go to <strong>aipp.dev</strong>, paste your Lightning address or BOLT12 offer.</li>
+        <li>Receive an API key starting with <code>aipp_merch_</code>.</li>
+        <li>Call the <code>/invoice/create</code> endpoint to mint an invoice.</li>
+        <li>Your customer pays it — 99% is instantly available in your merchant balance.</li>
+        <li>Call the <code>/merchant/payout</code> endpoint to withdraw to your Lightning address.</li>
+      </ol>
     </section>
 
-    <!-- INTEGRATION PATHS -->
-    <section id="integration-paths">
-      <h2>Integration Paths</h2>
-      <p>Depending on your technical expertise, there are 3 main ways to integrate your AIPP Merchant Key into your workflow:</p>
+    <section id="sdks">
+      <h2>Official SDKs</h2>
+      <p>The fastest way to integrate AIPP is using our official SDKs for Node.js and Python. They provide fully typed clients and zero-dependency designs.</p>
       
-      <div style="display:flex; flex-direction:column; gap:24px; margin-top:24px;">
-        <div style="background:#fff; border:3px solid #000; border-radius:12px; padding:24px; box-shadow:4px 4px 0px #000;">
-          <h3 style="font-size:18px; font-weight:900; margin-bottom:12px; color:#000;">🤖 1. For AI Agents (No-Code)</h3>
-          <p style="color:var(--muted); font-size:14px; font-weight:500; margin-bottom:0;">
-            If you are building an autonomous AI agent or using an LLM platform, you don't need to write any code. Simply paste your API Key into your Agent's system prompt or tool configuration, and instruct it: <i>"Use the AIPP API at aipp.dev to charge users for my tasks."</i> The AI will automatically read this documentation and handle the REST API calls.
-          </p>
+      <div style="display:flex;gap:20px;margin-bottom:24px;flex-wrap:wrap">
+        <div style="flex:1;min-width:280px;background:var(--card);border:1px solid var(--border);border-radius:8px;padding:20px">
+          <h3 style="color:var(--accent);margin-bottom:12px;font-size:18px">🐍 Python</h3>
+          <code style="display:block;margin-bottom:12px">pip install aipp-sdk</code>
+          <pre style="padding:0;background:transparent;border:none"><span class="c-key">from</span> aipp <span class="c-key">import</span> Aipp
+
+client = Aipp(<span class="c-str">"aipp_merch_..."</span>)
+charge = client.create_charge(<span class="c-num">500</span>)
+<span class="c-key">print</span>(charge.payment_request)</pre>
         </div>
+        
+        <div style="flex:1;min-width:280px;background:var(--card);border:1px solid var(--border);border-radius:8px;padding:20px">
+          <h3 style="color:var(--accent);margin-bottom:12px;font-size:18px">🟢 Node.js</h3>
+          <code style="display:block;margin-bottom:12px">npm install aipp-node</code>
+          <pre style="padding:0;background:transparent;border:none"><span class="c-key">import</span> { Aipp } <span class="c-key">from</span> <span class="c-str">'aipp-node'</span>;
 
-        <div style="background:#fff; border:3px solid #000; border-radius:12px; padding:24px; box-shadow:4px 4px 0px #000;">
-          <h3 style="font-size:18px; font-weight:900; margin-bottom:12px; color:#000;">🛍️ 2. For WordPress / Shopify (No-Code)</h3>
-          <p style="color:var(--muted); font-size:14px; font-weight:500; margin-bottom:0;">
-            If you are running an eCommerce store, you can use our upcoming official plugins. Just install the plugin, navigate to settings, and paste your API key. The checkout page will automatically display Lightning QR codes to your customers. <i>(Plugins are currently in development).</i>
-          </p>
-        </div>
-
-        <div style="background:#fff; border:3px solid #000; border-radius:12px; padding:24px; box-shadow:4px 4px 0px #000;">
-          <h3 style="font-size:18px; font-weight:900; margin-bottom:12px; color:#000;">💻 3. For Developers (REST API)</h3>
-          <p style="color:var(--muted); font-size:14px; font-weight:500; margin-bottom:0;">
-            If you are building a custom application, you can use our REST API. Just pass your API Key as an HTTP header <code>X-AIPP-Key</code>. The rest of this documentation explains the exact endpoints you need to call to generate invoices and verify payments.
-          </p>
+<span class="c-key">const</span> aipp = <span class="c-key">new</span> Aipp({ apiKey: <span class="c-str">'...'</span> });
+<span class="c-key">const</span> charge = <span class="c-key">await</span> aipp.createCharge({
+  amountSats: <span class="c-num">500</span>
+});</pre>
         </div>
       </div>
     </section>
 
-    <!-- MERCHANT REGISTRATION -->
-    <section id="register">
-      <h2>1. Merchant Registration</h2>
-      <p>To register your shop or service, send a POST request with your destination Lightning Address. You will instantly receive your Merchant API Key:</p>
-      
+    <section id="authentication">
+      <h2>Authentication</h2>
+      <p>Send the API key as a header:</p>
       <div class="code-block">
-        <div class="code-header">HTTP POST /merchant/register <button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
-        <pre><code>curl -X POST https://www.aipp.dev/merchant/register \
-  -H "Content-Type: application/json" \
-  -d '{
-    "ln_address": "mehmet@phoenixwallet.me"
-  }'</code></pre>
-      </div>
-
-      <p><strong>Response format:</strong></p>
-      <div class="code-block">
-        <div class="code-header">JSON Response <button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
-        <pre><code>{
-  "api_key": "aipp_merch_72a391fbce",
-  "ln_address": "mehmet@phoenixwallet.me"
-}</code></pre>
+        <div class="code-header">HTTP Header</div>
+        <pre>X-Api-Key: aipp_merch_xxxxxxxxxxxxxxxxxx</pre>
       </div>
     </section>
 
-    <!-- CREATE INVOICE -->
-    <section id="invoice-create">
-      <h2>2. Create Invoice</h2>
-      <p>To charge a customer, call the invoice creation endpoint. Invoices must be between **100 satoshis** and **100,000 satoshis**:</p>
-      
+    <section id="post-register">
+      <h2>Register Merchant</h2>
+      <p><code>POST /merchant/register</code></p>
       <div class="code-block">
-        <div class="code-header">HTTP POST /invoice/create <button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
-        <pre><code>curl -X POST https://www.aipp.dev/invoice/create \
-  -H "Content-Type: application/json" \
-  -H "X-AIPP-Key: aipp_merch_72a391fbce" \
-  -d '{
-    "amount_sats": 500,
-    "callback_url": "https://yourshop.com/webhook/aipp"
-  }'</code></pre>
-      </div>
-
-      <p><strong>Response format:</strong></p>
-      <div class="code-block">
-        <div class="code-header">JSON Response <button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
-        <pre><code>{
-  "payment_request": "lnbc5u1p4y...",
-  "payment_hash": "e93fca1029ab8..."
-}</code></pre>
+        <div class="code-header">Request</div>
+        <pre>
+{
+  <span class="c-key">"name"</span>: <span class="c-str">"My AI Agent"</span>,
+  <span class="c-key">"lnurl_address"</span>: <span class="c-str">"satoshi@getalby.com"</span>,
+  <span class="c-key">"payout_mode"</span>: <span class="c-str">"manual"</span>,
+  <span class="c-key">"payout_threshold"</span>: <span class="c-num">0</span>
+}</pre>
       </div>
     </section>
 
-    <!-- WEBHOOKS -->
+    <section id="post-charge">
+      <h2>Create an invoice</h2>
+      <p><code>POST /invoice/create</code></p>
+      <div class="code-block">
+        <div class="code-header">Request</div>
+        <pre>
+{
+  <span class="c-comment">// You can provide amount_sats OR amount_usd</span>
+  <span class="c-key">"amount_sats"</span>: <span class="c-num">2100</span>,
+  <span class="c-key">"amount_usd"</span>: <span class="c-num">1.50</span>,
+  <span class="c-key">"memo"</span>: <span class="c-str">"1 article unlock"</span>
+}</pre>
+      </div>
+      <div class="code-block">
+        <div class="code-header">&rarr; 200 OK</div>
+        <pre>
+{
+  <span class="c-key">"payment_hash"</span>: <span class="c-str">"0a1b..."</span>,
+  <span class="c-key">"payment_request"</span>: <span class="c-str">"lnbc21000n1p..."</span>
+}</pre>
+      </div>
+    </section>
+
+    <section id="get-charge">
+      <h2>Check invoice status</h2>
+      <p><code>GET /invoice/status/:hash</code></p>
+      <div class="code-block">
+        <div class="code-header">&rarr; 200 OK</div>
+        <pre>
+{
+  <span class="c-key">"status"</span>: <span class="c-str">"settled"</span>
+}</pre>
+      </div>
+    </section>
+
+    <section id="post-payout">
+      <h2>Withdraw Funds (Manual Payout)</h2>
+      <p><code>POST /merchant/payout</code></p>
+      <p>If your payout mode is <code>manual</code>, you can trigger a withdrawal of your balance to your configured Lightning address.</p>
+      <div class="code-block">
+        <div class="code-header">Request (Empty Body)</div>
+        <pre>{}</pre>
+      </div>
+      <div class="code-block">
+        <div class="code-header">&rarr; 200 OK</div>
+        <pre>
+{
+  <span class="c-key">"message"</span>: <span class="c-str">"Payout triggered successfully"</span>,
+  <span class="c-key">"amount_sats"</span>: <span class="c-num">15000</span>
+}</pre>
+      </div>
+    </section>
+
+    <section id="l402">
+      <h2>L402 micropayments</h2>
+      <p>Any of your endpoints can require Lightning payment using L402. The flow:</p>
+      <ol>
+        <li>Client requests resource &rarr; server returns <code>402</code> with macaroon + invoice.</li>
+        <li>Client pays invoice via any Lightning wallet.</li>
+        <li>Client retries with header <code>Authorization: L402 &lt;macaroon&gt;:&lt;preimage_hex&gt;</code>.</li>
+      </ol>
+      <p>Try it live on the <a href="l402.html" style="color:var(--accent);text-decoration:none">L402 demo page</a>.</p>
+    </section>
+
     <section id="webhooks">
-      <h2>3. Webhook Callbacks</h2>
-      <p>When the customer pays the Lightning invoice, AIPP automatically splits the payment, sends 99% of the amount to your Lightning Address, and fires a POST notification to your specified <code>callback_url</code>:</p>
-      
-      <div class="code-block">
-        <div class="code-header">Webhook POST Payload <button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
-        <pre><code>{
-  "payment_hash": "e93fca1029ab8...",
-  "amount_sats": 500,
-  "forwarded_amount_sats": 495,
-  "status": "settled"
-}</code></pre>
-      </div>
+      <h2>Webhooks</h2>
+      <p>When a charge is paid, AIPP automatically forwards 99% to your Lightning address and writes a transaction to your dashboard. You can configure a webhook URL for your backend to be notified instantly.</p>
     </section>
-
-    <!-- POLLING STATUS -->
-    <section id="status-poll">
-      <h2>4. Polling Payout Status</h2>
-      <p>You can also poll the status of any invoice from the frontend using the payment hash:</p>
-      
-      <div class="code-block">
-        <div class="code-header">HTTP GET /invoice/status/:hash <button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
-        <pre><code>curl https://www.aipp.dev/invoice/status/e93fca1029ab8...</code></pre>
-      </div>
-
-      <p><strong>Response format:</strong></p>
-      <div class="code-block">
-        <div class="code-header">JSON Response <button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
-        <pre><code>{
-  "paid": true,
-  "status": "settled"
-}</code></pre>
-      </div>
-    </section>
-
-    <!-- PYTHON RECIPE -->
-    <section id="python-example">
-      <h2>Python Integration Example</h2>
-      <p>Complete backend Python code to generate a payment request and handle callbacks:</p>
-      
-      <div class="code-block">
-        <div class="code-header">Python <button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
-        <pre><code>import requests
-
-aipp_key = "aipp_merch_72a391fbce"
-
-def create_checkout_session(amount_sats, order_id):
-    url = "https://www.aipp.dev/invoice/create"
-    headers = {
-        "X-AIPP-Key": aipp_key,
-        "Content-Type": "application/json"
-    }
-    payload = {
-        "amount_sats": amount_sats,
-        "callback_url": f"https://myonlinebuttique.com/webhook?order={order_id}"
-    }
-    response = requests.post(url, json=payload, headers=headers)
-    return response.json() # Returns {"payment_request": "lnbc...", "payment_hash": "..."}</code></pre>
-      </div>
-    </section>
-
-    <!-- NODE RECIPE -->
-    <section id="node-example">
-      <h2>Node.js Integration Example</h2>
-      <p>Complete Node.js / Express snippet to generate invoices and poll payout status:</p>
-      
-      <div class="code-block">
-        <div class="code-header">Node.js / Express <button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
-        <pre><code>const axios = require('axios');
-
-async function getInvoice(sats) {
-  const response = await axios.post('https://www.aipp.dev/invoice/create', {
-    amount_sats: sats,
-    callback_url: 'https://myshop.com/payout-webhook'
-  }, {
-    headers: { 'X-AIPP-Key': 'aipp_merch_72a391fbce' }
-  });
-  return response.data; // { payment_request, payment_hash }
-}
-
-async function checkStatus(hash) {
-  const response = await axios.get(`https://www.aipp.dev/invoice/status/${hash}`);
-  return response.data; // { paid: true, status: 'settled' }
-}</code></pre>
-      </div>
-    </section>
-
   </main>
 </div>
 
 <footer>
-  <p>© 2026 aipp.dev · Built for AI Agents</p>
+  Powered by ⚡ Bitcoin Lightning · LNBits · L402
 </footer>
 
 <script>
-function activateLink(el) {
-  document.querySelectorAll('aside a').forEach(a => a.classList.remove('active'));
-  el.classList.add('active');
-}
-
-function copyCode(btn) {
-  const pre = btn.parentElement.nextElementSibling;
-  const code = pre.textContent;
-  navigator.clipboard.writeText(code).then(() => {
-    btn.textContent = '✓ Copied!';
-    setTimeout(() => btn.textContent = 'Copy', 1500);
+  // Simple scrollspy
+  const links = document.querySelectorAll('aside a');
+  const sections = document.querySelectorAll('main section');
+  window.addEventListener('scroll', () => {
+    let current = '';
+    sections.forEach(section => {
+      if (window.scrollY >= section.offsetTop - 120) {
+        current = section.getAttribute('id');
+      }
+    });
+    links.forEach(li => {
+      li.classList.remove('active');
+      if (li.getAttribute('href') === `#${current}`) li.classList.add('active');
+    });
   });
-}
 </script>
 </body>
 </html>

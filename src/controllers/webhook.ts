@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import crypto from 'crypto';
 import { getDb } from '../config/database';
-import { LNBITS_WEBHOOK_SECRET, LNBITS_INVOICE_KEY, LNBITS_URL } from '../config/env';
+import { LNBITS_WEBHOOK_SECRET, LNBITS_INVOICE_KEY, LNBITS_URL, MIN_PAYOUT_THRESHOLD_SATS } from '../config/env';
 import { AppError } from '../utils/error';
 
 function verifyWebhookSignature(rawBody: Buffer, signature: string | undefined): boolean {
@@ -110,27 +110,15 @@ export const handleLnbitsWebhook = async (req: Request, res: Response, next: Nex
 
       const payoutMode = merchant.payout_mode || 'instant';
 
-      if (payoutMode === 'instant') {
-        // Enqueue payout job instead of synchronous execution
-        const jobId = crypto.randomUUID();
+      if (payoutMode === 'manual') {
+        // Accumulate for manual withdrawal
         await db.run(
-          "INSERT INTO payout_queue (id, payment_hash, api_key, amount_sats, ln_address, status, next_retry_at, created_at) VALUES (?, ?, ?, ?, ?, 'pending', ?, ?)",
-          jobId,
-          paymentHash,
-          invoice.api_key,
-          invoice.forwarded_amount_sats,
-          merchant.ln_address,
-          new Date().toISOString(),
-          new Date().toISOString()
-        );
-
-        await db.run(
-          "UPDATE invoices SET status = 'settled', payout_status = 'queued' WHERE payment_hash = ?",
+          "UPDATE invoices SET status = 'settled', payout_status = 'pending_manual' WHERE payment_hash = ?",
           paymentHash
         );
-        console.log(`[Webhook] Job ${jobId} queued for instant payout.`);
+        console.log(`[Webhook] Manual mode: payment accumulated. Waiting for merchant withdrawal.`);
       } else {
-        // Threshold accumulation
+        // Unify instant and threshold accumulation to respect MIN_PAYOUT_THRESHOLD_SATS
         await db.run(
           "UPDATE invoices SET status = 'settled', payout_status = 'pending_threshold' WHERE payment_hash = ?",
           paymentHash
@@ -142,8 +130,12 @@ export const handleLnbitsWebhook = async (req: Request, res: Response, next: Nex
         );
         
         const accumTotalForwarded = accumRecord?.total || 0;
+        
+        const effectiveThreshold = payoutMode === 'instant' 
+          ? MIN_PAYOUT_THRESHOLD_SATS 
+          : Math.max(MIN_PAYOUT_THRESHOLD_SATS, merchant.payout_threshold_sats || 0);
 
-        if (accumTotalForwarded >= merchant.payout_threshold_sats) {
+        if (accumTotalForwarded >= effectiveThreshold) {
           await db.run(
             "UPDATE invoices SET payout_status = 'queued' WHERE api_key = ? AND status = 'settled' AND payout_status = 'pending_threshold'",
             invoice.api_key
@@ -153,26 +145,31 @@ export const handleLnbitsWebhook = async (req: Request, res: Response, next: Nex
           await db.run(
             "INSERT INTO payout_queue (id, payment_hash, api_key, amount_sats, ln_address, status, next_retry_at, created_at) VALUES (?, ?, ?, ?, ?, 'pending', ?, ?)",
             jobId,
-            `threshold_${invoice.api_key}_${Date.now()}`,
+            `batch_${invoice.api_key}_${Date.now()}`,
             invoice.api_key,
             accumTotalForwarded,
             merchant.ln_address,
             new Date().toISOString(),
             new Date().toISOString()
           );
-          console.log(`[Webhook] Threshold met! Job ${jobId} queued for ${accumTotalForwarded} sats.`);
+          console.log(`[Webhook] Threshold met (${effectiveThreshold})! Job ${jobId} queued for ${accumTotalForwarded} sats.`);
+        } else {
+          console.log(`[Webhook] Payment accumulated. Total: ${accumTotalForwarded} sats. Waiting to reach ${effectiveThreshold} sats.`);
         }
       }
 
       await db.run('COMMIT');
 
+      // Fetch the updated invoice to get the exact payout_status
+      const updatedInvoice = await db.get('SELECT * FROM invoices WHERE payment_hash = ?', paymentHash);
+
       // Trigger merchant callback if provided
-      if (invoice.callback_url) {
+      if (invoice.callback_url && updatedInvoice) {
         triggerWebhookWithRetry(invoice.callback_url, {
-          payment_hash: invoice.payment_hash,
-          amount_sats: invoice.amount_sats,
-          status: 'settled',
-          payout_status: payoutMode === 'instant' ? 'queued' : 'pending'
+          payment_hash: updatedInvoice.payment_hash,
+          amount_sats: updatedInvoice.amount_sats,
+          status: updatedInvoice.status,
+          payout_status: updatedInvoice.payout_status
         });
       }
 

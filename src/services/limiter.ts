@@ -18,4 +18,9 @@ export async function checkLimit(apiKey: string, costUsd: number): Promise<void>
   if (record.usd_amount + costUsd > DAILY_LIMIT_USD) {
     throw new AppError(`Daily limit reached ($${DAILY_LIMIT_USD}). Resets at midnight UTC.`, 429, 'DAILY_LIMIT_EXCEEDED');
   }
+
+  await db.run(
+    'UPDATE daily_spend SET usd_amount = usd_amount + ?, requests_count = requests_count + 1 WHERE api_key = ? AND date = ?',
+    costUsd, apiKey, todayUtc
+  );
 }

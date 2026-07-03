@@ -5,6 +5,7 @@ import { initDb, getDb } from './config/database';
 import { errorHandler } from './utils/error';
 import { refreshBtcRate, getBtcUsdRate } from './services/price';
 import { startPayoutWorker } from './jobs/payoutWorker';
+import { startPruneWorker } from './jobs/pruneWorker';
 import apiRoutes from './routes/api';
 import path from 'path';
 
@@ -55,8 +56,11 @@ async function bootstrap() {
 
     // 3. Start Background Payout Worker (Dead Letter Queue)
     startPayoutWorker();
+    
+    // 4. Start Prune Worker (Garbage Collection)
+    startPruneWorker();
 
-    // 4. Start Server
+    // 5. Start Server
     app.listen(PORT, () => {
       console.log(`⚡ AIPP Generic Payment Bridge listening on port ${PORT}`);
       console.log(`⚡ LNBits API configured: ${LNBITS_INVOICE_KEY ? 'YES' : 'NO'}`);

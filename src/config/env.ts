@@ -14,3 +14,5 @@ export const FEE_PER_REQUEST_SATS = parseInt(process.env.FEE_PER_REQUEST_SATS ||
 export const DAILY_LIMIT_USD = parseInt(process.env.DAILY_LIMIT_USD || '100');
 export const MAX_SINGLE_REQUEST_USD = parseInt(process.env.MAX_SINGLE_REQUEST_USD || '10');
 export const MIN_TOPUP_SATS = parseInt(process.env.MIN_TOPUP_SATS || '100');
+export const MIN_PAYOUT_THRESHOLD_SATS = parseInt(process.env.MIN_PAYOUT_THRESHOLD_SATS || '1000');
+export const MAX_MERCHANTS = parseInt(process.env.MAX_MERCHANTS || '100');

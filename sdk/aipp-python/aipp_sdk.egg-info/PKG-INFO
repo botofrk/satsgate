@@ -1,0 +1,47 @@
+Metadata-Version: 2.4
+Name: aipp-sdk
+Version: 1.0.1
+Summary: Official Python SDK for AIPP - The Lightning Network Split-Payment Gateway
+Home-page: https://github.com/aippde/aipp-key
+Author: AIPP
+Classifier: Programming Language :: Python :: 3
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Operating System :: OS Independent
+Requires-Python: >=3.7
+Description-Content-Type: text/markdown
+Requires-Dist: requests>=2.25.1
+Requires-Dist: pydantic>=2.0.0
+Dynamic: author
+Dynamic: classifier
+Dynamic: description
+Dynamic: description-content-type
+Dynamic: home-page
+Dynamic: requires-dist
+Dynamic: requires-python
+Dynamic: summary
+
+# AIPP Python SDK
+
+Official Python client for the AIPP API (The Lightning Network Split-Payment Gateway).
+
+## Installation
+
+```bash
+pip install aipp-sdk
+```
+
+## Usage
+
+```python
+from aipp import Aipp
+
+client = Aipp(api_key="your_api_key_here")
+
+# Create a charge
+charge = client.create_charge(amount_sats=500, memo="Test payment")
+print(f"Pay this invoice: {charge.payment_request}")
+
+# Check status
+status = client.get_charge(charge.payment_hash)
+print(f"Status: {status.status}")
+```

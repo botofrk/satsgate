@@ -74,6 +74,13 @@ export async function initDb(): Promise<Database> {
       status TEXT NOT NULL DEFAULT 'open',
       created_at TEXT NOT NULL
     );
+
+    CREATE TABLE IF NOT EXISTS waitlist (
+      id TEXT PRIMARY KEY,
+      email TEXT NOT NULL,
+      ln_address TEXT NOT NULL,
+      created_at TEXT NOT NULL
+    );
   `);
 
   console.log('⚡ SQLite Database file initialized (aipp.db).');

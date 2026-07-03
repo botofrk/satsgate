@@ -31,8 +31,13 @@ There are 3 main ways to integrate:
 ## 5. What if the Payout Fails?
 If a customer pays but the merchant's wallet (e.g., Alby, Phoenix) is offline, the funds are temporarily held in a secure queue. The system's **Payout Retry Worker** will automatically retry sending the funds every few minutes (up to 5 times). The merchant will not lose their money.
 
-## 6. Supported Wallets
+## 6. Supported Wallets & Finding Your Address
 Any wallet that provides a standard "Lightning Address" (looks like an email, e.g., name@wallet.com) is supported. Popular examples: Alby, Phoenix, Wallet of Satoshi, Zeus, Blink.
+
+**How to find your Lightning Address:**
+- **Wallet of Satoshi:** Tap 'Receive', then select the '@' icon. You will see an address like `username@walletofsatoshi.com`.
+- **Phoenix:** Tap 'Receive', and look for the address formatted as `username@phoenixwallet.me`.
+- **Alby:** Open the Alby browser extension, your address (e.g., `name@getalby.com`) is displayed right at the top.
 
 ## 7. Support / Tickets
 If the user asks a highly specific technical question or reports a bug, tell them you can create a support ticket if they provide their email address. (The frontend will handle the email input UI when you return the `ticket_required` flag).
