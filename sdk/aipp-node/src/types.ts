@@ -4,7 +4,8 @@ export interface AippConfig {
 }
 
 export interface ChargeParams {
-  amountSats: number;
+  amountSats?: number;
+  amountUsd?: number;
   memo?: string;
 }
 
