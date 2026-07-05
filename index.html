@@ -56,7 +56,19 @@
   .modal-actions *:hover { opacity:0.9; }
 
   /* HERO SECTION */
-  .hero{display:flex;align-items:center;justify-content:center;gap:60px;padding:60px 24px;max-width:1150px;margin:0 auto;text-align:left;position:relative;z-index:2}
+  .hero{display:flex;align-items:center;justify-content:center;gap:60px;padding:30px 24px 60px;max-width:1150px;margin:0 auto;text-align:left;position:relative;z-index:2}
+  .hero::before {
+    content: ""; position: absolute; top: -100px; left: 50%; transform: translateX(-50%);
+    width: 100vw; height: 130%; z-index: -1; pointer-events: none;
+    background: 
+      radial-gradient(circle at center 30%, rgba(245, 158, 11, 0.12) 0%, transparent 60%),
+      linear-gradient(rgba(245, 158, 11, 0.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(245, 158, 11, 0.04) 1px, transparent 1px);
+    background-size: 100% 100%, 32px 32px, 32px 32px;
+    background-position: center top;
+    -webkit-mask-image: linear-gradient(to bottom, black 20%, transparent 90%);
+    mask-image: linear-gradient(to bottom, black 20%, transparent 90%);
+  }
   .hero-content{flex:1;max-width:620px}
   .hero-mascot{
     flex-shrink:0; width:320px; height:320px; position:relative;
@@ -209,21 +221,28 @@
 <body>
 
 <nav>
-  <a href="/" class="logo"><span>⚡</span> AIPP</a>
+  <a href="/" class="logo"><span>⚡</span> aipp</a>
   <div class="nav-links">
     <a href="#how">How it works</a>
     <a href="#get-started">Get Started</a>
     <a href="docs.html">Docs</a>
     <a href="l402.html">L402 Demo</a>
+    <a href="paywall-demo.html">Paywall</a>
     <a href="dashboard.html" class="nav-cta">Dashboard</a>
   </div>
 </nav>
 
 <section class="hero">
   <div class="hero-content" style="max-width:800px; margin:0 auto; text-align:center; display:flex; flex-direction:column; align-items:center;">
-    <div class="badge">⚡ Built on Lightning L402</div>
+    <div class="badge" style="border-color: var(--accent); color: var(--accent);">🔒 Built on Lightning L402</div>
     <h1 style="text-align:center;">Accept Lightning<br>payments in <span>seconds</span>.</h1>
-    <p style="text-align:center;">The non-custodial split-payment gateway for online shops, apps, and AI agents. Cash out instantly to your wallet — no cards, no KYC, no registration.</p>
+    <p style="text-align:center;">The non-custodial split-payment gateway for online shops, apps, and AI agents. Cash out instantly to your wallet.</p>
+    
+    <div style="background: rgba(245, 158, 11, 0.1); border: 1px solid rgba(245, 158, 11, 0.2); color: var(--accent); padding: 8px 16px; border-radius: 20px; font-size: 13px; font-weight: 600; display: inline-flex; align-items: center; gap: 8px; margin-bottom: 24px;">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+      Private Beta — Limited to 100 Merchants
+    </div>
+
     <div class="cta-row" style="justify-content:center;">
       <a href="#get-started" class="btn btn-primary">Get API Key →</a>
       <a href="docs.html" class="btn btn-ghost">Read the docs</a>
@@ -235,7 +254,7 @@
   <div class="label">How it works</div>
   <h2>Like a credit card POS terminal... but instant and for crypto!</h2>
   <p style="font-size: 16px; margin-bottom: 40px; color: var(--muted); max-width: 850px;">
-    When your customer wants to pay you, AIPP acts as the routing middleman. It receives the payment, automatically deducts a <b>flat 1% fee</b>, and forwards the remaining <b>99% directly to your personal wallet at lightning speed.</b> We never hold your funds.
+    When your customer wants to pay you, aipp acts as the routing middleman. It receives the payment, automatically deducts a <b>flat 1% fee</b>, and forwards the remaining <b>99% directly to your personal wallet at lightning speed.</b> We never hold your funds.
   </p>
   
   <div class="steps">
@@ -246,7 +265,7 @@
     </div>
     <div class="step">
       <div class="step-num" style="border-color:var(--accent);color:var(--accent)">2</div>
-      <h3>AIPP Gateway</h3>
+      <h3>aipp Gateway</h3>
       <p>Instantly deducts a 1% fee (100 sats).</p>
     </div>
     <div class="step">
@@ -259,7 +278,7 @@
   <div style="margin-top: 40px; background:var(--card); border:1px solid var(--border); border-radius:var(--radius); padding:32px;">
     <h3 style="font-size: 20px; font-weight: 600; margin-bottom: 12px; color:var(--fg)">Wait, how do I actually use the API Key?</h3>
     <p style="color:var(--muted); font-size:14px; margin-bottom:24px; line-height:1.6">
-      Once you register your wallet, you get a unique <code style="background:var(--bg);padding:2px 6px;border-radius:4px;border:1px solid var(--border);font-family:'Fira Code',monospace">aipp_merch_...</code> API key. You simply paste this key into your application's backend. When a user clicks "Buy" on your website, your app makes a single HTTP request using this key. AIPP returns a Lightning QR Code for your user to scan.
+      Once you register your wallet, you get a unique <code style="background:var(--bg);padding:2px 6px;border-radius:4px;border:1px solid var(--border);font-family:'Fira Code',monospace">aipp_merch_...</code> API key. You simply paste this key into your application's backend. When a user clicks "Buy" on your website, your app makes a single HTTP request using this key. aipp returns a Lightning QR Code for your user to scan.
     </p>
     <div class="steps" style="gap:16px;">
       <div class="step" style="padding:16px 24px;">
@@ -268,7 +287,7 @@
       </div>
       <div class="step" style="padding:16px 24px; border-color:var(--accent);">
         <h4 style="font-size:14px; font-weight:600; color:var(--accent); margin-bottom:4px">Step 2</h4>
-        <p style="font-size:14px; color:var(--fg)">Your backend calls AIPP with your Key</p>
+        <p style="font-size:14px; color:var(--fg)">Your backend calls aipp with your Key</p>
       </div>
       <div class="step" style="padding:16px 24px; border-color:#22c55e;">
         <h4 style="font-size:14px; font-weight:600; color:#22c55e; margin-bottom:4px">Step 3</h4>
@@ -324,7 +343,7 @@
 
     <!-- STEP 1: Get API Key -->
     <div class="demo-step active" id="step0">
-      <p style="color:var(--muted);font-size:14px;margin-bottom:20px">Link your Lightning Address to get your AIPP Merchant API Key:</p>
+      <p style="color:var(--muted);font-size:14px;margin-bottom:20px">Link your Lightning Address to get your aipp Merchant API Key:</p>
       <div class="demo-input">
         <input type="text" id="demo-ln-address" value="" placeholder="e.g. satoshi@getalby.com">
         <button onclick="demoRegisterMerchant()">Link Wallet & Get Key</button>
@@ -362,7 +381,7 @@
         <h3 style="text-align:center;margin-bottom:16px;color:#000">Split & Forward Completed!</h3>
         <div style="font-size:13px;line-height:1.8;color:#000">
           <div style="display:flex;justify-content:space-between;border-bottom:1px solid #ddd;padding:4px 0"><strong>Total Paid:</strong> <span>500 sats</span></div>
-          <p style="margin:4px 0; color:#b0bec5; font-size:12px">AIPP Fee (1% or min 5 sats): <span style="float:right">-<span id="demo-fee">0</span> sats</span></p>
+          <p style="margin:4px 0; color:#b0bec5; font-size:12px">aipp Fee (1% or min 5 sats): <span style="float:right">-<span id="demo-fee">0</span> sats</span></p>
           <div style="display:flex;justify-content:space-between;border-bottom:1px solid #ddd;padding:4px 0;color:#2e7d32"><strong>Payout Forwarded:</strong> <span id="demo-payout-sent">495 sats</span></div>
           <div style="display:flex;justify-content:space-between;border-bottom:1px solid #ddd;padding:4px 0"><strong>Destination Address:</strong> <span id="demo-dest-address" style="font-weight:700"></span></div>
           <div style="padding-top:12px;font-size:11px;color:var(--muted);word-break:break-all"><strong>Payout Tx ID:</strong> <br><span id="demo-payout-hash" style="font-family:monospace"></span></div>
@@ -378,7 +397,7 @@
   <div class="label">Use Cases</div>
   <h2>Built for the Machine Economy.</h2>
   <p style="font-size: 16px; margin-bottom: 40px; color: var(--muted);">
-    AIPP creates a robust financial layer bridging traditional web services with emerging machine economies.
+    aipp creates a robust financial layer bridging traditional web services with emerging machine economies.
   </p>
   
   <div class="bento-grid">
@@ -388,7 +407,7 @@
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 8V4H8"/><rect width="16" height="12" x="4" y="8" rx="2"/><path d="M2 14h2"/><path d="M20 14h2"/><path d="M15 13v2"/><path d="M9 13v2"/></svg>
         Autonomous AI Agent Economy
       </h3>
-      <p>Currently the fastest-growing sector. L402 creates a machine economy where AI agents can autonomously pay for inference, data oracles, computing, and storage in real-time. AIPP gives AI agents the ability to act as "customers" without needing a centralized billing system, bank account, or credit card.</p>
+      <p>Currently the fastest-growing sector. L402 creates a machine economy where AI agents can autonomously pay for inference, data oracles, computing, and storage in real-time. aipp gives AI agents the ability to act as "customers" without needing a centralized billing system, bank account, or credit card.</p>
     </div>
 
     <!-- 2. API Monetization -->
@@ -397,7 +416,7 @@
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 8v13H3V8"/><path d="M1 3h22v5H1z"/><path d="M10 12h4"/></svg>
         API Monetization
       </h3>
-      <p>Ideal for SaaS founders. Traditional billing (credit cards, subscriptions) fails for automated micro-transactions. AIPP unlocks frictionless Pay-Per-Call monetization with zero chargeback risk.</p>
+      <p>Ideal for SaaS founders. Traditional billing (credit cards, subscriptions) fails for automated micro-transactions. aipp unlocks frictionless Pay-Per-Call monetization with zero chargeback risk.</p>
     </div>
 
     <!-- 5. AI Infrastructure Market (Tall) -->
@@ -406,7 +425,7 @@
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="8" rx="2" ry="2"/><rect x="2" y="14" width="20" height="8" rx="2" ry="2"/><line x1="6" y1="6" x2="6.01" y2="6"/><line x1="6" y1="18" x2="6.01" y2="18"/></svg>
         AI Infrastructure Market
       </h3>
-      <p>As of late 2025, over 1 billion `402 Payment Required` responses are processed daily. Instead of blocking AI crawlers, publishers now charge them micro-fees for instant data access. This L402 standard is a massive and direct market for AIPP.</p>
+      <p>As of late 2025, over 1 billion `402 Payment Required` responses are processed daily. Instead of blocking AI crawlers, publishers now charge them micro-fees for instant data access. This L402 standard is a massive and direct market for aipp.</p>
     </div>
 
     <!-- 3. Borderless E-commerce -->
@@ -415,7 +434,7 @@
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
         Borderless E-Commerce
       </h3>
-      <p>Many emerging markets are restricted by legacy giants like Stripe. Powered by the Lightning Network, AIPP completely eliminates geographical constraints. Sell globally.</p>
+      <p>Many emerging markets are restricted by legacy giants like Stripe. Powered by the Lightning Network, aipp completely eliminates geographical constraints. Sell globally.</p>
     </div>
 
     <!-- 4. Content Micropayments -->
@@ -424,7 +443,7 @@
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
         Content Micropayments
       </h3>
-      <p>Payments like $0.05 per article or $0.10 per video are physically impossible with credit cards. AIPP makes micro-content monetization naturally viable.</p>
+      <p>Payments like $0.05 per article or $0.10 per video are physically impossible with credit cards. aipp makes micro-content monetization naturally viable.</p>
     </div>
 
     <!-- 6. Digital Product Sales -->
@@ -451,7 +470,7 @@
   <div class="label">Integration Paths</div>
   <h2>How do I actually use this API Key?</h2>
   <p style="font-size: 16px; margin-bottom: 40px; color: var(--muted);">
-    Whether you are a seasoned developer, a non-technical shop owner, or an autonomous AI, using your AIPP Key is incredibly simple.
+    Whether you are a seasoned developer, a non-technical shop owner, or an autonomous AI, using your aipp Key is incredibly simple.
   </p>
   
   <div class="integration-grid">
@@ -463,7 +482,7 @@
       </div>
       <h3 style="font-weight:600; font-size:18px; margin-bottom:12px; color:var(--fg);">I use an AI Agent</h3>
       <p style="color:var(--muted); font-size:14px; line-height:1.6; margin-bottom:20px;">
-        You don't need to know how to code! Simply paste your <code style="background:var(--bg);border:1px solid var(--border);padding:2px 4px;border-radius:4px">aipp_merch_...</code> key into your AI Agent's system prompt or knowledge base. Tell the agent: <i>"Use AIPP to charge users for my service."</i> The AI will read our documentation and integrate it autonomously.
+        You don't need to know how to code! Simply paste your <code style="background:var(--bg);border:1px solid var(--border);padding:2px 4px;border-radius:4px">aipp_merch_...</code> key into your AI Agent's system prompt or knowledge base. Tell the agent: <i>"Use aipp to charge users for my service."</i> The AI will read our documentation and integrate it autonomously.
       </p>
     </div>
 
@@ -474,7 +493,7 @@
       </div>
       <h3 style="font-weight:600; font-size:18px; margin-bottom:12px; color:var(--fg);">I use WordPress / Shopify</h3>
       <p style="color:var(--muted); font-size:14px; line-height:1.6; margin-bottom:20px;">
-        No coding required. Just download our official eCommerce plugin, go to the settings page, and paste your API key into the "AIPP Key" field. Your checkout page will instantly support Bitcoin Lightning payments. <br><br><i>(Plugins are currently in development)</i>
+        No coding required. Just download our official eCommerce plugin, go to the settings page, and paste your API key into the "aipp Key" field. Your checkout page will instantly support Bitcoin Lightning payments. <br><br><i>(Plugins are currently in development)</i>
       </p>
     </div>
 
@@ -541,9 +560,26 @@
   </div>
 </div>
 
+<!-- WAITLIST MODAL -->
+<div class="modal-overlay" id="waitlist-modal">
+  <div class="modal-box">
+    <div style="font-size:48px;text-align:center;margin-bottom:8px">⏳</div>
+    <h2 style="text-align:center">Kapasite Dolu!</h2>
+    <p style="text-align:center; margin-bottom: 24px;">
+      aipp şu anda Kapalı Beta aşamasındadır ve maksimum üye sayısına ulaştık. 
+      Lütfen e-posta adresinizi bırakın, yeni kontenjan açıldığında size haber verelim.
+    </p>
+    <div class="demo-input" style="flex-direction: column;">
+      <input type="email" id="waitlist-email" placeholder="ornek@email.com" style="margin-bottom: 12px; text-align: center;">
+      <button class="btn-primary" onclick="submitWaitlist()" style="width: 100%; border: none;">Bekleme Listesine Katıl</button>
+      <button class="btn-ghost" onclick="closeWaitlistModal()" style="width: 100%; margin-top: 8px;">Kapat</button>
+    </div>
+  </div>
+</div>
+
 <script>
 // ── CONFIG ──────────────────────────────────────────────
-const AIPP_API = window.location.origin; // AIPP backend
+const AIPP_API = window.location.origin; // aipp backend
 
 // ── STATE ───────────────────────────────────────────────
 let currentMerchantKey = '';
@@ -590,6 +626,10 @@ async function demoRegisterMerchant() {
     
     if (!response.ok) {
       const errData = await response.json();
+      if (errData.code === 'CAPACITY_REACHED' || response.status === 403) {
+        document.getElementById('waitlist-modal').classList.add('active');
+        return;
+      }
       alert('Error: ' + errData.error);
       return;
     }
@@ -608,7 +648,42 @@ async function demoRegisterMerchant() {
     
   } catch (err) {
     console.error('Failed to register merchant:', err);
-    alert('Failed to connect to AIPP backend server. Make sure it is running locally on port 3000.');
+    alert('Failed to connect to aipp backend server. Make sure it is running locally on port 3000.');
+  }
+}
+
+// ── WAITLIST ────────────────────────────────────────────
+function closeWaitlistModal() {
+  document.getElementById('waitlist-modal').classList.remove('active');
+}
+
+async function submitWaitlist() {
+  const emailInput = document.getElementById('waitlist-email').value.trim();
+  const addressInput = document.getElementById('demo-ln-address').value.trim();
+  
+  if (!emailInput || !emailInput.includes('@')) {
+    alert('Lütfen geçerli bir e-posta adresi girin.');
+    return;
+  }
+
+  try {
+    const response = await fetch(`${AIPP_API}/merchant/waitlist`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: emailInput, ln_address: addressInput })
+    });
+    
+    if (!response.ok) {
+      alert('Hata oluştu, lütfen tekrar deneyin.');
+      return;
+    }
+
+    alert('Başarıyla bekleme listesine eklendiniz! Kapasite açıldığında size e-posta göndereceğiz.');
+    closeWaitlistModal();
+    document.getElementById('waitlist-email').value = '';
+    
+  } catch (err) {
+    alert('Bağlantı hatası.');
   }
 }
 
@@ -630,7 +705,7 @@ function copyModalKey() {
 function downloadKey() {
   const k = document.getElementById('modal-api-key').value;
   const ln = currentLnAddress;
-  const content = `AIPP Merchant Details\n----------------------\nAPI Key: ${k}\nLightning Address: ${ln}\n\nKeep this file safe!`;
+  const content = `aipp Merchant Details\n----------------------\nAPI Key: ${k}\nLightning Address: ${ln}\n\nKeep this file safe!`;
   const blob = new Blob([content], { type: 'text/plain' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
@@ -693,7 +768,7 @@ async function demoCreateInvoice() {
     pollTimer = setInterval(() => checkPayment(currentPaymentHash), 2000);
   } catch (err) {
     console.error('Failed to create invoice:', err);
-    alert('Failed to connect to AIPP backend to generate invoice.');
+    alert('Failed to connect to aipp backend to generate invoice.');
   }
 }
 
@@ -734,7 +809,7 @@ function onPaymentConfirmed(hash) {
             <h3 style="text-align:center;margin-bottom:16px;color:#d32f2f">Routing Error</h3>
             <div style="font-size:13px;line-height:1.8;color:#000;text-align:center;margin-bottom:16px;">
               Your invoice was paid, but the Lightning Network could not find a route to forward the payout to <strong>${currentLnAddress}</strong>.<br><br>
-              The funds remain safely in your AIPP node.
+              The funds remain safely in your aipp node.
             </div>
             <button class="demo-btn" onclick="switchTab(0)" style="width:100%">Try Another Address →</button>
           `;
