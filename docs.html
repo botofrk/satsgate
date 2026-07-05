@@ -166,6 +166,7 @@
       <li><a href="#get-charge">GET /invoice/status/:hash</a></li>
       <li><a href="#post-payout">POST /merchant/payout</a></li>
       <li><a href="#l402">L402 protocol</a></li>
+      <li><a href="#drop-in-paywall">Drop-in Paywall</a></li>
       <li><a href="#webhooks">Webhooks</a></li>
       <li><a href="#errors">Errors</a></li>
     </ul>
@@ -300,6 +301,29 @@ charge = client.create_charge(<span class="c-num">500</span>)
         <li>Client retries with header <code>Authorization: L402 &lt;macaroon&gt;:&lt;preimage_hex&gt;</code>.</li>
       </ol>
       <p>Try it live on the <a href="l402.html" style="color:var(--accent);text-decoration:none">L402 demo page</a>.</p>
+    </section>
+
+    <section id="drop-in-paywall">
+      <h2>Drop-in Paywall</h2>
+      <p>Monetize any static content on your website by simply dropping in our <code>paywall.js</code> script. It automatically handles Lightning invoices, WebLN browser wallets (like Alby or Zeus), and renders a beautiful UI without any dependencies.</p>
+      
+      <ol>
+        <li>Include the script in your HTML:</li>
+        <div class="code-block">
+          <pre>&lt;script src="https://aipp.dev/paywall.js"&gt;&lt;/script&gt;</pre>
+        </div>
+        <li>Wrap your premium content in a <code>div</code> with the <code>data-aipp-src</code> attribute pointing to your L402-protected endpoint:</li>
+        <div class="code-block">
+          <pre>&lt;div id="premium-content" data-aipp-src="https://your-api.com/premium-article"&gt;
+  Loading premium content...
+&lt;/div&gt;</pre>
+        </div>
+      </ol>
+      
+      <div style="background:var(--card);border:1px solid var(--border);border-left:4px solid var(--accent);padding:16px;border-radius:4px;margin-top:24px">
+        <strong style="color:var(--fg);display:block;margin-bottom:8px">Security Note: "Session Pass" Design</strong>
+        <p style="margin:0;font-size:14px;color:var(--muted)">The paywall stores the paid <code>preimage</code> (bearer token) in the browser's <code>localStorage</code> so the user doesn't have to pay again upon refresh. By design, this token can be shared by the user to others (functioning as a "session pass"). This is an intentional L402 design choice prioritizing seamless UX and true bearer-asset behavior over strict DRM.</p>
+      </div>
     </section>
 
     <section id="webhooks">

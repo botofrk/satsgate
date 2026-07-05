@@ -83,7 +83,6 @@ export const handleLnbitsWebhook = async (req: Request, res: Response, next: Nex
 
       const merchant = await db.get('SELECT * FROM merchants WHERE api_key = ?', invoice.api_key);
       if (!merchant) {
-        await db.run('ROLLBACK');
         throw new AppError('Merchant not found', 400, 'MERCHANT_NOT_FOUND');
       }
 
@@ -96,12 +95,10 @@ export const handleLnbitsWebhook = async (req: Request, res: Response, next: Nex
           headers: { 'X-Api-Key': LNBITS_INVOICE_KEY }
         });
         if (!verifyRes.ok) {
-          await db.run('ROLLBACK');
           throw new AppError('Failed to verify payment status with LNBits', 400, 'VERIFICATION_FAILED');
         }
         const verifyData = (await verifyRes.json()) as any;
         if (!verifyData.paid) {
-          await db.run('ROLLBACK');
           throw new AppError('Invoice remains unpaid on LNBits', 400, 'UNPAID_INVOICE');
         }
       }
