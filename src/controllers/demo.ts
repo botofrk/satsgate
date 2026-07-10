@@ -127,3 +127,24 @@ export const premiumArticle = async (req: Request, res: Response) => {
     res.status(500).json({ error: "Failed to generate demo invoice" });
   }
 };
+
+export const getPricing = async (req: Request, res: Response) => {
+  res.json({
+    currency: "USD",
+    endpoints: [
+      {
+        path: "/premium-article-1",
+        protocol: "L402",
+        price_usd: 0.005,
+        price_sats_fixed: 21,
+        description: "Access premium article for AI Autonomy research"
+      },
+      {
+        path: "/chat",
+        protocol: "L402",
+        price_sats_fixed: 5,
+        description: "Submit request to OpenAI proxy chatbot endpoint"
+      }
+    ]
+  });
+};

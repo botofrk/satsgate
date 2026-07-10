@@ -4,7 +4,7 @@ import { createInvoice, checkInvoiceStatus } from '../controllers/invoice';
 import { handleLnbitsWebhook } from '../controllers/webhook';
 import { handleChat, createTicket } from '../controllers/chat';
 import { verifyAdmin, getAdminStats, getFailedPayouts, retryPayout, getWaitlist } from '../controllers/admin';
-import { premiumArticle } from '../controllers/demo';
+import { premiumArticle, getPricing } from '../controllers/demo';
 
 const router = Router();
 
@@ -22,6 +22,7 @@ router.get('/invoice/status/:hash', checkInvoiceStatus);
 
 // Demo Paywall route
 router.get('/premium-article-1', premiumArticle);
+router.get('/pricing.json', getPricing);
 
 // Admin routes
 router.get('/admin/stats', verifyAdmin, getAdminStats);

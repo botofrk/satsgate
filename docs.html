@@ -238,6 +238,8 @@
       <li><a href="#post-payout">POST /merchant/payout</a></li>
       <li><a href="#l402">L402 protocol</a></li>
       <li><a href="#x402">x402 protocol</a></li>
+      <li><a href="#agent-integration">Agent Autopay</a></li>
+      <li><a href="#machine-pricing">Pricing Discovery</a></li>
       <li><a href="#drop-in-paywall">Drop-in Paywall</a></li>
       <li><a href="#webhooks">Webhooks</a></li>
       <li><a href="#errors">Errors</a></li>
@@ -255,6 +257,8 @@
       <a href="#post-payout">Payout</a>
       <a href="#l402">L402</a>
       <a href="#x402">x402</a>
+      <a href="#agent-integration">Autopay</a>
+      <a href="#machine-pricing">Pricing</a>
       <a href="#drop-in-paywall">Paywall</a>
       <a href="#webhooks">Webhooks</a>
       <a href="#errors">Errors</a>
@@ -432,6 +436,75 @@ charge = client.create_charge(<span class="c-num">500</span>)
       <div style="background:var(--card);border:1px solid var(--border);border-left:4px solid var(--accent);padding:16px;border-radius:4px;margin-top:24px">
         <strong style="color:var(--fg);display:block;margin-bottom:8px">Security Note: "Session Pass" Design</strong>
         <p style="margin:0;font-size:14px;color:var(--muted)">The paywall stores the paid <code>preimage</code> (bearer token) in the browser's <code>localStorage</code> so the user doesn't have to pay again upon refresh. By design, this token can be shared by the user to others (functioning as a "session pass"). This is an intentional L402 design choice prioritizing seamless UX and true bearer-asset behavior over strict DRM.</p>
+      </div>
+    </section>
+
+    <section id="agent-integration">
+      <h2>AI Agent Autopayment & Security</h2>
+      <p>For autonomous AI agents running in cloud environments, catching a <code>402 Payment Required</code> response and paying it programmatically can be implemented with a lightweight interceptor. If you use Nostr Wallet Connect (NWC) or an Alby token, your agent can pay invoices dynamically.</p>
+      
+      <div style="background:var(--card);border:1px solid var(--border);border-left:4px solid #ef4444;padding:16px;border-radius:4px;margin-bottom:24px">
+        <strong style="color:#ef4444;display:block;margin-bottom:8px">⚠️ CRITICAL SECURITY WARNING: Never hardcode Private Keys</strong>
+        <p style="margin:0;font-size:14px;color:var(--muted)">Do not embed NWC URLs or private wallet keys directly in your code. Always load them via environment variables (e.g. <code>process.env</code> or <code>os.environ</code>) and add <code>.env</code> to your <code>.gitignore</code> file to prevent accidental repo commits.</p>
+      </div>
+
+      <div class="code-block">
+        <div class="code-header">Python: Autonomous L402 Interceptor</div>
+        <pre><span class="c-key">import</span> os
+<span class="c-key">import</span> requests
+<span class="c-key">from</span> aipp <span class="c-key">import</span> AippClient
+
+<span class="c-comment"># Load the NWC wallet URL securely from environment variables</span>
+nwc_url = os.environ.get(<span class="c-str">"NWC_URL"</span>)
+client = AippClient(nwc_url=nwc_url)
+
+<span class="c-key">def</span> <span class="c-fun">get_api_resource</span>(url):
+    <span class="c-comment"># Initial request to L402 protected resource</span>
+    res = requests.get(url)
+    
+    <span class="c-key">if</span> res.status_code == <span class="c-num">402</span>:
+        auth_header = res.headers.get(<span class="c-str">"Www-Authenticate"</span>)
+        <span class="c-key">if</span> auth_header <span class="c-key">and</span> auth_header.startswith(<span class="c-str">"L402 "</span>):
+            <span class="c-comment"># Extract invoice and macaroon from challenge</span>
+            challenge = parse_l402_challenge(auth_header)
+            
+            <span class="c-comment"># Check budget and pay invoice</span>
+            <span class="c-key">try</span>:
+                preimage = client.pay_invoice(challenge[<span class="c-str">"invoice"</span>])
+                <span class="c-comment"># Retry request with payment proof</span>
+                headers = {<span class="c-str">"Authorization"</span>: f<span class="c-str">"L402 {challenge['macaroon']}:{preimage}"</span>}
+                <span class="c-key">return</span> requests.get(url, headers=headers).json()
+            <span class="c-key">except</span> InsufficientBudgetError:
+                <span class="c-key">raise</span> Exception(<span class="c-str">"AI Agent out of wallet budget!"</span>)
+    <span class="c-key">return</span> res.json()</pre>
+      </div>
+    </section>
+
+    <section id="machine-pricing">
+      <h2>Machine-Readable Pricing Discovery</h2>
+      <p>Before making requests, autonomous agents can query the pricing structure of an endpoint to evaluate budget constraints without triggering <code>402 Payment Required</code> challenge loops.</p>
+      <p>AIPP exposes a standardized <code>/pricing.json</code> manifest detailing pricing rates:</p>
+      
+      <div class="code-block">
+        <div class="code-header">GET /pricing.json</div>
+        <pre>{
+  <span class="c-key">"currency"</span>: <span class="c-str">"USD"</span>,
+  <span class="c-key">"endpoints"</span>: [
+    {
+      <span class="c-key">"path"</span>: <span class="c-str">"/premium-article-1"</span>,
+      <span class="c-key">"protocol"</span>: <span class="c-str">"L402"</span>,
+      <span class="c-key">"price_usd"</span>: <span class="c-num">0.005</span>,
+      <span class="c-key">"price_sats_fixed"</span>: <span class="c-num">21</span>,
+      <span class="c-key">"description"</span>: <span class="c-str">"Access premium article for AI Autonomy research"</span>
+    },
+    {
+      <span class="c-key">"path"</span>: <span class="c-str">"/chat"</span>,
+      <span class="c-key">"protocol"</span>: <span class="c-str">"L402"</span>,
+      <span class="c-key">"price_sats_fixed"</span>: <span class="c-num">5</span>,
+      <span class="c-key">"description"</span>: <span class="c-str">"Submit request to OpenAI proxy chatbot endpoint"</span>
+    }
+  ]
+}</pre>
       </div>
     </section>
 
