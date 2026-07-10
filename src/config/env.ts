@@ -13,7 +13,6 @@ const REQUIRED_IN_PROD = [
   'LNBITS_ADMIN_KEY',
   'LNBITS_WEBHOOK_SECRET',
   'ADMIN_SECRET',
-  'AIPP_BASE_PRIVATE_KEY',
 ] as const;
 
 if (IS_PROD) {
@@ -37,10 +36,9 @@ export const LNBITS_WEBHOOK_SECRET = process.env.LNBITS_WEBHOOK_SECRET || '';
 export const DEEPSEEK_API_KEY = process.env.DEEPSEEK_API_KEY || '';
 export const RESEND_API_KEY = process.env.RESEND_API_KEY || '';
 
-// [CRIT-1 FIX] No hardcoded fallback private key — fail fast if not set in production
+// [CRIT-1 FIX] AIPP_BASE_PRIVATE_KEY is optional — print warning if not set in production instead of crash
 if (IS_PROD && !process.env.AIPP_BASE_PRIVATE_KEY) {
-  console.error('FATAL: AIPP_BASE_PRIVATE_KEY is not set. Refusing to start.');
-  process.exit(1);
+  console.warn('⚠️ WARNING: AIPP_BASE_PRIVATE_KEY is not set. EVM/Base USDC functions (x402) will be disabled.');
 }
 export const AIPP_BASE_PRIVATE_KEY = process.env.AIPP_BASE_PRIVATE_KEY || '';
 
