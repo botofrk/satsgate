@@ -365,7 +365,22 @@
     <div class="demo-step" id="step1">
       <p style="color:var(--muted);font-size:14px;margin-bottom:20px">Simulate a test checkout on your newly generated API key:</p>
       <div class="shop-card" style="background:#fff;border:3px solid #000;border-radius:var(--radius);padding:16px;box-shadow:4px 4px 0px #000;margin:0 auto;max-width:320px;text-align:center">
-        <img src="api_token.jpg" alt="API Inference Token" style="width:100%;height:180px;object-fit:cover;border:3px solid #000;border-radius:var(--radius);margin-bottom:12px">
+        <!-- Beautiful SVG Placeholder for AI Inference Token -->
+        <div style="width:100%; height:180px; display:flex; align-items:center; justify-content:center; background:linear-gradient(135deg, #111 0%, #222 100%); border:3px solid #000; border-radius:var(--radius); margin-bottom:12px; position:relative; overflow:hidden;">
+          <!-- Grid pattern overlay -->
+          <div style="position:absolute; top:0; left:0; right:0; bottom:0; opacity:0.1; background-image: radial-gradient(circle, #fff 1px, transparent 1px); background-size: 16px 16px;"></div>
+          <!-- Glowing circle -->
+          <div style="width: 80px; height: 80px; border-radius: 50%; background: radial-gradient(circle, rgba(255,204,0,0.2) 0%, transparent 70%); position: absolute; filter: blur(8px);"></div>
+          <!-- SVG Icon -->
+          <svg width="64" height="64" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg" style="z-index: 1;">
+            <rect x="12" y="12" width="40" height="40" rx="8" fill="#111" stroke="#ffcc00" stroke-width="2.5"/>
+            <circle cx="28" cy="32" r="8" fill="none" stroke="#ffcc00" stroke-width="2"/>
+            <circle cx="28" cy="32" r="3" fill="#ffcc00"/>
+            <path d="M36 24 L44 32 L36 40" fill="none" stroke="#ffcc00" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M46 18 L48 20" stroke="#ffcc00" stroke-width="1.5" stroke-linecap="round"/>
+            <path d="M18 46 L20 48" stroke="#ffcc00" stroke-width="1.5" stroke-linecap="round"/>
+          </svg>
+        </div>
         <h3 style="margin-bottom:4px;font-size:16px;color:#000">Premium LLM Inference</h3>
         <p style="color:var(--muted);font-size:12px;margin-bottom:12px">Execute 10k tokens of highly optimized AI inference.</p>
         
