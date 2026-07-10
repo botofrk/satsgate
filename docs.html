@@ -512,6 +512,32 @@ client = AippClient(nwc_url=nwc_url)
       <h2>Webhooks</h2>
       <p>When a charge is paid, AIPP automatically forwards 99% to your Lightning address and writes a transaction to your dashboard. You can configure a webhook URL for your backend to be notified instantly.</p>
     </section>
+
+    <section id="errors">
+      <h2>Errors</h2>
+      <p>AIPP returns standard HTTP response codes to indicate success or failure. All error responses contain a JSON body detailing the error code and message:</p>
+      
+      <div class="code-block">
+        <div class="code-header">&rarr; 401 Unauthorized</div>
+        <pre>{
+  <span class="c-key">"error"</span>: <span class="c-str">"Unauthorized: Invalid or missing API key"</span>
+}</pre>
+      </div>
+
+      <div class="code-block">
+        <div class="code-header">&rarr; 429 Too Many Requests (Spend Limit)</div>
+        <pre>{
+  <span class="c-key">"error"</span>: <span class="c-str">"Daily limit reached ($100). Resets at midnight UTC."</span>
+}</pre>
+      </div>
+
+      <div class="code-block">
+        <div class="code-header">&rarr; 400 Bad Request (Single Request limit exceeded)</div>
+        <pre>{
+  <span class="c-key">"error"</span>: <span class="c-str">"Single request exceeds $10 limit"</span>
+}</pre>
+      </div>
+    </section>
   </main>
 </div>
 
