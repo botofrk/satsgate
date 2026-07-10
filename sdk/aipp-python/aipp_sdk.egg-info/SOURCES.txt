@@ -2,7 +2,10 @@ README.md
 setup.py
 aipp/__init__.py
 aipp/client.py
+aipp/jwt.py
+aipp/middleware.py
 aipp/models.py
+aipp/tools.py
 aipp_sdk.egg-info/PKG-INFO
 aipp_sdk.egg-info/SOURCES.txt
 aipp_sdk.egg-info/dependency_links.txt

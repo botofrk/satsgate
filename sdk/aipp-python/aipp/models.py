@@ -5,16 +5,22 @@ class ChargeParams(BaseModel):
     amount_sats: Optional[int] = None
     amount_usd: Optional[float] = None
     memo: Optional[str] = None
+    protocol: Optional[str] = None
 
 class ChargeResponse(BaseModel):
-    payment_request: str
     payment_hash: str
-    amount_sats: int
+    protocol: str = "L402"
+    payment_request: Optional[str] = None
+    amount_sats: Optional[int] = None
+    amount_usd: Optional[float] = None
+    pay_to: Optional[str] = None
+    network: Optional[str] = None
+    token: Optional[str] = None
 
 class ChargeStatus(BaseModel):
+    paid: bool = False
     status: str
-    payment_hash: str
-    amount_sats: int
+    preimage: Optional[str] = None
 
 class AippErrorResponse(BaseModel):
     error: str
@@ -23,3 +29,4 @@ class AippErrorResponse(BaseModel):
 class PayoutResponse(BaseModel):
     message: str
     amount_sats: Optional[int] = None
+    amount_usd: Optional[float] = None

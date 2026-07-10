@@ -31,15 +31,18 @@ class Aipp:
             
         return response.json()
 
-    def create_charge(self, amount_sats: int, memo: Optional[str] = None) -> ChargeResponse:
+    def create_charge(self, amount_sats: Optional[int] = None, amount_usd: Optional[float] = None, memo: Optional[str] = None) -> ChargeResponse:
         """Creates a new Lightning Invoice"""
-        if amount_sats <= 0:
-            raise ValueError("AIPP: amount_sats must be greater than 0")
+        if not amount_sats and not amount_usd:
+            raise ValueError("AIPP: Either amount_sats or amount_usd is required")
             
-        data = self._request("POST", "/invoice/create", json={
-            "amount_sats": amount_sats,
-            "memo": memo
-        })
+        payload = {"memo": memo}
+        if amount_sats:
+            payload["amount_sats"] = amount_sats
+        if amount_usd:
+            payload["amount_usd"] = amount_usd
+            
+        data = self._request("POST", "/invoice/create", json=payload)
         return ChargeResponse(**data)
 
     def get_charge(self, payment_hash: str) -> ChargeStatus:

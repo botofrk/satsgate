@@ -32,17 +32,19 @@ export async function processPruning() {
         continue; // They have trapped funds, do not delete
       }
 
-      // 4. Safe to prune. Delete their invoices first (to clean up SQLite) then delete merchant.
+      // 4. Safe to prune. Delete all related data, then the merchant.
       await db.run('BEGIN EXCLUSIVE TRANSACTION');
       try {
         await db.run('DELETE FROM invoices WHERE api_key = ?', merchant.api_key);
+        await db.run('DELETE FROM daily_spend WHERE api_key = ?', merchant.api_key);
+        await db.run('DELETE FROM ledgers WHERE api_key = ?', merchant.api_key);
         await db.run('DELETE FROM merchants WHERE api_key = ?', merchant.api_key);
         await db.run('COMMIT');
         
         console.log(`[Prune Worker] 🗑️ Pruned inactive merchant: ${merchant.ln_address}`);
         prunedCount++;
       } catch (err) {
-        await db.run('ROLLBACK');
+        try { await db.run('ROLLBACK'); } catch (_) { /* already rolled back */ }
         console.error(`[Prune Worker] Failed to prune merchant ${merchant.ln_address}:`, err);
       }
     }

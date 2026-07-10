@@ -21,20 +21,25 @@ export async function initDb(): Promise<Database> {
     CREATE TABLE IF NOT EXISTS merchants (
       api_key TEXT PRIMARY KEY,
       ln_address TEXT NOT NULL UNIQUE,
+      email TEXT,
       payout_mode TEXT NOT NULL DEFAULT 'instant',
       payout_threshold_sats INTEGER NOT NULL DEFAULT 0,
+      usdc_address TEXT,
       created_at TEXT NOT NULL
     );
 
     CREATE TABLE IF NOT EXISTS invoices (
       payment_hash TEXT PRIMARY KEY,
       api_key TEXT NOT NULL,
-      amount_sats INTEGER NOT NULL,
-      commission_sats INTEGER NOT NULL,
-      forwarded_amount_sats INTEGER NOT NULL,
+      amount_sats INTEGER,
+      commission_sats INTEGER,
+      forwarded_amount_sats INTEGER,
       status TEXT NOT NULL,
       payout_status TEXT NOT NULL DEFAULT 'none',
       callback_url TEXT,
+      protocol TEXT NOT NULL DEFAULT 'L402',
+      usdc_amount REAL,
+      preimage TEXT,
       created_at TEXT NOT NULL
     );
 
@@ -59,8 +64,11 @@ export async function initDb(): Promise<Database> {
       id TEXT PRIMARY KEY,
       payment_hash TEXT NOT NULL,
       api_key TEXT NOT NULL,
-      amount_sats INTEGER NOT NULL,
-      ln_address TEXT NOT NULL,
+      amount_sats INTEGER,
+      ln_address TEXT,
+      protocol TEXT NOT NULL DEFAULT 'L402',
+      usdc_address TEXT,
+      usdc_amount REAL,
       status TEXT NOT NULL DEFAULT 'pending', -- pending, processing, failed, completed
       attempts INTEGER NOT NULL DEFAULT 0,
       next_retry_at TEXT NOT NULL,
@@ -82,6 +90,72 @@ export async function initDb(): Promise<Database> {
       created_at TEXT NOT NULL
     );
   `);
+
+  // Performance indexes on hot query paths
+  await dbInstance.exec(`
+    CREATE INDEX IF NOT EXISTS idx_invoices_api_key ON invoices (api_key);
+    CREATE INDEX IF NOT EXISTS idx_invoices_api_key_status ON invoices (api_key, status);
+    CREATE INDEX IF NOT EXISTS idx_invoices_payout_status ON invoices (api_key, status, payout_status);
+    CREATE INDEX IF NOT EXISTS idx_invoices_created_at ON invoices (api_key, created_at DESC);
+    CREATE INDEX IF NOT EXISTS idx_payout_queue_status ON payout_queue (status, next_retry_at);
+    CREATE INDEX IF NOT EXISTS idx_ledgers_api_key ON ledgers (api_key);
+  `);
+
+  // Migration: Add email column if it doesn't exist
+  try {
+    await dbInstance.exec('ALTER TABLE merchants ADD COLUMN email TEXT;');
+  } catch (err) {
+    // Column already exists, ignore
+  }
+
+  // Migration: Add usdc_address column to merchants
+  try {
+    await dbInstance.exec('ALTER TABLE merchants ADD COLUMN usdc_address TEXT;');
+  } catch (err) {
+    // Ignore
+  }
+
+  // Migration: Add protocol column to invoices
+  try {
+    await dbInstance.exec("ALTER TABLE invoices ADD COLUMN protocol TEXT NOT NULL DEFAULT 'L402';");
+  } catch (err) {
+    // Ignore
+  }
+
+  // Migration: Add usdc_amount column to invoices
+  try {
+    await dbInstance.exec('ALTER TABLE invoices ADD COLUMN usdc_amount REAL;');
+  } catch (err) {
+    // Ignore
+  }
+
+  // Migration: Add preimage column to invoices
+  try {
+    await dbInstance.exec('ALTER TABLE invoices ADD COLUMN preimage TEXT;');
+  } catch (err) {
+    // Ignore
+  }
+
+  // Migration: Add protocol column to payout_queue
+  try {
+    await dbInstance.exec("ALTER TABLE payout_queue ADD COLUMN protocol TEXT NOT NULL DEFAULT 'L402';");
+  } catch (err) {
+    // Ignore
+  }
+
+  // Migration: Add usdc_address column to payout_queue
+  try {
+    await dbInstance.exec('ALTER TABLE payout_queue ADD COLUMN usdc_address TEXT;');
+  } catch (err) {
+    // Ignore
+  }
+
+  // Migration: Add usdc_amount column to payout_queue
+  try {
+    await dbInstance.exec('ALTER TABLE payout_queue ADD COLUMN usdc_amount REAL;');
+  } catch (err) {
+    // Ignore
+  }
 
   console.log('⚡ SQLite Database file initialized (aipp.db).');
 

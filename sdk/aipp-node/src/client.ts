@@ -36,7 +36,7 @@ export class Aipp {
   }
 
   /**
-   * Creates a new Lightning Invoice
+   * Creates a new Invoice (either L402 or x402)
    */
   async createCharge(params: ChargeParams): Promise<ChargeResponse> {
     if (!params.amountSats && !params.amountUsd) {
@@ -46,6 +46,7 @@ export class Aipp {
     const body: any = { memo: params.memo };
     if (params.amountSats) body.amount_sats = params.amountSats;
     if (params.amountUsd) body.amount_usd = params.amountUsd;
+    if (params.protocol) body.protocol = params.protocol;
 
     return this.request<ChargeResponse>('/invoice/create', {
       method: 'POST',
@@ -56,11 +57,12 @@ export class Aipp {
   /**
    * Checks the status of an existing charge
    */
-  async getCharge(paymentHash: string): Promise<ChargeStatus> {
+  async getCharge(paymentHash: string, txHash?: string): Promise<ChargeStatus> {
     if (!paymentHash) {
       throw new Error('AIPP: paymentHash is required');
     }
-    return this.request<ChargeStatus>(`/invoice/status/${paymentHash}`, {
+    const query = txHash ? `?tx_hash=${txHash}` : '';
+    return this.request<ChargeStatus>(`/invoice/status/${paymentHash}${query}`, {
       method: 'GET',
     });
   }

@@ -4,14 +4,34 @@ import { getDb } from '../config/database';
 import { LNBITS_WEBHOOK_SECRET, LNBITS_INVOICE_KEY, LNBITS_URL, MIN_PAYOUT_THRESHOLD_SATS } from '../config/env';
 import { AppError } from '../utils/error';
 
+// Safe URLs for merchant callbacks — block SSRF targets
+const SSRF_BLOCKED = /^(https?:\/\/)?(localhost|127\.0\.0\.1|0\.0\.0\.0|10\.|192\.168\.|172\.(1[6-9]|2\d|3[01])\.|169\.254\.|::1|fd[0-9a-f]{2}:)/i;
+
+export function isSafeCallbackUrl(url: string | null): boolean {
+  if (!url) return true;
+  try {
+    const parsed = new URL(url);
+    if (!['http:', 'https:'].includes(parsed.protocol)) return false;
+    if (SSRF_BLOCKED.test(url)) return false;
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 function verifyWebhookSignature(rawBody: Buffer, signature: string | undefined): boolean {
-  if (!LNBITS_WEBHOOK_SECRET) return true;
+  // If no secret configured, reject ALL webhook calls (fail-closed)
+  if (!LNBITS_WEBHOOK_SECRET) return false;
   if (!signature) return false;
   const expected = crypto
     .createHmac('sha256', LNBITS_WEBHOOK_SECRET)
     .update(rawBody)
     .digest('hex');
-  return crypto.timingSafeEqual(Buffer.from(signature), Buffer.from(expected));
+  // Guard against different-length buffers before timingSafeEqual
+  const sigBuf = Buffer.from(signature);
+  const expBuf = Buffer.from(expected);
+  if (sigBuf.length !== expBuf.length) return false;
+  return crypto.timingSafeEqual(sigBuf, expBuf);
 }
 
 // Fire-and-forget webhook callback to the merchant
@@ -40,18 +60,30 @@ function triggerWebhookWithRetry(callbackUrl: string, payload: any, attempt: num
 
 export const handleLnbitsWebhook = async (req: Request, res: Response, next: NextFunction) => {
   try {
+    // Two accepted auth modes:
+    // 1. HMAC header (preferred, for self-hosted LNBits that supports webhook signing)
+    // 2. Query param secret (fallback for demo.lnbits.com which just POSTs to the URL as-is)
     const signature = req.headers['x-lnbits-webhook-secret'] as string | undefined
       || req.headers['x-webhook-signature'] as string | undefined;
     const querySecret = req.query.secret as string | undefined;
-    
+
     if (LNBITS_WEBHOOK_SECRET) {
       const isSignatureValid = verifyWebhookSignature(req.body as Buffer, signature);
       const isQueryValid = querySecret === LNBITS_WEBHOOK_SECRET;
-      
+
       if (!isSignatureValid && !isQueryValid) {
-        console.warn('[Webhook] Invalid signature/secret from:', req.ip);
+        console.warn('[Webhook] Invalid auth from:', req.ip);
         throw new AppError('Invalid webhook signature or secret', 401, 'UNAUTHORIZED');
       }
+
+      if (isQueryValid && !isSignatureValid) {
+        // demo.lnbits.com mode — log a notice but allow through
+        console.log('[Webhook] Authenticated via query param (demo.lnbits.com mode). Upgrade to self-hosted LNBits for HMAC signing.');
+      }
+    } else {
+      // No secret configured at all — reject all to fail-closed
+      console.warn('[Webhook] Rejected: LNBITS_WEBHOOK_SECRET not configured');
+      throw new AppError('Webhook secret not configured on server', 500, 'SERVER_MISCONFIGURED');
     }
 
     let body: any = {};
@@ -86,9 +118,8 @@ export const handleLnbitsWebhook = async (req: Request, res: Response, next: Nex
         throw new AppError('Merchant not found', 400, 'MERCHANT_NOT_FOUND');
       }
 
-      const isDemo = invoice.payment_hash.startsWith('demo_') ||
-                     merchant.ln_address === 'mehmet@phoenixwallet.me' ||
-                     merchant.ln_address === 'devtest@aipp.dev';
+      // Demo mode: ONLY for payment hashes explicitly generated as demo_ (no real LNBits key configured)
+      const isDemo = invoice.payment_hash.startsWith('demo_');
 
       if (LNBITS_INVOICE_KEY && !isDemo) {
         const verifyRes = await fetch(`${LNBITS_URL}/api/v1/payments/${paymentHash}`, {

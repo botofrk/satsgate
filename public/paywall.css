@@ -1,0 +1,181 @@
+/* AIPP Paywall CSS */
+.aipp-paywall-container {
+  position: relative;
+  width: 100%;
+  margin: 2rem 0;
+  border-radius: 12px;
+  overflow: hidden;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  background: rgba(10, 10, 10, 0.02);
+  min-height: 200px;
+}
+
+.aipp-paywall-content-wrapper {
+  filter: blur(8px);
+  user-select: none;
+  pointer-events: none;
+  opacity: 0.6;
+  max-height: 250px;
+  overflow: hidden;
+  transition: all 0.5s ease-in-out;
+  padding: 1rem;
+}
+
+.aipp-paywall-content-wrapper.unlocked {
+  filter: blur(0);
+  user-select: auto;
+  pointer-events: auto;
+  opacity: 1;
+  max-height: 10000px;
+}
+
+.aipp-paywall-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: rgba(10, 10, 10, 0.6);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  z-index: 10;
+  color: white;
+  text-align: center;
+  padding: 2rem;
+  box-sizing: border-box;
+  transition: opacity 0.5s ease;
+}
+
+.aipp-paywall-overlay.hidden {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.aipp-paywall-card {
+  background: rgba(25, 25, 25, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+  border-radius: 16px;
+  padding: 2rem;
+  max-width: 400px;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.5rem;
+}
+
+.aipp-paywall-header {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.aipp-paywall-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin: 0;
+  background: linear-gradient(90deg, #f7931a 0%, #f5d100 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.aipp-paywall-subtitle {
+  font-size: 0.9rem;
+  color: rgba(255, 255, 255, 0.7);
+  margin: 0;
+}
+
+.aipp-paywall-qr-container {
+  background: white;
+  padding: 1rem;
+  border-radius: 8px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 240px;
+  height: 240px;
+}
+
+.aipp-paywall-qr-container img,
+.aipp-paywall-qr-container canvas {
+  max-width: 100%;
+  height: auto;
+  display: block;
+}
+
+.aipp-paywall-button {
+  background: #f7931a;
+  color: #111;
+  border: none;
+  border-radius: 8px;
+  padding: 0.75rem 1.5rem;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.2s, background 0.2s;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.aipp-paywall-button:hover {
+  background: #f5d100;
+  transform: translateY(-2px);
+}
+
+.aipp-paywall-button:active {
+  transform: translateY(0);
+}
+
+.aipp-paywall-button svg {
+  width: 20px;
+  height: 20px;
+}
+
+.aipp-paywall-copy {
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.aipp-paywall-copy:hover {
+  background: rgba(255, 255, 255, 0.2);
+  color: white;
+}
+
+.aipp-paywall-loader {
+  border: 3px solid rgba(255, 255, 255, 0.1);
+  border-top: 3px solid #f7931a;
+  border-radius: 50%;
+  width: 24px;
+  height: 24px;
+  animation: aipp-spin 1s linear infinite;
+  margin: 0 auto;
+}
+
+@keyframes aipp-spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.aipp-paywall-status {
+  font-size: 0.85rem;
+  color: rgba(255, 255, 255, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.aipp-paywall-webln-error {
+  font-size: 0.8rem;
+  color: #ff6b6b;
+  margin-bottom: 0.5rem;
+}

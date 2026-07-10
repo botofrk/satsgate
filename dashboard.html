@@ -4,6 +4,10 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>aipp.dev — Developer Dashboard</title>
+<link rel="icon" type="image/x-icon" href="favicon.ico">
+<link rel="icon" type="image/png" sizes="32x32" href="favicon.png">
+<link rel="icon" type="image/svg+xml" href="favicon.svg">
+<link rel="apple-touch-icon" href="favicon-192.png">
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,700;1,600&family=Inter:wght@400;500;600;700&display=swap');
@@ -11,14 +15,14 @@
   *{margin:0;padding:0;box-sizing:border-box}
   
   :root {
-    --bg: #0a0a0b;
-    --fg: #f4f4f5;
-    --muted: #a1a1aa;
-    --border: #27272a;
-    --accent: #f59e0b;
-    --card: #18181b;
-    --success: #22c55e;
-    --danger: #ef4444;
+    --bg: #ffcc00;
+    --fg: #000000;
+    --muted: #111111;
+    --border: #000000;
+    --accent: #000000;
+    --card: #ffffff;
+    --success: #16a34a;
+    --danger: #dc2626;
   }
   
   body {
@@ -37,12 +41,11 @@
     align-items: center;
     justify-content: space-between;
     padding: 24px 40px;
-    border-bottom: 1px solid var(--border);
+    border-bottom: 2px solid var(--border);
     position: sticky;
     top: 0;
     z-index: 50;
-    background: rgba(10,10,11,0.8);
-    backdrop-filter: blur(8px);
+    background: var(--bg);
   }
   
   .logo {
@@ -64,13 +67,14 @@
     align-items: center;
   }
   .nav-links a {
-    color: var(--muted);
+    color: var(--fg);
     text-decoration: none;
-    font-size: 14px;
-    font-weight: 500;
-    transition: color 0.2s;
+    font-size: 15px;
+    font-weight: 700;
+    transition: all 0.2s;
+    border-bottom: 2px solid transparent;
   }
-  .nav-links a:hover { color: var(--fg); }
+  .nav-links a:hover { border-bottom: 2px solid var(--fg); transform: translateY(-2px); }
   
   .nav-btn {
     background: transparent;
@@ -96,26 +100,28 @@
     max-width: 480px;
     margin: 80px auto 0;
     background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: 16px;
+    border: 2px solid var(--border);
+    border-radius: 12px;
     padding: 40px;
     text-align: center;
+    box-shadow: 8px 8px 0 #000;
   }
   .login-wrap h1 {
     font-family: 'Playfair Display', serif;
     font-size: 32px;
-    font-weight: 600;
+    font-weight: 700;
     margin-bottom: 12px;
   }
   .login-wrap p {
     color: var(--muted);
     font-size: 14px;
     margin-bottom: 32px;
+    font-weight: 500;
   }
   .login-input {
     width: 100%;
-    background: var(--bg);
-    border: 1px solid var(--border);
+    background: #fff;
+    border: 2px solid var(--border);
     border-radius: 8px;
     padding: 14px 16px;
     color: var(--fg);
@@ -124,24 +130,26 @@
     outline: none;
     margin-bottom: 24px;
     text-align: center;
-    transition: border-color 0.2s;
+    transition: all 0.2s;
+    box-shadow: inset 2px 2px 0 rgba(0,0,0,0.05);
   }
-  .login-input:focus { border-color: var(--accent); }
+  .login-input:focus { border-color: #000; box-shadow: 4px 4px 0 #000; transform: translate(-2px, -2px); }
   
   .btn-primary {
     background: var(--accent);
-    color: #000;
-    border: none;
+    color: #fff;
+    border: 2px solid #000;
     border-radius: 8px;
     padding: 14px 24px;
-    font-weight: 600;
+    font-weight: 700;
     font-size: 14px;
     cursor: pointer;
     width: 100%;
     font-family: 'Inter', sans-serif;
-    transition: opacity 0.2s;
+    transition: all 0.2s;
+    box-shadow: 4px 4px 0 #000;
   }
-  .btn-primary:hover { opacity: 0.9; }
+  .btn-primary:hover { transform: translate(-2px, -2px); box-shadow: 6px 6px 0 #000; }
 
   /* DASHBOARD VIEW */
   .dashboard-view { display: none; }
@@ -163,29 +171,30 @@
   }
   .stat-card {
     background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: 12px;
+    border: 2px solid var(--border);
+    border-radius: 8px;
     padding: 24px;
+    box-shadow: 5px 5px 0 #000;
   }
-  .stat-card .label { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px; font-weight: 600; }
-  .stat-card .val { font-family: 'Inter', sans-serif; font-size: 32px; font-weight: 700; letter-spacing: -1px; }
-  .stat-card .val sub { font-size: 14px; font-weight: 400; color: var(--muted); }
-  .stat-card .footer { font-size: 13px; color: var(--success); margin-top: 16px; font-weight: 500; }
+  .stat-card .label { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px; font-weight: 700; }
+  .stat-card .val { font-family: 'Inter', sans-serif; font-size: 32px; font-weight: 800; letter-spacing: -1px; }
+  .stat-card .val sub { font-size: 14px; font-weight: 500; color: var(--muted); }
+  .stat-card .footer { font-size: 13px; color: var(--success); margin-top: 16px; font-weight: 600; }
 
   .grid-two-col { display: grid; grid-template-columns: 2fr 1fr; gap: 24px; margin-bottom: 24px; }
   @media(max-width:900px){ .grid-two-col{grid-template-columns:1fr} }
 
-  .chart-card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 24px; }
-  .chart-card h3 { font-family: 'Inter', sans-serif; font-size: 16px; font-weight: 600; margin-bottom: 24px; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; }
+  .chart-card { background: var(--card); border: 2px solid var(--border); border-radius: 8px; padding: 24px; box-shadow: 6px 6px 0 #000; }
+  .chart-card h3 { font-family: 'Inter', sans-serif; font-size: 16px; font-weight: 700; margin-bottom: 24px; color: var(--fg); text-transform: uppercase; letter-spacing: 1px; }
   .chart-container { position: relative; height: 260px; width: 100%; }
 
-  .ledger-card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 24px; margin-top: 24px; }
-  .ledger-card h3 { font-family: 'Inter', sans-serif; font-size: 16px; font-weight: 600; margin-bottom: 24px; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; }
+  .ledger-card { background: var(--card); border: 2px solid var(--border); border-radius: 8px; padding: 24px; margin-top: 24px; box-shadow: 6px 6px 0 #000; }
+  .ledger-card h3 { font-family: 'Inter', sans-serif; font-size: 16px; font-weight: 700; margin-bottom: 24px; color: var(--fg); text-transform: uppercase; letter-spacing: 1px; }
   
   .table-wrap { overflow-x: auto; }
   table { width: 100%; border-collapse: collapse; text-align: left; font-size: 13px; }
-  th { color: var(--muted); font-weight: 600; padding: 16px 12px; border-bottom: 1px solid var(--border); text-transform: uppercase; font-size: 11px; letter-spacing: 0.5px; }
-  td { padding: 16px 12px; border-bottom: 1px solid var(--border); color: var(--fg); }
+  th { color: var(--fg); font-weight: 700; padding: 16px 12px; border-bottom: 2px solid var(--border); text-transform: uppercase; font-size: 11px; letter-spacing: 0.5px; }
+  td { padding: 16px 12px; border-bottom: 2px solid var(--border); color: var(--fg); font-weight: 500; }
   tr:last-child td { border-bottom: none; }
   
   .badge-type { display: inline-block; padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; }
@@ -196,13 +205,108 @@
   .sats-val { font-family: 'Fira Code', monospace; font-size: 13px; }
   .sats-val.positive { color: var(--success); }
 
+  .api-key-box {
+    background: var(--card);
+    border: 2px solid var(--border);
+    padding: 16px 24px;
+    border-radius: 8px;
+    margin-bottom: 32px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    box-shadow: 4px 4px 0 #000;
+  }
+  .api-key-text {
+    font-size: 14px;
+    color: var(--muted);
+    font-weight: 600;
+  }
+  #display-api-key {
+    background: #fefefe;
+    color: var(--fg);
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-family: 'Fira Code', monospace;
+    font-size: 13px;
+    margin-left: 8px;
+    border: 2px solid var(--border);
+  }
+  .btn-copy {
+    padding: 8px 16px;
+    font-size: 13px;
+    font-weight: 700;
+    background: #fff;
+    color: var(--fg);
+    border: 2px solid var(--border);
+    border-radius: 6px;
+    cursor: pointer;
+    font-family: 'Inter', sans-serif;
+    box-shadow: 2px 2px 0 #000;
+    transition: all 0.2s;
+  }
+  .btn-copy:hover {
+    transform: translate(-1px, -1px);
+    box-shadow: 3px 3px 0 #000;
+  }
+
   footer { text-align: center; padding: 32px; color: var(--muted); font-size: 13px; border-top: 1px solid var(--border); margin-top: auto; font-family: 'Inter', sans-serif; }
+
+  @media (max-width: 600px) {
+    header {
+      flex-direction: column;
+      gap: 16px;
+      align-items: flex-start;
+      padding: 16px 20px;
+    }
+    .nav-links {
+      width: 100%;
+      overflow-x: auto;
+      padding-bottom: 4px;
+      -webkit-overflow-scrolling: touch;
+      gap: 16px;
+    }
+    .nav-links::-webkit-scrollbar { display: none; }
+    
+    .container {
+      padding: 24px 16px;
+    }
+    
+    .login-wrap {
+      padding: 24px;
+      margin-top: 40px;
+    }
+    
+    .api-key-box {
+      flex-direction: column;
+      align-items: stretch;
+      text-align: center;
+      padding: 16px;
+    }
+    .api-key-text {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    #display-api-key {
+      margin-left: 0;
+      display: block;
+      word-break: break-all;
+      white-space: normal;
+    }
+    .btn-copy {
+      width: 100%;
+    }
+    th, td {
+      padding: 12px 8px;
+    }
+  }
 </style>
 </head>
 <body>
 
 <header>
-  <a href="index.html" class="logo"><span>⚡</span> AIPP</a>
+  <a href="index.html" class="logo"><svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg" style="display: block; flex-shrink: 0;"><rect x="0" y="0" width="32" height="32" rx="8" fill="#000000"/><circle cx="14" cy="16" r="7" fill="none" stroke="#ffcc00" stroke-width="2.5"/><circle cx="14" cy="16" r="2.5" fill="#ffcc00"/><path d="M19.5 12 L24 16 L19.5 20" fill="none" stroke="#ffcc00" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg><span>aipp<span style="font-size:15px;font-weight:500;color:rgba(0,0,0,0.6)">.dev</span></span></a>
   <div class="nav-links">
     <a href="docs.html">Docs</a>
     <a href="l402.html">L402 Demo</a>
@@ -227,12 +331,12 @@
   <!-- MAIN DASHBOARD VIEW -->
   <div id="dashboard-view" class="dashboard-view">
     
-    <div style="background:var(--card);border:1px solid var(--border);padding:16px 24px;border-radius:12px;margin-bottom:32px;display:flex;justify-content:space-between;align-items:center;gap:12px">
-      <div style="font-size:14px;color:var(--muted)">
+    <div class="api-key-box">
+      <div class="api-key-text">
         Active API Key: 
-        <code id="display-api-key" style="background:var(--bg);color:var(--fg);padding:6px 12px;border-radius:6px;font-family:'Fira Code',monospace;font-size:13px;margin-left:8px;border:1px solid var(--border)">aipp_...</code>
+        <code id="display-api-key">aipp_...</code>
       </div>
-      <button onclick="copyActiveKey(this)" style="padding:8px 16px;font-size:13px;font-weight:600;background:var(--bg);color:var(--fg);border:1px solid var(--border);border-radius:6px;cursor:pointer;font-family:'Inter',sans-serif">Copy Key</button>
+      <button onclick="copyActiveKey(this)" class="btn-copy">Copy Key</button>
     </div>
 
     <!-- STATS ROW -->
@@ -240,13 +344,19 @@
       <!-- Volume Routed Card -->
       <div class="stat-card">
         <div class="label">Volume Routed</div>
-        <div class="val" id="volume-val">— <sub class="notranslate" translate="no">sats</sub></div>
+        <div style="display:flex; justify-content:space-between; align-items:baseline; margin-bottom:8px; flex-wrap:wrap; gap:8px;">
+          <div class="val" id="volume-val" style="font-size:24px;">— <sub class="notranslate" translate="no">sats</sub></div>
+          <div class="val" id="volume-usdc-val" style="font-size:24px; color:#3b82f6;">— <sub class="notranslate" translate="no">USDC</sub></div>
+        </div>
         <div class="footer" id="merchant-ln-address">Destination: —</div>
       </div>
       <!-- Commission Card -->
       <div class="stat-card">
         <div class="label">AIPP Commission (1%)</div>
-        <div class="val" id="commission-val">— <sub class="notranslate" translate="no">sats</sub></div>
+        <div style="display:flex; justify-content:space-between; align-items:baseline; margin-bottom:8px; flex-wrap:wrap; gap:8px;">
+          <div class="val" id="commission-val" style="font-size:24px;">— <sub class="notranslate" translate="no">sats</sub></div>
+          <div class="val" id="commission-usdc-val" style="font-size:24px; color:#3b82f6;">— <sub class="notranslate" translate="no">USDC</sub></div>
+        </div>
         <div class="footer" style="color:var(--muted)">Total platform fees paid</div>
       </div>
       <!-- Transactions Card -->
@@ -289,8 +399,55 @@
   </div>
 </div>
 
-<footer>
-  Powered by ⚡ Bitcoin Lightning · LNBits · L402
+<style>
+  .social-btn {
+    display: flex; align-items: center; justify-content: center;
+    width: 48px; height: 48px; background: #fff;
+    border: 2px solid var(--border); border-radius: 8px;
+    color: var(--fg); transition: all 0.2s; box-shadow: 3px 3px 0 #000;
+  }
+  .social-btn:hover { transform: translate(-2px, -2px); box-shadow: 5px 5px 0 #000; background: #f9f9f9; }
+  .footer-links a { color: var(--fg); text-decoration: none; transition: all 0.2s; }
+  .footer-links a:hover { text-decoration: underline; }
+</style>
+<footer style="border-top: 2px solid var(--border); padding: 60px 24px; background: var(--bg); text-align: center; display: flex; flex-direction: column; align-items: center; gap: 32px; color: var(--fg); font-family: 'Inter', sans-serif; margin-top: auto;">
+  
+  <div style="font-weight: 800; font-size: 24px; display: flex; align-items: center; gap: 8px;">
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="#000" stroke="#000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
+    aipp
+  </div>
+
+  <div style="display: flex; gap: 16px; flex-wrap: wrap; justify-content: center;">
+    <a href="https://t.me/aippdev" target="_blank" class="social-btn" title="Telegram">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.198 2.433a2.242 2.242 0 0 0-1.022.215l-18 7.333c-.76.31-.77 1.39-.02 1.72l4.88 2.12 1.34 5.91c.14.63.85.87 1.35.46l2.97-2.45 4.67 3.46c.55.4 1.33.15 1.5-.52l3.41-16.14a2.24 2.24 0 0 0-2.078-2.108z"></path><path d="m15.5 8.5-6.5 5.5"></path></svg>
+    </a>
+    <a href="https://x.com/aippdev" target="_blank" class="social-btn" title="X (Twitter)">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4l11.733 16h4.267l-11.733 -16z"></path><path d="M4 20l6.768 -6.768m2.46 -2.46l6.772 -6.772"></path></svg>
+    </a>
+    <a href="#" target="_blank" class="social-btn" title="Nostr">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><circle cx="12" cy="12" r="4"></circle><line x1="2" y1="12" x2="8" y2="12"></line><line x1="16" y1="12" x2="22" y2="12"></line><line x1="12" y1="2" x2="12" y2="8"></line><line x1="12" y1="16" x2="12" y2="22"></line></svg>
+    </a>
+    <a href="https://github.com/aippde" target="_blank" class="social-btn" title="GitHub" style="display: none;">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"></path></svg>
+    </a>
+  </div>
+
+  <div class="footer-links" style="display: flex; gap: 16px; flex-wrap: wrap; justify-content: center; font-size: 14px; font-weight: 700;">
+    <a href="#">Privacy Policy</a>
+    <span style="color:var(--muted)">|</span>
+    <a href="#">Support</a>
+    <span style="color:var(--muted)">|</span>
+    <a href="#">Terms & Conditions</a>
+    <span style="color:var(--muted)">|</span>
+    <a href="l402.html">For AI Agents</a>
+    <span style="color:var(--muted)">|</span>
+    <a href="docs.html">API</a>
+  </div>
+
+  <div style="font-size: 13px; font-weight: 600; color: var(--muted); margin-top: 8px;">
+    Powered by ⚡ Bitcoin Lightning · LNBits · L402<br><br>
+    © 2026 aipp.dev — The non-custodial gateway
+  </div>
 </footer>
 
 <script>
@@ -403,13 +560,23 @@ async function refreshDashboardData() {
     const stats = d.stats || [];
     const totalVolume = stats.reduce((acc, curr) => acc + (curr.total_volume || 0), 0);
     const totalCommission = stats.reduce((acc, curr) => acc + (curr.total_commission || 0), 0);
+    const totalUsdcVolume = stats.reduce((acc, curr) => acc + (curr.total_usdc_volume || 0), 0);
+    const totalUsdcCommission = totalUsdcVolume * 0.01;
     const totalTransactions = stats.reduce((acc, curr) => acc + (curr.transactions_count || 0), 0);
 
     // Update UI elements
     document.getElementById('volume-val').innerHTML = `${totalVolume.toLocaleString()} <sub class="notranslate" translate="no">sats</sub>`;
+    document.getElementById('volume-usdc-val').innerHTML = `${totalUsdcVolume.toFixed(2)} <sub class="notranslate" translate="no">USDC</sub>`;
+    
     document.getElementById('commission-val').innerHTML = `${totalCommission.toLocaleString()} <sub class="notranslate" translate="no">sats</sub>`;
+    document.getElementById('commission-usdc-val').innerHTML = `${totalUsdcCommission.toFixed(4)} <sub class="notranslate" translate="no">USDC</sub>`;
+    
     document.getElementById('tx-count-val').textContent = totalTransactions.toLocaleString();
-    document.getElementById('merchant-ln-address').textContent = `Destination: ${d.ln_address || '—'}`;
+    
+    let destText = '';
+    if (d.ln_address) destText += `LN: ${d.ln_address}`;
+    if (d.usdc_address) destText += `${destText ? ' | ' : ''}Base USDC: ${d.usdc_address.slice(0,6)}...${d.usdc_address.slice(-6)}`;
+    document.getElementById('merchant-ln-address').textContent = destText || 'Destination: —';
   } catch(e) {
     console.error('Failed to load dashboard metrics', e);
   }
@@ -431,11 +598,24 @@ async function loadLedger() {
 
     txs.forEach(tx => {
       const date = new Date(tx.created_at).toLocaleString();
+      const isX402 = tx.protocol === 'x402';
       const truncatedHash = tx.payment_hash.slice(0, 16) + '...';
       const statusBadge = `<span class="badge-type ${tx.status}">${tx.status}</span>`;
       
-      const splitDetails = `${tx.forwarded_amount_sats} forwarded / ${tx.commission_sats} fee`;
-      const amountVal = `${tx.amount_sats} sats`;
+      let splitDetails = '';
+      let amountVal = '';
+      
+      if (isX402) {
+        const totalAmount = tx.usdc_amount || 0;
+        const feeAmount = totalAmount * 0.01;
+        const forwardedAmount = totalAmount * 0.99;
+        
+        splitDetails = `${forwardedAmount.toFixed(4)} forwarded / ${feeAmount.toFixed(4)} fee`;
+        amountVal = `${totalAmount.toFixed(2)} USDC`;
+      } else {
+        splitDetails = `${tx.forwarded_amount_sats} forwarded / ${tx.commission_sats} fee`;
+        amountVal = `${tx.amount_sats} sats`;
+      }
       
       const row = `
         <tr>
@@ -443,7 +623,7 @@ async function loadLedger() {
           <td style="font-family:'Fira Code',monospace;font-size:12px;color:var(--muted)" title="${tx.payment_hash}">${truncatedHash}</td>
           <td>${statusBadge}</td>
           <td style="font-size:12px">${splitDetails}</td>
-          <td class="sats-val positive notranslate" translate="no">${amountVal}</td>
+          <td class="sats-val positive notranslate" translate="no" style="${isX402 ? 'color:#3b82f6;' : ''}">${amountVal}</td>
         </tr>
       `;
       body.insertAdjacentHTML('beforeend', row);

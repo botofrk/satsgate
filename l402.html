@@ -4,18 +4,22 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>aipp.dev — L402 Demo</title>
+<link rel="icon" type="image/x-icon" href="favicon.ico">
+<link rel="icon" type="image/png" sizes="32x32" href="favicon.png">
+<link rel="icon" type="image/svg+xml" href="favicon.svg">
+<link rel="apple-touch-icon" href="favicon-192.png">
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,700;1,600&family=Inter:wght@400;500;600;700&display=swap');
   
   *{margin:0;padding:0;box-sizing:border-box}
   
   :root {
-    --bg: #0a0a0b;
-    --fg: #f4f4f5;
-    --muted: #a1a1aa;
-    --border: #27272a;
-    --accent: #f59e0b;
-    --card: #18181b;
+    --bg: #ffcc00;
+    --fg: #000000;
+    --muted: #111111;
+    --border: #000000;
+    --accent: #000000;
+    --card: #ffffff;
   }
   
   body {
@@ -34,12 +38,11 @@
     align-items: center;
     justify-content: space-between;
     padding: 24px 40px;
-    border-bottom: 1px solid var(--border);
+    border-bottom: 2px solid var(--border);
     position: sticky;
     top: 0;
     z-index: 50;
-    background: rgba(10,10,11,0.8);
-    backdrop-filter: blur(8px);
+    background: var(--bg);
   }
   
   .logo {
@@ -61,24 +64,27 @@
     align-items: center;
   }
   .nav-links a {
-    color: var(--muted);
+    color: var(--fg);
     text-decoration: none;
-    font-size: 14px;
-    font-weight: 500;
-    transition: color 0.2s;
+    font-size: 15px;
+    font-weight: 700;
+    transition: all 0.2s;
+    border-bottom: 2px solid transparent;
   }
-  .nav-links a:hover { color: var(--fg); }
+  .nav-links a:hover { border-bottom: 2px solid var(--fg); transform: translateY(-2px); }
   .nav-btn {
-    background: var(--accent);
-    color: #000;
-    padding: 8px 16px;
-    border-radius: 20px;
-    font-size: 13px;
-    font-weight: 600;
+    background: #fff;
+    color: var(--fg);
+    border: 2px solid var(--border);
+    padding: 10px 20px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 800;
     text-decoration: none;
-    transition: opacity 0.2s;
+    transition: all 0.2s;
+    box-shadow: 4px 4px 0 #000;
   }
-  .nav-btn:hover { opacity: 0.9; }
+  .nav-btn:hover { transform: translate(-2px, -2px); box-shadow: 6px 6px 0 #000; }
 
   main {
     flex: 1;
@@ -91,22 +97,23 @@
     display: inline-flex;
     align-items: center;
     gap: 8px;
-    background: #18181b;
-    border: 1px solid var(--border);
+    background: #fff;
+    border: 2px solid var(--border);
     padding: 6px 12px;
     border-radius: 20px;
     font-size: 12px;
-    font-weight: 600;
-    color: var(--muted);
+    font-weight: 700;
+    color: var(--fg);
     margin-bottom: 40px;
+    box-shadow: 3px 3px 0 #000;
   }
   .badge::before {
     content: '';
     width: 8px;
     height: 8px;
-    background: #22c55e;
+    background: #16a34a;
     border-radius: 50%;
-    box-shadow: 0 0 10px #22c55e;
+    border: 1px solid #000;
   }
 
   h1 {
@@ -132,11 +139,12 @@
 
   .demo-box {
     background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: 12px;
+    border: 2px solid var(--border);
+    border-radius: 8px;
     padding: 32px;
     position: relative;
     overflow: hidden;
+    box-shadow: 6px 6px 0 #000;
   }
   .demo-step {
     font-family: 'Inter', sans-serif;
@@ -149,9 +157,9 @@
     margin-bottom: 12px;
   }
   .demo-step-num {
-    background: transparent;
-    border: 1px solid var(--accent);
-    color: var(--accent);
+    background: var(--bg);
+    border: 2px solid var(--border);
+    color: var(--fg);
     width: 28px;
     height: 28px;
     border-radius: 50%;
@@ -159,31 +167,35 @@
     align-items: center;
     justify-content: center;
     font-size: 12px;
+    font-weight: 800;
+    box-shadow: 2px 2px 0 #000;
   }
   
   .demo-desc {
     color: var(--muted);
     font-size: 14px;
     margin-bottom: 24px;
+    font-weight: 500;
   }
 
   .action-btn {
     background: var(--accent);
-    color: #000;
-    border: none;
+    color: #fff;
+    border: 2px solid #000;
     padding: 12px 24px;
-    border-radius: 24px;
+    border-radius: 8px;
     font-size: 14px;
     font-weight: 700;
     font-family: 'Inter', sans-serif;
     cursor: pointer;
-    transition: transform 0.2s;
+    transition: all 0.2s;
+    box-shadow: 4px 4px 0 #000;
   }
-  .action-btn:hover { transform: scale(1.02); }
+  .action-btn:hover { transform: translate(-2px, -2px); box-shadow: 6px 6px 0 #000; }
 
   .terminal {
-    background: #000;
-    border: 1px solid var(--border);
+    background: #111;
+    border: 2px solid var(--border);
     border-radius: 8px;
     padding: 16px;
     font-family: 'Fira Code', monospace;
@@ -191,6 +203,7 @@
     color: #e4e4e7;
     margin-top: 24px;
     display: none;
+    box-shadow: 6px 6px 0 #000;
   }
   .terminal-header { color: #f87171; margin-bottom: 8px; font-weight: bold; }
   .terminal-success { color: #4ade80; margin-bottom: 8px; font-weight: bold; }
@@ -201,6 +214,8 @@
     border-radius: 8px;
     display: inline-block;
     margin-top: 16px;
+    border: 2px solid #000;
+    box-shadow: 4px 4px 0 #000;
   }
   #qr-canvas { width: 200px !important; height: 200px !important; }
   .spinner {
@@ -232,12 +247,44 @@
     font-family: 'Inter', sans-serif;
     margin-top: auto;
   }
+
+  @media(max-width: 800px) {
+    header {
+      flex-direction: column;
+      gap: 16px;
+      align-items: flex-start;
+      padding: 16px 20px;
+    }
+    .nav-links {
+      width: 100%;
+      overflow-x: auto;
+      padding-bottom: 4px;
+      -webkit-overflow-scrolling: touch;
+      gap: 16px;
+    }
+    .nav-links::-webkit-scrollbar { display: none; }
+    
+    main {
+      margin: 40px auto;
+      padding: 0 16px;
+    }
+    h1 {
+      font-size: clamp(32px, 8vw, 48px);
+      letter-spacing: -1px;
+    }
+    .demo-box {
+      padding: 20px;
+    }
+    .terminal {
+      font-size: 12px;
+    }
+  }
 </style>
 </head>
 <body>
 
 <header>
-  <a href="index.html" class="logo"><span>⚡</span> AIPP</a>
+  <a href="index.html" class="logo"><svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg" style="display: block; flex-shrink: 0;"><rect x="0" y="0" width="32" height="32" rx="8" fill="#000000"/><circle cx="14" cy="16" r="7" fill="none" stroke="#ffcc00" stroke-width="2.5"/><circle cx="14" cy="16" r="2.5" fill="#ffcc00"/><path d="M19.5 12 L24 16 L19.5 20" fill="none" stroke="#ffcc00" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg><span>aipp<span style="font-size:15px;font-weight:500;color:rgba(0,0,0,0.6)">.dev</span></span></a>
   <div class="nav-links">
     <a href="docs.html">Docs</a>
     <a href="l402.html" style="color:var(--fg)">L402 Demo</a>
@@ -262,13 +309,21 @@
         <div class="demo-step-num">01</div>
         Request the resource
       </div>
-      <p class="demo-desc">Click below to mint a fresh L402 challenge.</p>
-      <button class="action-btn" onclick="startL402Demo()" id="start-btn">GET /api/l402/resource</button>
+      <p class="demo-desc">Select a protocol and request a payment challenge to unlock the premium resource.</p>
+      
+      <div style="margin-bottom:20px;">
+        <select id="l402-protocol" style="padding:10px; border:2px solid var(--border); border-radius:8px; font-weight:700; background:#fff; outline:none; cursor:pointer; width:100%; max-width:320px;">
+          <option value="L402">Pay via Lightning (L402)</option>
+          <option value="x402">Pay via USDC on Base (x402)</option>
+        </select>
+      </div>
+
+      <button class="action-btn" onclick="startL402Demo()" id="start-btn">GET /api/resource</button>
     </div>
 
     <div class="terminal" id="terminal-view">
       <div class="terminal-header" id="terminal-status">HTTP/1.1 402 Payment Required</div>
-      <div>Www-Authenticate: L402 macaroon="..."</div>
+      <div id="terminal-headers">Www-Authenticate: L402 macaroon="..."</div>
       
       <div id="qr-section">
         <div class="qr-container">
@@ -279,13 +334,29 @@
           <span class="spinner"></span> Waiting for payment...
         </div>
       </div>
+
+      <div id="x402-section" style="display:none; margin-top:16px;">
+        <div style="background:#222; border:1px solid #444; border-radius:6px; padding:12px; font-size:12px; margin-bottom:16px; text-align:left; color:#a1a1aa; line-height:1.6;">
+          <strong>Network:</strong> Base<br>
+          <strong>Token:</strong> USDC (<span id="x402-token-disp">...</span>)<br>
+          <strong>Recipient:</strong> <span id="x402-payto-disp">...</span><br>
+          <strong>Price:</strong> <span id="x402-price-disp">0.05</span> USDC
+        </div>
+        <div style="display:flex; flex-direction:column; gap:8px;">
+          <button class="action-btn" id="demo-web3-btn" onclick="payWithWeb3Demo()" style="background:#3b82f6; border-color:#2563eb; width:100%;">Pay with Web3 Wallet</button>
+          <button class="action-btn" onclick="simulateX402Payment()" style="background:#10b981; border-color:#059669; width:100%;">Simulate Payment (1-Click)</button>
+        </div>
+        <div style="margin-top: 16px; color: var(--accent);">
+          <span class="spinner"></span> Waiting for on-chain tx...
+        </div>
+      </div>
       
       <div id="success-section" style="display:none; margin-top:20px; border-top:1px dashed #333; padding-top:16px;">
-        <div class="terminal-success">HTTP/1.1 200 OK</div>
+        <div class="terminal-success" id="terminal-success-status">HTTP/1.1 200 OK</div>
         <div style="color:#fff; font-size:16px; margin-top:8px;">
           🎉 <strong>Resource Unlocked!</strong>
         </div>
-        <div style="color:var(--muted); margin-top:8px;">
+        <div style="color:var(--muted); margin-top:8px;" id="success-message">
           "The future of AI is micropayments."
         </div>
         <button class="action-btn" style="margin-top:20px; font-size:12px; padding: 8px 16px;" onclick="location.reload()">Reset Demo</button>
@@ -294,21 +365,74 @@
   </div>
 </main>
 
-<footer>
-  Powered by ⚡ Bitcoin Lightning · LNBits · L402
+<style>
+  .social-btn {
+    display: flex; align-items: center; justify-content: center;
+    width: 48px; height: 48px; background: #fff;
+    border: 2px solid var(--border); border-radius: 8px;
+    color: var(--fg); transition: all 0.2s; box-shadow: 3px 3px 0 #000;
+  }
+  .social-btn:hover { transform: translate(-2px, -2px); box-shadow: 5px 5px 0 #000; background: #f9f9f9; }
+  .footer-links a { color: var(--fg); text-decoration: none; transition: all 0.2s; }
+  .footer-links a:hover { text-decoration: underline; }
+</style>
+<footer style="border-top: 2px solid var(--border); padding: 60px 24px; background: var(--bg); text-align: center; display: flex; flex-direction: column; align-items: center; gap: 32px; color: var(--fg); font-family: 'Inter', sans-serif; margin-top: auto;">
+  
+  <div style="font-weight: 800; font-size: 24px; display: flex; align-items: center; gap: 8px;">
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="#000" stroke="#000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
+    aipp
+  </div>
+
+  <div style="display: flex; gap: 16px; flex-wrap: wrap; justify-content: center;">
+    <a href="https://t.me/aippdev" target="_blank" class="social-btn" title="Telegram">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.198 2.433a2.242 2.242 0 0 0-1.022.215l-18 7.333c-.76.31-.77 1.39-.02 1.72l4.88 2.12 1.34 5.91c.14.63.85.87 1.35.46l2.97-2.45 4.67 3.46c.55.4 1.33.15 1.5-.52l3.41-16.14a2.24 2.24 0 0 0-2.078-2.108z"></path><path d="m15.5 8.5-6.5 5.5"></path></svg>
+    </a>
+    <a href="https://x.com/aippdev" target="_blank" class="social-btn" title="X (Twitter)">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4l11.733 16h4.267l-11.733 -16z"></path><path d="M4 20l6.768 -6.768m2.46 -2.46l6.772 -6.772"></path></svg>
+    </a>
+    <a href="#" target="_blank" class="social-btn" title="Nostr">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><circle cx="12" cy="12" r="4"></circle><line x1="2" y1="12" x2="8" y2="12"></line><line x1="16" y1="12" x2="22" y2="12"></line><line x1="12" y1="2" x2="12" y2="8"></line><line x1="12" y1="16" x2="12" y2="22"></line></svg>
+    </a>
+    <a href="https://github.com/aippde" target="_blank" class="social-btn" title="GitHub" style="display: none;">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"></path></svg>
+    </a>
+  </div>
+
+  <div class="footer-links" style="display: flex; gap: 16px; flex-wrap: wrap; justify-content: center; font-size: 14px; font-weight: 700;">
+    <a href="#">Privacy Policy</a>
+    <span style="color:var(--muted)">|</span>
+    <a href="#">Support</a>
+    <span style="color:var(--muted)">|</span>
+    <a href="#">Terms & Conditions</a>
+    <span style="color:var(--muted)">|</span>
+    <a href="l402.html">For AI Agents</a>
+    <span style="color:var(--muted)">|</span>
+    <a href="docs.html">API</a>
+  </div>
+
+  <div style="font-size: 13px; font-weight: 600; color: var(--muted); margin-top: 8px;">
+    Powered by ⚡ Bitcoin Lightning · LNBits · L402<br><br>
+    © 2026 aipp.dev — The non-custodial gateway
+  </div>
 </footer>
 
 <script src="https://cdn.jsdelivr.net/npm/qrcode@1.4.4/build/qrcode.min.js"></script>
 <script>
   let pollInterval;
-  const API_URL = 'https://aipp.dev';
+  const API_URL = window.location.origin;
+  let currentPaymentHash = '';
+  let currentX402PayTo = '';
+  let currentX402Token = '';
+  let currentX402Price = '0.05';
 
   async function ensureMerchantKey() {
-    // Register the mock merchant (fetches existing key if already registered)
     const res = await fetch(`${API_URL}/merchant/register`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ ln_address: 'angrycow39@zeuspay.com' })
+      body: JSON.stringify({ 
+        ln_address: 'angrycow39@zeuspay.com',
+        usdc_address: '0xFCAd0B19bB29D4674531d6f115237E16AfCE377c'
+      })
     });
     
     if (!res.ok) throw new Error("Failed to create mock merchant");
@@ -321,56 +445,90 @@
     btn.innerText = "Processing...";
     btn.disabled = true;
 
+    const protocol = document.getElementById('l402-protocol').value;
+    const reqBody = { memo: 'AIPP Demo Challenge' };
+    
+    if (protocol === 'L402') {
+      reqBody.amount_sats = 500;
+    } else {
+      reqBody.amount_usd = 0.05;
+      reqBody.protocol = 'x402';
+    }
+
     try {
       const apiKey = await ensureMerchantKey();
       
-      // 1. Create a 500 sat invoice
       const res = await fetch(`${API_URL}/invoice/create`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'X-Api-Key': apiKey
         },
-        body: JSON.stringify({ amount_sats: 500, memo: 'AIPP L402 Demo' })
+        body: JSON.stringify(reqBody)
       });
       
       const charge = await res.json();
-      if (!charge.payment_request) throw new Error("Invoice creation failed");
+      currentPaymentHash = charge.payment_hash;
 
-      // 2. Hide step 1, show terminal
       document.getElementById('step-1').style.display = 'none';
       document.getElementById('terminal-view').style.display = 'block';
-      
-      // 3. Render QR Code (Important: add lightning: prefix for strict wallets and uppercase for alphanumeric QR encoding)
-      const invoiceStr = 'lightning:' + charge.payment_request.toUpperCase();
-      document.getElementById('invoice-string').innerText = charge.payment_request;
-      
-      const canvas = document.getElementById('qr-canvas');
-      QRCode.toCanvas(canvas, invoiceStr, {
-        width: 250,
-        margin: 1,
-        color: { dark: '#000000', light: '#ffffff' }
-      });
 
-      // 4. Start polling
-      startPolling(charge.payment_hash);
+      if (protocol === 'L402') {
+        if (!charge.payment_request) throw new Error("Invoice creation failed");
+        
+        document.getElementById('terminal-status').innerText = 'HTTP/1.1 402 Payment Required';
+        document.getElementById('terminal-headers').innerText = `Www-Authenticate: L402 macaroon="..."\nInvoice: ${charge.payment_request.slice(0, 32)}...`;
+        
+        const invoiceStr = 'lightning:' + charge.payment_request.toUpperCase();
+        document.getElementById('invoice-string').innerText = charge.payment_request;
+        
+        const canvas = document.getElementById('qr-canvas');
+        QRCode.toCanvas(canvas, invoiceStr, {
+          width: 250,
+          margin: 1,
+          color: { dark: '#000000', light: '#ffffff' }
+        });
+
+        document.getElementById('qr-section').style.display = 'block';
+        document.getElementById('x402-section').style.display = 'none';
+
+        startPolling(charge.payment_hash);
+      } else {
+        currentX402PayTo = charge.pay_to;
+        currentX402Token = charge.token;
+        currentX402Price = charge.amount_usd.toString();
+
+        document.getElementById('terminal-status').innerText = 'HTTP/1.1 402 Payment Required';
+        document.getElementById('terminal-headers').innerText = `PAYMENT-REQUIRED: Base64EncodedJSONChallenge`;
+
+        document.getElementById('x402-token-disp').innerText = currentX402Token.slice(0, 6) + '...' + currentX402Token.slice(-6);
+        document.getElementById('x402-payto-disp').innerText = currentX402PayTo;
+        document.getElementById('x402-price-disp').innerText = currentX402Price;
+
+        document.getElementById('qr-section').style.display = 'none';
+        document.getElementById('x402-section').style.display = 'block';
+
+        startPolling(charge.payment_hash);
+      }
       
     } catch (err) {
       alert("Error starting demo: " + err.message);
-      btn.innerText = "GET /api/l402/resource";
+      btn.innerText = "GET /api/resource";
       btn.disabled = false;
     }
   }
 
-  function startPolling(paymentHash) {
+  function startPolling(paymentHash, txHash) {
+    if (pollInterval) clearInterval(pollInterval);
     pollInterval = setInterval(async () => {
       try {
-        const res = await fetch(`${API_URL}/invoice/status/${paymentHash}`);
+        const query = txHash ? `?tx_hash=${txHash}` : '';
+        const res = await fetch(`${API_URL}/invoice/status/${paymentHash}${query}`);
         const data = await res.json();
         
         if (data.status === 'settled') {
           clearInterval(pollInterval);
-          showSuccess();
+          showSuccess(paymentHash.startsWith('x402_'));
         }
       } catch(e) {
         console.error("Polling error", e);
@@ -378,10 +536,90 @@
     }, 2000);
   }
 
-  function showSuccess() {
+  async function simulateX402Payment() {
+    startPolling(currentPaymentHash, '0xmocktxhash');
+  }
+
+  async function payWithWeb3Demo() {
+    try {
+      if (!window.ethereum) {
+        alert('No Ethereum wallet found. Please install MetaMask or Coinbase Wallet.');
+        return;
+      }
+      const payBtn = document.getElementById('demo-web3-btn');
+      payBtn.disabled = true;
+      payBtn.innerText = 'Connecting...';
+
+      const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+      const from = accounts[0];
+
+      const isSepolia = currentX402Token.toLowerCase() === '0x036cbd53842c5426634e7929541ec2318f3dcf7e';
+      const chainId = isSepolia ? '0x14a34' : '0x2105';
+      const networkName = isSepolia ? 'Base Sepolia' : 'Base Mainnet';
+      const rpcUrl = isSepolia ? 'https://sepolia.base.org' : 'https://mainnet.base.org';
+
+      try {
+        await window.ethereum.request({
+          method: 'wallet_switchEthereumChain',
+          params: [{ chainId }],
+        });
+      } catch (switchError) {
+        if (switchError.code === 4902) {
+          await window.ethereum.request({
+            method: 'wallet_addEthereumChain',
+            params: [{
+              chainId,
+              chainName: networkName,
+              rpcUrls: [rpcUrl],
+              nativeCurrency: { name: 'Ether', symbol: 'ETH', decimals: 18 },
+              blockExplorerUrls: [isSepolia ? 'https://sepolia.basescan.org' : 'https://basescan.org']
+            }],
+          });
+        } else {
+          throw switchError;
+        }
+      }
+
+      payBtn.innerText = 'Approve...';
+      const amountUnits = Math.round(parseFloat(currentX402Price) * 1_000_000);
+      
+      const txHash = await window.ethereum.request({
+        method: 'eth_sendTransaction',
+        params: [{
+          from,
+          to: currentX402Token,
+          data: '0xa9059cbb' + 
+                currentX402PayTo.replace('0x', '').toLowerCase().padStart(64, '0') + 
+                amountUnits.toString(16).padStart(64, '0')
+        }]
+      });
+
+      console.log('x402 transaction broadcasted:', txHash);
+      payBtn.innerText = 'Confirming...';
+
+      startPolling(currentPaymentHash, txHash);
+
+    } catch (err) {
+      console.error(err);
+      alert('Payment failed: ' + (err.message || err));
+      const payBtn = document.getElementById('demo-web3-btn');
+      payBtn.disabled = false;
+      payBtn.innerText = 'Pay with Web3 Wallet';
+    }
+  }
+
+  function showSuccess(isX402) {
     document.getElementById('qr-section').style.display = 'none';
+    document.getElementById('x402-section').style.display = 'none';
+    
     document.getElementById('terminal-status').innerText = 'HTTP/1.1 200 OK (Payment Verified)';
     document.getElementById('terminal-status').style.color = '#4ade80';
+    document.getElementById('terminal-headers').innerText = isX402 ? 'Authorization: Bearer <tx_hash>' : 'Authorization: L402 <macaroon>:<preimage>';
+    
+    document.getElementById('success-message').innerText = isX402 ? 
+      'Unlocked via x402 USDC on Base network.' : 
+      'Unlocked via L402 Lightning micropayments.';
+      
     document.getElementById('success-section').style.display = 'block';
   }
 </script>

@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>AIPP Paywall Demo</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,700;1,600&family=Inter:wght@400;500;600;700&display=swap');
+  
+  *{margin:0;padding:0;box-sizing:border-box}
+  
+  body {
+    background-color: #0a0a0b;
+    color: #f4f4f5;
+    font-family: 'Inter', -apple-system, sans-serif;
+    line-height: 1.7;
+    -webkit-font-smoothing: antialiased;
+    min-height: 100vh;
+  }
+  
+  header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 24px 40px;
+    border-bottom: 1px solid #27272a;
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    background: rgba(10,10,11,0.8);
+    backdrop-filter: blur(8px);
+  }
+  
+  .logo {
+    font-weight: 700;
+    font-size: 20px;
+    letter-spacing: -0.5px;
+    text-decoration: none;
+    color: #f4f4f5;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .logo span { color: #f59e0b; }
+  
+  .layout {
+    max-width: 800px;
+    margin: 60px auto;
+    padding: 0 24px;
+  }
+
+  h1 { font-family: 'Playfair Display', serif; font-size: 48px; font-weight: 600; letter-spacing: -1px; margin-bottom: 16px; }
+  .author { color: #a1a1aa; font-size: 14px; margin-bottom: 48px; border-bottom: 1px solid #27272a; padding-bottom: 24px; display: flex; align-items: center; gap: 12px; }
+  .author img { width: 40px; height: 40px; border-radius: 50%; }
+
+  p { color: #d4d4d8; font-size: 17px; margin-bottom: 24px; line-height: 1.8; }
+  
+  .premium-label {
+    display: inline-block;
+    background: rgba(245, 158, 11, 0.1);
+    color: #f59e0b;
+    border: 1px solid rgba(245, 158, 11, 0.2);
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    margin-bottom: 16px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <a href="/" class="logo"><span>⚡</span> AIPP</a>
+</header>
+
+<div class="layout">
+  <span class="premium-label">Premium Article</span>
+  <h1>The Future of AI Autonomy and Micropayments</h1>
+  <div class="author">
+    <img src="https://i.pravatar.cc/150?u=aipp" alt="Author">
+    <div>
+      <strong>Satoshi Nakamoto</strong><br>
+      Published July 3, 2026
+    </div>
+  </div>
+
+  <p>In the rapidly evolving landscape of artificial intelligence, one of the most significant bottlenecks has been the inability of autonomous agents to interact with the traditional financial system. LLMs can write code, analyze data, and generate creative content, but when faced with a simple API paywall or a subscription requirement, they are stopped dead in their tracks.</p>
+
+  <p>This is where the L402 protocol and the Lightning Network come into play. By embedding micropayment capabilities directly into the HTTP protocol, we are opening the door for machines to hold their own budgets and pay for resources dynamically, in real-time.</p>
+
+  <!-- This div will be replaced/unlocked by the paywall script -->
+  <div data-aipp-src="/premium-article-1">
+    <p>Loading premium content...</p>
+  </div>
+  
+</div>
+
+<!-- Include the AIPP Paywall Drop-in JS -->
+<script src="/public/paywall.js?v=9"></script>
+
+</body>
+</html>

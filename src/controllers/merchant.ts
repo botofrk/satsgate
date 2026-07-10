@@ -2,6 +2,7 @@ import { Request, Response, NextFunction } from 'express';
 import crypto from 'crypto';
 import { getDb } from '../config/database';
 import { verifyLightningAddress } from '../services/lightning';
+import { sendEmail } from '../services/email';
 import { AppError } from '../utils/error';
 import { MIN_PAYOUT_THRESHOLD_SATS, MAX_MERCHANTS } from '../config/env';
 
@@ -20,7 +21,11 @@ export const registerMerchant = async (req: Request, res: Response, next: NextFu
     const isValid = await verifyLightningAddress(ln_address);
     if (!isValid) {
       console.warn(`[Merchant Warning] Registered unverified LN Address: ${ln_address}`);
-      // We no longer block registration. Better UX to allow it and let the background worker retry later.
+    }
+
+    const usdc_address = body.usdc_address ? body.usdc_address.trim() : null;
+    if (usdc_address && !/^0x[a-fA-F0-9]{40}$/.test(usdc_address)) {
+      throw new AppError('Invalid Base USDC address format. Must be a valid 40-character hex EVM address starting with 0x.', 400, 'INVALID_USDC_ADDRESS');
     }
 
     const payout_mode = body.payout_mode || 'instant';
@@ -36,11 +41,27 @@ export const registerMerchant = async (req: Request, res: Response, next: NextFu
     // If merchant already exists, return their existing key
     const existing = await db.get('SELECT * FROM merchants WHERE ln_address = ?', ln_address.trim());
     if (existing) {
+      // Update usdc_address if provided and different
+      if (usdc_address && usdc_address !== existing.usdc_address) {
+        await db.run('UPDATE merchants SET usdc_address = ? WHERE api_key = ?', usdc_address, existing.api_key);
+        existing.usdc_address = usdc_address;
+      }
+      if (body.email && body.email.trim() !== existing.email) {
+        const email = body.email.trim();
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+        if (!emailRegex.test(email)) {
+          throw new AppError('Invalid email address', 400, 'INVALID_EMAIL');
+        }
+        await db.run('UPDATE merchants SET email = ? WHERE api_key = ?', email, existing.api_key);
+        existing.email = email;
+      }
       return res.json({
         api_key: existing.api_key,
         ln_address: existing.ln_address,
+        email: existing.email || null,
         payout_mode: existing.payout_mode,
-        payout_threshold_sats: existing.payout_threshold_sats
+        payout_threshold_sats: existing.payout_threshold_sats,
+        usdc_address: existing.usdc_address || null
       });
     }
 
@@ -51,21 +72,58 @@ export const registerMerchant = async (req: Request, res: Response, next: NextFu
     }
 
     const apiKey = 'aipp_merch_' + crypto.randomBytes(8).toString('hex');
+    const email = body.email ? body.email.trim() : null;
+    if (email) {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+      if (!emailRegex.test(email)) {
+        throw new AppError('Invalid email address', 400, 'INVALID_EMAIL');
+      }
+    }
     
     await db.run(
-      'INSERT INTO merchants (api_key, ln_address, payout_mode, payout_threshold_sats, created_at) VALUES (?, ?, ?, ?, ?)',
+      'INSERT INTO merchants (api_key, ln_address, email, payout_mode, payout_threshold_sats, usdc_address, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
       apiKey,
       ln_address.trim(),
+      email,
       payout_mode,
       payout_threshold_sats,
+      usdc_address,
       new Date().toISOString()
     );
+
+    // Send Welcome Email if email was provided
+    if (email) {
+      const welcomeSubject = '⚡ Welcome to AIPP Gateway!';
+      const welcomeHtml = `
+        <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 2px solid #000; box-shadow: 4px 4px 0 #000; border-radius: 8px;">
+          <h2 style="font-size: 24px; font-weight: 800; margin-bottom: 20px; text-transform: uppercase; color: #000;">⚡ AIPP Payment Gateway</h2>
+          <p>Hi there,</p>
+          <p>Thank you for registering with AIPP. Your account has been created successfully.</p>
+          <div style="background: #ffdb00; padding: 15px; border: 2px solid #000; font-weight: bold; margin: 20px 0; font-family: monospace; font-size: 16px; text-align: center; border-radius: 4px;">
+            Your API Key: ${apiKey}
+          </div>
+          <p><strong>Lightning Address:</strong> ${ln_address.trim()}</p>
+          ${usdc_address ? `<p><strong>Base USDC Address:</strong> ${usdc_address}</p>` : ''}
+          <p><strong>Payout Mode:</strong> ${payout_mode} ${payout_mode === 'threshold' ? `(Threshold: ${payout_threshold_sats} sats)` : ''}</p>
+          <hr style="border: 1px solid #000; margin: 25px 0;">
+          <h3 style="font-size: 18px; font-weight: 700;">Integration Quickstart:</h3>
+          <p>Use the HTTP header <code>X-AIPP-Key</code> with your API key to create invoices via:</p>
+          <pre style="background: #f3f4f6; padding: 10px; border: 1px solid #ddd; overflow-x: auto; font-family: monospace;">POST https://aipp.dev/invoice/create</pre>
+          <p>Check out our documentation at <a href="https://aipp.dev/docs.html" style="color: #000; font-weight: bold;">aipp.dev/docs.html</a></p>
+          <p>If you have any questions, reply to this email or create a ticket on our chat.</p>
+          <p>Best regards,<br>AIPP Team</p>
+        </div>
+      `;
+      sendEmail(email, welcomeSubject, welcomeHtml).catch(err => console.error('Failed to send welcome email:', err));
+    }
 
     res.json({
       api_key: apiKey,
       ln_address: ln_address.trim(),
+      email,
       payout_mode,
-      payout_threshold_sats
+      payout_threshold_sats,
+      usdc_address
     });
   } catch (error) {
     next(error);
@@ -160,7 +218,8 @@ export const getMerchantStats = async (req: Request, res: Response, next: NextFu
         date(created_at) as date,
         COUNT(payment_hash) as transactions_count,
         SUM(amount_sats) as total_volume,
-        SUM(commission_sats) as total_commission
+        SUM(commission_sats) as total_commission,
+        SUM(usdc_amount) as total_usdc_volume
       FROM invoices 
       WHERE api_key = ? AND status = 'settled'
       GROUP BY date(created_at)
@@ -170,6 +229,7 @@ export const getMerchantStats = async (req: Request, res: Response, next: NextFu
 
     res.json({
       ln_address: merchant.ln_address,
+      usdc_address: merchant.usdc_address,
       stats: stats
     });
   } catch (error) {

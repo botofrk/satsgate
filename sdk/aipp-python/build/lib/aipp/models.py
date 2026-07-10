@@ -2,7 +2,8 @@ from pydantic import BaseModel
 from typing import Optional
 
 class ChargeParams(BaseModel):
-    amount_sats: int
+    amount_sats: Optional[int] = None
+    amount_usd: Optional[float] = None
     memo: Optional[str] = None
 
 class ChargeResponse(BaseModel):

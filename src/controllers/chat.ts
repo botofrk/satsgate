@@ -36,10 +36,20 @@ export const handleChat = async (req: Request, res: Response, next: NextFunction
       throw new AppError('Messages array is required', 400, 'BAD_REQUEST');
     }
 
+    // Guard against unbounded context / cost explosion
+    if (messages.length > 20) {
+      throw new AppError('Too many messages in context (max 20)', 400, 'TOO_MANY_MESSAGES');
+    }
+    for (const m of messages) {
+      if (typeof m.content !== 'string' || m.content.length > 2000) {
+        throw new AppError('Each message must be a string under 2000 characters', 400, 'MESSAGE_TOO_LONG');
+      }
+    }
+
     if (!DEEPSEEK_API_KEY) {
       return res.json({ 
         role: 'assistant', 
-        content: 'Chat system is currently offline (Missing API Key).' 
+        content: 'Chat system is currently offline.' 
       });
     }
 
@@ -82,6 +92,17 @@ export const createTicket = async (req: Request, res: Response, next: NextFuncti
     const { email, question } = req.body;
     if (!email || !question) {
       throw new AppError('Email and question are required', 400, 'BAD_REQUEST');
+    }
+
+    // Basic email validation (RFC-ish)
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+    if (!emailRegex.test(email)) {
+      throw new AppError('Invalid email address', 400, 'INVALID_EMAIL');
+    }
+
+    // Limit question length
+    if (typeof question !== 'string' || question.length > 5000) {
+      throw new AppError('Question must be a string under 5000 characters', 400, 'QUESTION_TOO_LONG');
     }
 
     const db = getDb();
