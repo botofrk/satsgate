@@ -13,9 +13,10 @@ export async function initDb(): Promise<Database> {
     driver: sqlite3.Database,
   });
 
-  // Enable foreign keys and WAL mode for better concurrency
+  // Enable foreign keys and WAL mode for better concurrency, set busy timeout
   await dbInstance.exec('PRAGMA foreign_keys = ON;');
   await dbInstance.exec('PRAGMA journal_mode = WAL;');
+  await dbInstance.exec('PRAGMA busy_timeout = 5000;');
 
   await dbInstance.exec(`
     CREATE TABLE IF NOT EXISTS merchants (

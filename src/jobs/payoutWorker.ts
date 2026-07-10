@@ -12,23 +12,33 @@ export async function processPayoutQueue() {
 
   const db = getDb();
   
-  // Find pending or failed jobs that are due for retry
-  const now = new Date().toISOString();
   try {
-    const jobs = await db.all(
-      "SELECT * FROM payout_queue WHERE status IN ('pending', 'failed') AND next_retry_at <= ? AND attempts < 5 LIMIT 50",
-      now
-    );
+    while (true) {
+      const now = new Date().toISOString();
+      let job: any = null;
 
-    if (jobs.length > 0) {
-      console.log(`[Payout Worker] Found ${jobs.length} jobs to process.`);
-    }
-
-    for (const job of jobs) {
+      // 1. Atomically acquire one job using SQLite immediate transaction
       try {
-        // Mark as processing
-        await db.run("UPDATE payout_queue SET status = 'processing' WHERE id = ?", job.id);
+        await db.run('BEGIN IMMEDIATE TRANSACTION');
+        job = await db.get(
+          "SELECT * FROM payout_queue WHERE status IN ('pending', 'failed') AND next_retry_at <= ? AND attempts < 5 LIMIT 1",
+          now
+        );
+        if (job) {
+          await db.run("UPDATE payout_queue SET status = 'processing' WHERE id = ?", job.id);
+        }
+        await db.run('COMMIT');
+      } catch (err: any) {
+        await db.run('ROLLBACK').catch(() => {});
+        console.error('[Payout Worker] Transaction error while acquiring job:', err.message);
+        break; // Break loop on transaction failure (busy) to retry next time
+      }
 
+      // If no job was found, break the loop
+      if (!job) break;
+
+      // 2. Process the job outside the database transaction (non-blocking)
+      try {
         const isX402 = job.protocol === 'x402';
 
         if (isX402) {
