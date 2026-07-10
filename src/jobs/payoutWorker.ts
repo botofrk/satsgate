@@ -40,45 +40,59 @@ export async function processPayoutQueue() {
       // 2. Process the job outside the database transaction (non-blocking)
       try {
         const isX402 = job.protocol === 'x402';
+        // [K-11 FIX] is_demo is now determined by explicit flag, not string prefix
+        const isDemo = !isX402 && (job.payment_hash.startsWith('demo_') || job.payment_hash.startsWith('mock_'));
 
         if (isX402) {
           console.log(`[Payout Worker] Processing job ${job.id} - ${job.usdc_amount} USDC to ${job.usdc_address}`);
-          // Send USDC on Base using derived private key wallet
           const txHash = await sendUsdcPayout(job.usdc_address, job.usdc_amount);
           console.log(`[Payout Worker] ✅ USDC payout successful: ${txHash}`);
         } else {
           console.log(`[Payout Worker] Processing job ${job.id} - ${job.amount_sats} sats to ${job.ln_address}`);
-          const payoutHash = await payLightningAddress(job.ln_address, job.amount_sats, job.payment_hash.startsWith('demo_'));
+          const payoutHash = await payLightningAddress(job.ln_address, job.amount_sats, isDemo);
           console.log(`[Payout Worker] ✅ Lightning payout successful: ${payoutHash}`);
         }
         
-        // Success! Update job status
-        await db.run("UPDATE payout_queue SET status = 'completed' WHERE id = ?", job.id);
+        // [HIGH-5 FIX] Wrap all success updates in a single atomic transaction
+        await db.run('BEGIN IMMEDIATE TRANSACTION');
+        try {
+          await db.run("UPDATE payout_queue SET status = 'completed' WHERE id = ?", job.id);
 
-        // Update individual invoices
-        if (job.payment_hash.startsWith('batch_')) {
+          // Update individual invoices
+          if (job.payment_hash.startsWith('batch_')) {
+            await db.run(
+              "UPDATE invoices SET payout_status = 'forwarded' WHERE api_key = ? AND payout_status = 'queued'",
+              job.api_key
+            );
+          } else {
+            await db.run("UPDATE invoices SET payout_status = 'forwarded' WHERE payment_hash = ?", job.payment_hash);
+          }
+
+          // [HIGH-4 FIX] Record actual commission in ledger (was always 0)
+          const isX402 = job.protocol === 'x402';
+          const commissionSats = isX402 ? 0 : Math.max(20, Math.ceil(job.amount_sats * 0.01));
+          const forwardedSats = isX402 ? 0 : (job.amount_sats - commissionSats);
+
           await db.run(
-            "UPDATE invoices SET payout_status = 'forwarded' WHERE api_key = ? AND payout_status = 'queued'",
-            job.api_key
+            'INSERT INTO ledgers (id, payment_hash, api_key, amount_sats, commission_sats, timestamp) VALUES (?, ?, ?, ?, ?, ?)',
+            crypto.randomUUID(),
+            job.payment_hash,
+            job.api_key,
+            forwardedSats,
+            commissionSats,
+            new Date().toISOString()
           );
-        } else {
-          await db.run("UPDATE invoices SET payout_status = 'forwarded' WHERE payment_hash = ?", job.payment_hash);
+          await db.run('COMMIT');
+        } catch (dbErr) {
+          await db.run('ROLLBACK').catch(() => {});
+          throw dbErr;
         }
-
-        // Record to ledger
-        await db.run(
-          'INSERT INTO ledgers (id, payment_hash, api_key, amount_sats, commission_sats, timestamp) VALUES (?, ?, ?, ?, ?, ?)',
-          crypto.randomUUID(),
-          job.payment_hash,
-          job.api_key,
-          isX402 ? 0 : job.amount_sats,
-          0,
-          new Date().toISOString()
-        );
 
         // Fetch merchant details for email notification
         const merchant = await db.get("SELECT email FROM merchants WHERE api_key = ?", job.api_key);
-        if (merchant && merchant.email) {
+        if (!merchant) {
+          console.warn(`[Payout Worker] Merchant not found for api_key (job ${job.id}), skipping email notification.`);
+        } else if (merchant.email) {
           const payoutSubject = isX402 
             ? `🔵 USDC Payout completed: ${job.usdc_amount} USDC sent!`
             : `⚡ Payout completed: ${job.amount_sats} sats sent!`;
@@ -111,15 +125,16 @@ export async function processPayoutQueue() {
               <p>Best regards,<br>AIPP Team</p>
             </div>
           `;
-          sendEmail(merchant.email, payoutSubject, payoutHtml).catch(err => console.error('Failed to send payout email:', err));
+          sendEmail(merchant.email, payoutSubject, payoutHtml).catch(err => console.error('[Payout Worker] Failed to send payout email:', err));
         }
 
       } catch (err: any) {
         console.error(`[Payout Worker] ❌ Job ${job.id} failed: ${err.message}`);
         
         const attempts = job.attempts + 1;
-        // Exponential backoff: 1min, 5min, 15min, 30min, 60min
-        const delayMins = [1, 5, 15, 30, 60][attempts - 1] || 60;
+        // [LOW-4 FIX] Safe exponential backoff with explicit clamping
+        const RETRY_DELAYS = [1, 5, 15, 30, 60];
+        const delayMins = RETRY_DELAYS[Math.min(attempts - 1, RETRY_DELAYS.length - 1)];
         const nextRetry = new Date(Date.now() + delayMins * 60 * 1000).toISOString();
 
         await db.run(

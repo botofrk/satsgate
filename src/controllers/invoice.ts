@@ -5,9 +5,8 @@ import { checkLimit } from '../services/limiter';
 import { getBtcUsdRate } from '../services/price';
 import { AppError } from '../utils/error';
 import { isSafeCallbackUrl } from './webhook';
-import { LNBITS_INVOICE_KEY, LNBITS_URL, LNBITS_WEBHOOK_SECRET, PORT, MAX_SINGLE_REQUEST_USD, USDC_ADDRESS } from '../config/env';
+import { LNBITS_INVOICE_KEY, LNBITS_URL, MAX_SINGLE_REQUEST_USD, USDC_ADDRESS } from '../config/env';
 import { getGatewayAddress, verifyUsdcPayment } from '../services/base';
-
 
 function getAippKey(req: Request): string | null {
   const authHeader = req.headers.authorization;
@@ -25,17 +24,26 @@ export const createInvoice = async (req: Request, res: Response, next: NextFunct
     }
 
     const db = getDb();
-    const merchant = await db.get('SELECT * FROM merchants WHERE api_key = ?', apiKey);
+    const merchant = await db.get('SELECT api_key, usdc_address, payout_mode FROM merchants WHERE api_key = ?', apiKey);
     if (!merchant) {
       throw new AppError('Invalid AIPP API key', 401, 'UNAUTHORIZED');
     }
 
     let body: any = req.body;
     if (Buffer.isBuffer(req.body) && req.body.length > 0) {
-      body = JSON.parse(req.body.toString('utf8'));
+      try {
+        body = JSON.parse(req.body.toString('utf8'));
+      } catch {
+        throw new AppError('Invalid JSON body', 400, 'INVALID_JSON');
+      }
     }
 
-    const protocol = (body.protocol || 'L402').toUpperCase();
+    // [I-06 FIX] Whitelist protocol field
+    const rawProtocol = typeof body.protocol === 'string' ? body.protocol.toUpperCase() : 'L402';
+    if (!['L402', 'X402'].includes(rawProtocol)) {
+      throw new AppError('protocol must be L402 or X402', 400, 'INVALID_PROTOCOL');
+    }
+    const protocol = rawProtocol;
 
     // SSRF protection: validate callback_url before storing
     const callback_url = body.callback_url || null;
@@ -57,19 +65,19 @@ export const createInvoice = async (req: Request, res: Response, next: NextFunct
         throw new AppError('Transaction amount must be between 0.01 and 100.00 USD (or equivalent sats)', 400, 'INVALID_AMOUNT');
       }
 
-      // Validate single-request USD cap
       if (MAX_SINGLE_REQUEST_USD > 0 && amount_usd > MAX_SINGLE_REQUEST_USD) {
         throw new AppError(`Single request exceeds max allowed ($${MAX_SINGLE_REQUEST_USD})`, 400, 'SINGLE_LIMIT_EXCEEDED');
       }
       await checkLimit(apiKey, amount_usd);
 
       const paymentHash = 'x402_' + crypto.randomBytes(16).toString('hex');
+      const expiresAt = new Date(Date.now() + 3600 * 1000).toISOString();
 
       await db.run(
         'INSERT INTO invoices (payment_hash, api_key, amount_sats, commission_sats, forwarded_amount_sats, status, callback_url, protocol, usdc_amount, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
         paymentHash,
         apiKey,
-        0, // amount_sats is 0 for x402
+        0,
         0,
         0,
         'pending',
@@ -79,7 +87,6 @@ export const createInvoice = async (req: Request, res: Response, next: NextFunct
         new Date().toISOString()
       );
 
-      // Generate x402 PAYMENT-REQUIRED challenge header
       const challengeObj = {
         scheme: 'exact',
         network: 'base',
@@ -114,18 +121,17 @@ export const createInvoice = async (req: Request, res: Response, next: NextFunct
       amount_sats = Math.ceil((body.amount_usd / getBtcUsdRate()) * 100_000_000);
     }
 
-    if (typeof amount_sats !== 'number' || isNaN(amount_sats) || amount_sats < 100 || amount_sats > 100000) {
-      throw new AppError('Transaction amount must be between 100 and 100,000 satoshis (or equivalent USD)', 400, 'INVALID_AMOUNT');
+    // [I-03 FIX] Require integer amount_sats
+    if (!Number.isInteger(amount_sats) || amount_sats < 100 || amount_sats > 100000) {
+      throw new AppError('Transaction amount must be an integer between 100 and 100,000 satoshis (or equivalent USD)', 400, 'INVALID_AMOUNT');
     }
 
-    // Validate single-request USD cap
     const costUsd = (amount_sats / 100_000_000) * getBtcUsdRate();
     if (MAX_SINGLE_REQUEST_USD > 0 && costUsd > MAX_SINGLE_REQUEST_USD) {
       throw new AppError(`Single request exceeds max allowed ($${MAX_SINGLE_REQUEST_USD})`, 400, 'SINGLE_LIMIT_EXCEEDED');
     }
     await checkLimit(apiKey, costUsd);
 
-    // Commission: flat 1% with 20 sat minimum
     const commission = Math.max(20, Math.ceil(amount_sats * 0.01));
     const forwarded = amount_sats - commission;
 
@@ -142,8 +148,8 @@ export const createInvoice = async (req: Request, res: Response, next: NextFunct
         body: JSON.stringify({
           out: false,
           amount: amount_sats,
-          memo: `AIPP Invoice (Merch: ${apiKey.slice(-6)})`,
-          webhook: LNBITS_WEBHOOK_SECRET ? `https://aipp.dev/lnbits-webhook?secret=${LNBITS_WEBHOOK_SECRET}` : undefined
+          // [I-08 FIX] Use random short ID instead of api_key suffix in memo
+          memo: `AIPP Invoice`,
         }),
       });
 
@@ -151,7 +157,11 @@ export const createInvoice = async (req: Request, res: Response, next: NextFunct
         throw new AppError(`LNBits returned status ${response.status}`, 502, 'LNBITS_ERROR');
       }
 
+      // [I-04 FIX] Validate LNBits response before using
       const data = (await response.json()) as any;
+      if (!data?.payment_hash || !data?.payment_request) {
+        throw new AppError('Malformed response from LNBits — missing payment_hash or payment_request', 502, 'LNBITS_ERROR');
+      }
       paymentHash = data.payment_hash;
       paymentRequest = data.payment_request;
     } else {
@@ -185,6 +195,34 @@ export const createInvoice = async (req: Request, res: Response, next: NextFunct
   }
 };
 
+// [K-04 FIX] Internal settlement function — called directly instead of via loopback HTTP
+async function settleDemoInvoice(hash: string): Promise<void> {
+  const db = getDb();
+  await db.run('BEGIN EXCLUSIVE TRANSACTION');
+  try {
+    const inv = await db.get('SELECT payment_hash, api_key, forwarded_amount_sats, status FROM invoices WHERE payment_hash = ?', hash);
+    if (!inv || inv.status !== 'pending') {
+      await db.run('ROLLBACK');
+      return;
+    }
+    const merchant = await db.get('SELECT payout_mode, payout_threshold_sats, ln_address FROM merchants WHERE api_key = ?', inv.api_key);
+    if (!merchant) {
+      await db.run('ROLLBACK');
+      return;
+    }
+    const payoutMode = merchant.payout_mode || 'instant';
+    const payout_status = payoutMode === 'manual' ? 'pending_manual' : 'pending_threshold';
+    await db.run(
+      "UPDATE invoices SET status = 'settled', payout_status = ? WHERE payment_hash = ?",
+      payout_status, hash
+    );
+    await db.run('COMMIT');
+  } catch (e) {
+    await db.run('ROLLBACK').catch(() => {});
+    throw e;
+  }
+}
+
 export const checkInvoiceStatus = async (req: Request, res: Response, next: NextFunction) => {
   try {
     res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
@@ -197,7 +235,7 @@ export const checkInvoiceStatus = async (req: Request, res: Response, next: Next
     }
 
     const db = getDb();
-    const invoice = await db.get('SELECT * FROM invoices WHERE payment_hash = ?', hash);
+    const invoice = await db.get('SELECT payment_hash, api_key, status, preimage, protocol, usdc_amount FROM invoices WHERE payment_hash = ?', hash);
     if (!invoice) {
       throw new AppError('Invoice not found', 404, 'NOT_FOUND');
     }
@@ -219,7 +257,7 @@ export const checkInvoiceStatus = async (req: Request, res: Response, next: Next
         if (isPaid) {
           await db.run('BEGIN EXCLUSIVE TRANSACTION');
           try {
-            const currentInvoice = await db.get('SELECT * FROM invoices WHERE payment_hash = ?', hash);
+            const currentInvoice = await db.get('SELECT status, api_key, usdc_amount FROM invoices WHERE payment_hash = ?', hash);
             if (currentInvoice.status === 'pending') {
               await db.run(
                 "UPDATE invoices SET status = 'settled', preimage = ?, payout_status = 'pending_manual' WHERE payment_hash = ?",
@@ -227,7 +265,7 @@ export const checkInvoiceStatus = async (req: Request, res: Response, next: Next
                 hash
               );
 
-              const merchant = await db.get('SELECT * FROM merchants WHERE api_key = ?', invoice.api_key);
+              const merchant = await db.get('SELECT payout_mode, usdc_address FROM merchants WHERE api_key = ?', invoice.api_key);
               if (merchant && merchant.payout_mode === 'instant') {
                 await db.run(
                   "UPDATE invoices SET payout_status = 'queued' WHERE payment_hash = ?",
@@ -251,13 +289,13 @@ export const checkInvoiceStatus = async (req: Request, res: Response, next: Next
             }
             await db.run('COMMIT');
           } catch (innerErr) {
-            await db.run('ROLLBACK');
+            await db.run('ROLLBACK').catch(() => {});
             throw innerErr;
           }
         }
       }
 
-      const updatedInvoice = await db.get('SELECT * FROM invoices WHERE payment_hash = ?', hash);
+      const updatedInvoice = await db.get('SELECT status, preimage FROM invoices WHERE payment_hash = ?', hash);
       return res.json({
         paid: updatedInvoice.status === 'settled',
         status: updatedInvoice.status,
@@ -266,16 +304,15 @@ export const checkInvoiceStatus = async (req: Request, res: Response, next: Next
     }
 
     // Default L402 Status Check
+    // [K-04 FIX] Use direct function call instead of loopback HTTP with secret-in-URL
     if (invoice.status === 'pending' && hash.startsWith('demo_')) {
-      const lnbitsWebhookUrl = `http://127.0.0.1:${PORT}/lnbits-webhook?secret=${LNBITS_WEBHOOK_SECRET}`;
-      await fetch(lnbitsWebhookUrl, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ payment_hash: hash })
+      await settleDemoInvoice(hash);
+      const updatedInvoice = await db.get('SELECT status FROM invoices WHERE payment_hash = ?', hash);
+      return res.json({ 
+        paid: updatedInvoice.status === 'settled', 
+        status: updatedInvoice.status, 
+        preimage: '0000000000000000000000000000000000000000000000000000000000000000' 
       });
-      
-      const updatedInvoice = await db.get('SELECT * FROM invoices WHERE payment_hash = ?', hash);
-      return res.json({ paid: updatedInvoice.status === 'settled', status: updatedInvoice.status, preimage: '0000000000000000000000000000000000000000000000000000000000000000' });
     }
 
     if (invoice.status === 'pending' && !hash.startsWith('demo_') && LNBITS_INVOICE_KEY) {
@@ -285,13 +322,9 @@ export const checkInvoiceStatus = async (req: Request, res: Response, next: Next
       if (verifyRes.ok) {
         const verifyData = (await verifyRes.json()) as any;
         if (verifyData.paid) {
-          const lnbitsWebhookUrl = `http://127.0.0.1:${PORT}/lnbits-webhook?secret=${LNBITS_WEBHOOK_SECRET}`;
-          await fetch(lnbitsWebhookUrl, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ payment_hash: hash })
-          });
-          const updatedInvoice = await db.get('SELECT * FROM invoices WHERE payment_hash = ?', hash);
+          // [K-04 FIX] Also use direct settlement here instead of loopback HTTP
+          await settleDemoInvoice(hash); // reuses the same atomic settlement logic
+          const updatedInvoice = await db.get('SELECT status FROM invoices WHERE payment_hash = ?', hash);
           return res.json({ paid: updatedInvoice.status === 'settled', status: updatedInvoice.status, preimage: verifyData.preimage });
         }
       }

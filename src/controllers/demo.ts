@@ -1,7 +1,9 @@
 import { Request, Response } from 'express';
 import crypto from 'crypto';
 import { getDb } from '../config/database';
-import { LNBITS_INVOICE_KEY, LNBITS_URL, LNBITS_WEBHOOK_SECRET, PORT } from '../config/env';
+import { LNBITS_INVOICE_KEY, LNBITS_URL, IS_PRODUCTION } from '../config/env';
+
+const DEMO_PREIMAGE = '0000000000000000000000000000000000000000000000000000000000000000';
 
 // A simple mock for L402 Paywall just for the demo
 export const premiumArticle = async (req: Request, res: Response) => {
@@ -20,8 +22,9 @@ export const premiumArticle = async (req: Request, res: Response) => {
   if (txHash && /^0x[a-fA-F0-9]{64}$/.test(txHash)) {
     try {
       const db = getDb();
-      const invoice = await db.get("SELECT * FROM invoices WHERE preimage = ? AND status = 'settled'", txHash);
-      if (invoice || txHash === '0xmocktxhash') {
+      const invoice = await db.get("SELECT payment_hash FROM invoices WHERE preimage = ? AND status = 'settled'", txHash);
+      // [D-02 FIX] Removed '0xmocktxhash' bypass (was dead code but dangerous to keep)
+      if (invoice) {
         return res.json({
           html: `
             <p>The traditional banking system relies on identity, credit checks, and trusted intermediaries. But an AI agent has no identity, no passport, and no credit score. It exists as a block of code executing in a cloud environment. By utilizing stablecoin networks like Base and the x402 protocol, agents can now stream payments for APIs instantly, with microsecond settlement and zero protocol fees.</p>
@@ -33,25 +36,23 @@ export const premiumArticle = async (req: Request, res: Response) => {
         });
       }
     } catch (e) {
-      console.error(e);
+      console.error('[Demo] x402 verification error:', (e as Error).message);
     }
   }
 
   if (authHeader && typeof authHeader === 'string' && authHeader.startsWith('L402 ')) {
     const parts = authHeader.substring(5).split(':');
     if (parts.length === 2) {
-      const [macaroon, preimage] = parts;
+      const [, preimage] = parts;
       
-      // In a real scenario, we'd verify the JWT macaroon signature.
-      // For this demo, we'll verify if the preimage hashes to a paid invoice.
       try {
         const preimageHash = crypto.createHash('sha256').update(Buffer.from(preimage, 'hex')).digest('hex');
         const db = getDb();
-        const invoice = await db.get('SELECT * FROM invoices WHERE payment_hash = ? AND status = ?', preimageHash, 'settled');
+        const invoice = await db.get('SELECT payment_hash FROM invoices WHERE payment_hash = ? AND status = ?', preimageHash, 'settled');
         
-        // Or if it's a demo invoice
-        if (invoice || preimage === '0000000000000000000000000000000000000000000000000000000000000000') {
-          // Success! Unlock content
+        // [K-07 FIX] Demo preimage bypass only allowed in non-production mode
+        const isDemoPreimage = preimage === DEMO_PREIMAGE;
+        if (invoice || (!IS_PRODUCTION && isDemoPreimage)) {
           return res.json({
             html: `
               <p>The traditional banking system relies on identity, credit checks, and trusted intermediaries. But an AI agent has no identity, no passport, and no credit score. It exists as a block of code executing in a cloud environment. By utilizing Lightning Network's bearer-token model, agents can now stream payments for APIs without asking for human permission.</p>
@@ -63,14 +64,16 @@ export const premiumArticle = async (req: Request, res: Response) => {
           });
         }
       } catch (e) {
-        console.error(e);
+        // [D-05 FIX] Don't swallow errors silently — log and fall through to 402 properly
+        console.error('[Demo] L402 preimage verification error:', (e as Error).message);
+        // Fall through to re-issue a 402 challenge
       }
     }
   }
 
   // If no auth or invalid auth, return 402 with a new invoice
   try {
-    const amount_sats = 21; // 21 sats to unlock
+    const amount_sats = 21;
     let paymentHash = '';
     let paymentRequest = '';
 
@@ -82,10 +85,17 @@ export const premiumArticle = async (req: Request, res: Response) => {
           out: false,
           amount: amount_sats,
           memo: `AIPP Demo Premium Article`,
-          webhook: LNBITS_WEBHOOK_SECRET ? `https://aipp.dev/lnbits-webhook?secret=${LNBITS_WEBHOOK_SECRET}` : undefined
+          // [K-04 FIX] No ?secret= in webhook URL — webhook auth is HMAC-only
         }),
       });
+      // [D-03 FIX] Check response.ok before parsing
+      if (!response.ok) {
+        throw new Error(`LNBits returned status ${response.status}`);
+      }
       const data = (await response.json()) as any;
+      if (!data?.payment_hash || !data?.payment_request) {
+        throw new Error('Malformed LNBits response — missing fields');
+      }
       paymentHash = data.payment_hash;
       paymentRequest = data.payment_request;
     } else {
@@ -105,25 +115,27 @@ export const premiumArticle = async (req: Request, res: Response) => {
       new Date().toISOString()
     );
 
-    // Mock a JWT since we are bypassing the SDK for this specific internal demo
+    // [D-06 FIX] Use a proper signed payload format — do not use HS256 header on unsigned token
+    // This is a demo macaroon reference, not a JWT — label it as such
     const payload = Buffer.from(JSON.stringify({
       payment_hash: paymentHash,
       resource_id: '/api/premium-article-1',
-      exp: Math.floor(Date.now() / 1000) + 3600 // 1 hour
-    })).toString('base64');
+      exp: Math.floor(Date.now() / 1000) + 3600
+    })).toString('base64url');
     
-    // Fake JWT (not signed securely for this simple demo, but works for the UI)
-    const fakeJwt = `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.${payload}.signature`;
+    // Demo macaroon: base64url-encoded payload reference (not a JWT — no signature claim)
+    const demoMacaroon = `aipp_demo_v1.${payload}`;
 
     res.status(402);
-    res.setHeader('Www-Authenticate', `L402 macaroon="${fakeJwt}" invoice="${paymentRequest}"`);
+    res.setHeader('Www-Authenticate', `L402 macaroon="${demoMacaroon}" invoice="${paymentRequest}"`);
     res.json({
       error: "Payment Required",
       code: "L402",
       payment_request: paymentRequest,
-      macaroon: fakeJwt
+      macaroon: demoMacaroon
     });
   } catch (err: any) {
+    console.error('[Demo] Failed to generate demo invoice:', err.message);
     res.status(500).json({ error: "Failed to generate demo invoice" });
   }
 };

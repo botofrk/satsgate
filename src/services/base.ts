@@ -1,20 +1,31 @@
 import { ethers } from 'ethers';
 import { AIPP_BASE_PRIVATE_KEY, BASE_RPC_URL, USDC_ADDRESS } from '../config/env';
 
-let providerInstance: ethers.JsonRpcProvider | null = null;
+let _providerInstance: ethers.JsonRpcProvider | null = null;
 
 export function getProvider(): ethers.JsonRpcProvider {
-  if (!providerInstance) {
-    providerInstance = new ethers.JsonRpcProvider(BASE_RPC_URL);
+  if (!_providerInstance) {
+    _providerInstance = new ethers.JsonRpcProvider(BASE_RPC_URL);
   }
-  return providerInstance;
+  return _providerInstance;
+}
+
+// [CRIT-3 FIX] Create wallet once at module level — not inside the hot payout loop
+let _wallet: ethers.Wallet | null = null;
+
+function getWallet(): ethers.Wallet {
+  if (!_wallet) {
+    if (!AIPP_BASE_PRIVATE_KEY) {
+      throw new Error('AIPP_BASE_PRIVATE_KEY is not configured. Cannot execute on-chain operations.');
+    }
+    _wallet = new ethers.Wallet(AIPP_BASE_PRIVATE_KEY, getProvider());
+  }
+  return _wallet;
 }
 
 export function getGatewayAddress(): string {
-  // Derive public key address from private key
   try {
-    const wallet = new ethers.Wallet(AIPP_BASE_PRIVATE_KEY);
-    return wallet.address;
+    return getWallet().address;
   } catch (err) {
     console.error('Failed to derive Base Gateway address from private key:', err);
     return '';
@@ -89,8 +100,16 @@ export async function verifyUsdcPayment(txHash: string, expectedUsdcAmount: numb
  * Deducts 1% fee using BigInt arithmetic to avoid rounding errors.
  */
 export async function sendUsdcPayout(toAddress: string, amountUsdc: number): Promise<string> {
+  // [HIGH-3 FIX] Validate Ethereum address before any on-chain operation
+  if (!ethers.isAddress(toAddress)) {
+    throw new Error(`Invalid Ethereum address for payout: "${toAddress}"`);
+  }
+  if (toAddress === ethers.ZeroAddress) {
+    throw new Error('Payout to zero address is not allowed');
+  }
+
+  const wallet = getWallet(); // [CRIT-3 FIX] Use module-level singleton
   const provider = getProvider();
-  const wallet = new ethers.Wallet(AIPP_BASE_PRIVATE_KEY, provider);
 
   const usdcContract = new ethers.Contract(USDC_ADDRESS, [
     "function transfer(address to, uint256 value) returns (bool)",
@@ -106,10 +125,11 @@ export async function sendUsdcPayout(toAddress: string, amountUsdc: number): Pro
     throw new Error(`Payout amount too small to process: ${amountUsdc} USDC`);
   }
 
-  // 1. Gas fee warning (checks if gateway has at least 0.0005 ETH for transfer gas)
+  // 1. Gas fee check — require at least 0.0005 ETH for transfer gas
   const ethBalance = await provider.getBalance(wallet.address);
   if (ethBalance < ethers.parseEther("0.0005")) {
-    console.warn(`[Base Payout Warning] ETH balance on Gateway cüzdanı (${wallet.address}) low: ${ethers.formatEther(ethBalance)} ETH. Gas fees might fail.`);
+    // [MED-5 FIX] Throw instead of only warning — gas failure will crash the TX anyway
+    throw new Error(`Insufficient ETH gas on Gateway wallet (${wallet.address}): ${ethers.formatEther(ethBalance)} ETH. Top up before retrying.`);
   }
 
   // 2. USDC balance check

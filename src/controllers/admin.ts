@@ -1,15 +1,26 @@
 import { Request, Response, NextFunction } from 'express';
+import crypto from 'crypto';
 import { getDb } from '../config/database';
 import { ADMIN_SECRET } from '../config/env';
 import { AppError } from '../utils/error';
 
-// Middleware to check Admin Key
+// [A-02 FIX] Constant-time admin key comparison
 export const verifyAdmin = (req: Request, res: Response, next: NextFunction) => {
   const adminKey = req.header('X-Admin-Key');
   if (!ADMIN_SECRET) {
     return next(new AppError('Admin key is not configured on the server', 500, 'ADMIN_NOT_CONFIGURED'));
   }
-  if (!adminKey || adminKey !== ADMIN_SECRET) {
+  if (!adminKey) {
+    return next(new AppError('Unauthorized access', 401, 'UNAUTHORIZED'));
+  }
+  // Constant-time comparison to prevent timing side-channel
+  try {
+    const isValid = adminKey.length === ADMIN_SECRET.length &&
+      crypto.timingSafeEqual(Buffer.from(adminKey), Buffer.from(ADMIN_SECRET));
+    if (!isValid) {
+      return next(new AppError('Unauthorized access', 401, 'UNAUTHORIZED'));
+    }
+  } catch {
     return next(new AppError('Unauthorized access', 401, 'UNAUTHORIZED'));
   }
   next();
@@ -25,9 +36,9 @@ export const getAdminStats = async (req: Request, res: Response, next: NextFunct
     
     res.json({
       status: 'ok',
-      merchantCount: merchantCount?.count || 0,
-      waitlistCount: waitlistCount?.count || 0,
-      failedPayouts: failedPayouts?.count || 0
+      merchantCount: merchantCount?.count ?? 0,
+      waitlistCount: waitlistCount?.count ?? 0,
+      failedPayouts: failedPayouts?.count ?? 0
     });
   } catch (error) {
     next(error);
@@ -37,7 +48,10 @@ export const getAdminStats = async (req: Request, res: Response, next: NextFunct
 export const getFailedPayouts = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const db = getDb();
-    const payouts = await db.all("SELECT * FROM payout_queue WHERE status = 'failed' ORDER BY created_at DESC");
+    // [A-05 FIX] Select only needed columns instead of SELECT *
+    const payouts = await db.all(
+      "SELECT id, payment_hash, api_key, amount_sats, ln_address, usdc_address, usdc_amount, protocol, status, attempts, next_retry_at, created_at FROM payout_queue WHERE status = 'failed' ORDER BY created_at DESC"
+    );
     res.json({ status: 'ok', payouts });
   } catch (error) {
     next(error);
@@ -47,7 +61,10 @@ export const getFailedPayouts = async (req: Request, res: Response, next: NextFu
 export const retryPayout = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { id } = req.body;
-    if (!id) throw new AppError('Payout ID is required', 400, 'BAD_REQUEST');
+    // [A-03 FIX] Validate ID is a string UUID before using
+    if (!id || typeof id !== 'string' || !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id)) {
+      throw new AppError('Payout ID is required and must be a valid UUID', 400, 'BAD_REQUEST');
+    }
 
     const db = getDb();
     
@@ -69,7 +86,8 @@ export const retryPayout = async (req: Request, res: Response, next: NextFunctio
 export const getWaitlist = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const db = getDb();
-    const waitlist = await db.all("SELECT * FROM waitlist ORDER BY created_at ASC");
+    // [A-05 FIX] Select only needed columns instead of SELECT *
+    const waitlist = await db.all("SELECT id, email, ln_address, created_at FROM waitlist ORDER BY created_at ASC");
     res.json({ status: 'ok', waitlist });
   } catch (error) {
     next(error);

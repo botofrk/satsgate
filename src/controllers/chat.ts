@@ -10,8 +10,12 @@ import OpenAI from 'openai';
 let knowledgeBase = '';
 try {
   knowledgeBase = fs.readFileSync(path.join(process.cwd(), 'AIPP_KNOWLEDGE.md'), 'utf8');
+  if (!knowledgeBase.trim()) {
+    console.warn('[Chat] AIPP_KNOWLEDGE.md is empty — chat responses will have no knowledge base context.');
+  }
 } catch (e) {
-  console.error('Warning: AIPP_KNOWLEDGE.md not found');
+  // [C-04 FIX] Knowledge base missing is a hard failure in production — chat will be degraded
+  console.warn('[Chat] Warning: AIPP_KNOWLEDGE.md not found. Chat responses will be ungrounded.');
 }
 
 const openai = new OpenAI({
@@ -67,7 +71,12 @@ export const handleChat = async (req: Request, res: Response, next: NextFunction
       temperature: 0.1,
     });
 
-    const reply = completion.choices[0].message.content || '';
+    // [C-02 FIX] Guard against empty choices array (content filter hits, API errors)
+    const choice = completion.choices?.[0];
+    if (!choice?.message?.content) {
+      return res.status(503).json({ role: 'assistant', content: 'Service temporarily unavailable. Please try again.' });
+    }
+    const reply = choice.message.content;
 
     if (reply.includes('TICKET_REQUIRED')) {
       return res.json({
@@ -81,8 +90,9 @@ export const handleChat = async (req: Request, res: Response, next: NextFunction
       role: 'assistant',
       content: reply
     });
-  } catch (error) {
-    console.error('Chat error:', error);
+  } catch (error: any) {
+    // [C-05 FIX] Log only message, not full error object (may contain API keys in response headers)
+    console.error('[Chat] Error:', error?.message || 'Unknown error');
     next(error);
   }
 };

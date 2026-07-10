@@ -1,5 +1,6 @@
 import express, { Request, Response } from 'express';
 import cors from 'cors';
+import rateLimit from 'express-rate-limit';
 import { PORT, LNBITS_INVOICE_KEY, LNBITS_ADMIN_KEY, LNBITS_WEBHOOK_SECRET, IS_PRODUCTION, FEE_PER_REQUEST_SATS, DAILY_LIMIT_USD } from './config/env';
 import { initDb, getDb } from './config/database';
 import { errorHandler } from './utils/error';
@@ -31,9 +32,37 @@ app.use(cors({
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Api-Key', 'X-Admin-Key']
 }));
 
-// We parse raw body for webhook signature verification, then use express.json for others
-app.use('/lnbits-webhook', express.raw({ type: 'application/json' }));
-app.use(express.json());
+// [HIGH-2 FIX] Explicit body size limits to prevent DoS
+app.use('/lnbits-webhook', express.raw({ type: 'application/json', limit: '8kb' }));
+app.use(express.json({ limit: '64kb' }));
+
+// ─────────────────────────────────────────────────────────────────────────────
+// [Y-22 / X-01 FIX] Global + per-route rate limiting
+// ─────────────────────────────────────────────────────────────────────────────
+
+// Global fallback: 200 req/min per IP
+const globalLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 200,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Too many requests, please slow down.', code: 'RATE_LIMIT_EXCEEDED' }
+});
+app.use(globalLimiter);
+
+// Tight limits for expensive / sensitive unauthenticated endpoints
+const strictLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 10,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Too many requests, please slow down.', code: 'RATE_LIMIT_EXCEEDED' }
+});
+app.use('/merchant/register', strictLimiter);
+app.use('/merchant/waitlist', strictLimiter);
+app.use('/chat', strictLimiter);
+app.use('/ticket', rateLimit({ windowMs: 60 * 1000, max: 5, standardHeaders: true, legacyHeaders: false }));
+app.use('/admin', rateLimit({ windowMs: 60 * 1000, max: 20, standardHeaders: true, legacyHeaders: false }));
 
 // API Routes
 app.use('/', apiRoutes);
@@ -84,11 +113,14 @@ async function bootstrap() {
     // 5. Start Server
     app.listen(PORT, () => {
       console.log(`⚡ AIPP Generic Payment Bridge listening on port ${PORT}`);
-      console.log(`⚡ LNBits API configured: ${LNBITS_INVOICE_KEY ? 'YES' : 'NO'}`);
-      console.log(`⚡ Admin key configured (payouts): ${LNBITS_ADMIN_KEY ? 'YES' : '❌ NO'}`);
-      console.log(`⚡ Webhook secret: ${LNBITS_WEBHOOK_SECRET ? 'SET ✅' : '⚠️ NOT SET'}`);
+      // [LOW-7 FIX] Log config status at debug level, no sensitive details
+      if (!IS_PRODUCTION) {
+        console.log(`⚡ LNBits API configured: ${LNBITS_INVOICE_KEY ? 'YES' : 'NO'}`);
+        console.log(`⚡ Admin key configured (payouts): ${LNBITS_ADMIN_KEY ? 'YES' : '❌ NO'}`);
+        console.log(`⚡ Webhook secret: ${LNBITS_WEBHOOK_SECRET ? 'SET ✅' : '⚠️ NOT SET'}`);
+        console.log(`⚡ Rate limit: Default fee: ${FEE_PER_REQUEST_SATS} sats, Daily limit: $${DAILY_LIMIT_USD}`);
+      }
       console.log(`⚡ Mode: ${IS_PRODUCTION ? 'PRODUCTION' : 'DEVELOPMENT'}`);
-      console.log(`⚡ Rate limit: Default fee: ${FEE_PER_REQUEST_SATS} sats, Daily limit: $${DAILY_LIMIT_USD}`);
     });
 
   } catch (err) {

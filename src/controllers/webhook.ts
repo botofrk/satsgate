@@ -1,19 +1,25 @@
 import { Request, Response, NextFunction } from 'express';
 import crypto from 'crypto';
 import { getDb } from '../config/database';
-import { LNBITS_WEBHOOK_SECRET, LNBITS_INVOICE_KEY, LNBITS_URL, MIN_PAYOUT_THRESHOLD_SATS } from '../config/env';
+import { LNBITS_WEBHOOK_SECRET, LNBITS_INVOICE_KEY, LNBITS_URL, MIN_PAYOUT_THRESHOLD_SATS, IS_PRODUCTION } from '../config/env';
 import { AppError } from '../utils/error';
 import { processPayoutQueue } from '../jobs/payoutWorker';
 
 // Safe URLs for merchant callbacks — block SSRF targets
-const SSRF_BLOCKED = /^(https?:\/\/)?(localhost|127\.0\.0\.1|0\.0\.0\.0|10\.|192\.168\.|172\.(1[6-9]|2\d|3[01])\.|169\.254\.|::1|fd[0-9a-f]{2}:)/i;
+// [W-05 FIX] Tests parsed hostname instead of raw URL string; extended blocklist
+const SSRF_BLOCKED_HOSTNAME = /^(localhost|127\.|0\.0\.0\.0|10\.|192\.168\.|172\.(1[6-9]|2\d|3[01])\.|169\.254\.|::1|0177\.|metadata\.google\.internal)$/i;
+const SSRF_BLOCKED_PATTERN = /^(localhost|127\.|0\.0\.0\.0|10\.|192\.168\.|172\.(1[6-9]|2\d|3[01])\.|169\.254\.|::1|fd[0-9a-f]{2}:|0177\.|2130706433)/i;
 
 export function isSafeCallbackUrl(url: string | null): boolean {
   if (!url) return true;
   try {
     const parsed = new URL(url);
     if (!['http:', 'https:'].includes(parsed.protocol)) return false;
-    if (SSRF_BLOCKED.test(url)) return false;
+    // Strip IPv6 brackets and test hostname
+    const hostname = parsed.hostname.replace(/^\[|\]$/g, '');
+    if (SSRF_BLOCKED_HOSTNAME.test(hostname)) return false;
+    if (SSRF_BLOCKED_PATTERN.test(hostname)) return false;
+    if (hostname === 'metadata.google.internal') return false;
     return true;
   } catch {
     return false;
@@ -28,68 +34,94 @@ function verifyWebhookSignature(rawBody: Buffer, signature: string | undefined):
     .createHmac('sha256', LNBITS_WEBHOOK_SECRET)
     .update(rawBody)
     .digest('hex');
-  // Guard against different-length buffers before timingSafeEqual
-  const sigBuf = Buffer.from(signature);
-  const expBuf = Buffer.from(expected);
-  if (sigBuf.length !== expBuf.length) return false;
+  // [MED-8 FIX] Compare fixed-length HMAC digests — no length info leakage
+  const sigBuf = Buffer.from(signature, 'hex');
+  const expBuf = Buffer.from(expected, 'hex');
+  if (sigBuf.length !== expBuf.length || sigBuf.length === 0) return false;
   return crypto.timingSafeEqual(sigBuf, expBuf);
 }
 
-// Fire-and-forget webhook callback to the merchant
+// [W-12 FIX] Constant-time query secret comparison
+function verifyQuerySecret(querySecret: string | undefined): boolean {
+  if (!LNBITS_WEBHOOK_SECRET || !querySecret) return false;
+  if (querySecret.length !== LNBITS_WEBHOOK_SECRET.length) return false;
+  try {
+    return crypto.timingSafeEqual(
+      Buffer.from(querySecret),
+      Buffer.from(LNBITS_WEBHOOK_SECRET)
+    );
+  } catch {
+    return false;
+  }
+}
+
+// [W-03 FIX] Merchant callback with explicit 10s timeout
 function triggerWebhookWithRetry(callbackUrl: string, payload: any, attempt: number = 1) {
   setTimeout(async () => {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 10_000);
     try {
       const res = await fetch(callbackUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
+        body: JSON.stringify(payload),
+        signal: controller.signal
       });
       if (!res.ok) {
         throw new Error(`Receiver returned status ${res.status}`);
       }
-      console.log(`[Merchant Webhook success] Fired callback to ${callbackUrl} (Attempt ${attempt})`);
+      console.log(`[Merchant Webhook] ✅ Callback sent to ${callbackUrl} (Attempt ${attempt})`);
     } catch (err: any) {
-      console.error(`[Merchant Webhook error] Attempt ${attempt} failed for ${callbackUrl}:`, err.message);
+      console.error(`[Merchant Webhook] ❌ Attempt ${attempt} failed for ${callbackUrl}: ${err.message}`);
       if (attempt < 3) {
         const delayMs = attempt * 60 * 1000;
-        console.log(`[Merchant Webhook queue] Retrying callback to ${callbackUrl} in ${delayMs / 1000}s...`);
+        console.log(`[Merchant Webhook] Retrying in ${delayMs / 1000}s...`);
         triggerWebhookWithRetry(callbackUrl, payload, attempt + 1);
       }
+    } finally {
+      clearTimeout(timeoutId);
     }
   }, 0);
 }
 
 export const handleLnbitsWebhook = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    // Two accepted auth modes:
-    // 1. HMAC header (preferred, for self-hosted LNBits that supports webhook signing)
-    // 2. Query param secret (fallback for demo.lnbits.com which just POSTs to the URL as-is)
     const signature = req.headers['x-lnbits-webhook-secret'] as string | undefined
       || req.headers['x-webhook-signature'] as string | undefined;
     const querySecret = req.query.secret as string | undefined;
 
     if (LNBITS_WEBHOOK_SECRET) {
       const isSignatureValid = verifyWebhookSignature(req.body as Buffer, signature);
-      const isQueryValid = querySecret === LNBITS_WEBHOOK_SECRET;
+      // [W-12 FIX] Constant-time query secret comparison
+      const isQueryValid = verifyQuerySecret(querySecret);
 
       if (!isSignatureValid && !isQueryValid) {
         console.warn('[Webhook] Invalid auth from:', req.ip);
         throw new AppError('Invalid webhook signature or secret', 401, 'UNAUTHORIZED');
       }
 
+      // [W-01 FIX] In production, reject query-param-only auth
+      if (IS_PRODUCTION && isQueryValid && !isSignatureValid) {
+        console.warn('[Webhook] Rejected query-param auth in production mode from:', req.ip);
+        throw new AppError('Query-param webhook auth is not allowed in production. Use HMAC header signing.', 401, 'UNAUTHORIZED');
+      }
+
       if (isQueryValid && !isSignatureValid) {
-        // demo.lnbits.com mode — log a notice but allow through
-        console.log('[Webhook] Authenticated via query param (demo.lnbits.com mode). Upgrade to self-hosted LNBits for HMAC signing.');
+        console.log('[Webhook] Authenticated via query param (dev/demo mode). Upgrade to HMAC signing for production.');
       }
     } else {
-      // No secret configured at all — reject all to fail-closed
       console.warn('[Webhook] Rejected: LNBITS_WEBHOOK_SECRET not configured');
       throw new AppError('Webhook secret not configured on server', 500, 'SERVER_MISCONFIGURED');
     }
 
+    // [HIGH-3 FIX] Wrap JSON.parse in try-catch
     let body: any = {};
     if (req.body && req.body.length > 0) {
-      body = JSON.parse(req.body.toString('utf8'));
+      try {
+        body = JSON.parse(req.body.toString('utf8'));
+      } catch {
+        throw new AppError('Invalid JSON body in webhook request', 400, 'INVALID_JSON');
+      }
     }
 
     const paymentHash = body.payment_hash || body.checking_id;
@@ -99,11 +131,10 @@ export const handleLnbitsWebhook = async (req: Request, res: Response, next: Nex
 
     const db = getDb();
     
-    // Start transaction for webhook processing
     await db.run('BEGIN EXCLUSIVE TRANSACTION');
 
     try {
-      const invoice = await db.get('SELECT * FROM invoices WHERE payment_hash = ?', paymentHash);
+      const invoice = await db.get('SELECT payment_hash, api_key, amount_sats, forwarded_amount_sats, status, callback_url, protocol FROM invoices WHERE payment_hash = ?', paymentHash);
       if (!invoice) {
         await db.run('ROLLBACK');
         return res.json({ status: 'ignored', reason: 'invoice_not_found' });
@@ -114,7 +145,7 @@ export const handleLnbitsWebhook = async (req: Request, res: Response, next: Nex
         return res.json({ status: 'ok', reason: 'already_settled' });
       }
 
-      const merchant = await db.get('SELECT * FROM merchants WHERE api_key = ?', invoice.api_key);
+      const merchant = await db.get('SELECT api_key, ln_address, payout_mode, payout_threshold_sats FROM merchants WHERE api_key = ?', invoice.api_key);
       if (!merchant) {
         throw new AppError('Merchant not found', 400, 'MERCHANT_NOT_FOUND');
       }
@@ -140,14 +171,12 @@ export const handleLnbitsWebhook = async (req: Request, res: Response, next: Nex
       const payoutMode = merchant.payout_mode || 'instant';
 
       if (payoutMode === 'manual') {
-        // Accumulate for manual withdrawal
         await db.run(
           "UPDATE invoices SET status = 'settled', payout_status = 'pending_manual' WHERE payment_hash = ?",
           paymentHash
         );
         console.log(`[Webhook] Manual mode: payment accumulated. Waiting for merchant withdrawal.`);
       } else {
-        // Unify instant and threshold accumulation to respect MIN_PAYOUT_THRESHOLD_SATS
         await db.run(
           "UPDATE invoices SET status = 'settled', payout_status = 'pending_threshold' WHERE payment_hash = ?",
           paymentHash
@@ -158,7 +187,8 @@ export const handleLnbitsWebhook = async (req: Request, res: Response, next: Nex
           invoice.api_key
         );
         
-        const accumTotalForwarded = accumRecord?.total || 0;
+        // [W-06 FIX] Use ?? (nullish coalescing) instead of || for SUM result
+        const accumTotalForwarded = accumRecord?.total ?? 0;
         
         const effectiveThreshold = payoutMode === 'instant' 
           ? MIN_PAYOUT_THRESHOLD_SATS 
@@ -174,7 +204,7 @@ export const handleLnbitsWebhook = async (req: Request, res: Response, next: Nex
           await db.run(
             "INSERT INTO payout_queue (id, payment_hash, api_key, amount_sats, ln_address, status, next_retry_at, created_at) VALUES (?, ?, ?, ?, ?, 'pending', ?, ?)",
             jobId,
-            `batch_${invoice.api_key}_${Date.now()}`,
+            `batch_${crypto.randomBytes(8).toString('hex')}`, // [K-11 FIX] Random suffix, not predictable
             invoice.api_key,
             accumTotalForwarded,
             merchant.ln_address,
@@ -190,10 +220,11 @@ export const handleLnbitsWebhook = async (req: Request, res: Response, next: Nex
       await db.run('COMMIT');
 
       // Trigger the payout worker immediately (non-blocking) to achieve instant pass-through
-      processPayoutQueue().catch(err => console.error('[Webhook] Failed to run payout queue immediately:', err));
+      Promise.resolve().then(() => processPayoutQueue()).catch(err => 
+        console.error('[Webhook] Failed to run payout queue immediately:', err)
+      );
 
-      // Fetch the updated invoice to get the exact payout_status
-      const updatedInvoice = await db.get('SELECT * FROM invoices WHERE payment_hash = ?', paymentHash);
+      const updatedInvoice = await db.get('SELECT payment_hash, amount_sats, status, payout_status FROM invoices WHERE payment_hash = ?', paymentHash);
 
       // Trigger merchant callback if provided
       if (invoice.callback_url && updatedInvoice) {
@@ -208,7 +239,7 @@ export const handleLnbitsWebhook = async (req: Request, res: Response, next: Nex
       res.json({ status: 'ok' });
 
     } catch (innerErr) {
-      await db.run('ROLLBACK');
+      await db.run('ROLLBACK').catch(() => {});
       throw innerErr;
     }
 
