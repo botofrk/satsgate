@@ -23,6 +23,7 @@ Bu belge, AIPP projesinde bugüne kadar yapılan çalışmaları, en son uygulan
 * **Atomik Veritabanı İşlemleri:** Payout worker başarı durumları tek bir transaction bloğu (`BEGIN IMMEDIATE TRANSACTION`) içine alınarak crash-safe hale getirildi.
 
 ### 3. Arayüz Güncellemeleri
+* **Görsel Düzenleme / Kırık Resim Giderimi (`index.html`):** Silinen 800KB'lık `api_token.jpg` dosyasından kalan kırık görsel bağlantısı, saf CSS ve SVG ile oluşturulmuş, yüksek performanslı ve modern bir yapay zeka token illüstrasyonu ile değiştirildi.
 * **Müşteri/Satıcı Uyarısı (`dashboard.html`):** Satıcı paneline volatilitenin satoshi kazançlarını nasıl etkilediğini açıklayan Türkçe ve İngilizce uyarı eklendi.
 * **Dokümantasyon Başlıkları (`docs.html`):** Dokümantasyondaki eksik "Errors" alanı ve sol menüdeki 14 başlığın tamamı anchor linklerle senkronize edilerek yayına alındı.
 * **Canlı Ortam Senkronizasyonu:** Tüm HTML ve JS değişiklikleri `/home/hermes/aipp/aipp-key` dizinine ve Docker konteyneri (`aipp-key`) içine aktarıldı.
