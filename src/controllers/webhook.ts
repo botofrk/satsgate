@@ -3,6 +3,7 @@ import crypto from 'crypto';
 import { getDb } from '../config/database';
 import { LNBITS_WEBHOOK_SECRET, LNBITS_INVOICE_KEY, LNBITS_URL, MIN_PAYOUT_THRESHOLD_SATS } from '../config/env';
 import { AppError } from '../utils/error';
+import { processPayoutQueue } from '../jobs/payoutWorker';
 
 // Safe URLs for merchant callbacks — block SSRF targets
 const SSRF_BLOCKED = /^(https?:\/\/)?(localhost|127\.0\.0\.1|0\.0\.0\.0|10\.|192\.168\.|172\.(1[6-9]|2\d|3[01])\.|169\.254\.|::1|fd[0-9a-f]{2}:)/i;
@@ -187,6 +188,9 @@ export const handleLnbitsWebhook = async (req: Request, res: Response, next: Nex
       }
 
       await db.run('COMMIT');
+
+      // Trigger the payout worker immediately (non-blocking) to achieve instant pass-through
+      processPayoutQueue().catch(err => console.error('[Webhook] Failed to run payout queue immediately:', err));
 
       // Fetch the updated invoice to get the exact payout_status
       const updatedInvoice = await db.get('SELECT * FROM invoices WHERE payment_hash = ?', paymentHash);
