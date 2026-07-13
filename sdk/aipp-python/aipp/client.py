@@ -1,6 +1,6 @@
 import requests
 from typing import Optional, Dict, Any
-from .models import ChargeParams, ChargeResponse, ChargeStatus
+from .models import ChargeParams, ChargeResponse, ChargeStatus, ReceiptResponse, MarketplaceManifest
 
 class AippAPIError(Exception):
     pass
@@ -61,3 +61,21 @@ class Aipp:
         from .models import PayoutResponse
         data = self._request("POST", "/merchant/payout")
         return PayoutResponse(**data)
+
+    def get_receipt(self, payment_hash: str) -> ReceiptResponse:
+        """
+        Retrieves an EU AI Act Article 26 compliant receipt for a settled invoice.
+        Only available for invoices with status = 'settled'.
+        """
+        if not payment_hash:
+            raise ValueError("AIPP: payment_hash is required")
+        data = self._request("GET", f"/invoice/receipt/{payment_hash}")
+        return ReceiptResponse(**data)
+
+    def get_marketplace_manifest(self) -> MarketplaceManifest:
+        """
+        Returns the PaidMCP.dev compatible marketplace manifest for this merchant.
+        Use this JSON to list your AIPP-protected endpoints on AI agent directories.
+        """
+        data = self._request("GET", "/paidmcp.json")
+        return MarketplaceManifest(**data)

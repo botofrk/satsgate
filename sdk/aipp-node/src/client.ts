@@ -1,4 +1,4 @@
-import { AippConfig, ChargeParams, ChargeResponse, ChargeStatus, AippErrorResponse } from './types';
+import { AippConfig, ChargeParams, ChargeResponse, ChargeStatus, AippErrorResponse, ReceiptResponse, MarketplaceManifest } from './types';
 
 export class Aipp {
   private apiKey: string;
@@ -73,6 +73,29 @@ export class Aipp {
   async payout(): Promise<import('./types').PayoutResponse> {
     return this.request<import('./types').PayoutResponse>('/merchant/payout', {
       method: 'POST',
+    });
+  }
+
+  /**
+   * Retrieves an EU AI Act Article 26 compliant receipt for a settled invoice.
+   * Only available for invoices with status = 'settled'.
+   */
+  async getReceipt(paymentHash: string): Promise<ReceiptResponse> {
+    if (!paymentHash) {
+      throw new Error('AIPP: paymentHash is required');
+    }
+    return this.request<ReceiptResponse>(`/invoice/receipt/${paymentHash}`, {
+      method: 'GET',
+    });
+  }
+
+  /**
+   * Returns the PaidMCP.dev compatible marketplace manifest for this merchant.
+   * Use this JSON to list your AIPP-protected endpoints on AI agent directories.
+   */
+  async getMarketplaceManifest(): Promise<MarketplaceManifest> {
+    return this.request<MarketplaceManifest>('/paidmcp.json', {
+      method: 'GET',
     });
   }
 }
