@@ -81,7 +81,7 @@ app.get('/health', async (req: Request, res: Response) => {
 // Serve ONLY the public/ directory as static — prevents .env and source code exposure
 app.use(express.static(path.join(__dirname, '../public')));
 // Also serve HTML files from root (index.html, dashboard.html, etc.) explicitly
-const ROOT_HTML_FILES = ['index.html', 'dashboard.html', 'docs.html', 'l402.html', 'admin.html', 'paywall-demo.html'];
+const ROOT_HTML_FILES = ['index.html', 'dashboard.html', 'docs.html', 'l402.html', 'admin.html'];
 ROOT_HTML_FILES.forEach(file => {
   app.get(`/${file}`, (req: Request, res: Response) => {
     res.sendFile(path.join(__dirname, '..', file));
