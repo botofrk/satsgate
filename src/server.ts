@@ -129,4 +129,9 @@ async function bootstrap() {
   }
 }
 
-bootstrap();
+export { app };
+
+if (process.env.NODE_ENV !== 'test') {
+  bootstrap();
+}
+
