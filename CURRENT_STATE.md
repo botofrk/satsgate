@@ -1,7 +1,7 @@
 # AIPP.dev — Current Project State & Next Steps
-*Son Güncelleme: 10 Temmuz 2026*
+*Son Güncelleme: 13 Temmuz 2026*
 
-Bu belge, AIPP projesinde bugüne kadar yapılan çalışmaları, en son uygulanan güvenlik sertleştirme (security hardening) işlemlerini ve bir sonraki çalışma seansında kalınan yerden nasıl devam edileceğini özetlemektedir.
+Bu belge, AIPP projesinde bugüne kadar yapılan çalışmaları, en son uygulanan güvenlik sertleştirme (security hardening) işlemlerini, pazar yeri ve AI ajan entegrasyonlarını ve bir sonraki çalışma seansında kalınan yerden nasıl devam edileceğini özetlemektedir.
 
 ---
 
@@ -13,19 +13,27 @@ Bu belge, AIPP projesinde bugüne kadar yapılan çalışmaları, en son uygulan
 * **USDC on Base (x402)** entegrasyonu tamamlandı. Gateway cüzdanından para çekimleri ve ödeme doğrulamaları aktif hale getirildi.
 * Fiyat keşfi için makine-uyumlu `/pricing.json` manifestosu ve dinamik USD-sats dönüştürücü eklendi.
 
-### 2. Güvenlik Sertleştirmesi (Security Hardening)
+### 2. Pazar Yeri & AI Ajan Entegrasyonları (Yeni)
+* **PaidMCP.dev Otomatik Listeleme:** AIPP-Key altyapısını kullanan satıcıların, kendi API'lerini PaidMCP pazar yerinde tek tıkla listeleyebilmeleri için `/paidmcp.json` manifestosunu dinamik olarak üreten bir endpoint ve Dashboard üzerinde kopyalama butonu eklendi.
+* **AIPP Auto-Pay Skill (`aipp-pay.md`):** Claude Code ve Cursor gibi yapay zeka ajanlarının 402 HTTP hatası aldıklarında faturayı okuyup L402 veya x402 (Base/Base-Sepolia) üzerinden otomatik ödemesini ve isteği tekrarlamasını sağlayan AI Skill hazırlandı ve statik olarak sunuldu.
+* **EU AI Act - Article 26 Makbuzlandırma:** Ağustos 2026 regülasyonları ile uyumlu, tamamlanan işlemlere dair blockchain kanıtı ve preimage içeren `/invoice/receipt/:hash` makine-okunabilir JSON makbuz uç noktası eklendi.
+* **Base Sepolia (Testnet) Desteği:** Sistem `.env` dosyasındaki RPC adresinde `sepolia` tespit ettiğinde otomatik olarak test ağına geçiyor ve 402 meydan okumasında (challenge) ağı `base-sepolia` olarak dönüyor.
+* **SDK Sürüm Yükseltmeleri ve Yayınlar:** Hem Node.js (`aipp-node`) hem de Python (`aipp-sdk`) kütüphaneleri **v1.2.1** sürümüne yükseltilerek npm registry ve PyPI üzerinde başarıyla yayınlandı.
+
+### 3. Güvenlik Sertleştirmesi (Security Hardening)
 3 paralel ajanla yapılan detaylı kod analizi (71 bulgu) sonucunda aşağıdaki **kritik ve yüksek öncelikli** açıklar tamamen giderildi:
 * **Gömülü Key Temizliği:** `src/config/env.ts` içindeki hardcoded private key ve demo fallback'leri kaldırıldı. Production'da eksik env varsa fail-fast (boot crash) sağlandı.
 * **IDOR ve Yetkisiz Erişim Engellemesi:** `/merchant/payout-status` ve `/invoice/status` endpoint'leri `X-Api-Key` doğrulama zorunluluğuna tabi tutuldu. Unauthenticated satıcı API anahtarı ifşası önlendi.
 * **Bypass Kodlarının Kapatılması:** `/premium-article-1` içindeki demo preimage ve mock tx bypass'ları production ortamı için tamamen kapatıldı (`!IS_PRODUCTION`).
 * **Hız Sınırlama (Rate Limiting) & DoS Koruması:** `express-rate-limit` entegre edildi. Küresel limit (200 req/min) ve `/chat`, `/register` gibi hassas rotalar için sıkı limitler (10 req/min) tanımlandı.
 * **Güvenli Docker:** Container root yetkileri olmayan (`appuser:appgroup`) bir kullanıcıyla çalışacak şekilde güncellendi. `.dockerignore` eklenerek `.env` sızıntısı önlendi.
+* **Zafiyetlerin Giderilmesi:** `npm audit` taramasında `sqlite3` bağımlılığından gelen `tar` açıkları, paketin en son sürüme güncellenmesiyle giderildi (**0 zafiyet**). Docker imajı Debian slim derleme araçları (`make`, `g++`, `python3`) ile native derleme yapacak şekilde güncellendi.
 * **Atomik Veritabanı İşlemleri:** Payout worker başarı durumları tek bir transaction bloğu (`BEGIN IMMEDIATE TRANSACTION`) içine alınarak crash-safe hale getirildi.
 
-### 3. Arayüz Güncellemeleri
+### 4. Arayüz & Dokümantasyon Güncellemeleri
 * **Görsel Düzenleme / Kırık Resim Giderimi (`index.html`):** Silinen 800KB'lık `api_token.jpg` dosyasından kalan kırık görsel bağlantısı, saf CSS ve SVG ile oluşturulmuş, yüksek performanslı ve modern bir yapay zeka token illüstrasyonu ile değiştirildi.
 * **Müşteri/Satıcı Uyarısı (`dashboard.html`):** Satıcı paneline volatilitenin satoshi kazançlarını nasıl etkilediğini açıklayan Türkçe ve İngilizce uyarı eklendi.
-* **Dokümantasyon Başlıkları (`docs.html`):** Dokümantasyondaki eksik "Errors" alanı ve sol menüdeki 14 başlığın tamamı anchor linklerle senkronize edilerek yayına alındı.
+* **Dokümantasyon Başlıkları (`docs.html`):** Dokümantasyondaki eksik "Errors" alanı ve sol menüdeki başlıkların tamamı yeni eklenen endpoints (`/invoice/receipt`, `/paidmcp.json`) ile birlikte güncellenerek yayına alındı.
 * **Canlı Ortam Senkronizasyonu:** Tüm HTML ve JS değişiklikleri `/home/hermes/aipp/aipp-key` dizinine ve Docker konteyneri (`aipp-key`) içine aktarıldı.
 
 ---
@@ -33,11 +41,13 @@ Bu belge, AIPP projesinde bugüne kadar yapılan çalışmaları, en son uygulan
 ## 🔍 Nerede Kaldık?
 
 Uygulama şu an **canlıda (Hetzner VPS) en güncel ve en güvenli haliyle** çalışmaktadır.
-* TypeScript derlemesi: `tsc --noEmit` ➔ 0 Hata.
+* TypeScript derlemesi: `tsc` ➔ 0 Hata.
 * Sunucu durumu: Aktif (`docker ps` ➔ `aipp-key` çalışıyor).
 * Sağlık kontrolü: `https://aipp.dev/health` ➔ `{"status":"ok","db":"ok"}`.
-* Fiyat Manifestosu: `https://aipp.dev/pricing.json` ➔ 200 OK.
+* Fiyat ve PaidMCP Manifestoları: Uç noktalar çalışıyor.
+* Testler: **Vitest** ve **Supertest** entegre edildi. Fiyat servisi ve API rotaları için yazılan 9 testin tamamı sorunsuz geçiyor (`9/9 passed`).
 * Git Durumu: Tüm değişiklikler commit edildi ve GitHub reposuna pushlandı (`main` branch güncellendi).
+* Paketler: `aipp-node` (npm) ve `aipp-sdk` (pip) **v1.2.1** sürümü ile canlıda yayınlandı.
 
 ---
 
