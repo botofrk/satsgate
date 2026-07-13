@@ -34,7 +34,10 @@ Bu belge, AIPP projesinde bugüne kadar yapılan çalışmaları, en son uygulan
 * **Görsel Düzenleme / Kırık Resim Giderimi (`index.html`):** Silinen 800KB'lık `api_token.jpg` dosyasından kalan kırık görsel bağlantısı, saf CSS ve SVG ile oluşturulmuş, yüksek performanslı ve modern bir yapay zeka token illüstrasyonu ile değiştirildi.
 * **Müşteri/Satıcı Uyarısı (`dashboard.html`):** Satıcı paneline volatilitenin satoshi kazançlarını nasıl etkilediğini açıklayan Türkçe ve İngilizce uyarı eklendi.
 * **Dokümantasyon Başlıkları (`docs.html`):** Dokümantasyondaki eksik "Errors" alanı ve sol menüdeki başlıkların tamamı yeni eklenen endpoints (`/invoice/receipt`, `/paidmcp.json`) ile birlikte güncellenerek yayına alındı.
+* **Paywall Düzeltmesi (`paywall-demo.html` & `paywall.js`):** Script yolundaki 404 hatası giderildi, kırık yazar avatarı temizlendi. Sunucuya `/paywall_demo.html` alt çizgili url'inden gelen istekleri otomatik olarak `/paywall-demo.html` adresine yönlendiren bir yönlendirme (302 redirect) rotası eklendi.
+* **SQLite İzin Çözümü (SQLITE_READONLY):** Docker konteynerinin `appuser` olarak yetkilendirilmesi sonucu oluşan SQLite yazma yetkisi hatası, sunucu üzerindeki `/home/hermes/data/aipp-key` klasör izinlerinin güncellenmesiyle çözüldü. Paywall QR üretimi başarıyla test edildi.
 * **Canlı Ortam Senkronizasyonu:** Tüm HTML ve JS değişiklikleri `/home/hermes/aipp/aipp-key` dizinine ve Docker konteyneri (`aipp-key`) içine aktarıldı.
+
 
 ---
 
