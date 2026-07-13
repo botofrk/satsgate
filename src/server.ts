@@ -90,6 +90,9 @@ ROOT_HTML_FILES.forEach(file => {
 app.get('/', (req: Request, res: Response) => {
   res.sendFile(path.join(__dirname, '..', 'index.html'));
 });
+app.get('/paywall_demo.html', (req: Request, res: Response) => {
+  res.redirect('/paywall-demo.html');
+});
 
 // Global Error Handler
 app.use(errorHandler);
