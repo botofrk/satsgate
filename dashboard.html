@@ -349,6 +349,16 @@
       </div>
     </div>
 
+    <!-- MARKETPLACE INTEGRATION -->
+    <div style="background: var(--card); border: 2px solid var(--border); padding: 24px; border-radius: 8px; margin-bottom: 32px; box-shadow: 4px 4px 0 #000;">
+      <h3 style="font-family: 'Inter', sans-serif; font-size: 16px; font-weight: 700; margin-bottom: 8px; color: var(--fg); text-transform: uppercase; letter-spacing: 1px;">Marketplace Integrations</h3>
+      <p style="color: var(--muted); font-size: 14px; margin-bottom: 16px;">List your monetized endpoints on AI directories like <a href="https://paidmcp.dev" target="_blank" style="color:var(--accent); font-weight: 600;">PaidMCP.dev</a> to reach global AI agents instantly.</p>
+      <div style="display: flex; gap: 12px; align-items: center;">
+        <button onclick="copyPaidMcpManifest(this)" class="btn-copy" style="background: var(--bg); color: var(--fg); box-shadow: 2px 2px 0 var(--border);">Copy PaidMCP Config</button>
+        <a href="https://paidmcp.dev/submit" target="_blank" style="font-size: 13px; color: var(--muted); text-decoration: none; font-weight: 600; transition: color 0.2s;" onmouseover="this.style.color='var(--fg)'" onmouseout="this.style.color='var(--muted)'">&rarr; Go to PaidMCP PR</a>
+      </div>
+    </div>
+
     <!-- STATS ROW -->
     <div class="stats-grid">
       <!-- Volume Routed Card -->
@@ -549,6 +559,30 @@ function copyActiveKey(btn) {
     btn.textContent = 'Copied!';
     setTimeout(() => btn.textContent = origText, 1500);
   });
+}
+
+async function copyPaidMcpManifest(btn) {
+  try {
+    const origText = btn.textContent;
+    btn.textContent = 'Generating...';
+    btn.disabled = true;
+    const r = await fetch(`${AIPP_API}/paidmcp.json`, {
+      headers: { 'X-Api-Key': activeKey }
+    });
+    if (!r.ok) throw new Error('Failed to fetch manifest');
+    const manifest = await r.json();
+    await navigator.clipboard.writeText(JSON.stringify(manifest, null, 2));
+    btn.textContent = 'Copied JSON!';
+    setTimeout(() => {
+      btn.textContent = origText;
+      btn.disabled = false;
+    }, 2000);
+  } catch (e) {
+    console.error('Failed to copy manifest', e);
+    alert('Error generating manifest.');
+    btn.textContent = 'Copy PaidMCP Config';
+    btn.disabled = false;
+  }
 }
 
 async function refreshDashboardData() {

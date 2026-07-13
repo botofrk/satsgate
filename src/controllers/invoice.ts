@@ -5,7 +5,7 @@ import { checkLimit } from '../services/limiter';
 import { getBtcUsdRate } from '../services/price';
 import { AppError } from '../utils/error';
 import { isSafeCallbackUrl } from './webhook';
-import { LNBITS_INVOICE_KEY, LNBITS_URL, MAX_SINGLE_REQUEST_USD, USDC_ADDRESS } from '../config/env';
+import { LNBITS_INVOICE_KEY, LNBITS_URL, MAX_SINGLE_REQUEST_USD, USDC_ADDRESS, BASE_NETWORK_NAME } from '../config/env';
 import { getGatewayAddress, verifyUsdcPayment } from '../services/base';
 
 function getAippKey(req: Request): string | null {
@@ -89,7 +89,7 @@ export const createInvoice = async (req: Request, res: Response, next: NextFunct
 
       const challengeObj = {
         scheme: 'exact',
-        network: 'base',
+        network: BASE_NETWORK_NAME,
         payTo: getGatewayAddress(),
         price: amount_usd.toFixed(2),
         token: USDC_ADDRESS,
@@ -331,6 +331,60 @@ export const checkInvoiceStatus = async (req: Request, res: Response, next: Next
     }
 
     res.json({ paid: invoice.status === 'settled', status: invoice.status, preimage: invoice.preimage || null });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getReceipt = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const hash = req.params.hash;
+    if (!hash) {
+      throw new AppError('Missing invoice hash', 400, 'BAD_REQUEST');
+    }
+
+    const db = getDb();
+    const invoice = await db.get(`
+      SELECT 
+        i.payment_hash, i.api_key, i.amount_sats, i.commission_sats, i.forwarded_amount_sats, 
+        i.status, i.protocol, i.usdc_amount, i.created_at, i.preimage,
+        m.ln_address, m.usdc_address
+      FROM invoices i
+      LEFT JOIN merchants m ON i.api_key = m.api_key
+      WHERE i.payment_hash = ?
+    `, hash);
+
+    if (!invoice) {
+      throw new AppError('Invoice not found', 404, 'NOT_FOUND');
+    }
+
+    if (invoice.status !== 'settled') {
+      throw new AppError('Receipts are only available for settled invoices', 400, 'NOT_SETTLED');
+    }
+
+    const receipt = {
+      receipt_id: `rec_${crypto.randomUUID()}`,
+      transaction_id: invoice.payment_hash,
+      date: invoice.created_at,
+      status: invoice.status,
+      compliance: {
+        regulation: 'EU AI Act Article 26',
+        note: 'This receipt serves as a verifiable record of a machine-to-machine transaction.'
+      },
+      payment_details: {
+        protocol: invoice.protocol,
+        proof: invoice.preimage || null,
+        merchant_destination: invoice.protocol === 'x402' ? invoice.usdc_address : invoice.ln_address,
+      },
+      financials: {
+        currency: invoice.protocol === 'x402' ? 'USDC' : 'SATS',
+        total_amount: invoice.protocol === 'x402' ? invoice.usdc_amount : invoice.amount_sats,
+        merchant_amount: invoice.protocol === 'x402' ? invoice.usdc_amount * 0.99 : invoice.forwarded_amount_sats,
+        platform_fee: invoice.protocol === 'x402' ? invoice.usdc_amount * 0.01 : invoice.commission_sats
+      }
+    };
+
+    res.json(receipt);
   } catch (error) {
     next(error);
   }

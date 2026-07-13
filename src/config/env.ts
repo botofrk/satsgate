@@ -54,6 +54,8 @@ export const USDC_ADDRESS = process.env.USDC_ADDRESS
     ? '0x036cbd53842c5426634e7929541ec2318f3dcf7e'
     : '0x833589fcd6edb6e08f4c7c32d4f71b54bda02913');
 
+export const BASE_NETWORK_NAME = BASE_RPC_URL.includes('sepolia') ? 'base-sepolia' : 'base';
+
 export const IS_PRODUCTION = IS_PROD;
 export const PORT = process.env.PORT || 3000;
 

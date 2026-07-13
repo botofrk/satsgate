@@ -1,14 +1,16 @@
 import { Router } from 'express';
 import { registerMerchant, getMerchantStats, getMerchantTransactions, triggerManualPayout, getPayoutStatus, joinWaitlist } from '../controllers/merchant';
-import { createInvoice, checkInvoiceStatus } from '../controllers/invoice';
+import { createInvoice, checkInvoiceStatus, getReceipt } from '../controllers/invoice';
 import { handleLnbitsWebhook } from '../controllers/webhook';
 import { handleChat, createTicket } from '../controllers/chat';
 import { verifyAdmin, getAdminStats, getFailedPayouts, retryPayout, getWaitlist } from '../controllers/admin';
 import { premiumArticle, getPricing } from '../controllers/demo';
+import { getPaidMcpManifest } from '../controllers/manifest';
 
 const router = Router();
 
 // Merchant routes
+router.get('/paidmcp.json', getPaidMcpManifest);
 router.post('/merchant/register', registerMerchant);
 router.post('/merchant/waitlist', joinWaitlist);
 router.get('/merchant/stats', getMerchantStats);
@@ -19,6 +21,7 @@ router.get('/merchant/transactions', getMerchantTransactions);
 // Invoice routes
 router.post('/invoice/create', createInvoice);
 router.get('/invoice/status/:hash', checkInvoiceStatus);
+router.get('/invoice/receipt/:hash', getReceipt);
 
 // Demo Paywall route
 router.get('/premium-article-1', premiumArticle);
