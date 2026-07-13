@@ -7,8 +7,11 @@ WORKDIR /app
 
 COPY package*.json ./
 
+# Install build dependencies to compile native addons (like sqlite3) from source
+RUN apt-get update && apt-get install -y python3 make g++ && rm -rf /var/lib/apt/lists/*
+
 # [HIGH-6 FIX] Install all deps for build, then prune devDependencies
-RUN npm ci
+RUN npm ci --build-from-source
 
 COPY . .
 
