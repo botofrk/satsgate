@@ -236,6 +236,8 @@
       <li><a href="#post-charge">POST /invoice/create</a></li>
       <li><a href="#get-charge">GET /invoice/status/:hash</a></li>
       <li><a href="#post-payout">POST /merchant/payout</a></li>
+      <li><a href="#get-receipt">GET /invoice/receipt/:hash</a></li>
+      <li><a href="#get-paidmcp">GET /paidmcp.json</a></li>
       <li><a href="#l402">L402 protocol</a></li>
       <li><a href="#x402">x402 protocol</a></li>
       <li><a href="#agent-integration">Agent Autopay</a></li>
@@ -391,6 +393,57 @@ charge = client.create_charge(<span class="c-num">500</span>)
         <pre>
 {
   <span class="c-key">"message"</span>: <span class="c-str">"Payout triggered successfully"</span>
+}</pre>
+      </div>
+    </section>
+
+    <section id="get-receipt">
+      <h2>Get Invoice Receipt <span style="font-size:12px;background:#22c55e22;color:#22c55e;padding:2px 8px;border-radius:4px;font-weight:600;vertical-align:middle;">NEW</span></h2>
+      <p><code>GET /invoice/receipt/:hash</code></p>
+      <p>Returns an <strong>EU AI Act Article 26</strong> compliant machine-readable receipt for a settled invoice. Useful for audit trails and regulatory compliance for AI-to-AI transactions.</p>
+      <div class="code-block">
+        <div class="code-header">&rarr; 200 OK</div>
+        <pre>
+{
+  <span class="c-key">"receipt_id"</span>: <span class="c-str">"rec_550e8400-e29b-41d4"</span>,
+  <span class="c-key">"transaction_id"</span>: <span class="c-str">"a3f2b9c1d0e4f5..."</span>,
+  <span class="c-key">"date"</span>: <span class="c-str">"2026-07-13T20:00:00.000Z"</span>,
+  <span class="c-key">"status"</span>: <span class="c-str">"settled"</span>,
+  <span class="c-key">"compliance"</span>: {
+    <span class="c-key">"regulation"</span>: <span class="c-str">"EU AI Act Article 26"</span>,
+    <span class="c-key">"note"</span>: <span class="c-str">"Verifiable record of a machine-to-machine transaction."</span>
+  },
+  <span class="c-key">"payment_details"</span>: {
+    <span class="c-key">"protocol"</span>: <span class="c-str">"L402"</span>,
+    <span class="c-key">"proof"</span>: <span class="c-str">"0000...preimage"</span>,
+    <span class="c-key">"merchant_destination"</span>: <span class="c-str">"merchant@ln.tips"</span>
+  },
+  <span class="c-key">"financials"</span>: {
+    <span class="c-key">"currency"</span>: <span class="c-str">"SATS"</span>,
+    <span class="c-key">"total_amount"</span>: <span class="c-num">1000</span>,
+    <span class="c-key">"merchant_amount"</span>: <span class="c-num">990</span>,
+    <span class="c-key">"platform_fee"</span>: <span class="c-num">10</span>
+  }
+}</pre>
+      </div>
+    </section>
+
+    <section id="get-paidmcp">
+      <h2>Marketplace Manifest <span style="font-size:12px;background:#22c55e22;color:#22c55e;padding:2px 8px;border-radius:4px;font-weight:600;vertical-align:middle;">NEW</span></h2>
+      <p><code>GET /paidmcp.json</code></p>
+      <p>Returns a <a href="https://paidmcp.dev" target="_blank" style="color:var(--accent)">PaidMCP.dev</a> compatible JSON manifest. Use this to list your AIPP-protected endpoints on global AI agent marketplaces. Copy it from your <a href="dashboard.html" style="color:var(--accent)">Dashboard</a> with one click.</p>
+      <div class="code-block">
+        <div class="code-header">&rarr; 200 OK</div>
+        <pre>
+{
+  <span class="c-key">"id"</span>: <span class="c-str">"aipp-merchant-api"</span>,
+  <span class="c-key">"name"</span>: <span class="c-str">"AIPP Monetized API"</span>,
+  <span class="c-key">"endpoint"</span>: <span class="c-str">"https://aipp.dev"</span>,
+  <span class="c-key">"chains"</span>: [<span class="c-str">"base"</span>, <span class="c-str">"base-sepolia"</span>],
+  <span class="c-key">"tools"</span>: [
+    { <span class="c-key">"name"</span>: <span class="c-str">"premium_article"</span>, <span class="c-key">"priceUsdt"</span>: <span class="c-num">0.005</span> }
+  ],
+  <span class="c-key">"tags"</span>: [<span class="c-str">"aipp"</span>, <span class="c-str">"l402"</span>, <span class="c-str">"x402"</span>]
 }</pre>
       </div>
     </section>
