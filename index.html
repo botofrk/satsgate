@@ -343,17 +343,24 @@
 
     <!-- STEP 1: Get API Key -->
     <div class="demo-step active" id="step0">
-      <p style="color:var(--muted);font-size:14px;margin-bottom:20px">Link your wallet address to get your aipp Merchant API Key (use either or both):</p>
+      <p style="color:var(--muted);font-size:14px;margin-bottom:16px">Choose your preferred payment method to configure your Merchant API Key:</p>
       
+      <!-- Selection Tabs -->
+      <div style="display:flex; gap:8px; max-width:480px; margin:0 auto 20px auto; justify-content:center;">
+        <button type="button" id="btn-mode-ln" onclick="setSetupMode('ln')" style="flex:1; padding:10px; border:2px solid #000; border-radius:8px; font-weight:700; background:#fff; cursor:pointer; font-size:13px; transition: all 0.15s;">⚡ Lightning</button>
+        <button type="button" id="btn-mode-usdc" onclick="setSetupMode('usdc')" style="flex:1; padding:10px; border:2px solid #000; border-radius:8px; font-weight:700; background:#fff; cursor:pointer; font-size:13px; transition: all 0.15s;">🔵 Base USDC</button>
+        <button type="button" id="btn-mode-both" onclick="setSetupMode('both')" style="flex:1; padding:10px; border:2px solid #000; border-radius:8px; font-weight:700; background:#ffcc00; cursor:pointer; font-size:13px; transition: all 0.15s; box-shadow: 2px 2px 0 #000; transform: translate(-1px, -1px);">🔀 Both (Dual-Rail)</button>
+      </div>
+
       <div style="display:flex; flex-direction:column; gap:16px; max-width:480px; margin:0 auto;">
-        <div style="text-align:left;">
-          <label style="font-size:12px; font-weight:700; color:#000; display:block; margin-bottom:6px;">⚡ Lightning Address (L402) <span style="color:#ef4444;">*</span></label>
+        <div id="wrapper-ln-address" style="text-align:left;">
+          <label style="font-size:12px; font-weight:700; color:#000; display:block; margin-bottom:6px;">⚡ Lightning Address <span style="color:#ef4444;">*</span></label>
           <div class="demo-input" style="margin-bottom:0;">
             <input type="text" id="demo-ln-address" value="demo-merchant@getalby.com" placeholder="Lightning Address (e.g. satoshi@getalby.com)">
           </div>
         </div>
-        <div style="text-align:left;">
-          <label style="font-size:12px; font-weight:700; color:#000; display:block; margin-bottom:6px;">🔵 Base USDC Address (x402) <span style="color:#ef4444;">*</span></label>
+        <div id="wrapper-usdc-address" style="text-align:left;">
+          <label style="font-size:12px; font-weight:700; color:#000; display:block; margin-bottom:6px;">🔵 Base USDC Address (EVM) <span style="color:#ef4444;">*</span></label>
           <div class="demo-input" style="margin-bottom:0;">
             <input type="text" id="demo-usdc-address" value="0x89167843111222333444555666777888999000ab" placeholder="Base USDC Address (EVM e.g. 0xFCAd...)">
           </div>
@@ -364,7 +371,6 @@
             <input type="email" id="demo-email" value="demo-alerts@aipp.dev" placeholder="Your email (Optional, for payout alerts)">
           </div>
         </div>
-        <div style="font-size:11px; color:#555; text-align:left; margin-top:-8px; font-weight:600;"><span style="color:#ef4444;">*</span> Provide at least one payment address. Link both to enable Dual-Rail (hybrid) payments.</div>
         <button class="demo-btn" onclick="demoRegisterMerchant()" style="margin-top:4px;">Link Wallet & Get Key</button>
       </div>
 
@@ -736,15 +742,54 @@ function drawQR(canvas, text) {
   });
 }
 
+// ── SETUP TABS LOGIC ──────────────────────────────────
+let currentSetupMode = 'both';
+
+function setSetupMode(mode) {
+  currentSetupMode = mode;
+  
+  const btnLn = document.getElementById('btn-mode-ln');
+  const btnUsdc = document.getElementById('btn-mode-usdc');
+  const btnBoth = document.getElementById('btn-mode-both');
+  
+  [btnLn, btnUsdc, btnBoth].forEach(btn => {
+    btn.style.background = '#fff';
+    btn.style.boxShadow = 'none';
+    btn.style.transform = 'none';
+  });
+  
+  const activeBtn = mode === 'ln' ? btnLn : (mode === 'usdc' ? btnUsdc : btnBoth);
+  activeBtn.style.background = '#ffcc00';
+  activeBtn.style.boxShadow = '2px 2px 0 #000';
+  activeBtn.style.transform = 'translate(-1px, -1px)';
+  
+  document.getElementById('wrapper-ln-address').style.display = (mode === 'ln' || mode === 'both') ? 'block' : 'none';
+  document.getElementById('wrapper-usdc-address').style.display = (mode === 'usdc' || mode === 'both') ? 'block' : 'none';
+}
+
 // ── REGISTER MERCHANT ───────────────────────────────────
 async function demoRegisterMerchant() {
-  const lnInput = document.getElementById('demo-ln-address').value.trim();
-  const usdcInput = document.getElementById('demo-usdc-address').value.trim();
+  let lnInput = document.getElementById('demo-ln-address').value.trim();
+  let usdcInput = document.getElementById('demo-usdc-address').value.trim();
   const emailInput = document.getElementById('demo-email').value.trim();
   
-  if (!lnInput && !usdcInput) {
-    alert('Please enter at least a Lightning Address or a Base USDC Address.');
-    return;
+  if (currentSetupMode === 'ln') {
+    usdcInput = '';
+    if (!lnInput) {
+      alert('Please enter a Lightning Address.');
+      return;
+    }
+  } else if (currentSetupMode === 'usdc') {
+    lnInput = '';
+    if (!usdcInput) {
+      alert('Please enter a Base USDC Address.');
+      return;
+    }
+  } else {
+    if (!lnInput || !usdcInput) {
+      alert('Please enter both a Lightning Address and a Base USDC Address for Dual-Rail setup.');
+      return;
+    }
   }
 
   if (lnInput && !lnInput.includes('@')) {
