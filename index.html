@@ -347,18 +347,24 @@
       
       <!-- Visual Cards Selector -->
       <div style="display:grid; grid-template-columns: repeat(3, 1fr); gap:12px; max-width:540px; margin:0 auto 24px auto;">
-        <div id="card-mode-ln" onclick="setSetupMode('ln')" style="border: 2px solid #000; border-radius: 12px; padding: 16px 8px; cursor: pointer; transition: all 0.2s; background: #fff; text-align: center;">
-          <div style="font-size: 28px; margin-bottom: 6px;">⚡</div>
+        <div id="card-mode-ln" onclick="setSetupMode('ln')" style="border: 2px solid #000; border-radius: 12px; padding: 16px 8px; cursor: pointer; transition: all 0.2s; background: #fff; text-align: center; display: flex; flex-direction: column; align-items: center; justify-content: center;">
+          <div style="margin-bottom: 8px; display: flex; align-items: center; justify-content: center; height: 40px;">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color: #ffcc00; filter: drop-shadow(1px 1px 0 #000);"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" fill="#ffcc00"></polygon></svg>
+          </div>
           <div style="font-weight: 800; font-size: 13px; color: #000; margin-bottom: 2px;">Bitcoin Lightning</div>
           <div style="font-size: 10px; color: #555; line-height: 1.2;">Instant sats micropayments</div>
         </div>
-        <div id="card-mode-usdc" onclick="setSetupMode('usdc')" style="border: 2px solid #000; border-radius: 12px; padding: 16px 8px; cursor: pointer; transition: all 0.2s; background: #fff; text-align: center;">
-          <div style="font-size: 28px; margin-bottom: 6px;">🔵</div>
+        <div id="card-mode-usdc" onclick="setSetupMode('usdc')" style="border: 2px solid #000; border-radius: 12px; padding: 16px 8px; cursor: pointer; transition: all 0.2s; background: #fff; text-align: center; display: flex; flex-direction: column; align-items: center; justify-content: center;">
+          <div style="margin-bottom: 8px; display: flex; align-items: center; justify-content: center; height: 40px;">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color: #0052ff; filter: drop-shadow(1px 1px 0 #000);"><circle cx="12" cy="12" r="10" fill="#0052ff"></circle><path d="M12 6v12M15 9H11.5a2.5 2.5 0 0 0 0 5H13a2.5 2.5 0 0 1 0 5H9" stroke="#fff"></path></svg>
+          </div>
           <div style="font-weight: 800; font-size: 13px; color: #000; margin-bottom: 2px;">Base USDC</div>
           <div style="font-size: 10px; color: #555; line-height: 1.2;">Stablecoin on Base L2</div>
         </div>
-        <div id="card-mode-both" onclick="setSetupMode('both')" style="border: 2px solid #000; border-radius: 12px; padding: 16px 8px; cursor: pointer; transition: all 0.2s; background: #ffcc00; text-align: center; box-shadow: 4px 4px 0 #000; transform: translate(-2px, -2px);">
-          <div style="font-size: 28px; margin-bottom: 6px;">🔀</div>
+        <div id="card-mode-both" onclick="setSetupMode('both')" style="border: 2px solid #000; border-radius: 12px; padding: 16px 8px; cursor: pointer; transition: all 0.2s; background: #ffcc00; text-align: center; box-shadow: 4px 4px 0 #000; transform: translate(-2px, -2px); display: flex; flex-direction: column; align-items: center; justify-content: center;">
+          <div style="margin-bottom: 8px; display: flex; align-items: center; justify-content: center; height: 40px;">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color: #000; filter: drop-shadow(1px 1px 0 #fff);"><path d="M7 10h14M21 10l-4-4M17 14H3M3 14l4 4" fill="none"></path></svg>
+          </div>
           <div style="font-weight: 800; font-size: 13px; color: #000; margin-bottom: 2px;">Both (Dual-Rail)</div>
           <div style="font-size: 10px; color: #000; font-weight: 600; line-height: 1.2;">Accept Lightning & USDC</div>
         </div>
