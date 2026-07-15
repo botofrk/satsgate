@@ -345,17 +345,26 @@
     <div class="demo-step active" id="step0">
       <p style="color:var(--muted);font-size:14px;margin-bottom:20px">Link your wallet address to get your aipp Merchant API Key (use either or both):</p>
       
-      <div style="display:flex; flex-direction:column; gap:12px; max-width:480px; margin:0 auto;">
-        <div class="demo-input" style="margin-bottom:0;">
-          <input type="text" id="demo-ln-address" value="demo-merchant@getalby.com" placeholder="Lightning Address (e.g. satoshi@getalby.com)">
+      <div style="display:flex; flex-direction:column; gap:16px; max-width:480px; margin:0 auto;">
+        <div style="text-align:left;">
+          <label style="font-size:12px; font-weight:700; color:#000; display:block; margin-bottom:6px;">⚡ Lightning Address (L402)</label>
+          <div class="demo-input" style="margin-bottom:0;">
+            <input type="text" id="demo-ln-address" value="demo-merchant@getalby.com" placeholder="Lightning Address (e.g. satoshi@getalby.com)">
+          </div>
         </div>
-        <div class="demo-input" style="margin-bottom:0;">
-          <input type="text" id="demo-usdc-address" value="0x89167843111222333444555666777888999000ab" placeholder="Base USDC Address (EVM e.g. 0xFCAd...)">
+        <div style="text-align:left;">
+          <label style="font-size:12px; font-weight:700; color:#000; display:block; margin-bottom:6px;">🔵 Base USDC Address (x402)</label>
+          <div class="demo-input" style="margin-bottom:0;">
+            <input type="text" id="demo-usdc-address" value="0x89167843111222333444555666777888999000ab" placeholder="Base USDC Address (EVM e.g. 0xFCAd...)">
+          </div>
         </div>
-        <div class="demo-input" style="margin-bottom:4px;">
-          <input type="email" id="demo-email" value="demo-alerts@aipp.dev" placeholder="Your email (Optional, for payout alerts)">
+        <div style="text-align:left;">
+          <label style="font-size:12px; font-weight:700; color:#000; display:block; margin-bottom:6px;">📧 Notification Email (Optional)</label>
+          <div class="demo-input" style="margin-bottom:0;">
+            <input type="email" id="demo-email" value="demo-alerts@aipp.dev" placeholder="Your email (Optional, for payout alerts)">
+          </div>
         </div>
-        <button class="demo-btn" onclick="demoRegisterMerchant()" style="margin-top:0;">Link Wallet & Get Key</button>
+        <button class="demo-btn" onclick="demoRegisterMerchant()" style="margin-top:4px;">Link Wallet & Get Key</button>
       </div>
 
       <div class="demo-note" style="margin-top:16px;">Input your real wallet addresses to get your permanent API key.</div>
