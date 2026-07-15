@@ -1,0 +1,189 @@
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: aipp-db
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-aipp}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB:-aipp}
+    volumes:
+      - aipp_db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER:-aipp}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    networks:
+      - aipp_net
+
+  redis:
+    image: redis:7.4.9-alpine
+    container_name: aipp-redis
+    command: redis-server --requirepass '${REDIS_PASSWORD}' --bind 0.0.0.0 --appendonly yes --appendfsync everysec --save '3600 1 300 100 60 10000'
+    volumes:
+      - aipp_redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD}", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    networks:
+      - aipp_net
+
+  satsgate:
+    build:
+      context: ./satsgate
+      dockerfile: Dockerfile
+    environment:
+      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-aipp}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-aipp}
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
+      ADMIN_TOKEN: ${AIPP_ADMIN_TOKEN}
+      SATSGATE_ADMIN_TOKEN: ${AIPP_ADMIN_TOKEN}
+      SATSGATE_MACAROON_SECRET: ${SATSGATE_MACAROON_SECRET}
+      SATSGATE_JWT_SECRET: ${SATSGATE_JWT_SECRET}
+      DEV_MODE: "true"
+      SATSGATE_DEV_MODE: "1"
+      SATSGATE_WALLET_MODE: ${SATSGATE_WALLET_MODE:-lnbits}
+      SATSGATE_LNBITS_API_KEY: ${SATSGATE_LNBITS_API_KEY}
+      SATSGATE_LNBITS_URL: ${SATSGATE_LNBITS_URL:-https://demo.lnbits.com}
+      GUNICORN_WORKERS: "1"
+      SATSGATE_GUNICORN_WORKERS: "1"
+      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:3000,http://127.0.0.1:3000,https://aipp.dev,https://admin.aipp.dev,https://agentic.aipp.dev}
+      RATE_LIMIT_PER_SEC: 10
+      RATE_LIMIT_PER_MIN: 100
+      DAILY_SPEND_LIMIT: 2000
+      FREE_CREDITS: 10
+      API_BASE_URL: ${API_BASE_URL:-https://api.aipp.dev}
+      LNURL_CALLBACK_BASE: ${LNURL_CALLBACK_BASE:-https://api.aipp.dev}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    command: ["gunicorn", "app.main:app", "--workers", "1", "--worker-class", "uvicorn.workers.UvicornWorker", "--bind", "0.0.0.0:8000"]
+    restart: unless-stopped
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=dokploy-network"
+      - "traefik.http.routers.satsgate-api.rule=Host(`api.aipp.dev`)"
+      - "traefik.http.routers.satsgate-api.entrypoints=websecure"
+      - "traefik.http.routers.satsgate-api.tls=true"
+      - "traefik.http.services.satsgate-api.loadbalancer.server.port=8000"
+    networks:
+      - aipp_net
+      - dokploy-network
+
+  lnbits:
+    image: lnbits/lnbits:latest
+    container_name: aipp-lnbits
+    environment:
+      LNBITS_BACKEND_WALLET_CLASS: PhoenixdWallet
+      PHOENIXD_API_ENDPOINT: http://phoenixd:9740/
+      PHOENIXD_API_PASSWORD: e7069b9e1d1ce2f18a8102b415caa0570cbe12be0a334433d61910215b0d955c
+    volumes:
+      - aipp_lnbits_data:/data
+    ports:
+      - "5000:5000"
+    restart: unless-stopped
+    networks:
+      - aipp_net
+      - dokploy-network
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=dokploy-network"
+      - "traefik.http.routers.aipp-lnbits.rule=Host(`lnbits.aipp.dev`)"
+      - "traefik.http.routers.aipp-lnbits.entrypoints=websecure"
+      - "traefik.http.services.aipp-lnbits.loadbalancer.server.port=5000"
+
+  phoenixd:
+    image: acinq/phoenixd:latest
+    container_name: aipp-phoenixd
+    volumes:
+      - /home/hermes/aipp/phoenixd_data:/phoenix/.phoenix
+    ports:
+      - "9740:9740"
+    restart: unless-stopped
+    networks:
+      - aipp_net
+
+  albyhub:
+    container_name: albyhub
+    image: ghcr.io/getalby/hub:latest
+    volumes:
+      - albyhub_data:/data
+    environment:
+      - WORK_DIR=/data/albyhub
+    stop_grace_period: 300s
+    restart: unless-stopped
+    networks:
+      - aipp_net
+      - dokploy-network
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=dokploy-network"
+      - "traefik.http.routers.albyhub.rule=Host(`hub.aipp.dev`)"
+      - "traefik.http.routers.albyhub.entrypoints=websecure"
+      - "traefik.http.routers.albyhub.tls.certresolver=letsencrypt"
+      - "traefik.http.services.albyhub.loadbalancer.server.port=8080"
+
+  # frontend (REMOVED 2026-06-29 — yedek: /home/hermes/backups/aipp-frontend-20260629_102514.tar.gz)
+  # frontend:
+  #   build:
+  #     context: ./frontend
+  #     dockerfile: Dockerfile
+  #   container_name: aipp-frontend
+  #   restart: unless-stopped
+  #   networks:
+  #     - aipp_net
+  #     - dokploy-network
+  #   labels:
+  #     - "traefik.enable=true"
+  #     - "traefik.docker.network=dokploy-network"
+  #     - "traefik.http.routers.aipp-frontend.rule=Host(`aipp.dev`)"
+  #     - "traefik.http.routers.aipp-frontend.entrypoints=websecure"
+  #     - "traefik.http.routers.aipp-frontend.tls=true"
+  #     - "traefik.http.services.aipp-frontend.loadbalancer.server.port=80"
+
+  dashboard:
+    build:
+      context: ./dashboard
+      dockerfile: Dockerfile
+    container_name: aipp-dashboard
+    environment:
+      SATSGATE_URL: http://satsgate:8000
+      SATSGATE_ADMIN_TOKEN: ${AIPP_ADMIN_TOKEN}
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8501/_stcore/health')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+      - aipp_net
+      - dokploy-network
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=dokploy-network"
+      - "traefik.http.routers.aipp-dashboard.rule=Host(`admin.aipp.dev`)"
+      - "traefik.http.routers.aipp-dashboard.entrypoints=websecure"
+      - "traefik.http.routers.aipp-dashboard.tls=true"
+      - "traefik.http.services.aipp-dashboard.loadbalancer.server.port=8501"
+
+networks:
+  aipp_net:
+    driver: bridge
+  dokploy-network:
+    external: true
+
+volumes:
+  aipp_db_data:
+  aipp_redis_data:
+  aipp_lnbits_data:
+  albyhub_data:

@@ -21,6 +21,7 @@ class ChargeStatus(BaseModel):
     paid: bool = False
     status: str
     preimage: Optional[str] = None
+    protocol: Optional[str] = None
 
 class AippErrorResponse(BaseModel):
     error: str
