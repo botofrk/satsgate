@@ -29,3 +29,6 @@ Thumbs.db
 **/build/
 **/dist/
 **/*.egg-info/
+
+# Scratch / temp files — never commit
+scratch/
