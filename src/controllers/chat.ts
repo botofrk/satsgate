@@ -81,7 +81,7 @@ export const handleChat = async (req: Request, res: Response, next: NextFunction
     if (reply.includes('TICKET_REQUIRED')) {
       return res.json({
         role: 'assistant',
-        content: "Maalesef bu sorunun cevabı bilgi bankamda yok. Ancak teknik ekibimiz size hemen yardımcı olabilir. Sorunuzu ekibimize iletmemi ister misiniz? Lütfen **e-posta adresinizi** yazın.",
+        content: "Unfortunately, I do not have the answer to this question in my knowledge base. However, our technical support team can help you right away. Would you like me to forward your question to them? If so, please enter your **email address**.",
         ticket_required: true
       });
     }
