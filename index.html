@@ -347,23 +347,24 @@
       
       <div style="display:flex; flex-direction:column; gap:16px; max-width:480px; margin:0 auto;">
         <div style="text-align:left;">
-          <label style="font-size:12px; font-weight:700; color:#000; display:block; margin-bottom:6px;">⚡ Lightning Address (L402)</label>
+          <label style="font-size:12px; font-weight:700; color:#000; display:block; margin-bottom:6px;">⚡ Lightning Address (L402) <span style="color:#666; font-weight:500;">(Optional)</span></label>
           <div class="demo-input" style="margin-bottom:0;">
             <input type="text" id="demo-ln-address" value="demo-merchant@getalby.com" placeholder="Lightning Address (e.g. satoshi@getalby.com)">
           </div>
         </div>
         <div style="text-align:left;">
-          <label style="font-size:12px; font-weight:700; color:#000; display:block; margin-bottom:6px;">🔵 Base USDC Address (x402)</label>
+          <label style="font-size:12px; font-weight:700; color:#000; display:block; margin-bottom:6px;">🔵 Base USDC Address (x402) <span style="color:#666; font-weight:500;">(Optional)</span></label>
           <div class="demo-input" style="margin-bottom:0;">
             <input type="text" id="demo-usdc-address" value="0x89167843111222333444555666777888999000ab" placeholder="Base USDC Address (EVM e.g. 0xFCAd...)">
           </div>
         </div>
         <div style="text-align:left;">
-          <label style="font-size:12px; font-weight:700; color:#000; display:block; margin-bottom:6px;">📧 Notification Email (Optional)</label>
+          <label style="font-size:12px; font-weight:700; color:#000; display:block; margin-bottom:6px;">📧 Notification Email <span style="color:#666; font-weight:500;">(Optional)</span></label>
           <div class="demo-input" style="margin-bottom:0;">
             <input type="email" id="demo-email" value="demo-alerts@aipp.dev" placeholder="Your email (Optional, for payout alerts)">
           </div>
         </div>
+        <div style="font-size:11px; color:#555; text-align:left; margin-top:-8px; font-weight:600;">* Provide at least one address. Link both to enable Dual-Rail (hybrid) payments.</div>
         <button class="demo-btn" onclick="demoRegisterMerchant()" style="margin-top:4px;">Link Wallet & Get Key</button>
       </div>
 
