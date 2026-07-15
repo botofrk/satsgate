@@ -58,6 +58,9 @@
   .modal-actions button, .modal-actions a { text-align:center; padding:12px; border:2px solid var(--border); border-radius:8px; font-weight:600; font-size:14px; cursor:pointer; transition:all 0.2s; text-decoration:none; display:block; background:#fff; color:var(--fg); box-shadow: 3px 3px 0 #000; }
   .modal-actions .btn-test { background:var(--accent); color:#fff; border:2px solid #000; }
   .modal-actions *:hover { transform:translate(-2px, -2px); box-shadow: 5px 5px 0 #000; }
+  .btn-dash { background: #000 !important; color: #ffcc00 !important; font-weight: 800 !important; }
+  .modal-btn-download { background:#fff; border:2px solid #000; border-radius:8px; padding:10px 14px; cursor:pointer; font-size:16px; box-shadow:2px 2px 0 #000; transition:all 0.15s; }
+  .modal-btn-download:hover { transform:translate(-1px,-1px); box-shadow:4px 4px 0 #000; }
 
   /* HERO SECTION */
   .hero{display:flex;align-items:center;justify-content:center;gap:60px;padding:30px 24px 60px;max-width:1150px;margin:0 auto;text-align:left;position:relative;z-index:2}
@@ -337,7 +340,6 @@
 </section>
 
 <section class="section">
-<section class="section">
   <div class="label">Why aipp.dev</div>
   <h2>Everything you hated about online billing, gone.</h2>
   <div class="pains">
@@ -500,7 +502,7 @@
       </div>
 
       <div id="x402-area" style="display:none; text-align:center; padding:12px 0;">
-        <h4 style="margin-bottom:8px; color:var(--fg);">x402 Challenge Recieved</h4>
+        <h4 style="margin-bottom:8px; color:var(--fg);">x402 Challenge Received</h4>
         <div style="background:#f9f9f9; padding:12px; border-radius:8px; border:2px solid var(--border); margin-bottom:16px; font-size:13px; text-align:left; font-family:monospace; word-break:break-all;">
           <strong>Network:</strong> Base<br>
           <strong>Token:</strong> USDC<br>
@@ -648,8 +650,8 @@
         Pass the key as an HTTP header <code style="background:var(--bg);border:1px solid var(--border);padding:2px 4px;border-radius:4px">X-Api-Key</code>. Create invoices, fetch EU AI Act Article 26 receipts, or publish your API to <a href="https://paidmcp.dev" target="_blank" style="color:var(--accent);font-weight:600;">PaidMCP.dev</a> with one click.
       </p>
       <div style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:16px;">
-        <a href="https://www.npmjs.com/package/aipp-node" target="_blank" style="font-size:11px;background:#000;color:#fff;padding:3px 10px;border-radius:4px;text-decoration:none;font-weight:700;">npm aipp-node@1.2.1</a>
-        <a href="https://pypi.org/project/aipp-sdk/" target="_blank" style="font-size:11px;background:#3572A5;color:#fff;padding:3px 10px;border-radius:4px;text-decoration:none;font-weight:700;">pip aipp-sdk==1.2.1</a>
+        <a href="https://www.npmjs.com/package/aipp-node" target="_blank" style="font-size:11px;background:#000;color:#fff;padding:3px 10px;border-radius:4px;text-decoration:none;font-weight:700;">npm aipp-node@1.2.3</a>
+        <a href="https://pypi.org/project/aipp-sdk/" target="_blank" style="font-size:11px;background:#3572A5;color:#fff;padding:3px 10px;border-radius:4px;text-decoration:none;font-weight:700;">pip aipp-sdk==1.2.3</a>
       </div>
       <a href="docs.html" style="color:var(--accent); font-weight:600; font-size:14px;">View API Docs →</a>
     </div>
@@ -729,18 +731,18 @@
 <div class="modal-overlay" id="success-modal">
   <div class="modal-box">
     <div style="font-size:48px;text-align:center;margin-bottom:8px">🎉</div>
-    <h2 style="text-align:center">Mağazanız Kuruldu!</h2>
+    <h2 style="text-align:center">Your store is live!</h2>
     <p style="text-align:center">
-      Bu API anahtarını tarayıcınıza otomatik kaydettik. Dashboard'a giriş yapmak için ezberlemenize gerek yok. Başka bir cihazda kullanmak isterseniz indirebilirsiniz.
+      Your API key has been saved to your browser automatically. You don't need to memorize it to access your Dashboard. You can also download it for use on another device.
     </p>
     <div class="modal-key-wrap">
       <input type="text" class="modal-key-input" id="modal-api-key" readonly>
-      <button class="modal-btn-download" onclick="downloadKey()" title="Anahtarı İndir">💾</button>
-      <button class="modal-btn-download" onclick="copyModalKey()" title="Kopyala">📋</button>
+      <button class="modal-btn-download" onclick="downloadKey()" title="Download Key">💾</button>
+      <button class="modal-btn-download" onclick="copyModalKey()" title="Copy">📋</button>
     </div>
     <div class="modal-actions">
       <button class="btn-test" onclick="closeModalAndTest()">Test Checkout (Optional)</button>
-      <a href="dashboard.html" class="btn-dash">Dashboard'a Git ⚡</a>
+      <a href="dashboard.html" class="btn-dash">Go to Dashboard ⚡</a>
     </div>
   </div>
 </div>
@@ -749,15 +751,15 @@
 <div class="modal-overlay" id="waitlist-modal">
   <div class="modal-box">
     <div style="font-size:48px;text-align:center;margin-bottom:8px">⏳</div>
-    <h2 style="text-align:center">Kapasite Dolu!</h2>
+    <h2 style="text-align:center">We're at capacity!</h2>
     <p style="text-align:center; margin-bottom: 24px;">
-      aipp şu anda Kapalı Beta aşamasındadır ve maksimum üye sayısına ulaştık. 
-      Lütfen e-posta adresinizi bırakın, yeni kontenjan açıldığında size haber verelim.
+      aipp is currently in Closed Beta and we've reached our maximum merchant limit.
+      Leave your email and we'll notify you when a new slot opens up.
     </p>
     <div class="demo-input" style="flex-direction: column;">
-      <input type="email" id="waitlist-email" placeholder="ornek@email.com" style="margin-bottom: 12px; text-align: center;">
-      <button class="btn-primary" onclick="submitWaitlist()" style="width: 100%; border: none;">Bekleme Listesine Katıl</button>
-      <button class="btn-ghost" onclick="closeWaitlistModal()" style="width: 100%; margin-top: 8px;">Kapat</button>
+      <input type="email" id="waitlist-email" placeholder="your@email.com" style="margin-bottom: 12px; text-align: center;">
+      <button class="btn-primary" onclick="submitWaitlist()" style="width: 100%; border: none;">Join the Waitlist</button>
+      <button class="btn-ghost" onclick="closeWaitlistModal()" style="width: 100%; margin-top: 8px;">Close</button>
     </div>
   </div>
 </div>
