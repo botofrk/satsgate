@@ -15,12 +15,19 @@ Yeni özelliklerin veya hata düzeltmelerinin mevcut sistemi bozmadığından em
 npm test
 ```
 
-### Adım 2: SDK Sürüm Numaralarının Artırılması
+### Adım 2: Web Sitesi ve Ön Yüz Sayfalarının Güncellenmesi (Frontend Updates)
+Değişikliklerin ve yeni protokollerin web sitemizdeki tüm arayüz sayfaları ile uyumlu olduğundan emin olun. Gerekli durumlarda şu sayfaları güncelleyin:
+* **`index.html` (Ana Sayfa / Sandbox):** Yeni protokollerin deneme arayüzleri ve sekmeleri buraya entegre edilmelidir.
+* **`docs.html` (Dokümantasyon):** Yeni endpoint şemaları, kod örnekleri ve protokol açıklamaları dökümante edilmelidir.
+* **`dashboard.html` (Satıcı Paneli):** Fatura durumları ve payout kuyruklarının görsel durumları güncellenmelidir.
+* **`public/paywall.js` (Paywall Arayüzü):** Arayüzün tüm ödeme yöntemlerini destekleyecek şekilde güncellendiğinden emin olunmalıdır.
+
+### Adım 3: SDK Sürüm Numaralarının Artırılması
 Eğer SDK dosyalarında (`src/` altında) bir değişiklik yapıldıysa, versiyon çakışmasını önlemek için sürüm numaralarını (örn. `1.2.2` -> `1.2.3`) güncelleyin:
 * **TypeScript SDK:** `sdk/aipp-node/package.json` içerisindeki `"version"` alanını artırın.
 * **Python SDK:** `sdk/aipp-python/setup.py` içerisindeki `version="..."` parametresini artırın.
 
-### Adım 3: SDK Paketlerinin Derlenmesi (Build)
+### Adım 4: SDK Paketlerinin Derlenmesi (Build)
 * **TypeScript SDK Derleme:**
   ```bash
   cd sdk/aipp-node
@@ -32,7 +39,7 @@ Eğer SDK dosyalarında (`src/` altında) bir değişiklik yapıldıysa, versiyo
   python setup.py sdist bdist_wheel
   ```
 
-### Adım 4: GitHub Deposuna Push
+### Adım 5: GitHub Deposuna Push
 Tüm yerel değişiklikleri commit'leyip GitHub reposuna gönderin:
 ```bash
 git add .
@@ -40,7 +47,7 @@ git commit -m "feat/chore: [güncelleme açıklaması]"
 git push origin main
 ```
 
-### Adım 5: Paketlerin NPM ve PyPI Ortamında Yayınlanması (Publish)
+### Adım 6: Paketlerin NPM ve PyPI Ortamında Yayınlanması (Publish)
 * **NPM (aipp-node) Yayınlama:**
   `sdk/aipp-node/.npmrc` dosyasına geçici olarak NPM token'ını ekleyin ve yayınlayın:
   ```bash
@@ -55,7 +62,7 @@ git push origin main
   python -m twine upload dist/* -u __token__ -p [PYPI_TOKEN] --skip-existing
   ```
 
-### Adım 6: Canlı Sunucu (VPS) Dağıtımı (Deployment)
+### Adım 7: Canlı Sunucu (VPS) Dağıtımı (Deployment)
 SSH anahtarını kullanarak Hetzner sunucusuna bağlanıp en güncel kodları çekin ve Docker imajını yeniden derleyin:
 ```bash
 # 1. Sunucudaki git reposunu güncelleyin
@@ -65,7 +72,7 @@ ssh -o StrictHostKeyChecking=no -i [SSH_KEY] root@89.167.84.31 "cd /home/hermes/
 ssh -o StrictHostKeyChecking=no -i [SSH_KEY] root@89.167.84.31 "cd /home/hermes/aipp/aipp-key && docker build -t aipp-key:latest . && docker stop aipp-key && docker rm aipp-key && docker run -d --name aipp-key --restart unless-stopped --network dokploy-network -v /home/hermes/data/aipp-key:/app/data --env-file /home/hermes/aipp/aipp-key/.env -l traefik.enable=true -l traefik.docker.network=dokploy-network -l 'traefik.http.routers.aipp-key.rule=Host(\`aipp.dev\`) || Host(\`www.aipp.dev\`)' -l traefik.http.routers.aipp-key.entrypoints=websecure -l traefik.http.routers.aipp-key.tls=true -l traefik.http.services.aipp-key.loadbalancer.server.port=3000 aipp-key:latest"
 ```
 
-### Adım 7: Servis Sağlık Kontrolü (Verification)
+### Adım 8: Servis Sağlık Kontrolü (Verification)
 Sunucu üzerinde API'lerin doğru yanıt verdiğini test edin:
 ```bash
 # Sağlık Durumu
