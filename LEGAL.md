@@ -1,24 +1,26 @@
-# AIPP.dev — Hukuki Beyan & Lisans Sözleşmesi (Legal Disclaimer)
+# AIPP.dev — Legal Disclaimer & License Agreement
 
-*Son Güncelleme: 15 Temmuz 2026*
+*Last Updated: July 15, 2026*
 
-AIPP.dev, satıcıların ve yapay zeka ajanlarının kendi sunucularında çalıştırabilecekleri **açık kaynak kodlu ve velayetsiz (non-custodial)** bir ödeme yönlendirme yazılımıdır. Bu belge, yazılımın kullanım koşullarını, hukuki statüsünü ve platform ücretlerinin niteliğini tanımlar.
-
----
-
-## 1. Velayetsiz (Non-Custodial) Yazılım Statüsü
-AIPP.dev geliştiricileri ve kod sağlayıcıları; bankacılık, saklama (custody), para transferi veya borsa hizmeti sunmamaktadır. 
-* Yazılım, ödemeleri doğrudan kullanıcı tarafından belirtilen hedeflere (Lightning Address veya EVM cüzdanları) iletecek şekilde tasarlanmıştır.
-* Geliştiricilerin, kullanıcıların özel anahtarları (private keys), fonları veya veri tabanları üzerinde hiçbir erişimi, kontrolü veya tasarrufu yoktur.
+AIPP.dev is an **open-source, non-custodial** payment routing software designed to be deployed and operated by merchants and AI agents on their own self-hosted infrastructure. This document outlines the legal status of the software, terms of use, and the nature of the platform fees.
 
 ---
 
-## 2. %1 Platform Ücretinin Hukuki Niteliği (Software Licensing Fee)
-AIPP.dev tarafından uygulanan %1 oranındaki kesinti, **finansal komisyon veya para transfer aracılık bedeli değildir.** 
-* Bu kesinti, açık kaynaklı yazılımın geliştirilmesi, güncellenmesi ve açık kaynak ekosisteminin sürdürülebilmesi için uygulanan **"Merkeziyetsiz Yazılım Lisanslama ve Yönlendirme Ücreti" (Software Routing & Licensing Fee)**'dir.
-* Web3 ve DeFi (merkeziyetsiz finans) dünyasındaki standart uygulamalara (MetaMask Swap ücretleri, Uniswap router ücretleri vb.) paralel olarak; yazılım kodu düzeyinde otomatik bir split (bölme) işlemi olarak gerçekleşir. Fonlar hiçbir zaman geliştiricilerin saklamasında toplanıp dağıtılmaz.
+## 1. Non-Custodial Software Status
+AIPP.dev developers and code contributors do not provide banking, custody, money transmission, or exchange services.
+* The software is designed to instantly route payments directly to destinations specified by the user (Lightning Address or EVM wallet addresses).
+* Geliştiricilerin/Developers have no access to, control over, or possession of users' private keys, funds, or databases.
 
 ---
 
-## 3. Sorumluluk Reddi (Limitation of Liability)
-Yazılım "OLDUĞU GİBİ" (AS IS) sunulmuştur. Geliştiriciler, yazılımın kullanımından doğabilecek finansal kayıplar, sistem kesintileri veya yasal sorumluluklardan ötürü sorumlu tutulamaz. AIPP yazılımını kendi sunucusunda kurup çalıştıran her satıcı, kendi yerel hukuk kurallarına (vergi, lisanslama vb.) uymaktan bizzat sorumludur.
+## 2. Nature of the 1% Platform Fee (Software Routing & Licensing Fee)
+The flat 1% routing fee applied by AIPP.dev is **not a financial commission or money transmission service fee.**
+* This fee is a **"Decentralized Software Routing & Licensing Fee"** designed to support the ongoing development, updates, and maintenance of the open-source software and its ecosystem.
+* Paralleling standard practices in Web3 and decentralized finance (DeFi) (such as MetaMask Swap fees or Uniswap router fees), this split is executed autonomously at the software code level. Funds are never pooled, held, or custodied by the developers before distribution.
+
+---
+
+## 3. Limitation of Liability & Warranty Disclaimer
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED.
+* In no event shall the developers or contributors be liable for any claim, damages, financial losses, system downtimes, or other liability arising from the use of the software.
+* Any merchant running an instance of AIPP on their own server is solely responsible for compliance with their local regulations, including tax reporting and financial licenses.
