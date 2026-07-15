@@ -7,6 +7,7 @@ import { errorHandler } from './utils/error';
 import { refreshBtcRate, getBtcUsdRate } from './services/price';
 import { startPayoutWorker } from './jobs/payoutWorker';
 import { startPruneWorker } from './jobs/pruneWorker';
+import { startWebhookWorker } from './jobs/webhookWorker';
 import apiRoutes from './routes/api';
 import path from 'path';
 
@@ -113,7 +114,10 @@ async function bootstrap() {
     // 4. Start Prune Worker (Garbage Collection)
     startPruneWorker();
 
-    // 5. Start Server
+    // 5. Start Webhook Worker (Reliable Deliveries)
+    startWebhookWorker();
+
+    // 6. Start Server
     app.listen(PORT, () => {
       console.log(`⚡ AIPP Generic Payment Bridge listening on port ${PORT}`);
       // [LOW-7 FIX] Log config status at debug level, no sensitive details

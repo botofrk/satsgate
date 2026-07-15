@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import request from 'supertest';
 import { app } from '../src/server';
-import { initDb, getDb } from '../src/config/database';
+import { initDb, getDb, closeDb } from '../src/config/database';
 import fs from 'fs';
 import path from 'path';
 
@@ -38,8 +38,7 @@ describe('API Integration Tests via Supertest', () => {
 
   afterAll(async () => {
     // Clean up test database files
-    const db = getDb();
-    await db.close();
+    await closeDb();
     
     if (fs.existsSync(TEST_DB_PATH)) {
       fs.unlinkSync(TEST_DB_PATH);
@@ -89,5 +88,26 @@ describe('API Integration Tests via Supertest', () => {
     expect(res.body).toHaveProperty('payment_hash');
     expect(res.body).toHaveProperty('payment_request');
     expect(res.body).toHaveProperty('amount_sats', 1000);
+  });
+
+  it('should return agent manifest on GET /aipp-agent.json', async () => {
+    const res = await request(app).get('/aipp-agent.json');
+    expect(res.status).toBe(200);
+    expect(res.body).toHaveProperty('spec_version', '1.0');
+    expect(res.body).toHaveProperty('endpoints');
+    expect(res.body.endpoints).toHaveProperty('create_invoice');
+    expect(res.body).toHaveProperty('protocols');
+  });
+
+  it('should return agent-friendly 402 challenge on GET /premium-article-1 without auth', async () => {
+    const res = await request(app).get('/premium-article-1');
+    expect(res.status).toBe(402);
+    expect(res.headers).toHaveProperty('www-authenticate');
+    expect(res.headers).toHaveProperty('payment-required');
+    expect(res.body).toHaveProperty('error', 'Payment Required');
+    expect(res.body).toHaveProperty('payment_methods');
+    expect(res.body.payment_methods).toHaveProperty('lightning');
+    expect(res.body.payment_methods).toHaveProperty('usdc_base');
+    expect(res.body).toHaveProperty('instructions');
   });
 });

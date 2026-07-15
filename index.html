@@ -388,6 +388,7 @@
           <select id="demo-protocol" onchange="updatePriceLabel()" style="width:100%; padding:10px; border:2px solid var(--border); border-radius:8px; font-weight:700; background:#fff; outline:none; cursor:pointer;">
             <option value="L402">Pay via Lightning (L402)</option>
             <option value="x402">Pay via USDC on Base (x402)</option>
+            <option value="dual">Pay via Dual-Rail (L402 + x402)</option>
           </select>
         </div>
 
@@ -398,6 +399,11 @@
 
     <!-- STEP 3: Payout Status -->
     <div class="demo-step" id="step2">
+      <div id="demo-dual-tabs" style="display:none; justify-content:center; gap:8px; margin-bottom:16px;">
+        <button class="tab-btn" id="demo-tab-ln" onclick="toggleDemoDualPanel('ln')" style="padding:6px 12px; border:2px solid var(--border); border-radius:6px; font-weight:700; background:#ffcc00; cursor:pointer;">⚡ Lightning</button>
+        <button class="tab-btn" id="demo-tab-usdc" onclick="toggleDemoDualPanel('usdc')" style="padding:6px 12px; border:2px solid var(--border); border-radius:6px; font-weight:700; background:#fff; cursor:pointer;">🔵 Base USDC</button>
+      </div>
+
       <div id="qr-area" style="display:none">
         <div class="qr-box">
           <canvas id="qr-canvas"></canvas>
@@ -700,8 +706,10 @@ function updatePriceLabel() {
   const display = document.getElementById('demo-price-display');
   if (protocol === 'L402') {
     display.innerHTML = '500 <span style="font-size:14px">sats</span>';
-  } else {
+  } else if (protocol === 'x402') {
     display.innerHTML = '0.05 <span style="font-size:14px">USDC</span>';
+  } else {
+    display.innerHTML = '500 sats <span style="font-size:14px">or</span> 0.05 USDC';
   }
 }
 
@@ -875,9 +883,12 @@ async function demoCreateInvoice() {
   
   if (protocol === 'L402') {
     reqBody.amount_sats = 500;
-  } else {
+  } else if (protocol === 'x402') {
     reqBody.amount_usd = 0.05;
     reqBody.protocol = 'x402';
+  } else {
+    reqBody.amount_usd = 0.05;
+    reqBody.protocol = 'dual';
   }
 
   try {
@@ -899,6 +910,9 @@ async function demoCreateInvoice() {
     const data = await response.json();
     currentPaymentHash = data.payment_hash;
 
+    // Reset tabs display
+    document.getElementById('demo-dual-tabs').style.display = 'none';
+
     if (protocol === 'L402') {
       const invoice = data.payment_request;
       const strEl = document.getElementById('invoice-str');
@@ -914,7 +928,7 @@ async function demoCreateInvoice() {
       
       if (pollTimer) clearInterval(pollTimer);
       pollTimer = setInterval(() => checkPayment(currentPaymentHash), 2000);
-    } else {
+    } else if (protocol === 'x402') {
       currentX402PayTo = data.pay_to;
       currentX402Token = data.token;
       currentX402Price = data.amount_usd.toString();
@@ -927,12 +941,56 @@ async function demoCreateInvoice() {
 
       if (pollTimer) clearInterval(pollTimer);
       pollTimer = setInterval(() => checkPayment(currentPaymentHash), 3000);
+    } else {
+      // DUAL
+      currentX402PayTo = data.pay_to;
+      currentX402Token = data.token;
+      currentX402Price = data.amount_usd.toString();
+
+      // Setup Lightning Side
+      const invoice = data.payment_request;
+      const strEl = document.getElementById('invoice-str');
+      strEl.textContent = invoice.slice(0, 28) + '...' + invoice.slice(-28);
+      strEl.dataset.full = invoice;
+
+      const canvas = document.getElementById('qr-canvas');
+      drawQR(canvas, 'LIGHTNING:' + invoice.toUpperCase());
+
+      // Setup USDC Side
+      document.getElementById('x402-price-val').textContent = currentX402Price;
+      document.getElementById('x402-pay-to-val').textContent = currentX402PayTo.slice(0,10) + '...' + currentX402PayTo.slice(-10);
+
+      // Display Tabs and default to Lightning panel
+      document.getElementById('demo-dual-tabs').style.display = 'flex';
+      toggleDemoDualPanel('ln');
+
+      document.getElementById('pay-status').textContent = 'Waiting for payment...';
+      document.getElementById('pay-dot').className = 'dot pending';
+      document.getElementById('x402-pay-status').textContent = 'Waiting for payment...';
+      document.getElementById('x402-pay-dot').className = 'dot pending';
+
+      if (pollTimer) clearInterval(pollTimer);
+      pollTimer = setInterval(() => checkPayment(currentPaymentHash), 2000);
     }
 
     switchTab(2); // Proceed to Payout status tab
   } catch (err) {
     console.error('Failed to create invoice:', err);
     alert('Failed to connect to aipp backend to generate invoice.');
+  }
+}
+
+function toggleDemoDualPanel(mode) {
+  if (mode === 'ln') {
+    document.getElementById('qr-area').style.display = 'block';
+    document.getElementById('x402-area').style.display = 'none';
+    document.getElementById('demo-tab-ln').style.background = '#ffcc00';
+    document.getElementById('demo-tab-usdc').style.background = '#fff';
+  } else {
+    document.getElementById('qr-area').style.display = 'none';
+    document.getElementById('x402-area').style.display = 'block';
+    document.getElementById('demo-tab-usdc').style.background = '#ffcc00';
+    document.getElementById('demo-tab-ln').style.background = '#fff';
   }
 }
 
@@ -944,7 +1002,7 @@ async function checkPayment(hash, txHash) {
     const data = await response.json();
     if (data.paid) {
       clearInterval(pollTimer);
-      const isX402 = hash.startsWith('x402_');
+      const isX402 = (data.protocol === 'x402') || hash.startsWith('x402_');
       onPaymentConfirmed(hash, isX402, txHash || data.preimage);
     }
   } catch (err) {}

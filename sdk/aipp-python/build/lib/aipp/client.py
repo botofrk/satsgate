@@ -1,6 +1,6 @@
 import requests
 from typing import Optional, Dict, Any
-from .models import ChargeParams, ChargeResponse, ChargeStatus
+from .models import ChargeParams, ChargeResponse, ChargeStatus, ReceiptResponse, MarketplaceManifest
 
 class AippAPIError(Exception):
     pass
@@ -31,8 +31,8 @@ class Aipp:
             
         return response.json()
 
-    def create_charge(self, amount_sats: Optional[int] = None, amount_usd: Optional[float] = None, memo: Optional[str] = None) -> ChargeResponse:
-        """Creates a new Lightning Invoice"""
+    def create_charge(self, amount_sats: Optional[int] = None, amount_usd: Optional[float] = None, memo: Optional[str] = None, protocol: Optional[str] = None) -> ChargeResponse:
+        """Creates a new Invoice (either L402 or x402)"""
         if not amount_sats and not amount_usd:
             raise ValueError("AIPP: Either amount_sats or amount_usd is required")
             
@@ -41,16 +41,19 @@ class Aipp:
             payload["amount_sats"] = amount_sats
         if amount_usd:
             payload["amount_usd"] = amount_usd
+        if protocol:
+            payload["protocol"] = protocol
             
         data = self._request("POST", "/invoice/create", json=payload)
         return ChargeResponse(**data)
 
-    def get_charge(self, payment_hash: str) -> ChargeStatus:
+    def get_charge(self, payment_hash: str, tx_hash: Optional[str] = None) -> ChargeStatus:
         """Checks the status of an existing charge"""
         if not payment_hash:
             raise ValueError("AIPP: payment_hash is required")
             
-        data = self._request("GET", f"/invoice/status/{payment_hash}")
+        query = f"?tx_hash={tx_hash}" if tx_hash else ""
+        data = self._request("GET", f"/invoice/status/{payment_hash}{query}")
         return ChargeStatus(**data)
 
     def payout(self):
@@ -58,3 +61,21 @@ class Aipp:
         from .models import PayoutResponse
         data = self._request("POST", "/merchant/payout")
         return PayoutResponse(**data)
+
+    def get_receipt(self, payment_hash: str) -> ReceiptResponse:
+        """
+        Retrieves an EU AI Act Article 26 compliant receipt for a settled invoice.
+        Only available for invoices with status = 'settled'.
+        """
+        if not payment_hash:
+            raise ValueError("AIPP: payment_hash is required")
+        data = self._request("GET", f"/invoice/receipt/{payment_hash}")
+        return ReceiptResponse(**data)
+
+    def get_marketplace_manifest(self) -> MarketplaceManifest:
+        """
+        Returns the PaidMCP.dev compatible marketplace manifest for this merchant.
+        Use this JSON to list your AIPP-protected endpoints on AI agent directories.
+        """
+        data = self._request("GET", "/paidmcp.json")
+        return MarketplaceManifest(**data)

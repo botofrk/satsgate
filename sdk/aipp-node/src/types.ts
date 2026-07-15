@@ -7,12 +7,12 @@ export interface ChargeParams {
   amountSats?: number;
   amountUsd?: number;
   memo?: string;
-  protocol?: 'L402' | 'x402';
+  protocol?: 'L402' | 'x402' | 'dual';
 }
 
 export interface ChargeResponse {
   payment_hash: string;
-  protocol: 'L402' | 'x402';
+  protocol: 'L402' | 'x402' | 'dual';
   amount_usd?: number;
   pay_to?: string;
   network?: string;
@@ -25,6 +25,7 @@ export interface ChargeStatus {
   paid: boolean;
   status: 'pending' | 'settled';
   preimage: string | null;
+  protocol?: string;
 }
 
 export interface AippErrorResponse {

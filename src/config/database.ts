@@ -90,6 +90,16 @@ export async function initDb(): Promise<Database> {
       ln_address TEXT NOT NULL,
       created_at TEXT NOT NULL
     );
+
+    CREATE TABLE IF NOT EXISTS webhook_deliveries (
+      id TEXT PRIMARY KEY,
+      callback_url TEXT NOT NULL,
+      payload TEXT NOT NULL,
+      status TEXT NOT NULL DEFAULT 'pending',
+      attempts INTEGER NOT NULL DEFAULT 0,
+      next_retry_at TEXT NOT NULL,
+      created_at TEXT NOT NULL
+    );
   `);
 
   // Performance indexes on hot query paths
@@ -100,6 +110,7 @@ export async function initDb(): Promise<Database> {
     CREATE INDEX IF NOT EXISTS idx_invoices_created_at ON invoices (api_key, created_at DESC);
     CREATE INDEX IF NOT EXISTS idx_payout_queue_status ON payout_queue (status, next_retry_at);
     CREATE INDEX IF NOT EXISTS idx_ledgers_api_key ON ledgers (api_key);
+    CREATE INDEX IF NOT EXISTS idx_webhook_deliveries_status ON webhook_deliveries (status, next_retry_at);
   `);
 
   // Migration: Add email column if it doesn't exist
@@ -198,4 +209,28 @@ export function getDb(): Database {
     throw new Error('Database not initialized! Call initDb() first.');
   }
   return dbInstance;
+}
+
+export async function closeDb(): Promise<void> {
+  if (dbInstance) {
+    await dbInstance.close();
+    dbInstance = null;
+  }
+}
+
+let currentTransactionPromise: Promise<void> = Promise.resolve();
+
+/**
+ * Acquires a global transaction lock to prevent concurrent database transactions 
+ * from interleaving and causing SQLITE_ERROR: cannot start a transaction within a transaction.
+ * Returns a release function that must be called in a finally block.
+ */
+export function acquireTransactionLock(): Promise<() => void> {
+  let release: () => void;
+  const nextPromise = new Promise<void>(resolve => {
+    release = resolve;
+  });
+  const waitPromise = currentTransactionPromise;
+  currentTransactionPromise = nextPromise;
+  return waitPromise.then(() => release);
 }

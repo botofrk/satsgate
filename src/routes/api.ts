@@ -5,12 +5,14 @@ import { handleLnbitsWebhook } from '../controllers/webhook';
 import { handleChat, createTicket } from '../controllers/chat';
 import { verifyAdmin, getAdminStats, getFailedPayouts, retryPayout, getWaitlist } from '../controllers/admin';
 import { premiumArticle, getPricing } from '../controllers/demo';
-import { getPaidMcpManifest } from '../controllers/manifest';
+import { getPaidMcpManifest, getAippAgentManifest } from '../controllers/manifest';
 
 const router = Router();
 
 // Merchant routes
 router.get('/paidmcp.json', getPaidMcpManifest);
+router.get('/aipp-agent.json', getAippAgentManifest);
+router.get('/.well-known/aipp-agent.json', getAippAgentManifest);
 router.post('/merchant/register', registerMerchant);
 router.post('/merchant/waitlist', joinWaitlist);
 router.get('/merchant/stats', getMerchantStats);

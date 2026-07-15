@@ -240,6 +240,8 @@
       <li><a href="#get-paidmcp">GET /paidmcp.json</a></li>
       <li><a href="#l402">L402 protocol</a></li>
       <li><a href="#x402">x402 protocol</a></li>
+      <li><a href="#dual-rail">Dual-Rail Hybrid</a></li>
+      <li><a href="#agent-discovery">Agent Auto-Discovery</a></li>
       <li><a href="#agent-integration">Agent Autopay</a></li>
       <li><a href="#machine-pricing">Pricing Discovery</a></li>
       <li><a href="#drop-in-paywall">Drop-in Paywall</a></li>
@@ -259,6 +261,8 @@
       <a href="#post-payout">Payout</a>
       <a href="#l402">L402</a>
       <a href="#x402">x402</a>
+      <a href="#dual-rail">Dual-Rail</a>
+      <a href="#agent-discovery">Auto-Discovery</a>
       <a href="#agent-integration">Autopay</a>
       <a href="#machine-pricing">Pricing</a>
       <a href="#drop-in-paywall">Paywall</a>
@@ -467,6 +471,54 @@ charge = client.create_charge(<span class="c-num">500</span>)
         <li>Client decodes challenge (scheme, network, payTo, price, token, payment_hash) and transfers USDC on-chain.</li>
         <li>Client retries request with header <code>Authorization: Bearer &lt;tx_hash&gt;</code> or query string <code>?tx_hash=&lt;tx_hash&gt;</code>.</li>
       </ol>
+    </section>
+
+    <section id="dual-rail">
+      <h2>Dual-Rail Hybrid Payments (L402 + x402)</h2>
+      <p>Provide ultimate payment flexibility to your users and agents by offering both Bitcoin Lightning and USDC on Base in a single request. When creating an invoice, specify <code>protocol: "dual"</code>. AIPP will return both Lightning and USDC parameters. The client can pay via either channel to unlock the content.</p>
+      <div class="code-block">
+        <div class="code-header">Create Dual Invoice Request</div>
+        <pre>POST /invoice/create
+{
+  <span class="c-key">"amount_usd"</span>: <span class="c-num">0.01</span>,
+  <span class="c-key">"protocol"</span>: <span class="c-str">"dual"</span>,
+  <span class="c-key">"memo"</span>: <span class="c-str">"Dual-Rail Protection"</span>
+}</pre>
+      </div>
+      <div class="code-block">
+        <div class="code-header">&rarr; Response (Both rails)</div>
+        <pre>{
+  <span class="c-key">"payment_hash"</span>: <span class="c-str">"mock_hash"</span>,
+  <span class="c-key">"protocol"</span>: <span class="c-str">"dual"</span>,
+  <span class="c-key">"payment_request"</span>: <span class="c-str">"lnbc..."</span>, <span class="c-comment">// Lightning BOLT11 invoice</span>
+  <span class="c-key">"pay_to"</span>: <span class="c-str">"0x..."</span>,           <span class="c-comment">// Gateway EVM Address</span>
+  <span class="c-key">"token"</span>: <span class="c-str">"0x..."</span>,            <span class="c-comment">// Base USDC Contract Address</span>
+  <span class="c-key">"network"</span>: <span class="c-str">"base"</span>,
+  <span class="c-key">"amount_usd"</span>: <span class="c-num">0.01</span>,
+  <span class="c-key">"amount_sats"</span>: <span class="c-num">42</span>
+}</pre>
+      </div>
+    </section>
+
+    <section id="agent-discovery">
+      <h2>AI Agent Auto-Discovery</h2>
+      <p>AI agents can query the machine-readable <code>/aipp-agent.json</code> or <code>/.well-known/aipp-agent.json</code> endpoints to dynamically discover supported chains, payment methods, pricing, and API endpoints without human intervention.</p>
+      <div class="code-block">
+        <div class="code-header">GET /.well-known/aipp-agent.json Response</div>
+        <pre>{
+  <span class="c-key">"spec_version"</span>: <span class="c-str">"1.0"</span>,
+  <span class="c-key">"name"</span>: <span class="c-str">"AIPP.dev AI Payment Gateway"</span>,
+  <span class="c-key">"endpoints"</span>: {
+    <span class="c-key">"create_invoice"</span>: <span class="c-str">"https://aipp.dev/invoice/create"</span>,
+    <span class="c-key">"invoice_status"</span>: <span class="c-str">"https://aipp.dev/invoice/status/{hash}"</span>
+  },
+  <span class="c-key">"protocols"</span>: {
+    <span class="c-key">"dual"</span>: {
+      <span class="c-key">"name"</span>: <span class="c-str">"Dual-Rail Hybrid"</span>
+    }
+  }
+}</pre>
+      </div>
     </section>
 
     <section id="drop-in-paywall">

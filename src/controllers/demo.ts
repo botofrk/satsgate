@@ -1,7 +1,8 @@
 import { Request, Response } from 'express';
 import crypto from 'crypto';
 import { getDb } from '../config/database';
-import { LNBITS_INVOICE_KEY, LNBITS_URL, IS_PRODUCTION } from '../config/env';
+import { LNBITS_INVOICE_KEY, LNBITS_URL, IS_PRODUCTION, BASE_NETWORK_NAME, USDC_ADDRESS } from '../config/env';
+import { getGatewayAddress } from '../services/base';
 
 const DEMO_PREIMAGE = '0000000000000000000000000000000000000000000000000000000000000000';
 
@@ -105,34 +106,65 @@ export const premiumArticle = async (req: Request, res: Response) => {
 
     const db = getDb();
     await db.run(
-      'INSERT INTO invoices (payment_hash, api_key, amount_sats, commission_sats, forwarded_amount_sats, status, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)',
+      'INSERT INTO invoices (payment_hash, api_key, amount_sats, commission_sats, forwarded_amount_sats, status, protocol, usdc_amount, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
       paymentHash,
       'demo_api_key',
       amount_sats,
       0,
       amount_sats,
       'pending',
+      'dual',
+      0.005,
       new Date().toISOString()
     );
 
-    // [D-06 FIX] Use a proper signed payload format — do not use HS256 header on unsigned token
-    // This is a demo macaroon reference, not a JWT — label it as such
+    // [D-06 FIX] Use a proper signed payload format
     const payload = Buffer.from(JSON.stringify({
       payment_hash: paymentHash,
       resource_id: '/api/premium-article-1',
       exp: Math.floor(Date.now() / 1000) + 3600
     })).toString('base64url');
     
-    // Demo macaroon: base64url-encoded payload reference (not a JWT — no signature claim)
     const demoMacaroon = `aipp_demo_v1.${payload}`;
+
+    // Generate x402 challenge
+    const challengeObj = {
+      scheme: 'exact',
+      network: BASE_NETWORK_NAME,
+      payTo: getGatewayAddress(),
+      price: '0.01', // Minimum USDC unit is $0.01
+      token: USDC_ADDRESS,
+      payment_hash: paymentHash
+    };
+    const challengeBase64 = Buffer.from(JSON.stringify(challengeObj), 'utf8').toString('base64');
 
     res.status(402);
     res.setHeader('Www-Authenticate', `L402 macaroon="${demoMacaroon}" invoice="${paymentRequest}"`);
+    res.setHeader('PAYMENT-REQUIRED', challengeBase64);
+    
     res.json({
       error: "Payment Required",
-      code: "L402",
-      payment_request: paymentRequest,
-      macaroon: demoMacaroon
+      code: "402",
+      payment_hash: paymentHash,
+      pricing: {
+        usd: 0.01,
+        sats: amount_sats
+      },
+      payment_methods: {
+        lightning: {
+          protocol: "L402",
+          payment_request: paymentRequest,
+          macaroon: demoMacaroon
+        },
+        usdc_base: {
+          protocol: "x402",
+          pay_to: challengeObj.payTo,
+          token: challengeObj.token,
+          network: challengeObj.network,
+          amount_usd: 0.01
+        }
+      },
+      instructions: "Pay the Lightning invoice and supply the preimage in 'Authorization: L402 macaroon:preimage' OR transfer the USDC amount to 'pay_to' and supply the transaction hash in 'Authorization: Bearer tx_hash' or 'payment-signature' header."
     });
   } catch (err: any) {
     console.error('[Demo] Failed to generate demo invoice:', err.message);

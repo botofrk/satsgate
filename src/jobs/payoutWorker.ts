@@ -1,4 +1,4 @@
-import { getDb } from '../config/database';
+import { getDb, acquireTransactionLock } from '../config/database';
 import { payLightningAddress } from '../services/lightning';
 import { sendEmail } from '../services/email';
 import { sendUsdcPayout } from '../services/base';
@@ -17,7 +17,8 @@ export async function processPayoutQueue() {
       const now = new Date().toISOString();
       let job: any = null;
 
-      // 1. Atomically acquire one job using SQLite immediate transaction
+      // 1. Atomically acquire one job using SQLite immediate transaction and lock
+      const release = await acquireTransactionLock();
       try {
         await db.run('BEGIN IMMEDIATE TRANSACTION');
         job = await db.get(
@@ -31,7 +32,10 @@ export async function processPayoutQueue() {
       } catch (err: any) {
         await db.run('ROLLBACK').catch(() => {});
         console.error('[Payout Worker] Transaction error while acquiring job:', err.message);
+        release();
         break; // Break loop on transaction failure (busy) to retry next time
+      } finally {
+        release();
       }
 
       // If no job was found, break the loop
@@ -53,9 +57,10 @@ export async function processPayoutQueue() {
           console.log(`[Payout Worker] ✅ Lightning payout successful: ${payoutHash}`);
         }
         
-        // [HIGH-5 FIX] Wrap all success updates in a single atomic transaction
-        await db.run('BEGIN IMMEDIATE TRANSACTION');
+        // [HIGH-5 FIX] Wrap all success updates in a single atomic transaction and lock
+        const releaseSuccess = await acquireTransactionLock();
         try {
+          await db.run('BEGIN IMMEDIATE TRANSACTION');
           await db.run("UPDATE payout_queue SET status = 'completed' WHERE id = ?", job.id);
 
           // Update individual invoices
@@ -86,6 +91,8 @@ export async function processPayoutQueue() {
         } catch (dbErr) {
           await db.run('ROLLBACK').catch(() => {});
           throw dbErr;
+        } finally {
+          releaseSuccess();
         }
 
         // Fetch merchant details for email notification
