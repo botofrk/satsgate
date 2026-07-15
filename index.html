@@ -234,9 +234,9 @@
 
 <section class="hero">
   <div class="hero-content" style="max-width:800px; margin:0 auto; text-align:center; display:flex; flex-direction:column; align-items:center;">
-    <div class="badge" style="background:#fff;">🔒 Built on Lightning L402</div>
-    <h1 style="text-align:center; font-weight:800; font-family:'Inter', sans-serif;">Accept Lightning<br>payments in <span style="background:var(--fg); color:var(--bg); padding:0 8px; border-radius:4px; font-style:normal;">seconds</span>.</h1>
-    <p style="text-align:center; font-weight:500; font-size:18px; color:var(--muted);">The non-custodial split-payment gateway for online shops, apps, and AI agents. Cash out instantly to your wallet.</p>
+    <div class="badge" style="background:#fff;">🔒 Dual-Rail Payment Gateway</div>
+    <h1 style="text-align:center; font-weight:800; font-family:'Inter', sans-serif;">Accept Lightning & USDC<br>payments in <span style="background:var(--fg); color:var(--bg); padding:0 8px; border-radius:4px; font-style:normal;">seconds</span>.</h1>
+    <p style="text-align:center; font-weight:500; font-size:18px; color:var(--muted);">The non-custodial split-payment gateway for online shops, apps, and AI agents. Cash out instantly via Lightning or USDC on Base.</p>
     
     <div style="background: #fff; border: 2px solid #000; color: #000; padding: 8px 16px; border-radius: 20px; font-size: 13px; font-weight: 700; display: inline-flex; align-items: center; gap: 8px; margin-bottom: 24px; box-shadow: 3px 3px 0 #000;">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
@@ -347,13 +347,13 @@
       
       <div style="display:flex; flex-direction:column; gap:12px; max-width:480px; margin:0 auto;">
         <div class="demo-input" style="margin-bottom:0;">
-          <input type="text" id="demo-ln-address" value="" placeholder="Lightning Address (e.g. satoshi@getalby.com)">
+          <input type="text" id="demo-ln-address" value="demo-merchant@getalby.com" placeholder="Lightning Address (e.g. satoshi@getalby.com)">
         </div>
         <div class="demo-input" style="margin-bottom:0;">
-          <input type="text" id="demo-usdc-address" value="" placeholder="Base USDC Address (EVM e.g. 0xFCAd...)">
+          <input type="text" id="demo-usdc-address" value="0x89167843111222333444555666777888999000ab" placeholder="Base USDC Address (EVM e.g. 0xFCAd...)">
         </div>
         <div class="demo-input" style="margin-bottom:4px;">
-          <input type="email" id="demo-email" value="" placeholder="Your email (Optional, for payout alerts)">
+          <input type="email" id="demo-email" value="demo-alerts@aipp.dev" placeholder="Your email (Optional, for payout alerts)">
         </div>
         <button class="demo-btn" onclick="demoRegisterMerchant()" style="margin-top:0;">Link Wallet & Get Key</button>
       </div>
