@@ -977,7 +977,7 @@ async function submitWaitlist() {
   const usdcInput = document.getElementById('demo-usdc-address').value.trim();
   
   if (!emailInput || !emailInput.includes('@')) {
-    alert('Lütfen geçerli bir e-posta adresi girin.');
+    alert('Please enter a valid email address.');
     return;
   }
 
@@ -993,16 +993,16 @@ async function submitWaitlist() {
     });
     
     if (!response.ok) {
-      alert('Hata oluştu, lütfen tekrar deneyin.');
+      alert('An error occurred, please try again.');
       return;
     }
 
-    alert('Başarıyla bekleme listesine eklendiniz! Kapasite açıldığında size e-posta göndereceğiz.');
+    alert('You\'ve been added to the waitlist! We\'ll email you when a new slot opens up.');
     closeWaitlistModal();
     document.getElementById('waitlist-email').value = '';
     
   } catch (err) {
-    alert('Bağlantı hatası.');
+    alert('Connection error. Please check your internet and try again.');
   }
 }
 
