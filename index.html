@@ -126,11 +126,46 @@
   .demo-step.active{display:block;animation:fadeInUp 0.3s ease forwards}
   
   .demo-input{display:flex;gap:12px;margin-bottom:16px}
-  .demo-input input{flex:1;background:#fff;border:2px solid var(--border);border-radius:8px;padding:12px 16px;color:var(--fg);font-size:14px;outline:none; box-shadow: inset 2px 2px 0 rgba(0,0,0,0.05);}
-  .demo-input input:focus{border-color:#000; box-shadow: 3px 3px 0 #000;}
+  .demo-input input{flex:1;background:#fff;border:2px solid #000;border-radius:8px;padding:12px 16px;color:var(--fg);font-size:14px;outline:none; box-shadow: 2px 2px 0 #000; transition: all 0.15s;}
+  .demo-input input:focus{border-color:#000; box-shadow: 4px 4px 0 #000; transform: translate(-1px, -1px);}
   .demo-input button,.demo-btn{background:var(--accent);color:#fff;border:2px solid #000;border-radius:8px;padding:12px 20px;font-weight:700;font-size:14px;cursor:pointer; box-shadow: 4px 4px 0 #000; transition:all 0.2s;}
   .demo-input button:hover,.demo-btn:hover{transform:translate(-2px,-2px); box-shadow: 6px 6px 0 #000;}
   .demo-btn{width:100%;margin-top:12px;}
+  
+  .setup-card {
+    border: 2px solid #000;
+    border-radius: 12px;
+    padding: 16px 8px;
+    cursor: pointer;
+    transition: all 0.2s;
+    background: #fff;
+    text-align: center;
+    box-shadow: 2px 2px 0 #000;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+  }
+  .setup-card:hover {
+    transform: translate(-2px, -2px);
+    box-shadow: 4px 4px 0 #000;
+  }
+  .setup-card.active {
+    background: #ffcc00 !important;
+    box-shadow: 4px 4px 0 #000 !important;
+    transform: translate(-2px, -2px) !important;
+  }
+  
+  .payout-fields-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+  @media (min-width: 600px) {
+    .payout-fields-grid.dual-columns {
+      grid-template-columns: 1fr 1fr;
+    }
+  }
   
   .qr-box{text-align:center;padding:24px 0}
   .qr-box canvas{border:2px solid var(--border);border-radius:8px;margin-bottom:16px; box-shadow: 4px 4px 0 #000;}
@@ -346,22 +381,22 @@
       <p style="color:var(--muted);font-size:14px;margin-bottom:20px;font-weight:600;">Choose how you want to receive payments:</p>
       
       <!-- Visual Cards Selector -->
-      <div style="display:grid; grid-template-columns: repeat(3, 1fr); gap:12px; max-width:540px; margin:0 auto 24px auto;">
-        <div id="card-mode-ln" onclick="setSetupMode('ln')" style="border: 2px solid #000; border-radius: 12px; padding: 16px 8px; cursor: pointer; transition: all 0.2s; background: #fff; text-align: center; display: flex; flex-direction: column; align-items: center; justify-content: center;">
+      <div style="display:grid; grid-template-columns: repeat(3, 1fr); gap:16px; max-width:560px; margin:0 auto 24px auto;">
+        <div id="card-mode-ln" class="setup-card" onclick="setSetupMode('ln')">
           <div style="margin-bottom: 8px; display: flex; align-items: center; justify-content: center; height: 40px;">
             <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color: #ffcc00; filter: drop-shadow(1px 1px 0 #000);"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" fill="#ffcc00"></polygon></svg>
           </div>
           <div style="font-weight: 800; font-size: 13px; color: #000; margin-bottom: 2px;">Bitcoin Lightning</div>
           <div style="font-size: 10px; color: #555; line-height: 1.2;">Instant sats micropayments</div>
         </div>
-        <div id="card-mode-usdc" onclick="setSetupMode('usdc')" style="border: 2px solid #000; border-radius: 12px; padding: 16px 8px; cursor: pointer; transition: all 0.2s; background: #fff; text-align: center; display: flex; flex-direction: column; align-items: center; justify-content: center;">
+        <div id="card-mode-usdc" class="setup-card" onclick="setSetupMode('usdc')">
           <div style="margin-bottom: 8px; display: flex; align-items: center; justify-content: center; height: 40px;">
             <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color: #0052ff; filter: drop-shadow(1px 1px 0 #000);"><circle cx="12" cy="12" r="10" fill="#0052ff"></circle><path d="M12 6v12M15 9H11.5a2.5 2.5 0 0 0 0 5H13a2.5 2.5 0 0 1 0 5H9" stroke="#fff"></path></svg>
           </div>
           <div style="font-weight: 800; font-size: 13px; color: #000; margin-bottom: 2px;">Base USDC</div>
           <div style="font-size: 10px; color: #555; line-height: 1.2;">Stablecoin on Base L2</div>
         </div>
-        <div id="card-mode-both" onclick="setSetupMode('both')" style="border: 2px solid #000; border-radius: 12px; padding: 16px 8px; cursor: pointer; transition: all 0.2s; background: #ffcc00; text-align: center; box-shadow: 4px 4px 0 #000; transform: translate(-2px, -2px); display: flex; flex-direction: column; align-items: center; justify-content: center;">
+        <div id="card-mode-both" class="setup-card active" onclick="setSetupMode('both')">
           <div style="margin-bottom: 8px; display: flex; align-items: center; justify-content: center; height: 40px;">
             <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color: #000; filter: drop-shadow(1px 1px 0 #fff);"><path d="M7 10h14M21 10l-4-4M17 14H3M3 14l4 4" fill="none"></path></svg>
           </div>
@@ -370,26 +405,34 @@
         </div>
       </div>
 
-      <div style="display:flex; flex-direction:column; gap:16px; max-width:480px; margin:0 auto;">
-        <div id="wrapper-ln-address" style="text-align:left;">
-          <label style="font-size:12px; font-weight:700; color:#000; display:block; margin-bottom:6px;">👉 Your Bitcoin/Lightning Address (e.g. for payouts):</label>
-          <div class="demo-input" style="margin-bottom:0;">
-            <input type="text" id="demo-ln-address" value="demo-merchant@getalby.com" placeholder="Lightning Address (e.g. satoshi@getalby.com)">
+      <div style="display:flex; flex-direction:column; gap:16px; max-width:560px; margin:0 auto;">
+        <!-- Responsive Grid for Payout Fields -->
+        <div id="payout-fields-grid" class="payout-fields-grid dual-columns">
+          <div id="wrapper-ln-address" style="text-align:left;">
+            <label style="font-size:12px; font-weight:700; color:#000; display:block; margin-bottom:6px;">▸ Your Bitcoin/Lightning Address (for payouts):</label>
+            <div class="demo-input" style="margin-bottom:0;">
+              <input type="text" id="demo-ln-address" value="demo-merchant@getalby.com" placeholder="Lightning Address (e.g. satoshi@getalby.com)">
+            </div>
+          </div>
+          <div id="wrapper-usdc-address" style="text-align:left;">
+            <label style="font-size:12px; font-weight:700; color:#000; display:block; margin-bottom:6px;">▸ Your EVM / Base USDC Wallet Address:</label>
+            <div class="demo-input" style="margin-bottom:0;">
+              <input type="text" id="demo-usdc-address" value="0x89167843111222333444555666777888999000ab" placeholder="Base USDC Address (EVM e.g. 0xFCAd...)">
+            </div>
           </div>
         </div>
-        <div id="wrapper-usdc-address" style="text-align:left;">
-          <label style="font-size:12px; font-weight:700; color:#000; display:block; margin-bottom:6px;">👉 Your EVM / Base USDC Wallet Address:</label>
-          <div class="demo-input" style="margin-bottom:0;">
-            <input type="text" id="demo-usdc-address" value="0x89167843111222333444555666777888999000ab" placeholder="Base USDC Address (EVM e.g. 0xFCAd...)">
-          </div>
-        </div>
-        <div style="text-align:left;">
-          <label style="font-size:12px; font-weight:700; color:#000; display:block; margin-bottom:6px;">👉 Notification Email (Optional):</label>
+
+        <div style="text-align:left; max-width: 100%;">
+          <label style="font-size:12px; font-weight:700; color:#000; display:block; margin-bottom:6px;">▸ Notification Email (Optional):</label>
           <div class="demo-input" style="margin-bottom:0;">
             <input type="email" id="demo-email" value="demo-alerts@aipp.dev" placeholder="Your email (Optional, for payout alerts)">
           </div>
         </div>
-        <button class="demo-btn" onclick="demoRegisterMerchant()" style="margin-top:4px;">Link Wallet & Get Key</button>
+        
+        <div>
+          <button class="demo-btn" onclick="demoRegisterMerchant()" style="margin-top:4px;">Link Wallet & Get Key</button>
+          <div style="font-size:11px; color:#555; text-align:center; margin-top:8px; font-weight:600;">* Your API key will be saved and displayed in your dashboard.</div>
+        </div>
       </div>
 
       <div class="demo-note" style="margin-top:16px;">Input your real wallet addresses to get your permanent API key.</div>
@@ -770,20 +813,52 @@ function setSetupMode(mode) {
   const cardUsdc = document.getElementById('card-mode-usdc');
   const cardBoth = document.getElementById('card-mode-both');
   
-  [cardLn, cardUsdc, cardBoth].forEach(card => {
-    card.style.background = '#fff';
-    card.style.boxShadow = 'none';
-    card.style.transform = 'none';
-  });
+  [cardLn, cardUsdc, cardBoth].forEach(card => card.classList.remove('active'));
   
   const activeCard = mode === 'ln' ? cardLn : (mode === 'usdc' ? cardUsdc : cardBoth);
-  activeCard.style.background = '#ffcc00';
-  activeCard.style.boxShadow = '4px 4px 0 #000';
-  activeCard.style.transform = 'translate(-2px, -2px)';
+  activeCard.classList.add('active');
+  
+  const grid = document.getElementById('payout-fields-grid');
+  if (mode === 'both') {
+    grid.classList.add('dual-columns');
+  } else {
+    grid.classList.remove('dual-columns');
+  }
   
   document.getElementById('wrapper-ln-address').style.display = (mode === 'ln' || mode === 'both') ? 'block' : 'none';
   document.getElementById('wrapper-usdc-address').style.display = (mode === 'usdc' || mode === 'both') ? 'block' : 'none';
 }
+
+// ── LIVE INPUT VALIDATION ─────────────────────────────
+document.addEventListener('DOMContentLoaded', () => {
+  const lnInput = document.getElementById('demo-ln-address');
+  const usdcInput = document.getElementById('demo-usdc-address');
+  
+  const validateLn = () => {
+    const val = lnInput.value.trim();
+    if (!val || val.includes('@')) {
+      lnInput.style.borderColor = '#000';
+      lnInput.style.background = '#fff';
+    } else {
+      lnInput.style.borderColor = '#ef4444';
+      lnInput.style.background = '#fef2f2';
+    }
+  };
+  
+  const validateUsdc = () => {
+    const val = usdcInput.value.trim();
+    if (!val || /^0x[a-fA-F0-9]{40}$/.test(val)) {
+      usdcInput.style.borderColor = '#000';
+      usdcInput.style.background = '#fff';
+    } else {
+      usdcInput.style.borderColor = '#ef4444';
+      usdcInput.style.background = '#fef2f2';
+    }
+  };
+  
+  lnInput.addEventListener('input', validateLn);
+  usdcInput.addEventListener('input', validateUsdc);
+});
 
 // ── REGISTER MERCHANT ───────────────────────────────────
 async function demoRegisterMerchant() {
