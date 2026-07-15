@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>aipp.dev — Hukuki Beyan (Legal Disclaimer)</title>
+<link rel="icon" type="image/x-icon" href="favicon.ico">
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,700;1,600&family=Inter:wght@400;500;600;700&display=swap');
+  
+  *{margin:0;padding:0;box-sizing:border-box}
+  :root{
+    --bg: #ffcc00;
+    --fg: #000000;
+    --muted: #111111;
+    --accent: #000000;
+    --border: #000000;
+    --card: #ffffff;
+    --radius: 8px;
+  }
+  
+  body{
+    background-color: var(--bg);
+    color: var(--fg);
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    padding-bottom: 40px;
+  }
+  
+  nav{display:flex;align-items:center;justify-content:space-between;padding:24px 40px;border-bottom:2px solid var(--border);background:var(--bg);position:sticky;top:0;z-index:50;}
+  .logo{font-family: 'Inter', sans-serif;font-weight:700;font-size:20px;letter-spacing:-0.5px;text-decoration:none;color:var(--fg);display:flex;align-items:center;gap:8px;}
+  .logo span { color: var(--accent); }
+  
+  .nav-links{display:flex;align-items:center;gap:24px;}
+  .nav-links a{color:var(--fg);font-size:15px;font-weight:700;text-decoration:none;}
+  .nav-links .nav-cta{background:#fff;color:var(--fg);padding:10px 20px;border-radius:8px;font-weight:800;border: 2px solid #000; box-shadow: 4px 4px 0 #000;}
+  
+  .container {
+    max-width: 800px;
+    margin: 40px auto;
+    padding: 24px;
+  }
+  
+  .legal-box {
+    background: var(--card);
+    border: 3px solid var(--border);
+    border-radius: 12px;
+    padding: 40px;
+    box-shadow: 8px 8px 0 #000;
+  }
+  
+  h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: 36px;
+    font-weight: 700;
+    margin-bottom: 16px;
+  }
+  
+  .date {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--muted);
+    margin-bottom: 32px;
+    display: inline-block;
+    border-bottom: 2px solid var(--fg);
+    padding-bottom: 4px;
+  }
+  
+  h2 {
+    font-family: 'Playfair Display', serif;
+    font-size: 22px;
+    font-weight: 700;
+    margin-top: 32px;
+    margin-bottom: 12px;
+    border-left: 4px solid var(--bg);
+    padding-left: 12px;
+  }
+  
+  p {
+    font-size: 15px;
+    margin-bottom: 16px;
+    color: #333;
+  }
+  
+  ul {
+    margin-left: 24px;
+    margin-bottom: 20px;
+    font-size: 15px;
+    color: #333;
+  }
+  
+  li {
+    margin-bottom: 8px;
+  }
+  
+  footer {
+    text-align: center;
+    margin-top: 60px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--muted);
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <a href="/" class="logo"><svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="0" y="0" width="32" height="32" rx="8" fill="#000000"/><circle cx="14" cy="16" r="7" fill="none" stroke="#ffcc00" stroke-width="2.5"/><circle cx="14" cy="16" r="2.5" fill="#ffcc00"/><path d="M19.5 12 L24 16 L19.5 20" fill="none" stroke="#ffcc00" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg><span>aipp<span style="font-size:15px;font-weight:500;color:rgba(0,0,0,0.6)">.dev</span></span></a>
+  <div class="nav-links">
+    <a href="/">Ana Sayfa</a>
+    <a href="/docs.html">Dokümantasyon</a>
+    <a href="/dashboard.html" class="nav-cta">Dashboard</a>
+  </div>
+</nav>
+
+<div class="container">
+  <div class="legal-box">
+    <h1>Hukuki Beyan & Lisans Sözleşmesi</h1>
+    <span class="date">Son Güncelleme: 15 Temmuz 2026</span>
+    
+    <p>AIPP.dev, satıcıların ve yapay zeka ajanlarının kendi sunucularında çalıştırabilecekleri <strong>açık kaynak kodlu ve velayetsiz (non-custodial)</strong> bir ödeme yönlendirme yazılımıdır. Bu belge, yazılımın kullanım koşullarını, hukuki statüsünü ve platform ücretlerinin niteliğini tanımlar.</p>
+
+    <h2>1. Velayetsiz (Non-Custodial) Yazılım Statüsü</h2>
+    <p>AIPP.dev geliştiricileri ve kod sağlayıcıları; bankacılık, saklama (custody), para transferi veya borsa hizmeti sunmamaktadır.</p>
+    <ul>
+      <li>Yazılım, ödemeleri doğrudan kullanıcı tarafından belirtilen hedeflere (Lightning Address veya EVM cüzdanları) anında iletecek şekilde tasarlanmıştır.</li>
+      <li>Geliştiricilerin, kullanıcıların özel anahtarları (private keys), fonları veya veri tabanları üzerinde hiçbir erişimi, kontrolü veya tasarrufu yoktur.</li>
+    </ul>
+
+    <h2>2. %1 Platform Ücretinin Hukuki Niteliği</h2>
+    <p>AIPP.dev tarafından uygulanan %1 oranındaki kesinti, <strong>finansal komisyon veya para transfer aracılık bedeli değildir.</strong></p>
+    <ul>
+      <li>Bu kesinti, açık kaynaklı yazılımın geliştirilmesi, güncellenmesi ve açık kaynak ekosisteminin sürdürülebilmesi için uygulanan <strong>"Merkeziyetsiz Yazılım Lisanslama ve Yönlendirme Ücreti" (Software Routing & Licensing Fee)</strong>'dir.</li>
+      <li>DeFi (merkeziyetsiz finans) dünyasındaki standart uygulamalara (MetaMask Swap ücretleri, Uniswap router ücretleri vb.) paralel olarak; yazılım kodu düzeyinde otomatik bir split (bölme) işlemi olarak gerçekleşir. Fonlar hiçbir zaman geliştiricilerin saklamasında toplanıp dağıtılmaz.</li>
+    </ul>
+
+    <h2>3. Sorumluluk Reddi (Limitation of Liability)</h2>
+    <p>Yazılım "OLDUĞU GİBİ" (AS IS) sunulmuştur. Geliştiriciler, yazılımın kullanımından doğabilecek finansal kayıplar, sistem kesintileri veya yasal sorumluluklardan ötürü sorumlu tutulamaz. AIPP yazılımını kendi sunucusunda kurup çalıştıran her satıcı, kendi yerel hukuk kurallarına (vergi, lisanslama vb.) uymaktan bizzat sorumludur.</p>
+  </div>
+  
+  <footer>
+    © 2026 aipp.dev — The non-custodial gateway
+  </footer>
+</div>
+
+</body>
+</html>
