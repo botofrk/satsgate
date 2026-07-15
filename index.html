@@ -126,7 +126,7 @@
   .demo-step.active{display:block;animation:fadeInUp 0.3s ease forwards}
   
   .demo-input{display:flex;gap:12px;margin-bottom:16px}
-  .demo-input input{flex:1;background:#fff;border:2px solid #000;border-radius:8px;padding:12px 16px;color:var(--fg);font-size:14px;outline:none; box-shadow: 2px 2px 0 #000; transition: all 0.15s;}
+  .demo-input input{flex:1;background:#fff;border:3px solid #000;border-radius:8px;padding:12px 16px;color:var(--fg);font-size:12px;font-family:'Fira Code', monospace;outline:none; box-shadow: 2px 2px 0 #000; transition: all 0.15s;}
   .demo-input input:focus{border-color:#000; box-shadow: 4px 4px 0 #000; transform: translate(-1px, -1px);}
   .demo-input button,.demo-btn{background:var(--accent);color:#fff;border:2px solid #000;border-radius:8px;padding:12px 20px;font-weight:700;font-size:14px;cursor:pointer; box-shadow: 4px 4px 0 #000; transition:all 0.2s;}
   .demo-input button:hover,.demo-btn:hover{transform:translate(-2px,-2px); box-shadow: 6px 6px 0 #000;}
@@ -431,11 +431,9 @@
         
         <div>
           <button class="demo-btn" onclick="demoRegisterMerchant()" style="margin-top:4px;">Link Wallet & Get Key</button>
-          <div style="font-size:11px; color:#555; text-align:center; margin-top:8px; font-weight:600;">* Your API key will be saved and displayed in your dashboard.</div>
+          <div style="font-size:11px; color:#555; text-align:center; margin-top:8px; font-weight:600;">* Enter your real wallet addresses to get a permanent API key. It will be saved in your dashboard.</div>
         </div>
       </div>
-
-      <div class="demo-note" style="margin-top:16px;">Input your real wallet addresses to get your permanent API key.</div>
     </div>
 
     <!-- STEP 2: Checkout -->
