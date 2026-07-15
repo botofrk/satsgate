@@ -128,12 +128,16 @@
   .demo-input{display:flex;gap:12px;margin-bottom:16px}
   .demo-input input{flex:1;background:#fff;border:3px solid #000;border-radius:8px;padding:12px 16px;color:var(--fg);font-size:12px;font-family:'Fira Code', monospace;outline:none; box-shadow: 2px 2px 0 #000; transition: all 0.15s;}
   .demo-input input:focus{border-color:#000; box-shadow: 4px 4px 0 #000; transform: translate(-1px, -1px);}
+  .demo-input input.input-normal{font-family:'Inter', sans-serif; font-size:14px;}
+  .demo-input input.input-error{border-color:#ef4444 !important; background:#fef2f2; box-shadow: 2px 2px 0 #ef4444;}
+  .input-error-msg{font-size:10px;color:#ef4444;font-weight:700;margin-top:4px;display:none;}
+  .input-error-msg.visible{display:block;}
   .demo-input button,.demo-btn{background:var(--accent);color:#fff;border:2px solid #000;border-radius:8px;padding:12px 20px;font-weight:700;font-size:14px;cursor:pointer; box-shadow: 4px 4px 0 #000; transition:all 0.2s;}
   .demo-input button:hover,.demo-btn:hover{transform:translate(-2px,-2px); box-shadow: 6px 6px 0 #000;}
   .demo-btn{width:100%;margin-top:12px;}
   
   .setup-card {
-    border: 2px solid #000;
+    border: 3px solid #000;
     border-radius: 12px;
     padding: 16px 8px;
     cursor: pointer;
@@ -398,7 +402,10 @@
         </div>
         <div id="card-mode-both" class="setup-card active" onclick="setSetupMode('both')">
           <div style="margin-bottom: 8px; display: flex; align-items: center; justify-content: center; height: 40px;">
-            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color: #000; filter: drop-shadow(1px 1px 0 #fff);"><path d="M7 10h14M21 10l-4-4M17 14H3M3 14l4 4" fill="none"></path></svg>
+            <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="filter: drop-shadow(1px 1px 0 rgba(0,0,0,0.3));">
+              <polygon points="3,8 11,8 11,4 21,10 11,16 11,12 3,12" fill="#ffcc00" stroke="#000"></polygon>
+              <polygon points="21,16 13,16 13,20 3,14 13,8 13,12 21,12" fill="#000" stroke="#000"></polygon>
+            </svg>
           </div>
           <div style="font-weight: 800; font-size: 13px; color: #000; margin-bottom: 2px;">Both (Dual-Rail)</div>
           <div style="font-size: 10px; color: #000; font-weight: 600; line-height: 1.2;">Accept Lightning & USDC</div>
@@ -409,23 +416,25 @@
         <!-- Responsive Grid for Payout Fields -->
         <div id="payout-fields-grid" class="payout-fields-grid dual-columns">
           <div id="wrapper-ln-address" style="text-align:left;">
-            <label style="font-size:12px; font-weight:700; color:#000; display:block; margin-bottom:6px;">▸ Your Bitcoin/Lightning Address (for payouts):</label>
+            <label style="font-size:12px; font-weight:700; color:#000; display:block; margin-bottom:6px;">▸ Lightning Address (for payouts):</label>
             <div class="demo-input" style="margin-bottom:0;">
-              <input type="text" id="demo-ln-address" value="demo-merchant@getalby.com" placeholder="Lightning Address (e.g. satoshi@getalby.com)">
+              <input type="text" id="demo-ln-address" value="demo-merchant@getalby.com" placeholder="e.g. satoshi@getalby.com">
             </div>
+            <div id="ln-error" class="input-error-msg">⚠ Must be a valid Lightning Address (user@domain.com)</div>
           </div>
           <div id="wrapper-usdc-address" style="text-align:left;">
-            <label style="font-size:12px; font-weight:700; color:#000; display:block; margin-bottom:6px;">▸ Your EVM / Base USDC Wallet Address:</label>
+            <label style="font-size:12px; font-weight:700; color:#000; display:block; margin-bottom:6px;">▸ EVM / Base USDC Address:</label>
             <div class="demo-input" style="margin-bottom:0;">
-              <input type="text" id="demo-usdc-address" value="0x89167843111222333444555666777888999000ab" placeholder="Base USDC Address (EVM e.g. 0xFCAd...)">
+              <input type="text" id="demo-usdc-address" value="0x89167843111222333444555666777888999000ab" placeholder="0x...">
             </div>
+            <div id="usdc-error" class="input-error-msg">⚠ Must be a valid EVM address (0x + 40 hex chars)</div>
           </div>
         </div>
 
         <div style="text-align:left; max-width: 100%;">
-          <label style="font-size:12px; font-weight:700; color:#000; display:block; margin-bottom:6px;">▸ Notification Email (Optional):</label>
+          <label style="font-size:12px; font-weight:700; color:#000; display:block; margin-bottom:6px;">▸ Notification Email <span style="font-weight:500; color:#666;">(Optional):</span></label>
           <div class="demo-input" style="margin-bottom:0;">
-            <input type="email" id="demo-email" value="demo-alerts@aipp.dev" placeholder="Your email (Optional, for payout alerts)">
+            <input type="email" id="demo-email" class="input-normal" value="demo-alerts@aipp.dev" placeholder="your@email.com">
           </div>
         </div>
         
@@ -829,78 +838,94 @@ function setSetupMode(mode) {
 
 // ── LIVE INPUT VALIDATION ─────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
-  const lnInput = document.getElementById('demo-ln-address');
+  const lnInput   = document.getElementById('demo-ln-address');
   const usdcInput = document.getElementById('demo-usdc-address');
-  
+  const lnError   = document.getElementById('ln-error');
+  const usdcError = document.getElementById('usdc-error');
+
+  const LN_REGEX   = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
+  const EVM_REGEX  = /^0x[a-fA-F0-9]{40}$/;
+
   const validateLn = () => {
     const val = lnInput.value.trim();
-    if (!val || val.includes('@')) {
-      lnInput.style.borderColor = '#000';
-      lnInput.style.background = '#fff';
+    if (!val || LN_REGEX.test(val)) {
+      lnInput.classList.remove('input-error');
+      lnError.classList.remove('visible');
     } else {
-      lnInput.style.borderColor = '#ef4444';
-      lnInput.style.background = '#fef2f2';
+      lnInput.classList.add('input-error');
+      lnError.classList.add('visible');
     }
   };
-  
+
   const validateUsdc = () => {
     const val = usdcInput.value.trim();
-    if (!val || /^0x[a-fA-F0-9]{40}$/.test(val)) {
-      usdcInput.style.borderColor = '#000';
-      usdcInput.style.background = '#fff';
+    if (!val || EVM_REGEX.test(val)) {
+      usdcInput.classList.remove('input-error');
+      usdcError.classList.remove('visible');
     } else {
-      usdcInput.style.borderColor = '#ef4444';
-      usdcInput.style.background = '#fef2f2';
+      usdcInput.classList.add('input-error');
+      usdcError.classList.add('visible');
     }
   };
-  
+
   lnInput.addEventListener('input', validateLn);
   usdcInput.addEventListener('input', validateUsdc);
 });
 
 // ── REGISTER MERCHANT ───────────────────────────────────
 async function demoRegisterMerchant() {
-  let lnInput = document.getElementById('demo-ln-address').value.trim();
-  let usdcInput = document.getElementById('demo-usdc-address').value.trim();
+  const LN_REGEX  = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
+  const EVM_REGEX = /^0x[a-fA-F0-9]{40}$/;
+
+  const lnEl    = document.getElementById('demo-ln-address');
+  const usdcEl  = document.getElementById('demo-usdc-address');
+  const lnErr   = document.getElementById('ln-error');
+  const usdcErr = document.getElementById('usdc-error');
+
+  let lnVal   = lnEl.value.trim();
+  let usdcVal = usdcEl.value.trim();
   const emailInput = document.getElementById('demo-email').value.trim();
-  
+
+  // Reset errors
+  lnEl.classList.remove('input-error');   lnErr.classList.remove('visible');
+  usdcEl.classList.remove('input-error'); usdcErr.classList.remove('visible');
+
+  let hasError = false;
+
   if (currentSetupMode === 'ln') {
-    usdcInput = '';
-    if (!lnInput) {
-      alert('Please enter a Lightning Address.');
-      return;
+    usdcVal = '';
+    if (!lnVal || !LN_REGEX.test(lnVal)) {
+      lnEl.classList.add('input-error'); lnErr.classList.add('visible');
+      lnEl.focus(); hasError = true;
     }
   } else if (currentSetupMode === 'usdc') {
-    lnInput = '';
-    if (!usdcInput) {
-      alert('Please enter a Base USDC Address.');
-      return;
+    lnVal = '';
+    if (!usdcVal || !EVM_REGEX.test(usdcVal)) {
+      usdcEl.classList.add('input-error'); usdcErr.classList.add('visible');
+      usdcEl.focus(); hasError = true;
     }
   } else {
-    if (!lnInput || !usdcInput) {
-      alert('Please enter both a Lightning Address and a Base USDC Address for Dual-Rail setup.');
-      return;
+    if (!lnVal || !LN_REGEX.test(lnVal)) {
+      lnEl.classList.add('input-error'); lnErr.classList.add('visible');
+      hasError = true;
     }
+    if (!usdcVal || !EVM_REGEX.test(usdcVal)) {
+      usdcEl.classList.add('input-error'); usdcErr.classList.add('visible');
+      hasError = true;
+    }
+    if (hasError) { lnEl.focus(); }
   }
 
-  if (lnInput && !lnInput.includes('@')) {
-    alert('Please enter a valid Lightning Address (e.g. username@domain.com)');
-    return;
-  }
-
-  if (usdcInput && !/^0x[a-fA-F0-9]{40}$/.test(usdcInput)) {
-    alert('Please enter a valid Base USDC Address (EVM 40-char hex starting with 0x)');
-    return;
-  }
+  if (hasError) return;
 
   if (emailInput && !emailInput.includes('@')) {
-    alert('Please enter a valid email address.');
+    document.getElementById('demo-email').focus();
     return;
   }
 
   const payload = { email: emailInput || null };
-  if (lnInput) payload.ln_address = lnInput;
-  if (usdcInput) payload.usdc_address = usdcInput;
+  if (lnVal) payload.ln_address = lnVal;
+  if (usdcVal) payload.usdc_address = usdcVal;
 
   try {
     const response = await fetch(`${AIPP_API}/merchant/register`, {
