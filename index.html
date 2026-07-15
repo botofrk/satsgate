@@ -343,30 +343,42 @@
 
     <!-- STEP 1: Get API Key -->
     <div class="demo-step active" id="step0">
-      <p style="color:var(--muted);font-size:14px;margin-bottom:16px">Choose your preferred payment method to configure your Merchant API Key:</p>
+      <p style="color:var(--muted);font-size:14px;margin-bottom:20px;font-weight:600;">Choose how you want to receive payments:</p>
       
-      <!-- Selection Tabs -->
-      <div style="display:flex; gap:8px; max-width:480px; margin:0 auto 20px auto; justify-content:center;">
-        <button type="button" id="btn-mode-ln" onclick="setSetupMode('ln')" style="flex:1; padding:10px; border:2px solid #000; border-radius:8px; font-weight:700; background:#fff; cursor:pointer; font-size:13px; transition: all 0.15s;">⚡ Lightning</button>
-        <button type="button" id="btn-mode-usdc" onclick="setSetupMode('usdc')" style="flex:1; padding:10px; border:2px solid #000; border-radius:8px; font-weight:700; background:#fff; cursor:pointer; font-size:13px; transition: all 0.15s;">🔵 Base USDC</button>
-        <button type="button" id="btn-mode-both" onclick="setSetupMode('both')" style="flex:1; padding:10px; border:2px solid #000; border-radius:8px; font-weight:700; background:#ffcc00; cursor:pointer; font-size:13px; transition: all 0.15s; box-shadow: 2px 2px 0 #000; transform: translate(-1px, -1px);">🔀 Both (Dual-Rail)</button>
+      <!-- Visual Cards Selector -->
+      <div style="display:grid; grid-template-columns: repeat(3, 1fr); gap:12px; max-width:540px; margin:0 auto 24px auto;">
+        <div id="card-mode-ln" onclick="setSetupMode('ln')" style="border: 2px solid #000; border-radius: 12px; padding: 16px 8px; cursor: pointer; transition: all 0.2s; background: #fff; text-align: center;">
+          <div style="font-size: 28px; margin-bottom: 6px;">⚡</div>
+          <div style="font-weight: 800; font-size: 13px; color: #000; margin-bottom: 2px;">Bitcoin Lightning</div>
+          <div style="font-size: 10px; color: #555; line-height: 1.2;">Instant sats micropayments</div>
+        </div>
+        <div id="card-mode-usdc" onclick="setSetupMode('usdc')" style="border: 2px solid #000; border-radius: 12px; padding: 16px 8px; cursor: pointer; transition: all 0.2s; background: #fff; text-align: center;">
+          <div style="font-size: 28px; margin-bottom: 6px;">🔵</div>
+          <div style="font-weight: 800; font-size: 13px; color: #000; margin-bottom: 2px;">Base USDC</div>
+          <div style="font-size: 10px; color: #555; line-height: 1.2;">Stablecoin on Base L2</div>
+        </div>
+        <div id="card-mode-both" onclick="setSetupMode('both')" style="border: 2px solid #000; border-radius: 12px; padding: 16px 8px; cursor: pointer; transition: all 0.2s; background: #ffcc00; text-align: center; box-shadow: 4px 4px 0 #000; transform: translate(-2px, -2px);">
+          <div style="font-size: 28px; margin-bottom: 6px;">🔀</div>
+          <div style="font-weight: 800; font-size: 13px; color: #000; margin-bottom: 2px;">Both (Dual-Rail)</div>
+          <div style="font-size: 10px; color: #000; font-weight: 600; line-height: 1.2;">Accept Lightning & USDC</div>
+        </div>
       </div>
 
       <div style="display:flex; flex-direction:column; gap:16px; max-width:480px; margin:0 auto;">
         <div id="wrapper-ln-address" style="text-align:left;">
-          <label style="font-size:12px; font-weight:700; color:#000; display:block; margin-bottom:6px;">⚡ Lightning Address <span style="color:#ef4444;">*</span></label>
+          <label style="font-size:12px; font-weight:700; color:#000; display:block; margin-bottom:6px;">👉 Your Bitcoin/Lightning Address (e.g. for payouts):</label>
           <div class="demo-input" style="margin-bottom:0;">
             <input type="text" id="demo-ln-address" value="demo-merchant@getalby.com" placeholder="Lightning Address (e.g. satoshi@getalby.com)">
           </div>
         </div>
         <div id="wrapper-usdc-address" style="text-align:left;">
-          <label style="font-size:12px; font-weight:700; color:#000; display:block; margin-bottom:6px;">🔵 Base USDC Address (EVM) <span style="color:#ef4444;">*</span></label>
+          <label style="font-size:12px; font-weight:700; color:#000; display:block; margin-bottom:6px;">👉 Your EVM / Base USDC Wallet Address:</label>
           <div class="demo-input" style="margin-bottom:0;">
             <input type="text" id="demo-usdc-address" value="0x89167843111222333444555666777888999000ab" placeholder="Base USDC Address (EVM e.g. 0xFCAd...)">
           </div>
         </div>
         <div style="text-align:left;">
-          <label style="font-size:12px; font-weight:700; color:#000; display:block; margin-bottom:6px;">📧 Notification Email <span style="color:#666; font-weight:500;">(Optional)</span></label>
+          <label style="font-size:12px; font-weight:700; color:#000; display:block; margin-bottom:6px;">👉 Notification Email (Optional):</label>
           <div class="demo-input" style="margin-bottom:0;">
             <input type="email" id="demo-email" value="demo-alerts@aipp.dev" placeholder="Your email (Optional, for payout alerts)">
           </div>
@@ -748,20 +760,20 @@ let currentSetupMode = 'both';
 function setSetupMode(mode) {
   currentSetupMode = mode;
   
-  const btnLn = document.getElementById('btn-mode-ln');
-  const btnUsdc = document.getElementById('btn-mode-usdc');
-  const btnBoth = document.getElementById('btn-mode-both');
+  const cardLn = document.getElementById('card-mode-ln');
+  const cardUsdc = document.getElementById('card-mode-usdc');
+  const cardBoth = document.getElementById('card-mode-both');
   
-  [btnLn, btnUsdc, btnBoth].forEach(btn => {
-    btn.style.background = '#fff';
-    btn.style.boxShadow = 'none';
-    btn.style.transform = 'none';
+  [cardLn, cardUsdc, cardBoth].forEach(card => {
+    card.style.background = '#fff';
+    card.style.boxShadow = 'none';
+    card.style.transform = 'none';
   });
   
-  const activeBtn = mode === 'ln' ? btnLn : (mode === 'usdc' ? btnUsdc : btnBoth);
-  activeBtn.style.background = '#ffcc00';
-  activeBtn.style.boxShadow = '2px 2px 0 #000';
-  activeBtn.style.transform = 'translate(-1px, -1px)';
+  const activeCard = mode === 'ln' ? cardLn : (mode === 'usdc' ? cardUsdc : cardBoth);
+  activeCard.style.background = '#ffcc00';
+  activeCard.style.boxShadow = '4px 4px 0 #000';
+  activeCard.style.transform = 'translate(-2px, -2px)';
   
   document.getElementById('wrapper-ln-address').style.display = (mode === 'ln' || mode === 'both') ? 'block' : 'none';
   document.getElementById('wrapper-usdc-address').style.display = (mode === 'usdc' || mode === 'both') ? 'block' : 'none';
