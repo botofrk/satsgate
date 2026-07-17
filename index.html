@@ -268,7 +268,7 @@
     <a href="#how">How it works</a>
     <a href="#get-started">Get Started</a>
     <a href="docs.html">Docs</a>
-    <a href="l402.html">L402 Demo</a>
+    <a href="l402.html">For AI Agents</a>
     <a href="paywall-demo.html">Paywall</a>
     <a href="dashboard.html" class="nav-cta">Dashboard</a>
   </div>
@@ -276,9 +276,9 @@
 
 <section class="hero">
   <div class="hero-content" style="max-width:800px; margin:0 auto; text-align:center; display:flex; flex-direction:column; align-items:center;">
-    <div class="badge" style="background:#fff;">🔒 Dual-Rail Payment Gateway</div>
-    <h1 style="text-align:center; font-weight:800; font-family:'Inter', sans-serif;">Accept Lightning & USDC<br>payments in <span style="background:var(--fg); color:var(--bg); padding:0 8px; border-radius:4px; font-style:normal;">seconds</span>.</h1>
-    <p style="text-align:center; font-weight:500; font-size:18px; color:var(--muted);">The non-custodial split-payment gateway for online shops, apps, and AI agents. Cash out instantly via Lightning or USDC on Base.</p>
+    <div class="badge" style="background:#fff;">⚡ No bank account needed</div>
+    <h1 style="text-align:center; font-weight:800; font-family:'Inter', sans-serif;">Accept Bitcoin & USDC<br>payments in <span style="background:var(--fg); color:var(--bg); padding:0 8px; border-radius:4px; font-style:normal;">seconds</span>.</h1>
+    <p style="text-align:center; font-weight:500; font-size:18px; color:var(--muted);">Add a payment button to your app or website. Your customers pay — you receive 99% directly in your own wallet. No middleman holds your money.</p>
     
     <div style="background: #fff; border: 2px solid #000; color: #000; padding: 8px 16px; border-radius: 20px; font-size: 13px; font-weight: 700; display: inline-flex; align-items: center; gap: 8px; margin-bottom: 24px; box-shadow: 3px 3px 0 #000;">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
@@ -393,14 +393,14 @@
             <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color: #ffcc00; filter: drop-shadow(1px 1px 0 #000);"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" fill="#ffcc00"></polygon></svg>
           </div>
           <div style="font-weight: 800; font-size: 13px; color: #000; margin-bottom: 2px;">Bitcoin Lightning</div>
-          <div style="font-size: 10px; color: #555; line-height: 1.2;">Instant sats micropayments</div>
+          <div style="font-size: 10px; color: #555; line-height: 1.2;">Instant, near-zero fee</div>
         </div>
         <div id="card-mode-usdc" class="setup-card" onclick="setSetupMode('usdc')">
           <div style="margin-bottom: 8px; display: flex; align-items: center; justify-content: center; height: 40px;">
             <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color: #0052ff; filter: drop-shadow(1px 1px 0 #000);"><circle cx="12" cy="12" r="10" fill="#0052ff"></circle><path d="M12 6v12M15 9H11.5a2.5 2.5 0 0 0 0 5H13a2.5 2.5 0 0 1 0 5H9" stroke="#fff"></path></svg>
           </div>
           <div style="font-weight: 800; font-size: 13px; color: #000; margin-bottom: 2px;">Base USDC</div>
-          <div style="font-size: 10px; color: #555; line-height: 1.2;">Stablecoin on Base L2</div>
+          <div style="font-size: 10px; color: #555; line-height: 1.2;">Dollar-pegged, no volatility</div>
         </div>
         <div id="card-mode-both" class="setup-card active" onclick="setSetupMode('both')">
           <div style="margin-bottom: 8px; display: flex; align-items: center; justify-content: center; height: 40px;">
@@ -418,25 +418,25 @@
         <!-- Responsive Grid for Payout Fields -->
         <div id="payout-fields-grid" class="payout-fields-grid dual-columns">
           <div id="wrapper-ln-address" style="text-align:left;">
-            <label style="font-size:12px; font-weight:700; color:#000; display:block; margin-bottom:6px;">▸ Lightning Address (for payouts):</label>
+            <label style="font-size:12px; font-weight:700; color:#000; display:block; margin-bottom:6px;">▸ Your Lightning Address <span style="font-weight:500;color:#666;">(where you receive payments)</span>:</label>
             <div class="demo-input" style="margin-bottom:0;">
-              <input type="text" id="demo-ln-address" value="demo-merchant@getalby.com" placeholder="e.g. satoshi@getalby.com">
+              <input type="text" id="demo-ln-address" value="" placeholder="e.g. yourname@getalby.com">
             </div>
             <div id="ln-error" class="input-error-msg">⚠ Must be a valid Lightning Address (user@domain.com)</div>
           </div>
           <div id="wrapper-usdc-address" style="text-align:left;">
-            <label style="font-size:12px; font-weight:700; color:#000; display:block; margin-bottom:6px;">▸ EVM / Base USDC Address:</label>
+            <label style="font-size:12px; font-weight:700; color:#000; display:block; margin-bottom:6px;">▸ USDC Wallet Address <span style="font-weight:500;color:#666;">(Base / Ethereum)</span>:</label>
             <div class="demo-input" style="margin-bottom:0;">
-              <input type="text" id="demo-usdc-address" value="0x89167843111222333444555666777888999000ab" placeholder="0x...">
+              <input type="text" id="demo-usdc-address" value="" placeholder="0x... (your MetaMask or Coinbase wallet)">
             </div>
             <div id="usdc-error" class="input-error-msg">⚠ Must be a valid EVM address (0x + 40 hex chars)</div>
           </div>
         </div>
 
         <div style="text-align:left; max-width: 100%;">
-          <label style="font-size:12px; font-weight:700; color:#000; display:block; margin-bottom:6px;">▸ Notification Email <span style="font-weight:500; color:#666;">(Optional):</span></label>
+          <label style="font-size:12px; font-weight:700; color:#000; display:block; margin-bottom:6px;">▸ Email for payment alerts <span style="font-weight:500; color:#666;">(Optional):</span></label>
           <div class="demo-input" style="margin-bottom:0;">
-            <input type="email" id="demo-email" class="input-normal" value="demo-alerts@aipp.dev" placeholder="your@email.com">
+            <input type="email" id="demo-email" class="input-normal" value="" placeholder="your@email.com">
           </div>
         </div>
         
