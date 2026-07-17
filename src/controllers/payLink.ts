@@ -231,8 +231,11 @@ export const renderPaymentPage = async (req: Request, res: Response, next: NextF
 <body>
 
 <div class="pay-card">
-  <span class="badge">aipp Checkout</span>
-  <h2>${link.title}</h2>
+  <span class="badge" style="background:#22c55e;color:#fff;display:inline-flex;align-items:center;gap:4px;">
+    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+    Secure Checkout
+  </span>
+  <h2 style="margin-top:12px;">${link.title}</h2>
   <div class="price-tag">$${link.amount_usd.toFixed(2)} <span>USD</span></div>
 
   <div id="payment-selection">
@@ -241,6 +244,19 @@ export const renderPaymentPage = async (req: Request, res: Response, next: NextF
       <button class="selector-btn" id="btn-usdc" onclick="setMode('X402')">Base USDC</button>
     </div>
     <button class="btn-pay" id="pay-action-btn" onclick="generateInvoice()">Pay Now</button>
+    
+    <!-- Trust features badges -->
+    <div style="margin-top:20px;display:flex;flex-direction:column;gap:8px;text-align:left;background:#f8fafc;padding:12px;border:2px solid #000;border-radius:8px;">
+      <div style="font-size:11px;font-weight:700;display:flex;align-items:center;gap:6px;">
+        <span style="color:#22c55e;">✔</span> 100% Non-Custodial (Wallet-to-Wallet)
+      </div>
+      <div style="font-size:11px;font-weight:700;display:flex;align-items:center;gap:6px;">
+        <span style="color:#22c55e;">✔</span> Direct instant payout to merchant
+      </div>
+      <div style="font-size:11px;font-weight:700;display:flex;align-items:center;gap:6px;">
+        <span style="color:#22c55e;">✔</span> No account setup required for buyer
+      </div>
+    </div>
   </div>
 
   <div class="status-area" id="status-area">
@@ -254,8 +270,9 @@ export const renderPaymentPage = async (req: Request, res: Response, next: NextF
     </div>
   </div>
 
-  <footer>
-    Secure & instant via aipp.dev
+  <footer style="margin-top:24px;font-size:11px;color:#71717a;font-weight:600;display:flex;align-items:center;justify-content:center;gap:4px;">
+    <span>🔒 Powered by</span>
+    <a href="https://aipp.dev" target="_blank" style="color:#000;text-decoration:underline;font-weight:700;">aipp.dev</a>
   </footer>
 </div>
 
