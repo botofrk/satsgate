@@ -275,19 +275,53 @@
 </nav>
 
 <section class="hero">
-  <div class="hero-content" style="max-width:800px; margin:0 auto; text-align:center; display:flex; flex-direction:column; align-items:center;">
-    <div class="badge" style="background:#fff;">⚡ No bank account needed</div>
-    <h1 style="text-align:center; font-weight:800; font-family:'Inter', sans-serif;">Accept Bitcoin & USDC<br>payments in <span style="background:var(--fg); color:var(--bg); padding:0 8px; border-radius:4px; font-style:normal;">seconds</span>.</h1>
-    <p style="text-align:center; font-weight:500; font-size:18px; color:var(--muted);">Add a payment button to your app, or generate instant payment links with zero code. Receive 99% directly in your own wallet.</p>
+  <div class="hero-content" style="max-width:850px; margin:0 auto; text-align:center; display:flex; flex-direction:column; align-items:center;">
+    <div class="badge" style="background:#fff; font-weight:800;">⚡ Artificial Intelligence Payment Protocol (AIPP)</div>
+    <h1 style="text-align:center; font-weight:900; font-family:'Inter', sans-serif; line-height:1.05; letter-spacing:-1.5px;">Give your apps &amp; AI agents a <span style="background:var(--fg); color:var(--bg); padding:0 8px; border-radius:4px; font-style:normal;">global wallet</span>.</h1>
+    <p style="text-align:center; font-weight:600; font-size:18px; color:var(--muted); margin-top:16px; max-width:700px;">Accept instant payments from humans or autonomous agents. Split revenues, dodge chargebacks, and withdraw instantly to Bitcoin Lightning or Base USDC.</p>
     
-    <div style="background: #fff; border: 2px solid #000; color: #000; padding: 8px 16px; border-radius: 20px; font-size: 13px; font-weight: 700; display: inline-flex; align-items: center; gap: 8px; margin-bottom: 24px; box-shadow: 3px 3px 0 #000;">
+    <div style="background: #fff; border: 2px solid #000; color: #000; padding: 8px 16px; border-radius: 20px; font-size: 13px; font-weight: 700; display: inline-flex; align-items: center; gap: 8px; margin-top: 12px; margin-bottom: 24px; box-shadow: 3px 3px 0 #000;">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
-      Private Beta — Limited to 100 Merchants
+      Non-Custodial · Instant Settlements · Zero Custody Risk
     </div>
 
     <div class="cta-row" style="justify-content:center;">
-      <a href="#get-started" class="btn btn-primary">Get API Key &amp; Links →</a>
-      <a href="docs.html" class="btn btn-ghost">Read the docs</a>
+      <a href="#get-started" class="btn btn-primary">Link Your Wallet →</a>
+      <a href="docs.html" class="btn btn-ghost">Read API Docs</a>
+    </div>
+  </div>
+</section>
+
+<!-- WHO IS THIS FOR SECTION -->
+<section class="section" style="padding-top:20px; padding-bottom:40px;">
+  <div class="label">Target Audiences</div>
+  <h2>Who is AIPP built for?</h2>
+  <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 24px;">
+    <!-- Card 1: Creators -->
+    <div style="background:#fff; border:2px solid #000; border-radius:8px; padding:24px; box-shadow: 5px 5px 0 #000; text-align: left;">
+      <div style="font-size:24px; margin-bottom:12px;">✍</div>
+      <h3 style="font-size:17px; font-weight:800; margin-bottom:8px;">Creators &amp; Writers</h3>
+      <p style="font-size:13px; color:#52525b; line-height:1.5; font-weight:500;">
+        Sell PDFs, premium newsletters, or digital goods. Paste your wallet address, get a checkout link, and start charging in 30 seconds. **No code required.**
+      </p>
+    </div>
+    
+    <!-- Card 2: SaaS Developers -->
+    <div style="background:#fff; border:2px solid #000; border-radius:8px; padding:24px; box-shadow: 5px 5px 0 #000; text-align: left;">
+      <div style="font-size:24px; margin-bottom:12px;">💻</div>
+      <h3 style="font-size:17px; font-weight:800; margin-bottom:8px;">SaaS &amp; Web Developers</h3>
+      <p style="font-size:13px; color:#52525b; line-height:1.5; font-weight:500;">
+        Ditch Stripe's high fees and strict geographic blocks. Integrate global micropayments down to $0.01 with standard API endpoints and instant Webhook delivery.
+      </p>
+    </div>
+
+    <!-- Card 3: AI Agents -->
+    <div style="background:#fff; border:2px solid #000; border-radius:8px; padding:24px; box-shadow: 5px 5px 0 #000; text-align: left;">
+      <div style="font-size:24px; margin-bottom:12px;">🤖</div>
+      <h3 style="font-size:17px; font-weight:800; margin-bottom:8px;">Autonomous AI Agents</h3>
+      <p style="font-size:13px; color:#52525b; line-height:1.5; font-weight:500;">
+        Give your AI agents programmatic wallets using L402 and x402 standards. Let agents pay each other for API calls or retrieve digital assets autonomously.
+      </p>
     </div>
   </div>
 </section>
@@ -389,6 +423,52 @@
       <div class="before" style="color:var(--muted); margin-bottom:8px; font-size:13px; text-decoration:line-through;">Hidden gateway fees</div>
       <div class="after" style="color:var(--fg); font-size:14px; font-weight:500;">⚡ Flat 1% transaction fee, zero maintenance cost</div>
     </div>
+  </div>
+
+  <!-- Comparison Table -->
+  <div style="margin-top: 48px; background: #fff; border: 2px solid #000; border-radius: var(--radius); padding: 24px; box-shadow: 6px 6px 0 #000; overflow-x: auto;">
+    <h3 style="font-size: 18px; font-weight: 800; margin-bottom: 16px; text-align: left;">Traditional Processors vs. AIPP.dev</h3>
+    <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 13px;">
+      <thead>
+        <tr style="border-bottom: 2px solid #000;">
+          <th style="padding: 12px 8px; font-weight: 800;">Feature</th>
+          <th style="padding: 12px 8px; font-weight: 800; color: #ef4444;">Stripe / PayPal</th>
+          <th style="padding: 12px 8px; font-weight: 800; color: #22c55e;">AIPP.dev</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr style="border-bottom: 1px solid #ddd;">
+          <td style="padding: 12px 8px; font-weight: 700;">Payout Time</td>
+          <td style="padding: 12px 8px; color: #ef4444;">7 - 14 Days (Payout holding)</td>
+          <td style="padding: 12px 8px; font-weight: 700; color: #22c55e;">Instant (Milliseconds)</td>
+        </tr>
+        <tr style="border-bottom: 1px solid #ddd;">
+          <td style="padding: 12px 8px; font-weight: 700;">Custody &amp; Risk</td>
+          <td style="padding: 12px 8px; color: #ef4444;">Custodial (Accounts can be frozen/blocked)</td>
+          <td style="padding: 12px 8px; font-weight: 700; color: #22c55e;">Non-Custodial (Wallet-to-Wallet)</td>
+        </tr>
+        <tr style="border-bottom: 1px solid #ddd;">
+          <td style="padding: 12px 8px; font-weight: 700;">Chargeback Fraud</td>
+          <td style="padding: 12px 8px; color: #ef4444;">High risk (Up to 180 days post-purchase)</td>
+          <td style="padding: 12px 8px; font-weight: 700; color: #22c55e;">Zero (Cryptographic finality)</td>
+        </tr>
+        <tr style="border-bottom: 1px solid #ddd;">
+          <td style="padding: 12px 8px; font-weight: 700;">Global Accessibility</td>
+          <td style="padding: 12px 8px; color: #ef4444;">Restricted by country &amp; local bank systems</td>
+          <td style="padding: 12px 8px; font-weight: 700; color: #22c55e;">100% Global (Lightning &amp; Base network)</td>
+        </tr>
+        <tr style="border-bottom: 1px solid #ddd;">
+          <td style="padding: 12px 8px; font-weight: 700;">Micropayments</td>
+          <td style="padding: 12px 8px; color: #ef4444;">Impossible (High fixed fees like $0.30 + 2.9%)</td>
+          <td style="padding: 12px 8px; font-weight: 700; color: #22c55e;">Supported (Down to $0.01)</td>
+        </tr>
+        <tr>
+          <td style="padding: 12px 8px; font-weight: 700;">Setup Time</td>
+          <td style="padding: 12px 8px; color: #ef4444;">Days (Strict business &amp; identity audits)</td>
+          <td style="padding: 12px 8px; font-weight: 700; color: #22c55e;">3 Seconds (Paste address &amp; go)</td>
+        </tr>
+      </tbody>
+    </table>
   </div>
 </section>
 
