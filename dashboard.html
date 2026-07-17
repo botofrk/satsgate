@@ -360,6 +360,46 @@
         <button onclick="copyPaidMcpManifest(this)" class="btn-copy" style="background: var(--bg); color: var(--fg); box-shadow: 2px 2px 0 var(--border);">Copy PaidMCP Config</button>
         <a href="https://paidmcp.dev/submit" target="_blank" style="font-size: 13px; color: var(--muted); text-decoration: none; font-weight: 600; transition: color 0.2s;" onmouseover="this.style.color='var(--fg)'" onmouseout="this.style.color='var(--muted)'">&rarr; Go to PaidMCP PR</a>
       </div>
+    <!-- NO-CODE PAYMENT LINKS -->
+    <div style="background: var(--card); border: 2px solid var(--border); padding: 24px; border-radius: 8px; margin-bottom: 32px; box-shadow: 4px 4px 0 #000;">
+      <h3 style="font-family: 'Inter', sans-serif; font-size: 16px; font-weight: 700; margin-bottom: 8px; color: var(--fg); text-transform: uppercase; letter-spacing: 1px;">No-Code Payment Links</h3>
+      <p style="color: var(--muted); font-size: 14px; margin-bottom: 16px;">Create instant payment links for your products or services. Customers pay via Lightning or USDC, then get redirected to your content.</p>
+      
+      <!-- Link Creation Form -->
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin-bottom: 20px; background: #fafafa; padding: 16px; border: 2px dashed #ccc; border-radius: 8px;">
+        <div>
+          <label style="font-size: 11px; font-weight: 700; display: block; margin-bottom: 4px;">Product Title</label>
+          <input type="text" id="link-title" placeholder="e.g. My Premium Ebook" style="width: 100%; padding: 8px; border: 2px solid #000; border-radius: 4px; font-size: 13px;">
+        </div>
+        <div>
+          <label style="font-size: 11px; font-weight: 700; display: block; margin-bottom: 4px;">Price (USD)</label>
+          <input type="number" id="link-amount" step="0.01" min="0.01" max="100.00" placeholder="5.00" style="width: 100%; padding: 8px; border: 2px solid #000; border-radius: 4px; font-size: 13px;">
+        </div>
+        <div>
+          <label style="font-size: 11px; font-weight: 700; display: block; margin-bottom: 4px;">Redirect URL (Product/Content Link)</label>
+          <input type="url" id="link-redirect" placeholder="https://mycontent.com/download" style="width: 100%; padding: 8px; border: 2px solid #000; border-radius: 4px; font-size: 13px;">
+        </div>
+        <div style="display: flex; align-items: flex-end;">
+          <button onclick="createPaymentLink(this)" style="width: 100%; padding: 9px; background: #000; color: #ffcc00; border: 2px solid #000; border-radius: 4px; font-weight: 800; cursor: pointer; box-shadow: 2px 2px 0 #000; font-size:12px;">Generate Link</button>
+        </div>
+      </div>
+
+      <!-- Links List -->
+      <div class="table-wrap">
+        <table style="width: 100%;">
+          <thead>
+            <tr>
+              <th style="padding: 8px;">Product</th>
+              <th style="padding: 8px;">Price</th>
+              <th style="padding: 8px;">Link URL</th>
+              <th style="padding: 8px; text-align: right;">Action</th>
+            </tr>
+          </thead>
+          <tbody id="links-body">
+            <tr><td colspan="4" style="text-align:center;color:var(--muted);padding:12px;">Loading links...</td></tr>
+          </tbody>
+        </table>
+      </div>
     </div>
 
     <!-- STATS ROW -->
@@ -556,6 +596,7 @@ async function showDashboard() {
   await refreshDashboardData();
   await loadStatsAndDrawChart();
   await loadLedger();
+  await loadPaymentLinks();
 }
 
 function copyActiveKey(btn) {
@@ -798,6 +839,89 @@ async function loadStatsAndDrawChart() {
   } catch(e) {
     console.error('Failed to load chart stats', e);
   }
+}
+
+// ── PAYMENT LINKS LOGIC ─────────────────────────────────
+async function createPaymentLink(btn) {
+  const title = document.getElementById('link-title').value.trim();
+  const amount = parseFloat(document.getElementById('link-amount').value);
+  const redirect = document.getElementById('link-redirect').value.trim();
+
+  if (!title || isNaN(amount) || amount < 0.01 || !redirect) {
+    alert('Please fill all fields correctly. Price must be at least 0.01 USD.');
+    return;
+  }
+
+  const origText = btn.textContent;
+  btn.textContent = 'Creating...';
+  btn.disabled = true;
+
+  try {
+    const res = await fetch(`${AIPP_API}/merchant/links/create`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Api-Key': activeKey
+      },
+      body: JSON.stringify({ title, amount_usd: amount, redirect_url: redirect })
+    });
+    if (!res.ok) throw new Error('Failed to create link');
+    
+    // Clear inputs
+    document.getElementById('link-title').value = '';
+    document.getElementById('link-amount').value = '';
+    document.getElementById('link-redirect').value = '';
+
+    await loadPaymentLinks();
+  } catch (e) {
+    alert('Error creating payment link.');
+  } finally {
+    btn.textContent = origText;
+    btn.disabled = false;
+  }
+}
+
+async function loadPaymentLinks() {
+  try {
+    const res = await fetch(`${AIPP_API}/merchant/links`, {
+      headers: { 'X-Api-Key': activeKey }
+    });
+    const links = await res.json();
+    const body = document.getElementById('links-body');
+    body.innerHTML = '';
+
+    if (links.length === 0) {
+      body.innerHTML = `<tr><td colspan="4" style="text-align:center;color:var(--muted);padding:12px">No payment links created yet.</td></tr>`;
+      return;
+    }
+
+    links.forEach(link => {
+      const displayUrl = link.url.replace(/^https?:\/\//, '');
+      const row = `
+        <tr>
+          <td style="font-weight: 700;">${link.title}</td>
+          <td>$${link.amount_usd.toFixed(2)}</td>
+          <td>
+            <a href="${link.url}" target="_blank" style="color:blue;text-decoration:underline;font-size:12px;">${displayUrl}</a>
+          </td>
+          <td style="text-align: right;">
+            <button onclick="copyText(this, '${link.url}')" class="btn-copy" style="padding: 4px 8px; font-size:11px; background:#fff; border: 2px solid #000; box-shadow: 2px 2px 0 #000; cursor:pointer;">Copy</button>
+          </td>
+        </tr>
+      `;
+      body.insertAdjacentHTML('beforeend', row);
+    });
+  } catch (e) {
+    console.error('Failed to load links', e);
+  }
+}
+
+function copyText(btn, text) {
+  navigator.clipboard.writeText(text).then(() => {
+    const origText = btn.textContent;
+    btn.textContent = 'Copied!';
+    setTimeout(() => btn.textContent = origText, 1500);
+  });
 }
 </script>
 </body>

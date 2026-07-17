@@ -100,6 +100,15 @@ export async function initDb(): Promise<Database> {
       next_retry_at TEXT NOT NULL,
       created_at TEXT NOT NULL
     );
+
+    CREATE TABLE IF NOT EXISTS payment_links (
+      id TEXT PRIMARY KEY,
+      api_key TEXT NOT NULL,
+      title TEXT NOT NULL,
+      amount_usd REAL NOT NULL,
+      redirect_url TEXT NOT NULL,
+      created_at TEXT NOT NULL
+    );
   `);
 
   // Performance indexes on hot query paths
@@ -111,6 +120,7 @@ export async function initDb(): Promise<Database> {
     CREATE INDEX IF NOT EXISTS idx_payout_queue_status ON payout_queue (status, next_retry_at);
     CREATE INDEX IF NOT EXISTS idx_ledgers_api_key ON ledgers (api_key);
     CREATE INDEX IF NOT EXISTS idx_webhook_deliveries_status ON webhook_deliveries (status, next_retry_at);
+    CREATE INDEX IF NOT EXISTS idx_payment_links_api_key ON payment_links (api_key);
   `);
 
   // Migration: Add email column if it doesn't exist
