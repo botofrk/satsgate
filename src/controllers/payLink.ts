@@ -299,7 +299,7 @@ export const renderPaymentPage = async (req: Request, res: Response, next: NextF
 <script>
   let mode = 'L402';
   let pollInterval = null;
-  const linkId = '\${link.id}';
+  const linkId = '${link.id}';
 
   function setMode(newMode) {
     mode = newMode;
@@ -417,3 +417,28 @@ export const createLinkInvoice = async (req: Request, res: Response, next: NextF
     next(error);
   }
 };
+
+// 5. Delete a Payment Link
+export const deletePaymentLink = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const apiKey = getAippKey(req);
+    if (!apiKey) {
+      throw new AppError('Missing API key in headers', 401, 'UNAUTHORIZED');
+    }
+
+    const { linkId } = req.params;
+    const db = getDb();
+    
+    // Ensure the link belongs to this merchant before deleting
+    const link = await db.get('SELECT * FROM payment_links WHERE id = ? AND api_key = ?', linkId, apiKey);
+    if (!link) {
+      throw new AppError('Payment link not found or unauthorized', 404, 'NOT_FOUND');
+    }
+
+    await db.run('DELETE FROM payment_links WHERE id = ?', linkId);
+    res.json({ status: 'ok' });
+  } catch (error) {
+    next(error);
+  }
+};
+

@@ -26,9 +26,10 @@ router.get('/invoice/status/:hash', checkInvoiceStatus);
 router.get('/invoice/receipt/:hash', getReceipt);
 
 // Payment Links
-import { createPaymentLink, getPaymentLinks, renderPaymentPage, createLinkInvoice } from '../controllers/payLink';
+import { createPaymentLink, getPaymentLinks, renderPaymentPage, createLinkInvoice, deletePaymentLink } from '../controllers/payLink';
 router.post('/merchant/links/create', createPaymentLink);
 router.get('/merchant/links', getPaymentLinks);
+router.delete('/merchant/links/:linkId', deletePaymentLink);
 router.get('/pay/:linkId', renderPaymentPage);
 router.post('/pay/:linkId/invoice', createLinkInvoice);
 
