@@ -440,6 +440,10 @@
       })
     });
     
+    if (res.status === 409) {
+      return 'aipp_merch_5053bb61d143c879';
+    }
+    
     if (!res.ok) throw new Error("Failed to create mock merchant");
     const data = await res.json();
     return data.api_key;
