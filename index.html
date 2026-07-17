@@ -3,1445 +3,783 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>aipp.dev — Give your AI agent a wallet</title>
+<title>aipp.dev — Link your wallet. Get paid instantly.</title>
 <link rel="icon" type="image/x-icon" href="favicon.ico">
 <link rel="icon" type="image/png" sizes="32x32" href="favicon.png">
 <link rel="icon" type="image/svg+xml" href="favicon.svg">
 <link rel="apple-touch-icon" href="favicon-192.png">
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,700;1,600&family=Inter:wght@400;500;600;700&display=swap');
+  @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&display=swap');
   
-  *{margin:0;padding:0;box-sizing:border-box}
-  :root{
-    --bg: #ffcc00;
-    --fg: #000000;
-    --muted: #111111;
-    --accent: #000000;
-    --border: #000000;
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  
+  :root {
+    --bg: #faf9f6;          /* Premium warm white */
+    --fg: #0f0f11;          /* Deep rich night black */
+    --accent: #ffc700;      /* Electric warm amber */
     --card: #ffffff;
-    --radius: 8px;
+    --border: #0f0f11;
+    --muted: #52525b;
   }
   
-  body{
+  body {
     background-color: var(--bg);
     color: var(--fg);
-    font-family: 'Inter', system-ui, -apple-system, sans-serif;
-    line-height: 1.6;
+    font-family: 'Outfit', sans-serif;
+    line-height: 1.5;
     -webkit-font-smoothing: antialiased;
-    padding-bottom: 40px;
     overflow-x: hidden;
   }
-  a{color:var(--fg);text-decoration:none}
-  html { scroll-behavior: smooth; scroll-padding-top: 100px; }
   
-  nav{display:flex;align-items:center;justify-content:space-between;padding:24px 40px;border-bottom:2px solid var(--border);background:var(--bg);position:sticky;top:0;z-index:50;gap:20px;}
-  .logo{font-family: 'Inter', sans-serif;font-weight:700;font-size:20px;letter-spacing:-0.5px;text-decoration:none;color:var(--fg);display:flex;align-items:center;gap:8px; white-space:nowrap; flex-shrink:0;}
-  .logo span { color: var(--accent); }
-  
-  .nav-links{display:flex;align-items:center;gap:24px;}
-  .nav-links a{color:var(--fg);font-size:15px;font-weight:700;transition:all 0.2s; white-space:nowrap; border-bottom: 2px solid transparent;}
-  .nav-links a:hover{border-bottom: 2px solid var(--fg); transform: translateY(-2px);}
-  .nav-cta{background:#fff;color:var(--fg)!important;padding:10px 20px;border-radius:8px;font-weight:800;transition:all 0.2s; border: 2px solid #000; box-shadow: 4px 4px 0 #000;}
-  .nav-cta:hover{transform:translate(-2px, -2px); box-shadow: 6px 6px 0 #000;}
-  
-  /* MODAL CSS */
-  .modal-overlay { position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.8); display:none; justify-content:center; align-items:center; z-index:9999; backdrop-filter:blur(8px); }
-  .modal-overlay.active { display:flex; animation: fadeIn 0.2s; }
-  .modal-box { background:var(--card); border:3px solid var(--border); border-radius:12px; padding:32px; width:90%; max-width:480px; position:relative; animation: slideUp 0.3s ease; box-shadow: 8px 8px 0 #000; }
-  @keyframes slideUp { from{transform:translateY(20px);opacity:0} to{transform:translateY(0);opacity:1} }
-  @keyframes fadeIn { from{opacity:0} to{opacity:1} }
-  .modal-box h2 { font-family:'Playfair Display',serif; font-size:28px; font-weight:600; margin-bottom:12px; }
-  .modal-box p { font-size:14px; color:var(--muted); font-weight:400; margin-bottom:20px; }
-  .modal-key-wrap { display:flex; gap:8px; margin-bottom:20px; }
-  .modal-key-input { flex:1; background:#fefefe; border:2px solid var(--border); border-radius:8px; padding:12px 14px; font-family:'Fira Code',monospace; font-size:14px; color:var(--fg); outline:none; text-align:center; box-shadow: inset 2px 2px 0 rgba(0,0,0,0.05); }
-  .modal-actions { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
-  .modal-actions button, .modal-actions a { text-align:center; padding:12px; border:2px solid var(--border); border-radius:8px; font-weight:600; font-size:14px; cursor:pointer; transition:all 0.2s; text-decoration:none; display:block; background:#fff; color:var(--fg); box-shadow: 3px 3px 0 #000; }
-  .modal-actions .btn-test { background:var(--accent); color:#fff; border:2px solid #000; }
-  .modal-actions *:hover { transform:translate(-2px, -2px); box-shadow: 5px 5px 0 #000; }
-  .btn-dash { background: #000 !important; color: #ffcc00 !important; font-weight: 800 !important; }
-  .modal-btn-download { background:#fff; border:2px solid #000; border-radius:8px; padding:10px 14px; cursor:pointer; font-size:16px; box-shadow:2px 2px 0 #000; transition:all 0.15s; }
-  .modal-btn-download:hover { transform:translate(-1px,-1px); box-shadow:4px 4px 0 #000; }
+  a { color: var(--fg); text-decoration: none; }
+  html { scroll-behavior: smooth; }
+
+  /* NAVIGATION */
+  nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 20px 40px;
+    border-bottom: 3px solid var(--border);
+    background: var(--bg);
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    max-width: 100%;
+  }
+  .logo {
+    font-weight: 800;
+    font-size: 22px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .logo span { color: var(--muted); font-size: 14px; font-weight: 500; }
+  .nav-links { display: flex; align-items: center; gap: 28px; }
+  .nav-links a { font-weight: 700; font-size: 15px; position: relative; padding-bottom: 2px; }
+  .nav-links a::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 0;
+    height: 2px;
+    background: var(--fg);
+    transition: width 0.2s;
+  }
+  .nav-links a:hover::after { width: 100%; }
+  .nav-cta {
+    background: var(--fg);
+    color: var(--bg) !important;
+    padding: 8px 18px;
+    border-radius: 8px;
+    font-weight: 800;
+    box-shadow: 3px 3px 0 var(--accent);
+    transition: transform 0.15s, box-shadow 0.15s;
+    border: 2px solid var(--fg);
+  }
+  .nav-cta:hover {
+    transform: translate(-2px, -2px);
+    box-shadow: 5px 5px 0 var(--accent);
+  }
 
   /* HERO SECTION */
-  .hero{display:flex;align-items:center;justify-content:center;gap:60px;padding:30px 24px 60px;max-width:1150px;margin:0 auto;text-align:left;position:relative;z-index:2}
-  .hero::before {
-    display: none;
-  }
-  .hero-content{flex:1;max-width:620px}
-  .hero-mascot{
-    flex-shrink:0; width:320px; height:320px; position:relative;
-    transition:transform 0.4s ease; border-radius:24px; overflow:hidden;
-  }
-  .hero-mascot:hover{ transform:scale(1.02); }
-  .hero-mascot img{width:100%;height:100%;object-fit:cover;border:3px solid var(--border);border-radius:24px; box-shadow: 6px 6px 0 #000; filter: contrast(1.1);}
-  .badge{display:inline-flex;align-items:center;gap:8px;background:var(--card);border:2px solid var(--border);color:var(--fg);font-size:12px;font-weight:700;padding:6px 12px;border-radius:20px;margin-bottom:28px; box-shadow: 3px 3px 0 #000;}
-  
-  h1{font-family: 'Playfair Display', serif;font-size:clamp(40px,6vw,64px);font-weight:600;letter-spacing:-1px;line-height:1.1;margin-bottom:24px;}
-  h1 span{font-style:italic; color:var(--accent);}
-  .hero p{font-size:16px;color:var(--fg);margin-bottom:40px;line-height:1.7;font-weight:600;}
-  .cta-row{display:flex;gap:16px;justify-content:flex-start;flex-wrap:wrap}
-  
-  /* BUTTONS & ANIMATION */
-  .btn{padding:12px 24px;border-radius:24px;font-size:14px;font-weight:700;cursor:pointer;transition:all 0.2s;display:inline-block; border:2px solid #000;}
-  .btn-primary{background:var(--accent);color:#fff;box-shadow: 4px 4px 0 #000;}
-  .btn-primary:hover{transform:translate(-2px, -2px); box-shadow: 6px 6px 0 #000;}
-  .btn-ghost{background:#fff;color:var(--fg);box-shadow: 4px 4px 0 #000;}
-  .btn-ghost:hover{background:#f9f9f9; transform:translate(-2px, -2px); box-shadow: 6px 6px 0 #000;}
-  
-  /* CARDS */
-  .section{padding:60px 24px;max-width:1000px;margin:0 auto;position:relative}
-  .label{font-size:12px;letter-spacing:1px;color:var(--accent);font-weight:600;text-transform:uppercase;margin-bottom:16px;display:inline-block;}
-  h2{font-family: 'Playfair Display', serif;font-size:clamp(28px,4vw,40px);font-weight:600;letter-spacing:-0.5px;margin-bottom:40px}
-  
-  .steps{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:24px}
-  .step{background:var(--card);border:2px solid var(--border);border-radius:var(--radius);padding:32px;transition:all 0.2s; box-shadow: 6px 6px 0 #000;}
-  .step:hover{transform:translate(-4px, -4px); box-shadow: 10px 10px 0 #000;}
-  .step-num{font-size:12px;font-weight:800;color:var(--fg);background:var(--bg);margin-bottom:16px; border:2px solid var(--border); width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center; box-shadow: 2px 2px 0 #000;}
-  .step h3{font-size:18px;font-weight:700;margin-bottom:12px; color:var(--fg);}
-  .step p{font-size:14px;color:var(--fg);line-height:1.6;font-weight:600;}
-  
-  .pains{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:24px}
-  .pain{background:var(--card);border:2px solid var(--border);border-radius:var(--radius);padding:24px;transition:all 0.2s; box-shadow: 5px 5px 0 #000;}
-  .pain:hover{transform:translate(-2px, -2px); box-shadow: 7px 7px 0 #000;}
-  .pain .before{font-size:13px;color:#ef4444;margin-bottom:12px;text-decoration:line-through;font-weight:600;}
-  .pain .after{font-size:14px;color:var(--fg);font-weight:700;display:flex;align-items:center;gap:8px}
-  
-  /* MAC IDE LAYOUT FOR CODE BLOCKS */
-  .code-wrap{background:#111;border:2px solid var(--border);border-radius:var(--radius);padding:16px;overflow-x:auto; box-shadow: 6px 6px 0 #000;}
-  .code-wrap pre{font-family:'Fira Code', 'JetBrains Mono', monospace;font-size:13px;line-height:1.7;color:#e5e7eb}
-  .c-comment{color:#9ca3af}.c-key{color:#93c5fd}.c-str{color:#fcd34d}
-  
-  /* USE CASES */
-  .use-case-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 24px; margin-top: 24px; }
-  .uc-card { background:var(--card);border:2px solid var(--border);border-radius:var(--radius); overflow:hidden; transition:all 0.2s; box-shadow: 6px 6px 0 #000; }
-  .uc-card:hover { transform:translate(-4px, -4px); box-shadow: 10px 10px 0 #000; }
-  .uc-card img { width:100%; height:200px; object-fit:cover; border-bottom:2px solid var(--border); }
-  .uc-content { padding:24px; }
-  .uc-content h3 { font-size:18px; font-weight:700; margin-bottom:12px; color:var(--fg); }
-  .uc-content p { color:var(--fg); font-size:14px; line-height:1.6; font-weight:600;}
-  
-  /* LIVE INTERACTIVE DEMO */
-  .demo-wrap{background:var(--card);border:2px solid var(--border);border-radius:var(--radius);padding:40px;max-width:580px;margin:0 auto; box-shadow: 8px 8px 0 #000;}
-  .demo-tabs{display:flex;gap:8px;margin-bottom:32px;border-bottom:2px solid var(--border);padding-bottom:16px;}
-  .tab{background:transparent;border:2px solid transparent;color:var(--muted);font-size:14px;font-weight:600;cursor:pointer;padding:8px 16px;border-radius:20px;transition:all 0.2s;}
-  .tab.active{background:var(--bg);color:var(--fg);border:2px solid var(--border); box-shadow: 3px 3px 0 #000;}
-  .demo-step{display:none}
-  .demo-step.active{display:block;animation:fadeInUp 0.3s ease forwards}
-  
-  .demo-input{display:flex;gap:12px;margin-bottom:16px}
-  .demo-input input{flex:1;background:#fff;border:3px solid #000;border-radius:8px;padding:12px 16px;color:var(--fg);font-size:12px;font-family:'Fira Code', monospace;outline:none; box-shadow: 2px 2px 0 #000; transition: all 0.15s;}
-  .demo-input input:focus{border-color:#000; box-shadow: 4px 4px 0 #000; transform: translate(-1px, -1px);}
-  .demo-input input.input-normal{font-family:'Inter', sans-serif; font-size:14px;}
-  .demo-input input.input-error{border-color:#ef4444 !important; background:#fef2f2; box-shadow: 2px 2px 0 #ef4444;}
-  .input-error-msg{font-size:10px;color:#ef4444;font-weight:700;margin-top:4px;display:none;}
-  .input-error-msg.visible{display:block;}
-  .demo-input button,.demo-btn{background:var(--accent);color:#fff;border:2px solid #000;border-radius:8px;padding:12px 20px;font-weight:700;font-size:14px;cursor:pointer; box-shadow: 4px 4px 0 #000; transition:all 0.2s;}
-  .demo-input button:hover,.demo-btn:hover{transform:translate(-2px,-2px); box-shadow: 6px 6px 0 #000;}
-  .demo-btn{width:100%;margin-top:12px;}
-  
-  .setup-card {
-    border: 3px solid #000;
-    border-radius: 12px;
-    padding: 16px 8px;
-    cursor: pointer;
-    transition: all 0.2s;
-    background: #fff;
+  .hero {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 80px 24px 60px 24px;
     text-align: center;
-    box-shadow: 2px 2px 0 #000;
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: center;
   }
-  .setup-card:hover {
-    transform: translate(-2px, -2px);
-    box-shadow: 4px 4px 0 #000;
-  }
-  .setup-card.active {
-    background: #ffcc00 !important;
-    box-shadow: 4px 4px 0 #000 !important;
-    transform: translate(-2px, -2px) !important;
-  }
-  
-  .payout-fields-grid {
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: 16px;
-  }
-  @media (min-width: 600px) {
-    .payout-fields-grid.dual-columns {
-      grid-template-columns: 1fr 1fr;
-    }
-  }
-  
-  .qr-box{text-align:center;padding:24px 0}
-  .qr-box canvas{border:2px solid var(--border);border-radius:8px;margin-bottom:16px; box-shadow: 4px 4px 0 #000;}
-  .invoice-str{font-family:'Fira Code',monospace;font-size:11px;color:var(--fg);font-weight:600;background:#fefefe;padding:12px;border-radius:8px;margin-bottom:16px;cursor:pointer;border:2px solid var(--border);word-break:break-all; box-shadow: 2px 2px 0 #000;}
-  .status-row{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--fg);justify-content:center;margin-top:8px}
-  .dot{width:8px;height:8px;border-radius:50%;background:var(--muted);}
-  .dot.pending{background:#f59e0b;animation:pulse 1.5s infinite}
-  .dot.paid{background:#22c55e}
-  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
-  
-  .key-box{background:#fefefe;border:2px solid var(--success);border-radius:8px;padding:16px;font-family:'Fira Code',monospace;font-size:13px;color:var(--success);word-break:break-all;cursor:pointer;margin:16px 0; box-shadow: 3px 3px 0 var(--success); font-weight:700;}
-  .success-icon{font-size:40px;text-align:center;margin-bottom:12px}
-  .demo-note{font-size:12px;color:var(--muted);text-align:center;margin-top:16px;font-weight:600;}
-
-  /* CHAT WIDGET */
-  .chat-widget-btn {
-    position: fixed; bottom: 24px; right: 24px; width: 56px; height: 56px;
-    background: var(--card); border: 2px solid var(--border); border-radius: 50%;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 24px; cursor: pointer; z-index: 1000; transition: all 0.2s;
-    box-shadow: 4px 4px 0 #000;
-  }
-  .chat-widget-btn:hover { transform: translate(-2px,-2px); box-shadow: 6px 6px 0 #000; }
-  
-  /* INTEGRATION GRID */
-  .integration-grid { display:grid; grid-template-columns:repeat(3, 1fr); gap:24px; }
-  
-  /* BENTO GRID */
-  .bento-grid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 24px;
-    margin-bottom: 60px;
-  }
-  .bento-item {
+  .badge {
     background: var(--card);
     border: 2px solid var(--border);
-    border-radius: var(--radius);
-    padding: 32px;
-    transition: all 0.2s;
-    box-shadow: 6px 6px 0 #000;
-  }
-  .bento-item:hover {
-    transform: translate(-4px,-4px);
-    box-shadow: 10px 10px 0 #000;
-  }
-  .bento-item h3 {
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 12px;
     font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 24px;
+    box-shadow: 3px 3px 0 var(--border);
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+  h1 {
+    font-size: clamp(38px, 6vw, 64px);
+    font-weight: 900;
+    line-height: 1.05;
+    letter-spacing: -1.5px;
+    margin-bottom: 24px;
+    max-width: 900px;
+  }
+  h1 span {
+    background: var(--accent);
+    padding: 2px 8px;
+    border-radius: 4px;
+    border: 2px solid var(--border);
+    box-shadow: 3px 3px 0 var(--border);
+  }
+  .hero-sub {
     font-size: 18px;
-    margin-bottom: 12px;
+    color: var(--muted);
+    max-width: 680px;
+    margin-bottom: 36px;
+    font-weight: 500;
+  }
+  .cta-group {
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  /* BUTTONS */
+  .btn {
+    padding: 12px 28px;
+    border-radius: 8px;
+    font-size: 15px;
+    font-weight: 800;
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+    border: 2px solid var(--border);
+    display: inline-block;
+  }
+  .btn-primary {
+    background: var(--accent);
     color: var(--fg);
+    box-shadow: 4px 4px 0 var(--border);
+  }
+  .btn-primary:hover {
+    transform: translate(-3px, -3px);
+    box-shadow: 7px 7px 0 var(--border);
+  }
+  .btn-ghost {
+    background: var(--card);
+    color: var(--fg);
+    box-shadow: 4px 4px 0 var(--border);
+  }
+  .btn-ghost:hover {
+    transform: translate(-3px, -3px);
+    box-shadow: 7px 7px 0 var(--border);
+    background: #fafafa;
+  }
+
+  /* SECTION STANDARD */
+  .section {
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 80px 24px;
+    text-align: center;
+  }
+  .section-label {
+    font-size: 12px;
+    font-weight: 800;
+    text-transform: uppercase;
+    color: var(--muted);
+    letter-spacing: 1px;
+    margin-bottom: 12px;
+  }
+  h2 {
+    font-size: clamp(28px, 4vw, 40px);
+    font-weight: 850;
+    letter-spacing: -0.5px;
+    margin-bottom: 48px;
+  }
+
+  /* MOCKUP / ANIMATED PAY FLOW */
+  .flow-container {
+    background: var(--card);
+    border: 3px solid var(--border);
+    border-radius: 12px;
+    padding: 40px 24px;
+    box-shadow: 8px 8px 0 var(--border);
+    margin-bottom: 60px;
+    display: flex;
+    flex-direction: column;
+    gap: 32px;
+  }
+  .flow-steps {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 24px;
+  }
+  .flow-card {
+    border: 2px solid var(--border);
+    border-radius: 8px;
+    padding: 24px;
+    background: var(--bg);
+    box-shadow: 4px 4px 0 var(--border);
+    text-align: left;
+    transition: transform 0.2s;
+  }
+  .flow-card:hover {
+    transform: translateY(-4px);
+  }
+  .flow-num {
+    width: 28px;
+    height: 28px;
+    background: var(--accent);
+    border: 2px solid var(--border);
+    border-radius: 50%;
     display: flex;
     align-items: center;
-    gap: 12px;
+    justify-content: center;
+    font-weight: 800;
+    font-size: 14px;
+    margin-bottom: 16px;
+    box-shadow: 2px 2px 0 var(--border);
   }
-  .bento-item h3 svg { color: var(--fg); }
-  .bento-item p { color: var(--muted); font-size: 14px; line-height: 1.6; }
-  .bento-wide { grid-column: span 2; }
+  .flow-card h3 { font-size: 18px; font-weight: 800; margin-bottom: 8px; }
+  .flow-card p { font-size: 13px; color: var(--muted); font-weight: 500; }
+
+  /* CARDS GRID (API VS NO-CODE) */
+  .grid-two {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 32px;
+    margin-top: 48px;
+  }
+  .feature-card {
+    background: var(--card);
+    border: 3px solid var(--border);
+    border-radius: 12px;
+    padding: 40px;
+    box-shadow: 8px 8px 0 var(--border);
+    text-align: left;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+  }
+  .feature-card.accent {
+    background: #fffdf5;
+    border-color: var(--border);
+  }
+  .feature-card h3 { font-size: 24px; font-weight: 900; margin-bottom: 12px; }
+  .feature-card p { font-size: 14px; color: var(--muted); margin-bottom: 24px; font-weight: 500; line-height: 1.6; }
+  .feature-list { display: flex; flex-direction: column; gap: 12px; margin-bottom: 32px; }
+  .feature-item { display: flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 700; }
+  .feature-item span { color: #22c55e; font-size: 16px; }
+
+  /* TABLE COMPARISON */
+  .table-wrap {
+    overflow-x: auto;
+    border: 3px solid var(--border);
+    border-radius: 12px;
+    background: var(--card);
+    box-shadow: 8px 8px 0 var(--border);
+    margin-top: 48px;
+  }
+  table { width: 100%; border-collapse: collapse; text-align: left; font-size: 14px; }
+  th { padding: 18px 16px; font-weight: 800; border-bottom: 3px solid var(--border); background: #fafafa; }
+  td { padding: 18px 16px; border-bottom: 1px solid #eee; font-weight: 600; }
+  tr:last-child td { border-bottom: none; }
+
+  /* REGISTRATION / INTERACTIVE WIZARD */
+  .wizard-card {
+    background: var(--card);
+    border: 3px solid var(--border);
+    border-radius: 12px;
+    padding: 40px;
+    box-shadow: 8px 8px 0 var(--border);
+    max-width: 580px;
+    margin: 0 auto;
+    text-align: center;
+  }
+  .wizard-tabs { display: flex; gap: 8px; border-bottom: 2px solid #eee; padding-bottom: 16px; margin-bottom: 32px; }
+  .tab {
+    flex: 1;
+    background: transparent;
+    border: 2px solid transparent;
+    padding: 10px;
+    font-size: 13px;
+    font-weight: 800;
+    cursor: pointer;
+    border-radius: 8px;
+    transition: all 0.15s;
+    color: var(--muted);
+  }
+  .tab.active { background: var(--accent); color: var(--fg); border-color: var(--border); box-shadow: 2px 2px 0 var(--border); }
+  .wizard-step { display: none; }
+  .wizard-step.active { display: block; }
   
-  @media(max-width:900px){
-    .bento-grid { grid-template-columns: repeat(2, 1fr); }
-    .bento-wide { grid-column: span 2; }
+  /* FORM INPUTS */
+  .mode-selector { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 28px; }
+  .mode-card {
+    border: 2px solid var(--border);
+    border-radius: 8px;
+    padding: 16px 8px;
+    cursor: pointer;
+    transition: transform 0.15s, box-shadow 0.15s;
+    background: #fff;
+    font-size: 12px;
+    font-weight: 800;
   }
-  @media(max-width:800px){
-    .hero{flex-direction:column-reverse;text-align:center;gap:40px;padding:40px 24px;}
-    .hero-mascot{width:280px;height:280px}
-    .cta-row{justify-content:center}
-    .modal-actions { grid-template-columns: 1fr; }
-    .integration-grid { grid-template-columns: 1fr; }
-    
-    nav{padding:16px 20px; flex-direction:column; gap:16px; align-items:flex-start;}
-    .nav-links { padding-bottom: 4px; width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
-    .nav-links::-webkit-scrollbar { display: none; }
-    footer{flex-direction:column;text-align:center;gap:16px}
-    h1 { font-size: 36px; }
+  .mode-card:hover { transform: translateY(-2px); box-shadow: 2px 2px 0 var(--border); }
+  .mode-card.active { background: var(--accent); transform: translateY(-2px); box-shadow: 3px 3px 0 var(--border); }
+  
+  .input-label { font-size: 12px; font-weight: 800; text-align: left; display: block; margin-bottom: 6px; }
+  .input-field {
+    width: 100%;
+    padding: 12px 16px;
+    border: 2px solid var(--border);
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    margin-bottom: 16px;
+    outline: none;
+    transition: box-shadow 0.15s;
   }
-  @media(max-width:600px){
-    .bento-grid { grid-template-columns: 1fr; }
-    .bento-wide { grid-column: span 1; }
-    .pains{grid-template-columns:1fr}
-    .steps{grid-template-columns:1fr}
-    .demo-input { flex-direction:column; gap:8px; }
+  .input-field:focus { box-shadow: 3px 3px 0 var(--border); }
+  .input-field::placeholder { color: #a1a1aa; }
+  .input-field.error { border-color: #ef4444; background: #fef2f2; }
+  .error-msg { font-size: 11px; color: #ef4444; font-weight: 700; text-align: left; margin-top: -12px; margin-bottom: 16px; display: none; }
+  .error-msg.visible { display: block; }
+
+  /* MODAL */
+  .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.7); display: none; justify-content: center; align-items: center; z-index: 999; backdrop-filter: blur(4px); }
+  .modal-overlay.active { display: flex; }
+  .modal-box { background: #fff; border: 3px solid var(--border); border-radius: 12px; padding: 32px; width: 90%; max-width: 460px; box-shadow: 8px 8px 0 var(--border); text-align: center; }
+
+  /* FOOTER */
+  footer {
+    border-top: 3px solid var(--border);
+    padding: 48px 24px;
+    text-align: center;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--muted);
   }
-  footer{display:flex;align-items:center;justify-content:space-between;padding:40px;max-width:1200px;margin:0 auto;border-top:1px solid var(--border);color:var(--muted);font-size:14px;}
+  .footer-links { display: flex; justify-content: center; gap: 24px; margin-bottom: 16px; font-weight: 800; }
+  .footer-links a { color: var(--fg); }
+  .footer-links a:hover { text-decoration: underline; }
+
+  @media(max-width: 768px) {
+    nav { flex-direction: column; gap: 16px; padding: 16px; }
+    .nav-links { flex-wrap: wrap; justify-content: center; width: 100%; }
+    .grid-two { grid-template-columns: 1fr; }
+    .mode-selector { grid-template-columns: 1fr; }
+  }
 </style>
 <script src="https://cdn.jsdelivr.net/npm/qrcode@1.4.4/build/qrcode.min.js"></script>
 </head>
 <body>
 
 <nav>
-  <a href="/" class="logo"><svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg" style="display: block; flex-shrink: 0;"><rect x="0" y="0" width="32" height="32" rx="8" fill="#000000"/><circle cx="14" cy="16" r="7" fill="none" stroke="#ffcc00" stroke-width="2.5"/><circle cx="14" cy="16" r="2.5" fill="#ffcc00"/><path d="M19.5 12 L24 16 L19.5 20" fill="none" stroke="#ffcc00" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg><span>aipp<span style="font-size:15px;font-weight:500;color:rgba(0,0,0,0.6)">.dev</span></span></a>
+  <a href="/" class="logo">
+    <svg width="28" height="28" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg" style="display: block; flex-shrink: 0;">
+      <rect width="32" height="32" rx="8" fill="#0f0f11"/>
+      <circle cx="14" cy="16" r="7" fill="none" stroke="#ffc700" stroke-width="2.5"/>
+      <circle cx="14" cy="16" r="2.5" fill="#ffc700"/>
+      <path d="M19.5 12 L24 16 L19.5 20" fill="none" stroke="#ffc700" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+    aipp<span>dev</span>
+  </a>
   <div class="nav-links">
     <a href="#how">How it works</a>
     <a href="#get-started">Get Started</a>
     <a href="docs.html">Docs</a>
     <a href="l402.html">For AI Agents</a>
-    <a href="paywall-demo.html">Paywall</a>
-    <a href="dashboard.html" class="nav-cta">Dashboard</a>
+    <a href="dashboard.html" class="nav-cta">Dashboard →</a>
   </div>
 </nav>
 
+<!-- HERO -->
 <section class="hero">
-  <div class="hero-content" style="max-width:850px; margin:0 auto; text-align:center; display:flex; flex-direction:column; align-items:center;">
-    <div class="badge" style="background:#fff; font-weight:800;">⚡ Artificial Intelligence Payment Protocol (AIPP)</div>
-    <h1 style="text-align:center; font-weight:900; font-family:'Inter', sans-serif; line-height:1.05; letter-spacing:-1.5px;">Give your apps &amp; AI agents a <span style="background:var(--fg); color:var(--bg); padding:0 8px; border-radius:4px; font-style:normal;">global wallet</span>.</h1>
-    <p style="text-align:center; font-weight:600; font-size:18px; color:var(--muted); margin-top:16px; max-width:700px;">Accept instant payments from humans or autonomous agents. Split revenues, dodge chargebacks, and withdraw instantly to Bitcoin Lightning or Base USDC.</p>
-    
-    <div style="background: #fff; border: 2px solid #000; color: #000; padding: 8px 16px; border-radius: 20px; font-size: 13px; font-weight: 700; display: inline-flex; align-items: center; gap: 8px; margin-top: 12px; margin-bottom: 24px; box-shadow: 3px 3px 0 #000;">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
-      Non-Custodial · Instant Settlements · Zero Custody Risk
-    </div>
-
-    <div class="cta-row" style="justify-content:center;">
-      <a href="#get-started" class="btn btn-primary">Link Your Wallet →</a>
-      <a href="docs.html" class="btn btn-ghost">Read API Docs</a>
-    </div>
+  <span class="badge">⚡ Artificial Intelligence Payment Protocol</span>
+  <h1>Link your wallet.<br>Get paid <span>instantly</span>.</h1>
+  <p class="hero-sub">Add instant payments to your website, app, or AI agent. Accept Bitcoin Lightning or Base USDC. Flat 1% fee. No custody risk, no account holds.</p>
+  <div class="cta-group">
+    <a href="#get-started" class="btn btn-primary">Start Processing Free</a>
+    <a href="docs.html" class="btn btn-ghost">Read API Docs</a>
   </div>
 </section>
 
-<!-- WHO IS THIS FOR SECTION -->
-<section class="section" style="padding-top:20px; padding-bottom:40px;">
-  <div class="label">Target Audiences</div>
-  <h2>Who is AIPP built for?</h2>
-  <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 24px;">
-    <!-- Card 1: Creators -->
-    <div style="background:#fff; border:2px solid #000; border-radius:8px; padding:24px; box-shadow: 5px 5px 0 #000; text-align: left;">
-      <div style="font-size:24px; margin-bottom:12px;">✍</div>
-      <h3 style="font-size:17px; font-weight:800; margin-bottom:8px;">Creators &amp; Writers</h3>
-      <p style="font-size:13px; color:#52525b; line-height:1.5; font-weight:500;">
-        Sell PDFs, premium newsletters, or digital goods. Paste your wallet address, get a checkout link, and start charging in 30 seconds. **No code required.**
-      </p>
-    </div>
-    
-    <!-- Card 2: SaaS Developers -->
-    <div style="background:#fff; border:2px solid #000; border-radius:8px; padding:24px; box-shadow: 5px 5px 0 #000; text-align: left;">
-      <div style="font-size:24px; margin-bottom:12px;">💻</div>
-      <h3 style="font-size:17px; font-weight:800; margin-bottom:8px;">SaaS &amp; Web Developers</h3>
-      <p style="font-size:13px; color:#52525b; line-height:1.5; font-weight:500;">
-        Ditch Stripe's high fees and strict geographic blocks. Integrate global micropayments down to $0.01 with standard API endpoints and instant Webhook delivery.
-      </p>
-    </div>
-
-    <!-- Card 3: AI Agents -->
-    <div style="background:#fff; border:2px solid #000; border-radius:8px; padding:24px; box-shadow: 5px 5px 0 #000; text-align: left;">
-      <div style="font-size:24px; margin-bottom:12px;">🤖</div>
-      <h3 style="font-size:17px; font-weight:800; margin-bottom:8px;">Autonomous AI Agents</h3>
-      <p style="font-size:13px; color:#52525b; line-height:1.5; font-weight:500;">
-        Give your AI agents programmatic wallets using L402 and x402 standards. Let agents pay each other for API calls or retrieve digital assets autonomously.
-      </p>
-    </div>
-  </div>
-</section>
-
+<!-- HOW IT WORKS -->
 <section class="section" id="how">
-  <div class="label">How it works</div>
-  <h2>Like a credit card POS terminal... but instant and for crypto!</h2>
-  <p style="font-size: 16px; margin-bottom: 40px; color: var(--muted); max-width: 850px;">
-    When your customer wants to pay you, aipp acts as the routing middleman. It receives the payment, automatically deducts a <b>flat 1% fee</b>, and forwards the remaining <b>99% directly to your personal wallet at lightning speed.</b> We never hold your funds.
-  </p>
+  <span class="section-label">Flow</span>
+  <h2>Wallet-to-Wallet Direct Settlement</h2>
   
-  <div class="steps">
-    <div class="step">
-      <div class="step-num">1</div>
-      <h3>Customer</h3>
-      <p>Sends a Lightning payment (e.g. 10,000 sats).</p>
-    </div>
-    <div class="step">
-      <div class="step-num" style="border-color:var(--accent);color:var(--accent)">2</div>
-      <h3>aipp Gateway</h3>
-      <p>Instantly deducts a 1% fee (100 sats).</p>
-    </div>
-    <div class="step">
-      <div class="step-num" style="border-color:#22c55e;color:#22c55e">3</div>
-      <h3>Your Wallet</h3>
-      <p>The remaining 99% (9,900 sats) lands in your account in milliseconds.</p>
-    </div>
-  </div>
-
-  <!-- Integration Options (API vs No-Code Link) -->
-  <div style="margin-top: 48px; display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 24px;">
-    <!-- Option A: Developer API -->
-    <div style="background:var(--card); border:2px solid var(--border); border-radius:var(--radius); padding:32px; box-shadow: 6px 6px 0 #000; text-align: left;">
-      <span style="font-size: 11px; font-weight: 800; background: #000; color: #fff; padding: 4px 10px; border-radius: 4px; text-transform: uppercase;">Option A</span>
-      <h3 style="font-size: 20px; font-weight: 800; margin: 16px 0 8px 0;">Developer REST API</h3>
-      <p style="color:var(--muted); font-size:13px; margin-bottom:20px; line-height:1.6;">
-        Perfect for custom apps, e-commerce checkouts, and AI agents. Generate invoices programmatically with just 5 lines of code.
-      </p>
-      <div class="steps" style="grid-template-columns: 1fr; gap:12px;">
-        <div style="font-size: 13px; font-weight: 700; display: flex; gap: 8px;">
-          <span style="color:#22c55e;">✔</span> JSON API endpoints
-        </div>
-        <div style="font-size: 13px; font-weight: 700; display: flex; gap: 8px;">
-          <span style="color:#22c55e;">✔</span> Webhook payment notifications
-        </div>
-        <div style="font-size: 13px; font-weight: 700; display: flex; gap: 8px;">
-          <span style="color:#22c55e;">✔</span> Python &amp; Node.js SDKs
-        </div>
+  <div class="flow-container">
+    <div class="flow-steps">
+      <div class="flow-card">
+        <div class="flow-num">1</div>
+        <h3>Customer Pays</h3>
+        <p>Müşteri faturayı Lightning veya Base USDC üzerinden anında öder.</p>
       </div>
-    </div>
-
-    <!-- Option B: No-Code Payment Links -->
-    <div style="background:var(--card); border:2px solid var(--border); border-radius:var(--radius); padding:32px; box-shadow: 6px 6px 0 #000; text-align: left;">
-      <span style="font-size: 11px; font-weight: 800; background: #22c55e; color: #fff; padding: 4px 10px; border-radius: 4px; text-transform: uppercase;">Option B</span>
-      <h3 style="font-size: 20px; font-weight: 800; margin: 16px 0 8px 0;">Zero-Code Payment Links</h3>
-      <p style="color:var(--muted); font-size:13px; margin-bottom:20px; line-height:1.6;">
-        Perfect for social media, newsletters, PDF sales, or quick services. Set a price, get a link, and share it anywhere. No code required.
-      </p>
-      <div class="steps" style="grid-template-columns: 1fr; gap:12px;">
-        <div style="font-size: 13px; font-weight: 700; display: flex; gap: 8px;">
-          <span style="color:#22c55e;">✔</span> Hosted brutalist checkout pages
-        </div>
-        <div style="font-size: 13px; font-weight: 700; display: flex; gap: 8px;">
-          <span style="color:#22c55e;">✔</span> Custom redirect URL after payment
-        </div>
-        <div style="font-size: 13px; font-weight: 700; display: flex; gap: 8px;">
-          <span style="color:#22c55e;">✔</span> Dual-Rail (Lightning &amp; USDC) ready
-        </div>
+      <div class="flow-card">
+        <div class="flow-num" style="background:#fff;">2</div>
+        <h3>1% Fee Deducted</h3>
+        <p>Sistem üzerinden %1 platform komisyonu milisaniyeler içinde kesilir.</p>
+      </div>
+      <div class="flow-card" style="border-color:#22c55e; box-shadow:4px 4px 0 #22c55e;">
+        <div class="flow-num" style="background:#22c55e; color:#fff; border-color:#22c55e;">3</div>
+        <h3>Direct Payout</h3>
+        <p>Kalan %99 tutar anında sizin kişisel cüzdanınıza yönlendirilir. Bizde para kalmaz.</p>
       </div>
     </div>
   </div>
 </section>
 
-<section class="section">
-  <div class="label">Why aipp.dev</div>
-  <h2>Everything you hated about online billing, gone.</h2>
-  <div class="pains">
-    <div class="pain">
-      <div class="before" style="color:var(--muted); margin-bottom:8px; font-size:13px; text-decoration:line-through;">Stripe setup took 3 weeks</div>
-      <div class="after" style="color:var(--fg); font-size:14px; font-weight:500;">⚡ Wallet address in, key out in 3 seconds</div>
-    </div>
-    <div class="pain">
-      <div class="before" style="color:var(--muted); margin-bottom:8px; font-size:13px; text-decoration:line-through;">Hold funds for 14 days</div>
-      <div class="after" style="color:var(--fg); font-size:14px; font-weight:500;">⚡ Settlement is instant (under 1 second)</div>
-    </div>
-    <div class="pain">
-      <div class="before" style="color:var(--muted); margin-bottom:8px; font-size:13px; text-decoration:line-through;">High merchant chargeback fraud</div>
-      <div class="after" style="color:var(--fg); font-size:14px; font-weight:500;">⚡ Bitcoin Lightning has zero chargebacks</div>
-    </div>
-    <div class="pain">
-      <div class="before" style="color:var(--muted); margin-bottom:8px; font-size:13px; text-decoration:line-through;">Can't pay from Turkey/Iran/Argentina</div>
-      <div class="after" style="color:var(--fg); font-size:14px; font-weight:500;">⚡ Lightning network has no borders</div>
-    </div>
-    <div class="pain">
-      <div class="before" style="color:var(--muted); margin-bottom:8px; font-size:13px; text-decoration:line-through;">Custody audit & regulatory compliance</div>
-      <div class="after" style="color:var(--fg); font-size:14px; font-weight:500;">⚡ Non-custodial proxy. We never hold your money</div>
-    </div>
-    <div class="pain">
-      <div class="before" style="color:var(--muted); margin-bottom:8px; font-size:13px; text-decoration:line-through;">Hidden gateway fees</div>
-      <div class="after" style="color:var(--fg); font-size:14px; font-weight:500;">⚡ Flat 1% transaction fee, zero maintenance cost</div>
+<!-- TWO OPTIONS (API VS NO-CODE) -->
+<section class="section" style="background:#f4f3f0; border-top:3px solid var(--border); border-bottom:3px solid var(--border); max-width:100%;">
+  <div style="max-width:1000px; margin:0 auto; padding:20px 0;">
+    <span class="section-label">Integration</span>
+    <h2>Pick the path that fits your setup</h2>
+    
+    <div class="grid-two">
+      <!-- Option B: No-Code Link -->
+      <div class="feature-card accent">
+        <div>
+          <span style="font-size:11px; font-weight:800; background:#22c55e; color:#fff; padding:4px 10px; border-radius:4px; text-transform:uppercase;">No-Code Option</span>
+          <h3 style="margin-top:16px;">Zero-Code Payment Links</h3>
+          <p>Perfect for newsletters, social media bio links, PDF sales, or quick services. Set a price, copy your paylink, and share it anywhere.</p>
+          <div class="feature-list">
+            <div class="feature-item"><span>✔</span> Hosted checkout pages</div>
+            <div class="feature-item"><span>✔</span> Auto-redirects after payment</div>
+            <div class="feature-item"><span>✔</span> Setup in under 30 seconds</div>
+          </div>
+        </div>
+        <a href="#get-started" class="btn btn-primary" style="text-align:center;">Generate Payment Link</a>
+      </div>
+
+      <!-- Option A: API -->
+      <div class="feature-card">
+        <div>
+          <span style="font-size:11px; font-weight:800; background:#000; color:#fff; padding:4px 10px; border-radius:4px; text-transform:uppercase;">Developer Option</span>
+          <h3 style="margin-top:16px;">Developer REST API</h3>
+          <p>Perfect for custom apps, e-commerce stores, and autonomous AI agents. Trigger invoices dynamically and track payment preimages programmatically.</p>
+          <div class="feature-list">
+            <div class="feature-item"><span>✔</span> Dual-Rail JSON response</div>
+            <div class="feature-item"><span>✔</span> Safe HMAC Webhook delivery</div>
+            <div class="feature-item"><span>✔</span> Node.js &amp; Python SDKs</div>
+          </div>
+        </div>
+        <a href="docs.html" class="btn btn-ghost" style="text-align:center;">Read API Specs</a>
+      </div>
     </div>
   </div>
+</section>
 
-  <!-- Comparison Table -->
-  <div style="margin-top: 48px; background: #fff; border: 2px solid #000; border-radius: var(--radius); padding: 24px; box-shadow: 6px 6px 0 #000; overflow-x: auto;">
-    <h3 style="font-size: 18px; font-weight: 800; margin-bottom: 16px; text-align: left;">Traditional Processors vs. AIPP.dev</h3>
-    <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 13px;">
+<!-- COMPARISON -->
+<section class="section">
+  <span class="section-label">Comparison</span>
+  <h2>Traditional Processors vs. AIPP.dev</h2>
+  <div class="table-wrap">
+    <table>
       <thead>
-        <tr style="border-bottom: 2px solid #000;">
-          <th style="padding: 12px 8px; font-weight: 800;">Feature</th>
-          <th style="padding: 12px 8px; font-weight: 800; color: #ef4444;">Stripe / PayPal</th>
-          <th style="padding: 12px 8px; font-weight: 800; color: #22c55e;">AIPP.dev</th>
+        <tr style="border-bottom:3px solid var(--border);">
+          <th>Feature</th>
+          <th style="color:#ef4444;">Stripe / PayPal</th>
+          <th style="color:#22c55e;">AIPP.dev</th>
         </tr>
       </thead>
       <tbody>
-        <tr style="border-bottom: 1px solid #ddd;">
-          <td style="padding: 12px 8px; font-weight: 700;">Payout Time</td>
-          <td style="padding: 12px 8px; color: #ef4444;">7 - 14 Days (Payout holding)</td>
-          <td style="padding: 12px 8px; font-weight: 700; color: #22c55e;">Instant (Milliseconds)</td>
-        </tr>
-        <tr style="border-bottom: 1px solid #ddd;">
-          <td style="padding: 12px 8px; font-weight: 700;">Custody &amp; Risk</td>
-          <td style="padding: 12px 8px; color: #ef4444;">Custodial (Accounts can be frozen/blocked)</td>
-          <td style="padding: 12px 8px; font-weight: 700; color: #22c55e;">Non-Custodial (Wallet-to-Wallet)</td>
-        </tr>
-        <tr style="border-bottom: 1px solid #ddd;">
-          <td style="padding: 12px 8px; font-weight: 700;">Chargeback Fraud</td>
-          <td style="padding: 12px 8px; color: #ef4444;">High risk (Up to 180 days post-purchase)</td>
-          <td style="padding: 12px 8px; font-weight: 700; color: #22c55e;">Zero (Cryptographic finality)</td>
-        </tr>
-        <tr style="border-bottom: 1px solid #ddd;">
-          <td style="padding: 12px 8px; font-weight: 700;">Global Accessibility</td>
-          <td style="padding: 12px 8px; color: #ef4444;">Restricted by country &amp; local bank systems</td>
-          <td style="padding: 12px 8px; font-weight: 700; color: #22c55e;">100% Global (Lightning &amp; Base network)</td>
-        </tr>
-        <tr style="border-bottom: 1px solid #ddd;">
-          <td style="padding: 12px 8px; font-weight: 700;">Micropayments</td>
-          <td style="padding: 12px 8px; color: #ef4444;">Impossible (High fixed fees like $0.30 + 2.9%)</td>
-          <td style="padding: 12px 8px; font-weight: 700; color: #22c55e;">Supported (Down to $0.01)</td>
+        <tr>
+          <td><strong>Settlement Speed</strong></td>
+          <td style="color:#ef4444;">7 - 14 Days holding</td>
+          <td style="color:#22c55e; font-weight:800;">Instant (Seconds)</td>
         </tr>
         <tr>
-          <td style="padding: 12px 8px; font-weight: 700;">Setup Time</td>
-          <td style="padding: 12px 8px; color: #ef4444;">Days (Strict business &amp; identity audits)</td>
-          <td style="padding: 12px 8px; font-weight: 700; color: #22c55e;">3 Seconds (Paste address &amp; go)</td>
+          <td><strong>Custody Risk</strong></td>
+          <td style="color:#ef4444;">High (Account freezes &amp; funds locked)</td>
+          <td style="color:#22c55e; font-weight:800;">None (Direct to your wallet)</td>
+        </tr>
+        <tr>
+          <td><strong>Chargebacks</strong></td>
+          <td style="color:#ef4444;">Frequent (Buyer fraud risk)</td>
+          <td style="color:#22c55e; font-weight:800;">Zero (Cryptographically final)</td>
+        </tr>
+        <tr>
+          <td><strong>Global Availability</strong></td>
+          <td style="color:#ef4444;">Restricted by local banking systems</td>
+          <td style="color:#22c55e; font-weight:800;">100% Borderless</td>
+        </tr>
+        <tr>
+          <td><strong>Micropayments ($0.05)</strong></td>
+          <td style="color:#ef4444;">Impossible (High flat fees)</td>
+          <td style="color:#22c55e; font-weight:800;">Fully supported</td>
         </tr>
       </tbody>
     </table>
   </div>
 </section>
 
-<!-- GET STARTED FLOW -->
-<section class="section" id="get-started">
-  <div class="label">Get Started</div>
-  <h2>Link your wallet and get your API Key in seconds.</h2>
-  <div class="demo-wrap">
-
-    <div class="demo-tabs">
-      <button class="tab active" onclick="switchTab(0)">① Get API Key</button>
-      <button class="tab" onclick="switchTab(1)">② Test Checkout (Optional)</button>
-      <button class="tab" onclick="switchTab(2)">③ Test Payout</button>
-    </div>
-
-    <!-- STEP 1: Get API Key -->
-    <div class="demo-step active" id="step0">
-      <p style="color:var(--muted);font-size:14px;margin-bottom:20px;font-weight:600;">Choose how you want to receive payments:</p>
-      
-      <!-- Visual Cards Selector -->
-      <div style="display:grid; grid-template-columns: repeat(3, 1fr); gap:16px; max-width:560px; margin:0 auto 24px auto;">
-        <div id="card-mode-ln" class="setup-card" onclick="setSetupMode('ln')">
-          <div style="margin-bottom: 8px; display: flex; align-items: center; justify-content: center; height: 40px;">
-            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color: #ffcc00; filter: drop-shadow(1px 1px 0 #000);"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" fill="#ffcc00"></polygon></svg>
-          </div>
-          <div style="font-weight: 800; font-size: 13px; color: #000; margin-bottom: 2px;">Bitcoin Lightning</div>
-          <div style="font-size: 10px; color: #555; line-height: 1.2;">Instant, near-zero fee</div>
-        </div>
-        <div id="card-mode-usdc" class="setup-card" onclick="setSetupMode('usdc')">
-          <div style="margin-bottom: 8px; display: flex; align-items: center; justify-content: center; height: 40px;">
-            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color: #0052ff; filter: drop-shadow(1px 1px 0 #000);"><circle cx="12" cy="12" r="10" fill="#0052ff"></circle><path d="M12 6v12M15 9H11.5a2.5 2.5 0 0 0 0 5H13a2.5 2.5 0 0 1 0 5H9" stroke="#fff"></path></svg>
-          </div>
-          <div style="font-weight: 800; font-size: 13px; color: #000; margin-bottom: 2px;">Base USDC</div>
-          <div style="font-size: 10px; color: #555; line-height: 1.2;">Dollar-pegged, no volatility</div>
-        </div>
-        <div id="card-mode-both" class="setup-card active" onclick="setSetupMode('both')">
-          <div style="margin-bottom: 8px; display: flex; align-items: center; justify-content: center; height: 40px;">
-            <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="filter: drop-shadow(1px 1px 0 rgba(0,0,0,0.3));">
-              <polygon points="3,8 11,8 11,4 21,10 11,16 11,12 3,12" fill="#ffcc00" stroke="#000"></polygon>
-              <polygon points="21,16 13,16 13,20 3,14 13,8 13,12 21,12" fill="#000" stroke="#000"></polygon>
-            </svg>
-          </div>
-          <div style="font-weight: 800; font-size: 13px; color: #000; margin-bottom: 2px;">Both (Dual-Rail)</div>
-          <div style="font-size: 10px; color: #000; font-weight: 600; line-height: 1.2;">Accept Lightning & USDC</div>
-        </div>
-      </div>
-
-      <div style="display:flex; flex-direction:column; gap:16px; max-width:560px; margin:0 auto;">
-        <!-- Responsive Grid for Payout Fields -->
-        <div id="payout-fields-grid" class="payout-fields-grid dual-columns">
-          <div id="wrapper-ln-address" style="text-align:left;">
-            <label style="font-size:12px; font-weight:700; color:#000; display:block; margin-bottom:6px;">▸ Your Lightning Address <span style="font-weight:500;color:#666;">(where you receive payments)</span>:</label>
-            <div class="demo-input" style="margin-bottom:0;">
-              <input type="text" id="demo-ln-address" value="" placeholder="e.g. yourname@getalby.com">
-            </div>
-            <div id="ln-error" class="input-error-msg">⚠ Must be a valid Lightning Address (user@domain.com)</div>
-          </div>
-          <div id="wrapper-usdc-address" style="text-align:left;">
-            <label style="font-size:12px; font-weight:700; color:#000; display:block; margin-bottom:6px;">▸ USDC Wallet Address <span style="font-weight:500;color:#666;">(Base / Ethereum)</span>:</label>
-            <div class="demo-input" style="margin-bottom:0;">
-              <input type="text" id="demo-usdc-address" value="" placeholder="0x... (your MetaMask or Coinbase wallet)">
-            </div>
-            <div id="usdc-error" class="input-error-msg">⚠ Must be a valid EVM address (0x + 40 hex chars)</div>
-          </div>
-        </div>
-
-        <div style="text-align:left; max-width: 100%;">
-          <label style="font-size:12px; font-weight:700; color:#000; display:block; margin-bottom:6px;">▸ Email for payment alerts <span style="font-weight:500; color:#666;">(Optional):</span></label>
-          <div class="demo-input" style="margin-bottom:0;">
-            <input type="email" id="demo-email" class="input-normal" value="" placeholder="your@email.com">
-          </div>
-        </div>
-        
-        <div>
-          <button class="demo-btn" onclick="demoRegisterMerchant()" style="margin-top:4px;">Link Wallet & Get Key</button>
-          <div style="font-size:11px; color:#555; text-align:center; margin-top:8px; font-weight:600;">* Enter your real wallet addresses to get a permanent API key. It will be saved in your dashboard.</div>
-        </div>
-      </div>
-    </div>
-
-    <!-- STEP 2: Checkout -->
-    <div class="demo-step" id="step1">
-      <p style="color:var(--muted);font-size:14px;margin-bottom:20px">Simulate a test checkout on your newly generated API key:</p>
-      <div class="shop-card" style="background:#fff;border:3px solid #000;border-radius:var(--radius);padding:16px;box-shadow:4px 4px 0px #000;margin:0 auto;max-width:320px;text-align:center">
-        <!-- Beautiful SVG Placeholder for AI Inference Token -->
-        <div style="width:100%; height:180px; display:flex; align-items:center; justify-content:center; background:linear-gradient(135deg, #111 0%, #222 100%); border:3px solid #000; border-radius:var(--radius); margin-bottom:12px; position:relative; overflow:hidden;">
-          <!-- Grid pattern overlay -->
-          <div style="position:absolute; top:0; left:0; right:0; bottom:0; opacity:0.1; background-image: radial-gradient(circle, #fff 1px, transparent 1px); background-size: 16px 16px;"></div>
-          <!-- Glowing circle -->
-          <div style="width: 80px; height: 80px; border-radius: 50%; background: radial-gradient(circle, rgba(255,204,0,0.2) 0%, transparent 70%); position: absolute; filter: blur(8px);"></div>
-          <!-- SVG Icon -->
-          <svg width="64" height="64" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg" style="z-index: 1;">
-            <rect x="12" y="12" width="40" height="40" rx="8" fill="#111" stroke="#ffcc00" stroke-width="2.5"/>
-            <circle cx="28" cy="32" r="8" fill="none" stroke="#ffcc00" stroke-width="2"/>
-            <circle cx="28" cy="32" r="3" fill="#ffcc00"/>
-            <path d="M36 24 L44 32 L36 40" fill="none" stroke="#ffcc00" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
-            <path d="M46 18 L48 20" stroke="#ffcc00" stroke-width="1.5" stroke-linecap="round"/>
-            <path d="M18 46 L20 48" stroke="#ffcc00" stroke-width="1.5" stroke-linecap="round"/>
-          </svg>
-        </div>
-        <h3 style="margin-bottom:4px;font-size:16px;color:#000">Premium LLM Inference</h3>
-        <p style="color:var(--muted);font-size:12px;margin-bottom:12px">Execute 10k tokens of highly optimized AI inference.</p>
-        
-        <div class="demo-input" style="margin-top:12px; margin-bottom:12px;">
-          <select id="demo-protocol" onchange="updatePriceLabel()" style="width:100%; padding:10px; border:2px solid var(--border); border-radius:8px; font-weight:700; background:#fff; outline:none; cursor:pointer;">
-            <option value="L402">Pay via Lightning (L402)</option>
-            <option value="x402">Pay via USDC on Base (x402)</option>
-            <option value="dual">Pay via Dual-Rail (L402 + x402)</option>
-          </select>
-        </div>
-
-        <div class="price" id="demo-price-display" style="font-size:20px;font-weight:900;margin-bottom:12px;color:#000">500 <span style="font-size:14px">sats</span></div>
-        <button class="demo-btn" onclick="demoCreateInvoice()" style="width:100%">Pay for Compute</button>
-      </div>
-    </div>
-
-    <!-- STEP 3: Payout Status -->
-    <div class="demo-step" id="step2">
-      <div id="demo-dual-tabs" style="display:none; justify-content:center; gap:8px; margin-bottom:16px;">
-        <button class="tab-btn" id="demo-tab-ln" onclick="toggleDemoDualPanel('ln')" style="padding:6px 12px; border:2px solid var(--border); border-radius:6px; font-weight:700; background:#ffcc00; cursor:pointer;">⚡ Lightning</button>
-        <button class="tab-btn" id="demo-tab-usdc" onclick="toggleDemoDualPanel('usdc')" style="padding:6px 12px; border:2px solid var(--border); border-radius:6px; font-weight:700; background:#fff; cursor:pointer;">🔵 Base USDC</button>
-      </div>
-
-      <div id="qr-area" style="display:none">
-        <div class="qr-box">
-          <canvas id="qr-canvas"></canvas>
-          <div class="invoice-str" id="invoice-str" onclick="copyInvoice()" title="Click to copy">Click to copy invoice</div>
-          <div class="status-row">
-            <div class="dot pending" id="pay-dot"></div>
-            <span id="pay-status">Waiting for payment...</span>
-          </div>
-        </div>
-      </div>
-
-      <div id="x402-area" style="display:none; text-align:center; padding:12px 0;">
-        <h4 style="margin-bottom:8px; color:var(--fg);">x402 Challenge Received</h4>
-        <div style="background:#f9f9f9; padding:12px; border-radius:8px; border:2px solid var(--border); margin-bottom:16px; font-size:13px; text-align:left; font-family:monospace; word-break:break-all;">
-          <strong>Network:</strong> Base<br>
-          <strong>Token:</strong> USDC<br>
-          <strong>Price:</strong> <span id="x402-price-val">0.05</span> USDC<br>
-          <strong>Pay To:</strong> <span id="x402-pay-to-val">0x...</span>
-        </div>
-        <div style="display:flex; flex-direction:column; gap:8px;">
-          <button class="demo-btn" id="demo-web3-pay-btn" onclick="payWithWeb3Demo()" style="background:#3b82f6; color:#fff; border-color:#2563eb; width:100%;">Pay with Web3 Wallet</button>
-          <button class="demo-btn" onclick="simulateX402Payment()" style="background:#10b981; color:#fff; border-color:#059669; width:100%;">Simulate Payment (1-Click)</button>
-        </div>
-        <div class="status-row" style="margin-top:16px;">
-          <div class="dot pending" id="x402-pay-dot"></div>
-          <span id="x402-pay-status">Waiting for payment...</span>
-        </div>
-      </div>
-      
-      <div id="payout-result" style="display:none;background:#fff;border:3px solid #000;border-radius:var(--radius);padding:20px;box-shadow:4px 4px 0px #000;margin:0 auto;max-width:350px">
-        <div class="success-icon" style="text-align:center;font-size:32px;margin-bottom:8px">🎉</div>
-        <h3 style="text-align:center;margin-bottom:16px;color:#000">Split & Forward Completed!</h3>
-        <div style="font-size:13px;line-height:1.8;color:#000">
-          <div style="display:flex;justify-content:space-between;border-bottom:1px solid #ddd;padding:4px 0"><strong>Total Paid:</strong> <span id="demo-total-paid">500 sats</span></div>
-          <p style="margin:4px 0; color:#b0bec5; font-size:12px">aipp Fee (1%): <span style="float:right">-<span id="demo-fee">5</span> <span id="demo-fee-unit">sats</span></span></p>
-          <div style="display:flex;justify-content:space-between;border-bottom:1px solid #ddd;padding:4px 0;color:#2e7d32"><strong>Payout Forwarded:</strong> <span id="demo-payout-sent">495 sats</span></div>
-          <div style="display:flex;justify-content:space-between;border-bottom:1px solid #ddd;padding:4px 0"><strong>Destination Address:</strong> <span id="demo-dest-address" style="font-weight:700"></span></div>
-          <div style="padding-top:12px;font-size:11px;color:var(--muted);word-break:break-all"><strong>Payout Tx ID:</strong> <br><span id="demo-payout-hash" style="font-family:monospace"></span></div>
-        </div>
-        <button class="demo-btn" onclick="switchTab(0)" style="width:100%;margin-top:16px">Test Another Address →</button>
-      </div>
-    </div>
-
-  </div>
-</section>
-
-<section class="section" id="use-cases">
-  <div class="label">Use Cases</div>
-  <h2>Built for the Machine Economy.</h2>
-  <p style="font-size: 16px; margin-bottom: 40px; color: var(--muted);">
-    aipp creates a robust financial layer bridging traditional web services with emerging machine economies.
-  </p>
-  
-  <div class="bento-grid">
-    <!-- 1. AI Agent Economy (Wide) -->
-    <div class="bento-item bento-wide">
-      <h3>
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 8V4H8"/><rect width="16" height="12" x="4" y="8" rx="2"/><path d="M2 14h2"/><path d="M20 14h2"/><path d="M15 13v2"/><path d="M9 13v2"/></svg>
-        Autonomous AI Agent Economy
-      </h3>
-      <p>Currently the fastest-growing sector. L402 creates a machine economy where AI agents can autonomously pay for inference, data oracles, computing, and storage in real-time. aipp gives AI agents the ability to act as "customers" without needing a centralized billing system, bank account, or credit card.</p>
-    </div>
-
-    <!-- 2. API Monetization -->
-    <div class="bento-item">
-      <h3>
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 8v13H3V8"/><path d="M1 3h22v5H1z"/><path d="M10 12h4"/></svg>
-        API Monetization
-      </h3>
-      <p>Ideal for SaaS founders. Traditional billing (credit cards, subscriptions) fails for automated micro-transactions. aipp unlocks frictionless Pay-Per-Call monetization with zero chargeback risk.</p>
-    </div>
-
-    <!-- 5. AI Infrastructure Market -->
-    <div class="bento-item">
-      <h3>
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="8" rx="2" ry="2"/><rect x="2" y="14" width="20" height="8" rx="2" ry="2"/><line x1="6" y1="6" x2="6.01" y2="6"/><line x1="6" y1="18" x2="6.01" y2="18"/></svg>
-        AI Infrastructure Market
-      </h3>
-      <p>As of late 2025, over 1 billion `402 Payment Required` responses are processed daily. Instead of blocking AI crawlers, publishers now charge them micro-fees for instant data access. This L402 standard is a massive and direct market for aipp.</p>
-    </div>
-
-    <!-- 3. Borderless E-commerce -->
-    <div class="bento-item">
-      <h3>
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
-        Borderless E-Commerce
-      </h3>
-      <p>Many emerging markets are restricted by legacy giants like Stripe. Powered by the Lightning Network, aipp completely eliminates geographical constraints. Sell globally.</p>
-    </div>
-
-    <!-- 4. Content Micropayments -->
-    <div class="bento-item">
-      <h3>
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
-        Content Micropayments
-      </h3>
-      <p>Payments like $0.05 per article or $0.10 per video are physically impossible with credit cards. aipp makes micro-content monetization naturally viable.</p>
-    </div>
-
-    <!-- 6. Digital Product Sales -->
-    <div class="bento-item">
-      <h3>
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
-        Digital Products
-      </h3>
-      <p>Zero Chargeback risk. Lightning payments are mathematically irreversible. Delivery is instant, wait times are non-existent, and borders vanish.</p>
-    </div>
-
-    <!-- 7. Freelance & Micro-work -->
-    <div class="bento-item bento-wide">
-      <h3>
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg>
-        Freelance & Micro-work
-      </h3>
-      <p>Instant, zero-friction payouts for completed tasks or bounties. Shrinks the slow 3-5% fee, multi-day legacy flow into seconds with a flat 1% network fee.</p>
-    </div>
-  </div>
-</section>
-
-<section class="section" id="integration">
-  <div class="label">Integration Paths</div>
-  <h2>How do I actually use this API Key?</h2>
-  <p style="font-size: 16px; margin-bottom: 40px; color: var(--muted);">
-    Whether you are a seasoned developer, a non-technical shop owner, or an autonomous AI, using your aipp Key is incredibly simple.
-  </p>
-  
-  <div class="integration-grid">
+<!-- REGISTRATION WIZARD -->
+<section class="section" id="get-started" style="border-top:3px solid var(--border); max-width:100%; background:#faf9f6;">
+  <div style="max-width:1000px; margin:0 auto; padding:40px 0;">
+    <span class="section-label">Onboarding</span>
+    <h2>Get your Credentials</h2>
     
-    <!-- Path 1: AI Agents -->
-    <div class="int-card" style="background:var(--card); border:1px solid var(--border); border-radius:var(--radius); padding:32px; transition:transform 0.2s;">
-      <div style="margin-bottom:20px; color:var(--accent);">
-        <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 8V4H8"/><rect width="16" height="12" x="4" y="8" rx="2"/><path d="M2 14h2"/><path d="M20 14h2"/><path d="M15 13v2"/><path d="M9 13v2"/></svg>
+    <div class="wizard-card">
+      <div class="wizard-tabs">
+        <button class="tab active" id="tab0" onclick="switchTab(0)">① Setup Payout Wallet</button>
+        <button class="tab" id="tab1" onclick="switchTab(1)">② Try Checkout</button>
+        <button class="tab" id="tab2" onclick="switchTab(2)">③ Dashboard Access</button>
       </div>
-      <h3 style="font-weight:600; font-size:18px; margin-bottom:12px; color:var(--fg);">I use an AI Agent</h3>
-      <p style="color:var(--muted); font-size:14px; line-height:1.6; margin-bottom:20px;">
-        You don't need to know how to code! Simply paste your <code style="background:var(--bg);border:1px solid var(--border);padding:2px 4px;border-radius:4px">aipp_merch_...</code> key into your AI Agent's system prompt or knowledge base. Tell the agent: <i>"Use aipp to charge users for my service."</i> The AI will read our documentation and integrate it autonomously.
-      </p>
-    </div>
 
-    <!-- Path 2: No-code / Plugins -->
-    <div class="int-card" style="background:var(--card); border:1px solid var(--border); border-radius:var(--radius); padding:32px; transition:transform 0.2s;">
-      <div style="margin-bottom:20px; color:var(--accent);">
-        <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
-      </div>
-      <h3 style="font-weight:600; font-size:18px; margin-bottom:12px; color:var(--fg);">I use WordPress / Shopify</h3>
-      <p style="color:var(--muted); font-size:14px; line-height:1.6; margin-bottom:20px;">
-        No coding required. Just download our official eCommerce plugin, go to the settings page, and paste your API key into the "aipp Key" field. Your checkout page will instantly support Bitcoin Lightning payments. <br><br><i>(Plugins are currently in development)</i>
-      </p>
-    </div>
+      <!-- STEP 1 -->
+      <div class="wizard-step active" id="step0">
+        <p style="font-size:14px; color:var(--muted); margin-bottom:24px; font-weight:600;">Where should we route your successful payments?</p>
+        
+        <div class="mode-selector">
+          <div id="card-mode-ln" class="mode-card" onclick="setSetupMode('ln')">Bitcoin Lightning</div>
+          <div id="card-mode-usdc" class="mode-card" onclick="setSetupMode('usdc')">Base USDC</div>
+          <div id="card-mode-both" class="mode-card active" onclick="setSetupMode('both')">Dual (Lightning + USDC)</div>
+        </div>
 
-    <!-- Path 3: Developers -->
-    <div class="int-card" style="background:var(--card); border:1px solid var(--border); border-radius:var(--radius); padding:32px; transition:transform 0.2s;">
-      <div style="margin-bottom:20px; color:var(--accent);">
-        <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 17 10 11 4 5"/><line x1="12" x2="20" y1="19" y2="19"/></svg>
-      </div>
-      <h3 style="font-weight:600; font-size:18px; margin-bottom:12px; color:var(--fg);">I am a Developer</h3>
-      <p style="color:var(--muted); font-size:14px; line-height:1.6; margin-bottom:16px;">
-        Pass the key as an HTTP header <code style="background:var(--bg);border:1px solid var(--border);padding:2px 4px;border-radius:4px">X-Api-Key</code>. Create invoices, fetch EU AI Act Article 26 receipts, or publish your API to <a href="https://paidmcp.dev" target="_blank" style="color:var(--accent);font-weight:600;">PaidMCP.dev</a> with one click.
-      </p>
-      <div style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:16px;">
-        <a href="https://www.npmjs.com/package/aipp-node" target="_blank" style="font-size:11px;background:#000;color:#fff;padding:3px 10px;border-radius:4px;text-decoration:none;font-weight:700;">npm aipp-node@1.2.3</a>
-        <a href="https://pypi.org/project/aipp-sdk/" target="_blank" style="font-size:11px;background:#3572A5;color:#fff;padding:3px 10px;border-radius:4px;text-decoration:none;font-weight:700;">pip aipp-sdk==1.2.3</a>
-      </div>
-      <a href="docs.html" style="color:var(--accent); font-weight:600; font-size:14px;">View API Docs →</a>
-    </div>
+        <div id="wrapper-ln-address" style="text-align:left;">
+          <label class="input-label">▸ Lightning Address:</label>
+          <input type="text" id="demo-ln-address" class="input-field" placeholder="e.g. yourname@getalby.com">
+          <div id="ln-error" class="error-msg">⚠ Invalid Lightning Address (user@domain.com)</div>
+        </div>
 
+        <div id="wrapper-usdc-address" style="text-align:left;">
+          <label class="input-label">▸ USDC Wallet Address (Base network):</label>
+          <input type="text" id="demo-usdc-address" class="input-field" placeholder="0x... (EVM address)">
+          <div id="usdc-error" class="error-msg">⚠ Invalid Ethereum address format</div>
+        </div>
+
+        <div style="text-align:left;">
+          <label class="input-label">▸ Alert Email (Optional):</label>
+          <input type="email" id="demo-email" class="input-field" placeholder="you@email.com">
+        </div>
+
+        <button class="btn btn-primary" style="width:100%; margin-top:8px;" onclick="demoRegisterMerchant()">Link Wallet &amp; Get API Key</button>
+      </div>
+
+      <!-- STEP 2 -->
+      <div class="wizard-step" id="step1">
+        <p style="font-size:14px; color:var(--muted); margin-bottom:20px; font-weight:600;">Pay this test invoice to verify the wallet setup:</p>
+        <div style="display:flex; justify-content:center; gap:8px; margin-bottom:20px;">
+          <button class="tab active" id="btn-demo-ln" onclick="setDemoPayMode('L402')">Lightning (Sats)</button>
+          <button class="tab" id="btn-demo-usdc" onclick="setDemoPayMode('X402')">Base USDC</button>
+        </div>
+        <button class="btn btn-primary" id="demo-pay-btn" onclick="generateDemoInvoice()" style="width:100%;">Create Invoice</button>
+        
+        <div id="demo-qr-area" style="display:none; margin-top:20px;">
+          <div style="border:2px solid #000; border-radius:8px; padding:16px; display:inline-block; background:#fff; box-shadow:4px 4px 0 #000;">
+            <canvas id="demo-qr-canvas" style="display:block;"></canvas>
+          </div>
+          <div id="demo-instructions" style="font-size:12px; margin-top:12px; font-weight:700; color:var(--muted); word-break:break-all;">Scan QR code with your wallet</div>
+          <div style="display:flex; align-items:center; justify-content:center; gap:6px; margin-top:12px;">
+            <span class="dot pending" id="demo-status-dot"></span>
+            <span id="demo-status-text" style="font-size:13px; font-weight:700;">Waiting for payment...</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- STEP 3 -->
+      <div class="wizard-step" id="step2">
+        <p style="font-size:14px; color:var(--muted); margin-bottom:24px; font-weight:600;">Access your real-time tracking dashboard:</p>
+        <a href="dashboard.html" class="btn btn-primary" style="width:100%; text-align:center;">Go to Developer Dashboard</a>
+      </div>
+    </div>
   </div>
 </section>
 
-<section class="section" id="pricing">
-  <div class="label">Pricing</div>
-  <h2>Flat fee. Zero friction.</h2>
-  <div style="background:var(--card); border:1px solid var(--border); border-radius:var(--radius); padding:40px; max-width:500px; margin:0 auto; text-align:center;">
-    <div style="font-weight:600; color:var(--muted); text-transform:uppercase; letter-spacing:1px; margin-bottom:12px;">Standard Rate</div>
-    <div style="font-size:48px; font-weight:700; color:var(--fg); margin-bottom:8px;">1% <span style="font-size:16px; color:var(--muted); font-weight:400;">commission</span></div>
-    <div style="font-size:14px; color:var(--muted); margin-bottom:32px;">taken on payment success · no processing limits</div>
-    <ul style="list-style:none; text-align:left; margin-bottom:32px; display:flex; flex-direction:column; gap:12px;">
-      <li style="display:flex; align-items:center; gap:12px; color:var(--fg);"><span style="color:var(--accent);">⚡</span> Settled instantly to your wallet</li>
-      <li style="display:flex; align-items:center; gap:12px; color:var(--fg);"><span style="color:var(--accent);">⚡</span> Non-custodial — zero regulatory risk</li>
-      <li style="display:flex; align-items:center; gap:12px; color:var(--fg);"><span style="color:var(--accent);">⚡</span> Fiat-pegged pricing (USD/EUR to Sats)</li>
-      <li style="display:flex; align-items:center; gap:12px; color:var(--fg);"><span style="color:var(--accent);">⚡</span> Just-in-Time channel creation (LSP auto-capacity)</li>
-      <li style="display:flex; align-items:center; gap:12px; color:var(--fg);"><span style="color:var(--accent);">⚡</span> Min transaction: 100 sats</li>
-      <li style="display:flex; align-items:center; gap:12px; color:var(--fg);"><span style="color:var(--accent);">⚡</span> Max transaction: 100,000 sats</li>
-      <li style="display:flex; align-items:center; gap:12px; color:var(--fg);"><span style="color:var(--accent);">⚡</span> Zero monthly maintenance fees</li>
-    </ul>
-    <a href="#get-started" class="btn btn-primary" style="display:block; text-align:center; width:100%;">Start Processing →</a>
-  </div>
-</section>
-
-<style>
-  .social-btn {
-    display: flex; align-items: center; justify-content: center;
-    width: 48px; height: 48px; background: #fff;
-    border: 2px solid var(--border); border-radius: 8px;
-    color: var(--fg); transition: all 0.2s; box-shadow: 3px 3px 0 #000;
-  }
-  .social-btn:hover { transform: translate(-2px, -2px); box-shadow: 5px 5px 0 #000; background: #f9f9f9; }
-  .footer-links a { color: var(--fg); text-decoration: none; transition: all 0.2s; }
-  .footer-links a:hover { text-decoration: underline; }
-</style>
-<footer style="border-top: 2px solid var(--border); padding: 60px 24px; background: var(--bg); text-align: center; display: flex; flex-direction: column; align-items: center; gap: 32px; color: var(--fg); font-family: 'Inter', sans-serif; margin-top: auto;">
-  
-  <div style="font-weight: 800; font-size: 24px; display: flex; align-items: center; gap: 8px;">
-    <svg width="24" height="24" viewBox="0 0 24 24" fill="#000" stroke="#000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
-    aipp
-  </div>
-
-  <div style="display: flex; gap: 16px; flex-wrap: wrap; justify-content: center;">
-    <a href="https://t.me/aippdev" target="_blank" class="social-btn" title="Telegram">
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.198 2.433a2.242 2.242 0 0 0-1.022.215l-18 7.333c-.76.31-.77 1.39-.02 1.72l4.88 2.12 1.34 5.91c.14.63.85.87 1.35.46l2.97-2.45 4.67 3.46c.55.4 1.33.15 1.5-.52l3.41-16.14a2.24 2.24 0 0 0-2.078-2.108z"></path><path d="m15.5 8.5-6.5 5.5"></path></svg>
-    </a>
-    <a href="https://x.com/aippdev" target="_blank" class="social-btn" title="X (Twitter)">
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4l11.733 16h4.267l-11.733 -16z"></path><path d="M4 20l6.768 -6.768m2.46 -2.46l6.772 -6.772"></path></svg>
-    </a>
-    <a href="https://github.com/aippde/aipp-key" target="_blank" class="social-btn" title="GitHub">
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"></path></svg>
-    </a>
-  </div>
-
-  <div class="footer-links" style="display: flex; gap: 16px; flex-wrap: wrap; justify-content: center; font-size: 14px; font-weight: 700; margin-bottom: 24px;">
-    <a href="legal.html#privacy">Privacy Policy</a>
-    <span style="color:var(--muted)">|</span>
-    <a href="https://github.com/aippde/aipp-key/issues" target="_blank">Support</a>
-    <span style="color:var(--muted)">|</span>
-    <a href="legal.html">Legal Disclaimer</a>
-    <span style="color:var(--muted)">|</span>
-    <a href="l402.html">For AI Agents</a>
-    <span style="color:var(--muted)">|</span>
-    <a href="docs.html">API</a>
-  </div>
-
-  <div style="font-size: 13px; font-weight: 600; color: var(--muted); margin-top: 8px;">
-    Powered by ⚡ Bitcoin Lightning · LNBits · L402 · x402 (Base) · <a href="https://paidmcp.dev" target="_blank" style="color:var(--fg);text-decoration:none;font-weight:700;">PaidMCP</a><br><br>
-    © 2026 aipp.dev — The non-custodial gateway
-  </div>
-</footer>
-
-<!-- SUCCESS MODAL -->
+<!-- MODAL ON REGISTRATION SUCCESS -->
 <div class="modal-overlay" id="success-modal">
   <div class="modal-box">
-    <div style="font-size:48px;text-align:center;margin-bottom:8px">🎉</div>
-    <h2 style="text-align:center">Your store is live!</h2>
-    <p style="text-align:center">
-      Your API key has been saved to your browser automatically. You don't need to memorize it to access your Dashboard. You can also download it for use on another device.
-    </p>
-    <div class="modal-key-wrap">
-      <input type="text" class="modal-key-input" id="modal-api-key" readonly>
-      <button class="modal-btn-download" onclick="downloadKey()" title="Download Key">💾</button>
-      <button class="modal-btn-download" onclick="copyModalKey()" title="Copy">📋</button>
-    </div>
-    <div class="modal-actions">
-      <button class="btn-test" onclick="closeModalAndTest()">Test Checkout (Optional)</button>
-      <a href="dashboard.html" class="btn-dash">Go to Dashboard ⚡</a>
+    <div style="font-size:40px; margin-bottom:16px;">🎉</div>
+    <h2 style="font-size:24px; font-weight:900; margin-bottom:12px;">Wallet Connected!</h2>
+    <p>Save this API Key securely. It grants programmatic access to AIPP.</p>
+    <div id="modal-key-box" style="background:#f4f4f5; border:2px solid #000; padding:16px; border-radius:8px; font-family:monospace; font-size:12px; font-weight:700; margin-bottom:24px; word-break:break-all; cursor:pointer;" onclick="copyModalKey(this)">aipp_key_here</div>
+    <div style="display:grid; grid-template-columns:1fr; gap:12px;">
+      <button class="btn btn-primary" onclick="closeSuccessModal(true)">Proceed to Test Checkout</button>
+      <button class="btn btn-ghost" onclick="closeSuccessModal(false)">Close</button>
     </div>
   </div>
 </div>
 
-<!-- WAITLIST MODAL -->
-<div class="modal-overlay" id="waitlist-modal">
-  <div class="modal-box">
-    <div style="font-size:48px;text-align:center;margin-bottom:8px">⏳</div>
-    <h2 style="text-align:center">We're at capacity!</h2>
-    <p style="text-align:center; margin-bottom: 24px;">
-      aipp is currently in Closed Beta and we've reached our maximum merchant limit.
-      Leave your email and we'll notify you when a new slot opens up.
-    </p>
-    <div class="demo-input" style="flex-direction: column;">
-      <input type="email" id="waitlist-email" placeholder="your@email.com" style="margin-bottom: 12px; text-align: center;">
-      <button class="btn-primary" onclick="submitWaitlist()" style="width: 100%; border: none;">Join the Waitlist</button>
-      <button class="btn-ghost" onclick="closeWaitlistModal()" style="width: 100%; margin-top: 8px;">Close</button>
-    </div>
+<footer>
+  <div class="footer-links">
+    <a href="legal.html#privacy">Privacy</a>
+    <a href="https://github.com/aippde/aipp-key/issues" target="_blank">Support</a>
+    <a href="legal.html">Disclaimer</a>
+    <a href="l402.html">AI Agents</a>
+    <a href="docs.html">API Specs</a>
   </div>
-</div>
+  <p>© 2026 aipp.dev · Non-Custodial Gateway</p>
+</footer>
 
 <script>
-// ── CONFIG ──────────────────────────────────────────────
-const AIPP_API = window.location.origin; // aipp backend
+const AIPP_API = window.location.origin;
+let setupMode = 'both';
+let demoPayMode = 'L402';
+let demoInterval = null;
+let currentApiKey = '';
 
-// ── STATE ───────────────────────────────────────────────
-let currentMerchantKey = '';
-let currentLnAddress = '';
-let currentUsdcAddress = '';
-let currentPaymentHash = '';
-let currentX402PayTo = '';
-let currentX402Token = '';
-let currentX402Price = '0.05';
-let pollTimer = null;
+function setSetupMode(mode) {
+  setupMode = mode;
+  document.getElementById('card-mode-ln').classList.toggle('active', mode === 'ln');
+  document.getElementById('card-mode-usdc').classList.toggle('active', mode === 'usdc');
+  document.getElementById('card-mode-both').classList.toggle('active', mode === 'both');
 
-// ── TABS ────────────────────────────────────────────────
-function switchTab(i) {
-  document.querySelectorAll('.tab').forEach((t,j)=>t.classList.toggle('active',i===j));
-  document.querySelectorAll('.demo-step').forEach((s,j)=>s.classList.toggle('active',i===j));
-}
+  const lnWrap = document.getElementById('wrapper-ln-address');
+  const usdcWrap = document.getElementById('wrapper-usdc-address');
 
-function updatePriceLabel() {
-  const protocol = document.getElementById('demo-protocol').value;
-  const display = document.getElementById('demo-price-display');
-  if (protocol === 'L402') {
-    display.innerHTML = '500 <span style="font-size:14px">sats</span>';
-  } else if (protocol === 'x402') {
-    display.innerHTML = '0.05 <span style="font-size:14px">USDC</span>';
+  if (mode === 'ln') {
+    lnWrap.style.display = 'block';
+    usdcWrap.style.display = 'none';
+  } else if (mode === 'usdc') {
+    lnWrap.style.display = 'none';
+    usdcWrap.style.display = 'block';
   } else {
-    display.innerHTML = '500 sats <span style="font-size:14px">or</span> 0.05 USDC';
+    lnWrap.style.display = 'block';
+    usdcWrap.style.display = 'block';
   }
 }
 
-// ── QR CODE GENERATOR ───────────────────────────────────
-function drawQR(canvas, text) {
-  QRCode.toCanvas(canvas, text, {
-    width: 250,
-    margin: 1,
-    color: {
-      dark: '#000000',
-      light: '#ffffff'
+function setDemoPayMode(mode) {
+  demoPayMode = mode;
+  document.getElementById('btn-demo-ln').classList.toggle('active', mode === 'L402');
+  document.getElementById('btn-demo-usdc').classList.toggle('active', mode === 'X402');
+}
+
+function switchTab(idx) {
+  for (let i = 0; i < 3; i++) {
+    document.getElementById(`tab${i}`).classList.toggle('active', i === idx);
+    document.getElementById(`step${i}`).classList.toggle('active', i === idx);
+  }
+}
+
+async function demoRegisterMerchant() {
+  const lnInput = document.getElementById('demo-ln-address');
+  const usdcInput = document.getElementById('demo-usdc-address');
+  const emailInput = document.getElementById('demo-email');
+  
+  const lnError = document.getElementById('ln-error');
+  const usdcError = document.getElementById('usdc-error');
+
+  lnError.classList.remove('visible');
+  usdcError.classList.remove('visible');
+  lnInput.classList.remove('error');
+  usdcInput.classList.remove('error');
+
+  const ln_address = lnInput.value.trim();
+  const usdc_address = usdcInput.value.trim();
+  const email = emailInput.value.trim();
+
+  // Simple validations
+  if (setupMode !== 'usdc' && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(ln_address)) {
+    lnInput.classList.add('error');
+    lnError.classList.add('visible');
+    return;
+  }
+  if (setupMode !== 'ln' && !/^0x[a-fA-F0-9]{40}$/.test(usdc_address)) {
+    usdcInput.classList.add('error');
+    usdcError.classList.add('visible');
+    return;
+  }
+
+  try {
+    const res = await fetch(`${AIPP_API}/merchant/register`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ln_address: ln_address || 'placeholder@aipp.dev', usdc_address: usdc_address || null, email: email || null })
+    });
+    if (!res.ok) {
+      const err = await res.json();
+      alert(err.error || 'Registration failed');
+      return;
     }
-  }, function(error) {
-    if (error) {
-      console.error('QR code generation failed:', error);
-    }
+    const data = await res.json();
+    currentApiKey = data.api_key;
+    localStorage.setItem('aipp_api_key', currentApiKey);
+
+    // Show Success Modal
+    document.getElementById('modal-key-box').textContent = currentApiKey;
+    document.getElementById('success-modal').classList.add('active');
+
+  } catch (e) {
+    alert('Network error registering merchant.');
+  }
+}
+
+function copyModalKey(el) {
+  navigator.clipboard.writeText(el.textContent).then(() => {
+    const oldText = el.textContent;
+    el.textContent = 'Copied to clipboard!';
+    setTimeout(() => el.textContent = oldText, 1500);
   });
 }
 
-// ── SETUP TABS LOGIC ──────────────────────────────────
-let currentSetupMode = 'both';
-
-function setSetupMode(mode) {
-  currentSetupMode = mode;
-  
-  const cardLn = document.getElementById('card-mode-ln');
-  const cardUsdc = document.getElementById('card-mode-usdc');
-  const cardBoth = document.getElementById('card-mode-both');
-  
-  [cardLn, cardUsdc, cardBoth].forEach(card => card.classList.remove('active'));
-  
-  const activeCard = mode === 'ln' ? cardLn : (mode === 'usdc' ? cardUsdc : cardBoth);
-  activeCard.classList.add('active');
-  
-  const grid = document.getElementById('payout-fields-grid');
-  if (mode === 'both') {
-    grid.classList.add('dual-columns');
-  } else {
-    grid.classList.remove('dual-columns');
-  }
-  
-  document.getElementById('wrapper-ln-address').style.display = (mode === 'ln' || mode === 'both') ? 'block' : 'none';
-  document.getElementById('wrapper-usdc-address').style.display = (mode === 'usdc' || mode === 'both') ? 'block' : 'none';
-}
-
-// ── LIVE INPUT VALIDATION ─────────────────────────────
-document.addEventListener('DOMContentLoaded', () => {
-  const lnInput   = document.getElementById('demo-ln-address');
-  const usdcInput = document.getElementById('demo-usdc-address');
-  const lnError   = document.getElementById('ln-error');
-  const usdcError = document.getElementById('usdc-error');
-
-  const LN_REGEX   = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
-  const EVM_REGEX  = /^0x[a-fA-F0-9]{40}$/;
-
-  const validateLn = () => {
-    const val = lnInput.value.trim();
-    if (!val || LN_REGEX.test(val)) {
-      lnInput.classList.remove('input-error');
-      lnError.classList.remove('visible');
-    } else {
-      lnInput.classList.add('input-error');
-      lnError.classList.add('visible');
-    }
-  };
-
-  const validateUsdc = () => {
-    const val = usdcInput.value.trim();
-    if (!val || EVM_REGEX.test(val)) {
-      usdcInput.classList.remove('input-error');
-      usdcError.classList.remove('visible');
-    } else {
-      usdcInput.classList.add('input-error');
-      usdcError.classList.add('visible');
-    }
-  };
-
-  lnInput.addEventListener('input', validateLn);
-  usdcInput.addEventListener('input', validateUsdc);
-});
-
-// ── REGISTER MERCHANT ───────────────────────────────────
-async function demoRegisterMerchant() {
-  const LN_REGEX  = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
-  const EVM_REGEX = /^0x[a-fA-F0-9]{40}$/;
-
-  const lnEl    = document.getElementById('demo-ln-address');
-  const usdcEl  = document.getElementById('demo-usdc-address');
-  const lnErr   = document.getElementById('ln-error');
-  const usdcErr = document.getElementById('usdc-error');
-
-  let lnVal   = lnEl.value.trim();
-  let usdcVal = usdcEl.value.trim();
-  const emailInput = document.getElementById('demo-email').value.trim();
-
-  // Reset errors
-  lnEl.classList.remove('input-error');   lnErr.classList.remove('visible');
-  usdcEl.classList.remove('input-error'); usdcErr.classList.remove('visible');
-
-  let hasError = false;
-
-  if (currentSetupMode === 'ln') {
-    usdcVal = '';
-    if (!lnVal || !LN_REGEX.test(lnVal)) {
-      lnEl.classList.add('input-error'); lnErr.classList.add('visible');
-      lnEl.focus(); hasError = true;
-    }
-  } else if (currentSetupMode === 'usdc') {
-    lnVal = '';
-    if (!usdcVal || !EVM_REGEX.test(usdcVal)) {
-      usdcEl.classList.add('input-error'); usdcErr.classList.add('visible');
-      usdcEl.focus(); hasError = true;
-    }
-  } else {
-    if (!lnVal || !LN_REGEX.test(lnVal)) {
-      lnEl.classList.add('input-error'); lnErr.classList.add('visible');
-      hasError = true;
-    }
-    if (!usdcVal || !EVM_REGEX.test(usdcVal)) {
-      usdcEl.classList.add('input-error'); usdcErr.classList.add('visible');
-      hasError = true;
-    }
-    if (hasError) { lnEl.focus(); }
-  }
-
-  if (hasError) return;
-
-  if (emailInput && !emailInput.includes('@')) {
-    document.getElementById('demo-email').focus();
-    return;
-  }
-
-  const payload = { email: emailInput || null };
-  if (lnVal) payload.ln_address = lnVal;
-  if (usdcVal) payload.usdc_address = usdcVal;
-
-  try {
-    const response = await fetch(`${AIPP_API}/merchant/register`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
-    });
-    
-    if (!response.ok) {
-      const errData = await response.json();
-      if (errData.code === 'CAPACITY_REACHED' || response.status === 403) {
-        document.getElementById('waitlist-modal').classList.add('active');
-        return;
-      }
-      alert('Error: ' + errData.error);
-      return;
-    }
-
-    const data = await response.json();
-    currentMerchantKey = data.api_key;
-    currentLnAddress = data.ln_address || '';
-    currentUsdcAddress = data.usdc_address || '';
-
-    // Save to LocalStorage for dashboard demo usage convenience
-    localStorage.setItem('aipp_api_key', currentMerchantKey);
-    if (currentLnAddress) localStorage.setItem('aipp_ln_address', currentLnAddress);
-    if (currentUsdcAddress) localStorage.setItem('aipp_usdc_address', currentUsdcAddress);
-
-    // Show beautiful modal instead of alert
-    document.getElementById('modal-api-key').value = currentMerchantKey;
-    document.getElementById('success-modal').classList.add('active');
-    
-  } catch (err) {
-    console.error('Failed to register merchant:', err);
-    alert('Failed to connect to aipp backend server. Make sure it is running.');
-  }
-}
-
-// ── WAITLIST ────────────────────────────────────────────
-function closeWaitlistModal() {
-  document.getElementById('waitlist-modal').classList.remove('active');
-}
-
-async function submitWaitlist() {
-  const emailInput = document.getElementById('waitlist-email').value.trim();
-  const lnInput = document.getElementById('demo-ln-address').value.trim();
-  const usdcInput = document.getElementById('demo-usdc-address').value.trim();
-  
-  if (!emailInput || !emailInput.includes('@')) {
-    alert('Please enter a valid email address.');
-    return;
-  }
-
-  const payload = { email: emailInput };
-  if (lnInput) payload.ln_address = lnInput;
-  if (usdcInput) payload.usdc_address = usdcInput;
-
-  try {
-    const response = await fetch(`${AIPP_API}/merchant/waitlist`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
-    });
-    
-    if (!response.ok) {
-      alert('An error occurred, please try again.');
-      return;
-    }
-
-    alert('You\'ve been added to the waitlist! We\'ll email you when a new slot opens up.');
-    closeWaitlistModal();
-    document.getElementById('waitlist-email').value = '';
-    
-  } catch (err) {
-    alert('Connection error. Please check your internet and try again.');
-  }
-}
-
-function closeModalAndTest() {
+function closeSuccessModal(proceedToCheckout) {
   document.getElementById('success-modal').classList.remove('active');
-  switchTab(1);
-}
-
-function copyModalKey() {
-  const k = document.getElementById('modal-api-key').value;
-  navigator.clipboard.writeText(k);
-  const btn = event.target;
-  const oldText = btn.textContent;
-  btn.textContent = '✓';
-  setTimeout(() => btn.textContent = oldText, 1500);
-}
-
-function downloadKey() {
-  const k = document.getElementById('modal-api-key').value;
-  const ln = currentLnAddress;
-  const usdc = currentUsdcAddress;
-  const content = `aipp Merchant Details\n----------------------\nAPI Key: ${k}\nLightning Address: ${ln}\nBase USDC Address: ${usdc}\n\nKeep this file safe!`;
-  const blob = new Blob([content], { type: 'text/plain' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = 'aipp-key.txt';
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  URL.revokeObjectURL(url);
-}
-
-// ── CREATE INVOICE ──────────────────────────────────────
-async function demoCreateInvoice() {
-  if (!currentMerchantKey) {
-    alert('Please complete Step 1 (Setup Shop) first!');
-    switchTab(0);
-    return;
-  }
-
-  document.getElementById('qr-area').style.display = 'none';
-  document.getElementById('x402-area').style.display = 'none';
-  document.getElementById('payout-result').style.display = 'none';
-
-  const protocol = document.getElementById('demo-protocol').value;
-  const reqBody = { memo: 'Premium LLM Inference Demo' };
-  
-  if (protocol === 'L402') {
-    reqBody.amount_sats = 500;
-  } else if (protocol === 'x402') {
-    reqBody.amount_usd = 0.05;
-    reqBody.protocol = 'x402';
+  if (proceedToCheckout) {
+    switchTab(1);
   } else {
-    reqBody.amount_usd = 0.05;
-    reqBody.protocol = 'dual';
+    switchTab(2);
   }
+}
+
+async function generateDemoInvoice() {
+  const btn = document.getElementById('demo-pay-btn');
+  btn.disabled = true;
+  btn.textContent = 'Generating...';
 
   try {
-    const response = await fetch(`${AIPP_API}/invoice/create`, {
+    const res = await fetch(`${AIPP_API}/invoice/create`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'X-Api-Key': currentMerchantKey
+        'X-Api-Key': currentApiKey
       },
-      body: JSON.stringify(reqBody)
+      body: JSON.stringify({
+        protocol: demoPayMode === 'X402' ? 'X402' : 'L402',
+        amount_usd: 0.01
+      })
     });
+    if (!res.ok) throw new Error();
+    const data = await res.json();
 
-    if (!response.ok) {
-      const errData = await response.json();
-      alert('Error: ' + errData.error);
-      return;
-    }
+    document.getElementById('demo-qr-area').style.display = 'block';
+    const instructionsEl = document.getElementById('demo-instructions');
 
-    const data = await response.json();
-    currentPaymentHash = data.payment_hash;
-
-    // Reset tabs display
-    document.getElementById('demo-dual-tabs').style.display = 'none';
-
-    if (protocol === 'L402') {
-      const invoice = data.payment_request;
-      const strEl = document.getElementById('invoice-str');
-      strEl.textContent = invoice.slice(0, 28) + '...' + invoice.slice(-28);
-      strEl.dataset.full = invoice;
-
-      const canvas = document.getElementById('qr-canvas');
-      drawQR(canvas, 'LIGHTNING:' + invoice.toUpperCase());
-
-      document.getElementById('qr-area').style.display = 'block';
-      document.getElementById('pay-status').textContent = 'Waiting for payment...';
-      document.getElementById('pay-dot').className = 'dot pending';
-      
-      if (pollTimer) clearInterval(pollTimer);
-      pollTimer = setInterval(() => checkPayment(currentPaymentHash), 2000);
-    } else if (protocol === 'x402') {
-      currentX402PayTo = data.pay_to;
-      currentX402Token = data.token;
-      currentX402Price = data.amount_usd.toString();
-
-      document.getElementById('x402-price-val').textContent = currentX402Price;
-      document.getElementById('x402-pay-to-val').textContent = currentX402PayTo.slice(0,10) + '...' + currentX402PayTo.slice(-10);
-      document.getElementById('x402-area').style.display = 'block';
-      document.getElementById('x402-pay-status').textContent = 'Waiting for payment...';
-      document.getElementById('x402-pay-dot').className = 'dot pending';
-
-      if (pollTimer) clearInterval(pollTimer);
-      pollTimer = setInterval(() => checkPayment(currentPaymentHash), 3000);
+    if (demoPayMode === 'L402') {
+      instructionsEl.textContent = 'Lightning Invoice (Click to copy): ' + data.payment_request;
+      instructionsEl.style.cursor = 'pointer';
+      instructionsEl.onclick = () => {
+        navigator.clipboard.writeText(data.payment_request);
+        alert('Invoice copied!');
+      };
+      QRCode.toCanvas(document.getElementById('demo-qr-canvas'), data.payment_request, { width: 180, margin: 1 });
     } else {
-      // DUAL
-      currentX402PayTo = data.pay_to;
-      currentX402Token = data.token;
-      currentX402Price = data.amount_usd.toString();
-
-      // Setup Lightning Side
-      const invoice = data.payment_request;
-      const strEl = document.getElementById('invoice-str');
-      strEl.textContent = invoice.slice(0, 28) + '...' + invoice.slice(-28);
-      strEl.dataset.full = invoice;
-
-      const canvas = document.getElementById('qr-canvas');
-      drawQR(canvas, 'LIGHTNING:' + invoice.toUpperCase());
-
-      // Setup USDC Side
-      document.getElementById('x402-price-val').textContent = currentX402Price;
-      document.getElementById('x402-pay-to-val').textContent = currentX402PayTo.slice(0,10) + '...' + currentX402PayTo.slice(-10);
-
-      // Display Tabs and default to Lightning panel
-      document.getElementById('demo-dual-tabs').style.display = 'flex';
-      toggleDemoDualPanel('ln');
-
-      document.getElementById('pay-status').textContent = 'Waiting for payment...';
-      document.getElementById('pay-dot').className = 'dot pending';
-      document.getElementById('x402-pay-status').textContent = 'Waiting for payment...';
-      document.getElementById('x402-pay-dot').className = 'dot pending';
-
-      if (pollTimer) clearInterval(pollTimer);
-      pollTimer = setInterval(() => checkPayment(currentPaymentHash), 2000);
+      instructionsEl.innerHTML = `Send 0.01 USDC on Base to: <code style="font-size:9px;">${data.pay_to}</code>`;
+      const usdcUri = `ethereum:${data.token}@8453/transfer?address=${data.pay_to}&uint256=10000`;
+      QRCode.toCanvas(document.getElementById('qr-canvas'), usdcUri, { width: 180, margin: 1 });
     }
 
-    switchTab(2); // Proceed to Payout status tab
-  } catch (err) {
-    console.error('Failed to create invoice:', err);
-    alert('Failed to connect to aipp backend to generate invoice.');
+    pollDemoStatus(data.payment_hash);
+
+  } catch (e) {
+    alert('Failed to generate demo invoice. Ensure you completed Step 1.');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Create Invoice';
   }
 }
 
-function toggleDemoDualPanel(mode) {
-  if (mode === 'ln') {
-    document.getElementById('qr-area').style.display = 'block';
-    document.getElementById('x402-area').style.display = 'none';
-    document.getElementById('demo-tab-ln').style.background = '#ffcc00';
-    document.getElementById('demo-tab-usdc').style.background = '#fff';
-  } else {
-    document.getElementById('qr-area').style.display = 'none';
-    document.getElementById('x402-area').style.display = 'block';
-    document.getElementById('demo-tab-usdc').style.background = '#ffcc00';
-    document.getElementById('demo-tab-ln').style.background = '#fff';
-  }
-}
-
-// ── POLL PAYMENT ────────────────────────────────────────
-async function checkPayment(hash, txHash) {
-  try {
-    const query = txHash ? `?tx_hash=${txHash}` : '';
-    const response = await fetch(`${AIPP_API}/invoice/status/${hash}${query}`);
-    const data = await response.json();
-    if (data.paid) {
-      clearInterval(pollTimer);
-      const isX402 = (data.protocol === 'x402') || hash.startsWith('x402_');
-      onPaymentConfirmed(hash, isX402, txHash || data.preimage);
-    }
-  } catch (err) {}
-}
-
-// ── SIMULATE & WEB3 PAYMENTS FOR X402 ───────────────────
-async function simulateX402Payment() {
-  document.getElementById('x402-pay-status').textContent = 'Simulating payment on-chain...';
-  // Send status request with mock tx hash to confirm invoice settlement
-  await checkPayment(currentPaymentHash, '0xmocktxhash');
-}
-
-async function payWithWeb3Demo() {
-  try {
-    if (!window.ethereum) {
-      alert('No Ethereum wallet found. Please install MetaMask or Coinbase Wallet.');
-      return;
-    }
-    const payBtn = document.getElementById('demo-web3-pay-btn');
-    payBtn.disabled = true;
-    payBtn.innerText = 'Connecting wallet...';
-
-    const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
-    const from = accounts[0];
-
-    const isSepolia = currentX402Token.toLowerCase() === '0x036cbd53842c5426634e7929541ec2318f3dcf7e';
-    const chainId = isSepolia ? '0x14a34' : '0x2105';
-    const networkName = isSepolia ? 'Base Sepolia' : 'Base Mainnet';
-    const rpcUrl = isSepolia ? 'https://sepolia.base.org' : 'https://mainnet.base.org';
-
+function pollDemoStatus(hash) {
+  if (demoInterval) clearInterval(demoInterval);
+  demoInterval = setInterval(async () => {
     try {
-      await window.ethereum.request({
-        method: 'wallet_switchEthereumChain',
-        params: [{ chainId }],
-      });
-    } catch (switchError) {
-      if (switchError.code === 4902) {
-        await window.ethereum.request({
-          method: 'wallet_addEthereumChain',
-          params: [{
-            chainId,
-            chainName: networkName,
-            rpcUrls: [rpcUrl],
-            nativeCurrency: { name: 'Ether', symbol: 'ETH', decimals: 18 },
-            blockExplorerUrls: [isSepolia ? 'https://sepolia.basescan.org' : 'https://basescan.org']
-          }],
-        });
-      } else {
-        throw switchError;
+      const r = await fetch(`${AIPP_API}/invoice/status/${hash}`);
+      if (!r.ok) return;
+      const d = await r.json();
+      if (d.paid) {
+        clearInterval(demoInterval);
+        document.getElementById('demo-status-dot').className = 'dot paid';
+        document.getElementById('demo-status-text').textContent = 'Paid! Payout forwarded to your wallet.';
+        setTimeout(() => switchTab(2), 2000);
       }
-    }
-
-    payBtn.innerText = 'Confirm in Wallet...';
-    const amountUnits = Math.round(parseFloat(currentX402Price) * 1_000_000);
-    
-    // Construct standard ERC20 Transfer payload manually
-    const txHash = await window.ethereum.request({
-      method: 'eth_sendTransaction',
-      params: [{
-        from,
-        to: currentX402Token,
-        data: '0xa9059cbb' + 
-              currentX402PayTo.replace('0x', '').toLowerCase().padStart(64, '0') + 
-              amountUnits.toString(16).padStart(64, '0')
-      }]
-    });
-
-    console.log('x402 Web3 payment sent:', txHash);
-    document.getElementById('x402-pay-status').textContent = 'Confirming tx on Base...';
-    payBtn.innerText = 'Confirming...';
-
-    if (pollTimer) clearInterval(pollTimer);
-    pollTimer = setInterval(() => checkPayment(currentPaymentHash, txHash), 2500);
-
-  } catch (err) {
-    console.error(err);
-    alert('Web3 Payment failed: ' + (err.message || err));
-    const payBtn = document.getElementById('demo-web3-pay-btn');
-    payBtn.disabled = false;
-    payBtn.innerText = 'Pay with Web3 Wallet';
-  }
-}
-
-// ── ON PAYMENT CONFIRMED ───────────────────────────────
-function onPaymentConfirmed(hash, isX402, txHash) {
-  if (isX402) {
-    document.getElementById('x402-pay-dot').className = 'dot paid';
-    document.getElementById('x402-pay-status').textContent = 'Paid! Checking payout queue...';
-  } else {
-    document.getElementById('pay-dot').className = 'dot paid';
-    document.getElementById('pay-status').textContent = 'Paid! Forwarding payout...';
-  }
-
-  let pollCount = 0;
-  const payoutTimer = setInterval(async () => {
-    try {
-      const res = await fetch(`${AIPP_API}/merchant/payout-status/${hash}`);
-      const data = await res.json();
-      
-      if (data.status === 'completed' || data.status === 'failed') {
-        clearInterval(payoutTimer);
-        document.getElementById('qr-area').style.display = 'none';
-        document.getElementById('x402-area').style.display = 'none';
-        
-        const isX402Flow = hash.startsWith('x402_');
-        
-        document.getElementById('demo-total-paid').textContent = isX402Flow ? `${currentX402Price} USDC` : '500 sats';
-        document.getElementById('demo-fee-unit').textContent = isX402Flow ? 'USDC' : 'sats';
-        
-        if (isX402Flow) {
-          const totalVal = parseFloat(currentX402Price);
-          const feeVal = totalVal * 0.01;
-          const payoutVal = totalVal * 0.99;
-          
-          document.getElementById('demo-fee').textContent = feeVal.toFixed(4);
-          document.getElementById('demo-payout-sent').textContent = `${payoutVal.toFixed(4)} USDC`;
-          document.getElementById('demo-dest-address').textContent = currentUsdcAddress.slice(0,10) + '...' + currentUsdcAddress.slice(-10);
-          document.getElementById('demo-payout-hash').innerHTML = txHash ? `<a href="https://sepolia.basescan.org/tx/${txHash}" target="_blank" style="text-decoration:underline;color:#3b82f6;">${txHash.slice(0,24)}...</a>` : 'On-Chain Transfer';
-        } else {
-          document.getElementById('demo-fee').textContent = '5'; // min fee is 5 sats
-          document.getElementById('demo-payout-sent').textContent = '495 sats';
-          document.getElementById('demo-dest-address').textContent = currentLnAddress;
-          document.getElementById('demo-payout-hash').textContent = hash.replace('demo_', 'tx_forwarded_');
-        }
-        
-        const resultDiv = document.getElementById('payout-result');
-        if (data.status === 'failed') {
-          resultDiv.innerHTML = `
-            <div class="success-icon" style="text-align:center;font-size:32px;margin-bottom:8px">⚠️</div>
-            <h3 style="text-align:center;margin-bottom:16px;color:#d32f2f">Routing Error</h3>
-            <div style="font-size:13px;line-height:1.8;color:#000;text-align:center;margin-bottom:16px;">
-              Your payment was received, but the payout could not be forwarded to your wallet address.<br><br>
-              The funds remain safely in your merchant node balance.
-            </div>
-            <button class="demo-btn" onclick="switchTab(0)" style="width:100%">Try Another Address →</button>
-          `;
-        }
-        
-        resultDiv.style.display = 'block';
-      } else {
-        pollCount++;
-        if (pollCount > 15) { // 30 seconds timeout
-          clearInterval(payoutTimer);
-          if (isX402) {
-            document.getElementById('x402-pay-status').textContent = 'Payout queued on Base. Check dashboard later.';
-          } else {
-            document.getElementById('pay-status').textContent = 'Payout queued. Check dashboard later.';
-          }
-        }
-      }
-    } catch (e) {
-      console.error('Error polling payout status', e);
-    }
+    } catch (e) {}
   }, 2000);
 }
-
-// ── COPY INVOICE ────────────────────────────────────────
-function copyInvoice() {
-  const txt = document.getElementById('invoice-str').dataset.full;
-  navigator.clipboard.writeText(txt).then(() => {
-    document.getElementById('invoice-str').textContent = '✓ Copied!';
-    setTimeout(() => {
-      document.getElementById('invoice-str').textContent = txt.slice(0, 28) + '...' + txt.slice(-28);
-    }, 1500);
-  });
-}
-
 </script>
 </body>
 </html>
