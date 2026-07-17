@@ -168,14 +168,32 @@
   aside h4 { font-size: 12px; text-transform: uppercase; color: var(--muted); letter-spacing: 1px; margin-bottom: 16px; font-weight: 600; }
   aside ul { list-style: none; }
   aside li { margin-bottom: 12px; }
-  aside a { color: var(--muted); text-decoration: none; font-size: 14px; font-weight: 500; transition: color 0.2s; }
-  aside a:hover, aside a.active { color: var(--fg); }
+  aside a {
+    color: var(--muted);
+    text-decoration: none;
+    font-size: 14px;
+    font-weight: 500;
+    transition: all 0.2s;
+    border-left: 2px solid transparent;
+    padding-left: 0;
+    display: inline-block;
+  }
+  aside a:hover {
+    color: var(--fg);
+  }
+  aside a.active {
+    color: var(--fg);
+    font-weight: 700;
+    border-left: 3px solid var(--accent);
+    padding-left: 8px;
+  }
 
   /* CONTENT */
   main { min-width: 0; padding-bottom: 60px; }
   h1 { font-family: 'Space Grotesk', sans-serif; font-size: 48px; font-weight: 700; letter-spacing: -0.02em; margin-bottom: 16px; }
   .subtitle { color: var(--muted); font-size: 16px; margin-bottom: 48px; font-weight: 500; }
   h2 { font-family: 'Space Grotesk', sans-serif; font-size: 28px; font-weight: 700; letter-spacing: -0.02em; margin-top: 48px; margin-bottom: 20px; }
+  h3 { font-family: 'Space Grotesk', sans-serif; color: var(--fg); font-size: 18px; font-weight: 700; margin-top: 24px; margin-bottom: 12px; }
   p { color: var(--muted); font-size: 15px; margin-bottom: 24px; font-weight: 500; }
   
   ol { margin-bottom: 24px; padding-left: 20px; color: var(--muted); }
@@ -195,15 +213,17 @@
   .code-header {
     display: flex;
     justify-content: space-between;
-    padding: 8px 16px;
+    padding: 6px 16px;
     border-bottom: 2px solid var(--border);
-    font-size: 12px;
+    font-size: 10px;
     color: #a1a1aa;
     font-family: 'Inter', sans-serif;
-    font-weight: 600;
-    background: #222;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    background: #18181b;
   }
-  pre { padding: 16px; overflow-x: auto; font-family: 'Fira Code', monospace; font-size: 13px; color: #d4d4d8; line-height: 1.6; }
+  pre { padding: 16px; overflow-x: auto; font-family: 'Fira Code', monospace; font-size: 13px; color: #d4d4d8; line-height: 1.6; white-space: pre-wrap; word-break: break-all; }
   .c-comment { color: #71717a; }
   .c-key { color: #60a5fa; }
   .c-str { color: #fde047; }
@@ -342,7 +362,7 @@ charge = client.create_charge(<span class="c-num">500</span>)
         <pre>
 {
   <span class="c-key">"ln_address"</span>: <span class="c-str">"satoshi@getalby.com"</span>,
-  <span class="c-key">"usdc_address"</span>: <span class="c-str">"0xFCAd0B19bB29D4674531d6f115237E16AfCE377c"</span>, <span class="c-comment">// EVM Wallet for Base USDC</span>
+  <span class="c-key">"usdc_address"</span>: <span class="c-str">"0x000000000000000000000000000000000000dead"</span>, <span class="c-comment">// EVM Wallet for Base USDC</span>
   <span class="c-key">"email"</span>: <span class="c-str">"merchant@example.com"</span> <span class="c-comment">// Optional for payout notifications</span>
 }</pre>
       </div>
