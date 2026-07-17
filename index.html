@@ -278,7 +278,7 @@
   <div class="hero-content" style="max-width:800px; margin:0 auto; text-align:center; display:flex; flex-direction:column; align-items:center;">
     <div class="badge" style="background:#fff;">⚡ No bank account needed</div>
     <h1 style="text-align:center; font-weight:800; font-family:'Inter', sans-serif;">Accept Bitcoin & USDC<br>payments in <span style="background:var(--fg); color:var(--bg); padding:0 8px; border-radius:4px; font-style:normal;">seconds</span>.</h1>
-    <p style="text-align:center; font-weight:500; font-size:18px; color:var(--muted);">Add a payment button to your app or website. Your customers pay — you receive 99% directly in your own wallet. No middleman holds your money.</p>
+    <p style="text-align:center; font-weight:500; font-size:18px; color:var(--muted);">Add a payment button to your app, or generate instant payment links with zero code. Receive 99% directly in your own wallet.</p>
     
     <div style="background: #fff; border: 2px solid #000; color: #000; padding: 8px 16px; border-radius: 20px; font-size: 13px; font-weight: 700; display: inline-flex; align-items: center; gap: 8px; margin-bottom: 24px; box-shadow: 3px 3px 0 #000;">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
@@ -286,7 +286,7 @@
     </div>
 
     <div class="cta-row" style="justify-content:center;">
-      <a href="#get-started" class="btn btn-primary">Get API Key →</a>
+      <a href="#get-started" class="btn btn-primary">Get API Key &amp; Links →</a>
       <a href="docs.html" class="btn btn-ghost">Read the docs</a>
     </div>
   </div>
@@ -317,23 +317,45 @@
     </div>
   </div>
 
-  <div style="margin-top: 40px; background:var(--card); border:1px solid var(--border); border-radius:var(--radius); padding:32px;">
-    <h3 style="font-size: 20px; font-weight: 600; margin-bottom: 12px; color:var(--fg)">Wait, how do I actually use the API Key?</h3>
-    <p style="color:var(--muted); font-size:14px; margin-bottom:24px; line-height:1.6">
-      Once you register your wallet, you get a unique <code style="background:var(--bg);padding:2px 6px;border-radius:4px;border:1px solid var(--border);font-family:'Fira Code',monospace">aipp_merch_...</code> API key. You simply paste this key into your application's backend. When a user clicks "Buy" on your website, your app makes a single HTTP request using this key. aipp returns a Lightning QR Code for your user to scan.
-    </p>
-    <div class="steps" style="gap:16px;">
-      <div class="step" style="padding:16px 24px;">
-        <h4 style="font-size:14px; font-weight:600; color:var(--muted); margin-bottom:4px">Step 1</h4>
-        <p style="font-size:14px; color:var(--fg)">User clicks "Pay" on your site</p>
+  <!-- Integration Options (API vs No-Code Link) -->
+  <div style="margin-top: 48px; display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 24px;">
+    <!-- Option A: Developer API -->
+    <div style="background:var(--card); border:2px solid var(--border); border-radius:var(--radius); padding:32px; box-shadow: 6px 6px 0 #000; text-align: left;">
+      <span style="font-size: 11px; font-weight: 800; background: #000; color: #fff; padding: 4px 10px; border-radius: 4px; text-transform: uppercase;">Option A</span>
+      <h3 style="font-size: 20px; font-weight: 800; margin: 16px 0 8px 0;">Developer REST API</h3>
+      <p style="color:var(--muted); font-size:13px; margin-bottom:20px; line-height:1.6;">
+        Perfect for custom apps, e-commerce checkouts, and AI agents. Generate invoices programmatically with just 5 lines of code.
+      </p>
+      <div class="steps" style="grid-template-columns: 1fr; gap:12px;">
+        <div style="font-size: 13px; font-weight: 700; display: flex; gap: 8px;">
+          <span style="color:#22c55e;">✔</span> JSON API endpoints
+        </div>
+        <div style="font-size: 13px; font-weight: 700; display: flex; gap: 8px;">
+          <span style="color:#22c55e;">✔</span> Webhook payment notifications
+        </div>
+        <div style="font-size: 13px; font-weight: 700; display: flex; gap: 8px;">
+          <span style="color:#22c55e;">✔</span> Python &amp; Node.js SDKs
+        </div>
       </div>
-      <div class="step" style="padding:16px 24px; border-color:var(--accent);">
-        <h4 style="font-size:14px; font-weight:600; color:var(--accent); margin-bottom:4px">Step 2</h4>
-        <p style="font-size:14px; color:var(--fg)">Your backend calls aipp with your Key</p>
-      </div>
-      <div class="step" style="padding:16px 24px; border-color:#22c55e;">
-        <h4 style="font-size:14px; font-weight:600; color:#22c55e; margin-bottom:4px">Step 3</h4>
-        <p style="font-size:14px; color:var(--fg)">You display the generated QR code</p>
+    </div>
+
+    <!-- Option B: No-Code Payment Links -->
+    <div style="background:var(--card); border:2px solid var(--border); border-radius:var(--radius); padding:32px; box-shadow: 6px 6px 0 #000; text-align: left;">
+      <span style="font-size: 11px; font-weight: 800; background: #22c55e; color: #fff; padding: 4px 10px; border-radius: 4px; text-transform: uppercase;">Option B</span>
+      <h3 style="font-size: 20px; font-weight: 800; margin: 16px 0 8px 0;">Zero-Code Payment Links</h3>
+      <p style="color:var(--muted); font-size:13px; margin-bottom:20px; line-height:1.6;">
+        Perfect for social media, newsletters, PDF sales, or quick services. Set a price, get a link, and share it anywhere. No code required.
+      </p>
+      <div class="steps" style="grid-template-columns: 1fr; gap:12px;">
+        <div style="font-size: 13px; font-weight: 700; display: flex; gap: 8px;">
+          <span style="color:#22c55e;">✔</span> Hosted brutalist checkout pages
+        </div>
+        <div style="font-size: 13px; font-weight: 700; display: flex; gap: 8px;">
+          <span style="color:#22c55e;">✔</span> Custom redirect URL after payment
+        </div>
+        <div style="font-size: 13px; font-weight: 700; display: flex; gap: 8px;">
+          <span style="color:#22c55e;">✔</span> Dual-Rail (Lightning &amp; USDC) ready
+        </div>
       </div>
     </div>
   </div>
