@@ -232,8 +232,8 @@ export const renderPaymentPage = async (req: Request, res: Response, next: NextF
 
 <div class="pay-card">
   <span class="badge">aipp Checkout</span>
-  <h2>\${link.title}</h2>
-  <div class="price-tag">\$\${link.amount_usd.toFixed(2)} <span>USD</span></div>
+  <h2>${link.title}</h2>
+  <div class="price-tag">$${link.amount_usd.toFixed(2)} <span>USD</span></div>
 
   <div id="payment-selection">
     <div class="selector">
