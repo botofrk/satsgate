@@ -141,9 +141,10 @@
     <h2 id="privacy">4. Privacy Policy</h2>
     <p>AIPP.dev is designed from the ground up to respect user and merchant privacy:</p>
     <ul>
-      <li><strong>No Data Collection:</strong> We do not collect, store, or share any personal information.</li>
+      <li><strong>Minimal Data:</strong> We collect only the data strictly necessary to operate the payment gateway: your Lightning Address and/or Base wallet address (required for payouts), and an optional email address for transactional notifications. We do not collect names, national IDs, or any other personal identifiers.</li>
       <li><strong>No Tracking:</strong> We do not use cookies, tracking scripts, or analytics tools.</li>
-      <li><strong>Local Databases:</strong> All transactional database records (e.g. invoice logs) are stored locally in the merchant's own self-hosted SQLite instance, completely private to the node operator.</li>
+      <li><strong>Local Databases:</strong> All transactional records (invoice logs, balances) are stored in a private SQLite database on the gateway server. This data is never sold, shared with third parties, or used for marketing purposes.</li>
+      <li><strong>Data Deletion:</strong> Inactive merchant accounts with no balance are automatically purged after 30 days of inactivity. You may also request manual deletion by contacting support.</li>
     </ul>
   </div>
   

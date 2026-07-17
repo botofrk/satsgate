@@ -26,7 +26,7 @@ Users can register by submitting their Lightning Address (e.g., satoshi@getalby.
 There are 3 main ways to integrate:
 1. **AI Agents (No-code):** Give the API key to an AI agent's system prompt and tell it to use AIPP to charge users.
 2. **WordPress / Shopify (No-code):** Plugins are currently in development.
-3. **Developers (REST API):** Use the HTTP header `X-AIPP-Key` to create invoices via `POST /invoice/create` and poll status via `GET /invoice/status/:hash`. Takes 5 lines of code.
+3. **Developers (REST API):** Use the HTTP header `X-Api-Key` to create invoices via `POST /invoice/create` and poll status via `GET /invoice/status/:hash`. Takes 5 lines of code.
 
 ## 5. What if the Payout Fails?
 If a customer pays but the merchant's wallet (e.g., Alby, Phoenix) is offline, the funds are temporarily held in a secure queue. The system's **Payout Retry Worker** will automatically retry sending the funds every few minutes (up to 5 times). The merchant will not lose their money.
