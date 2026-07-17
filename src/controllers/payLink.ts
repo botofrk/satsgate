@@ -113,6 +113,7 @@ export const renderPaymentPage = async (req: Request, res: Response, next: NextF
       color: #000000;
       font-family: 'Inter', sans-serif;
       display: flex;
+      flex-direction: column;
       align-items: center;
       justify-content: center;
       min-height: 100vh;
@@ -274,6 +275,25 @@ export const renderPaymentPage = async (req: Request, res: Response, next: NextF
     <span>🔒 Powered by</span>
     <a href="https://aipp.dev" target="_blank" style="color:#000;text-decoration:underline;font-weight:700;">aipp.dev</a>
   </footer>
+</div>
+
+<!-- Extra trust & benefits section below the main card -->
+<div style="width: 100%; max-width: 440px; margin-top: 24px; display: grid; grid-template-columns: 1fr; gap: 16px;">
+  <div style="background: #ffffff; border: 2px solid #000000; border-radius: 8px; padding: 16px; box-shadow: 4px 4px 0 #000000; display: flex; gap: 12px; align-items: flex-start; text-align: left;">
+    <div style="font-size: 20px; line-height: 1;">⚡</div>
+    <div>
+      <h4 style="font-size: 13px; font-weight: 800; margin-bottom: 4px;">Lightning Micropayments</h4>
+      <p style="font-size: 11px; color: #52525b; font-weight: 500; line-height: 1.4;">Pay instantly down to a fraction of a cent. Zero credit card fees, zero border limits.</p>
+    </div>
+  </div>
+  
+  <div style="background: #ffffff; border: 2px solid #000000; border-radius: 8px; padding: 16px; box-shadow: 4px 4px 0 #000000; display: flex; gap: 12px; align-items: flex-start; text-align: left;">
+    <div style="font-size: 20px; line-height: 1;">🤖</div>
+    <div>
+      <h4 style="font-size: 13px; font-weight: 800; margin-bottom: 4px;">Built for Humans &amp; AI</h4>
+      <p style="font-size: 11px; color: #52525b; font-weight: 500; line-height: 1.4;">Fully compatible with L402 and x402 machine-to-machine payment standards for autonomous AI agents.</p>
+    </div>
+  </div>
 </div>
 
 <script>
