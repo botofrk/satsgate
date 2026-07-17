@@ -1,5 +1,28 @@
 import { getDb } from '../config/database';
 
+/**
+ * Marks all pending invoices older than 1 hour as 'expired'.
+ * Lightning invoices have a 3600s (1h) expiry window by default.
+ * Without this, old test/unpaid invoices stay 'pending' forever in the UI.
+ */
+export async function expireStaleInvoices() {
+  try {
+    const db = getDb();
+    // Anything older than 1 hour that is still 'pending' is definitively expired
+    const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000).toISOString();
+    const result = await db.run(
+      "UPDATE invoices SET status = 'expired' WHERE status = 'pending' AND created_at < ?",
+      oneHourAgo
+    );
+    const changed = result?.changes ?? 0;
+    if (changed > 0) {
+      console.log(`[Prune Worker] ⏰ Expired ${changed} stale pending invoice(s).`);
+    }
+  } catch (err) {
+    console.error('[Prune Worker] Error expiring stale invoices:', err);
+  }
+}
+
 export async function processPruning() {
   try {
     const db = getDb();
@@ -59,7 +82,11 @@ export async function processPruning() {
 }
 
 export function startPruneWorker() {
-  // Run once immediately on startup, then every 24 hours
+  // Expire stale pending invoices on startup and every hour
+  expireStaleInvoices();
+  setInterval(expireStaleInvoices, 60 * 60 * 1000);
+
+  // Prune fully inactive merchants once per day
   processPruning();
   setInterval(processPruning, 24 * 60 * 60 * 1000);
 }

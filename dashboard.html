@@ -200,7 +200,10 @@
   .badge-type { display: inline-block; padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; }
   .badge-type.settled { background: rgba(34, 197, 94, 0.1); color: var(--success); }
   .badge-type.pending { background: rgba(245, 158, 11, 0.1); color: #f59e0b; }
+  .badge-type.expired { background: rgba(161, 161, 170, 0.1); color: #71717a; }
   .badge-type.pending_threshold { background: rgba(56, 189, 248, 0.1); color: #38bdf8; }
+  .badge-type.pending_manual { background: rgba(139, 92, 246, 0.1); color: #8b5cf6; }
+  .badge-type.queued { background: rgba(56, 189, 248, 0.15); color: #0ea5e9; }
   
   .sats-val { font-family: 'Fira Code', monospace; font-size: 13px; }
   .sats-val.positive { color: var(--success); }
@@ -390,8 +393,13 @@
     <!-- CHART ROW -->
     <div class="chart-card">
       <h3>Last 7 Days Usage</h3>
-      <div class="chart-container">
+      <div class="chart-container" style="position:relative;">
         <canvas id="usageChart"></canvas>
+        <div id="chart-empty-state" style="display:none;position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;pointer-events:none;">
+          <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#52525b" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom:12px;"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg>
+          <p style="color:#52525b;font-size:13px;font-weight:600;margin:0;">No activity yet</p>
+          <p style="color:#3f3f46;font-size:12px;margin:4px 0 0;">Create your first invoice to start tracking</p>
+        </div>
       </div>
     </div>
 
@@ -641,30 +649,46 @@ async function loadLedger() {
       const date = new Date(tx.created_at).toLocaleString();
       const isX402 = tx.protocol === 'x402';
       const truncatedHash = tx.payment_hash.slice(0, 16) + '...';
-      const statusBadge = `<span class="badge-type ${tx.status}">${tx.status}</span>`;
+      const isTerminal = tx.status === 'expired';
+      const isPendingUnsettled = tx.status === 'pending';
+      const statusLabel = tx.status.replace('_', ' ');
+      const statusBadge = `<span class="badge-type ${tx.status}">${statusLabel}</span>`;
       
       let splitDetails = '';
       let amountVal = '';
-      
-      if (isX402) {
+      let amountClass = 'sats-val positive notranslate';
+
+      if (isTerminal || isPendingUnsettled) {
+        // Expired or still-pending: no money moved
+        splitDetails = `<span style="color:#52525b;font-style:italic;">Not settled</span>`;
+        if (isX402) {
+          amountVal = `${(tx.usdc_amount || 0).toFixed(2)} USDC`;
+        } else {
+          amountVal = `${tx.amount_sats} sats`;
+        }
+        amountClass = 'sats-val notranslate';
+      } else if (isX402) {
         const totalAmount = tx.usdc_amount || 0;
         const feeAmount = totalAmount * 0.01;
         const forwardedAmount = totalAmount * 0.99;
-        
         splitDetails = `${forwardedAmount.toFixed(4)} forwarded / ${feeAmount.toFixed(4)} fee`;
         amountVal = `${totalAmount.toFixed(2)} USDC`;
+        amountClass += ' notranslate';
       } else {
-        splitDetails = `${tx.forwarded_amount_sats} forwarded / ${tx.commission_sats} fee`;
+        // For Lightning: always recalculate fee as 1% (min 20 sats) from stored commission_sats
+        const commissionSats = tx.commission_sats || Math.max(20, Math.ceil(tx.amount_sats * 0.01));
+        const forwardedSats = tx.amount_sats - commissionSats;
+        splitDetails = `${forwardedSats} forwarded / ${commissionSats} fee`;
         amountVal = `${tx.amount_sats} sats`;
       }
       
       const row = `
-        <tr>
+        <tr style="${isTerminal ? 'opacity:0.55;' : ''}">
           <td style="color:var(--muted);font-size:12px">${date}</td>
           <td style="font-family:'Fira Code',monospace;font-size:12px;color:var(--muted)" title="${tx.payment_hash}">${truncatedHash}</td>
           <td>${statusBadge}</td>
           <td style="font-size:12px">${splitDetails}</td>
-          <td class="sats-val positive notranslate" translate="no" style="${isX402 ? 'color:#3b82f6;' : ''}">${amountVal}</td>
+          <td class="${amountClass}" style="${isX402 && !isTerminal ? 'color:#3b82f6;' : ''}">${amountVal}</td>
         </tr>
       `;
       body.insertAdjacentHTML('beforeend', row);
@@ -693,11 +717,20 @@ async function loadStatsAndDrawChart() {
       txCountData.push(item.transactions_count || 0);
     });
 
+    // Check if ALL values are zero (no real activity)
+    const hasActivity = data.some(d => (d.total_volume || 0) > 0 || (d.transactions_count || 0) > 0);
+
     if (data.length === 0) {
       const today = new Date().toISOString().split('T')[0];
       labels.push(today);
       volumeData.push(0);
       txCountData.push(0);
+    }
+
+    // Show/hide empty state overlay
+    const emptyStateEl = document.getElementById('chart-empty-state');
+    if (emptyStateEl) {
+      emptyStateEl.style.display = hasActivity ? 'none' : 'block';
     }
 
     const ctx = document.getElementById('usageChart').getContext('2d');
