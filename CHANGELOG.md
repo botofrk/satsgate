@@ -1,5 +1,20 @@
 # AIPP-Key - Changelog & Implementation History
 
+## [v1.2.2] - 2026-07-17
+
+### 🎨 UI & UX Improvements
+- **Turkish Text Cleanup:** Translated all remaining Turkish descriptions to English on the homepage flow steps ("How It Works") to maintain complete English language consistency across user-facing pages.
+- **L402 Terminal Redesign (`l402.html`):** Overhauled the L402 challenge demo with a modern, responsive, dual-pane layout:
+  - Left pane displays the QR code payment interface, clean truncated invoice string (`lnbc5u1...wx0ete`), and a click-to-copy button.
+  - Right pane features a live HTTP logs and headers console with proper typography sizing and hierarchy.
+  - Embedded a thin brand-colored amber border around the QR container and colored the action buttons with amber backgrounds for UI consistency.
+  - Appended dynamic log rows showing preimage validation status, cryptographic verification status, and response code `200 OK` transitions when a payment is processed.
+- **Documentation Polish (`docs.html`):** Added a left border accent bar for active elements in the sidebar to highlight current reading sections dynamically. Integrated word-wrap styling for code blocks to prevent horizontal overflowing, improved code header styling hierarchy, and switched placeholder Ethereum addresses to safe dummy addresses (`0x0000...dead`).
+
+### ⚙️ Backend & Simulation Infrastructure
+- **Sandbox Simulation Bypass (`invoice.ts`):** Implemented a sandbox-safe checkout simulation flag (`?simulate=true` and `0xmocktxhash` checks) scoped specifically to the public demo merchant account. This permits users to instantly click "Simulate Payment" to mock-settle invoices in the database and unlock premium content without needing live keys or Base/Lightning mainnet transactions.
+- **Demo Re-Registration Fix:** Resolved a `409 Conflict` block on the demo page where repeating visits would trigger unauthenticated mock merchant registration warnings. Added a client-side recovery to automatically utilize the pre-existing mock merchant API key if already registered.
+
 ## [v1.0.2] - 2026-07-03
 
 ### 🚀 Features & SDK Updates

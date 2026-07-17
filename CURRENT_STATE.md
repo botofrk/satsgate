@@ -1,7 +1,7 @@
 # AIPP.dev — Current Project State & Next Steps
-*Son Güncelleme: 13 Temmuz 2026*
+*Son Güncelleme: 17 Temmuz 2026*
 
-Bu belge, AIPP projesinde bugüne kadar yapılan çalışmaları, en son uygulanan güvenlik sertleştirme (security hardening) işlemlerini, pazar yeri ve AI ajan entegrasyonlarını ve bir sonraki çalışma seansında kalınan yerden nasıl devam edileceğini özetlemektedir.
+Bu belge, AIPP projesinde bugüne kadar yapılan çalışmaları, en son uygulanan güvenlik sertleştirme (security hardening) işlemlerini, pazar yeri ve AI ajan entegrasyonlarını, arayüz / dokümantasyon cilalamalarını ve bir sonraki çalışma seansında kalınan yerden nasıl devam edileceğini özetlemektedir.
 
 ---
 
@@ -31,9 +31,11 @@ Bu belge, AIPP projesinde bugüne kadar yapılan çalışmaları, en son uygulan
 * **Atomik Veritabanı İşlemleri:** Payout worker başarı durumları tek bir transaction bloğu (`BEGIN IMMEDIATE TRANSACTION`) içine alınarak crash-safe hale getirildi.
 
 ### 4. Arayüz & Dokümantasyon Güncellemeleri
-* **Görsel Düzenleme / Kırık Resim Giderimi (`index.html`):** Silinen 800KB'lık `api_token.jpg` dosyasından kalan kırık görsel bağlantısı, saf CSS ve SVG ile oluşturulmuş, yüksek performanslı ve modern bir yapay zeka token illüstrasyonu ile değiştirildi.
+* **Metin Çevirisi & Dil Bütünlüğü (`index.html`):** Ana sayfa üzerindeki "How It Works" adımlarında kalmış olan son Türkçe açıklamalar tamamen İngilizceye çevrildi.
+* **L402 Terminal Arayüz Yenilemesi (`l402.html`):** L402 demo terminali iki sütunlu (split-grid) modern bir tasarıma kavuşturuldu. QR kod kutusuna marka renginde çerçeve eklenerek görsel kontrast uyumu sağlandı. Simülasyon butonu renkleri sarı/amber marka vurgularıyla birleştirildi.
+* **Canlı Loglama & Simülasyon Altyapısı:** Lightning L402 simülasyon butonu eklendi. `/invoice/status/:hash` backend uç noktasında demo satıcı API anahtarına özel simüle etme parametresi (`?simulate=true`) tanımlanarak cüzdansız test imkanı sağlandı. Ödeme onaylandığında sağ panele preimage doğrulamaları ve API yanıt durum kodları dinamik olarak akıtıldı.
+* **Dokümantasyon Cilalamaları (`docs.html`):** Sidebar aktif sayfa bağlantılarına şık bir sarı/amber sol çizgi (`border-left` accent bar) yerleştirildi. Kod başlığı etiketleri hiyerarşisi küçültülüp kalınlaştırılarak okunabilirlik artırıldı. Mobil uyumluluk için kod bloklarına dikey sarma (word-wrap) desteği getirildi. Örnek EVM cüzdan adresi `0x0000...dead` sahte adresiyle değiştirildi.
 * **Müşteri/Satıcı Uyarısı (`dashboard.html`):** Satıcı paneline volatilitenin satoshi kazançlarını nasıl etkilediğini açıklayan Türkçe ve İngilizce uyarı eklendi.
-* **Dokümantasyon Başlıkları (`docs.html`):** Dokümantasyondaki eksik "Errors" alanı ve sol menüdeki başlıkların tamamı yeni eklenen endpoints (`/invoice/receipt`, `/paidmcp.json`) ile birlikte güncellenerek yayına alındı.
 * **Paywall Düzeltmesi (`paywall-demo.html` & `paywall.js`):** Script yolundaki 404 hatası giderildi, kırık yazar avatarı temizlendi. Sunucuya `/paywall_demo.html` alt çizgili url'inden gelen istekleri otomatik olarak `/paywall-demo.html` adresine yönlendiren bir yönlendirme (302 redirect) rotası eklendi.
 * **SQLite İzin Çözümü (SQLITE_READONLY):** Docker konteynerinin `appuser` olarak yetkilendirilmesi sonucu oluşan SQLite yazma yetkisi hatası, sunucu üzerindeki `/home/hermes/data/aipp-key` klasör izinlerinin güncellenmesiyle çözüldü. Paywall QR üretimi başarıyla test edildi.
 * **Canlı Ortam Senkronizasyonu:** Tüm HTML ve JS değişiklikleri `/home/hermes/aipp/aipp-key` dizinine ve Docker konteyneri (`aipp-key`) içine aktarıldı.
