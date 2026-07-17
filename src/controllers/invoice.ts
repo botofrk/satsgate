@@ -344,6 +344,23 @@ export const checkInvoiceStatus = async (req: Request, res: Response, next: Next
       throw new AppError('Invoice not found', 404, 'NOT_FOUND');
     }
 
+    // Allow simulation for the demo merchant (demo page testing)
+    const isDemoMerchant = invoice.api_key === 'aipp_merch_5053bb61d143c879';
+    const queryTxHash = req.query.tx_hash as string;
+    if (invoice.status === 'pending' && isDemoMerchant && (req.query.simulate === 'true' || queryTxHash === '0xmocktxhash')) {
+      await settleDemoInvoice(hash);
+      invoice.status = 'settled';
+      if (invoice.protocol === 'x402' || queryTxHash === '0xmocktxhash') {
+        await db.run("UPDATE invoices SET preimage = '0xmocktxhash', protocol = 'x402' WHERE payment_hash = ?", hash);
+        invoice.preimage = '0xmocktxhash';
+        invoice.protocol = 'x402';
+      } else {
+        await db.run("UPDATE invoices SET preimage = '0000000000000000000000000000000000000000000000000000000000000000', protocol = 'L402' WHERE payment_hash = ?", hash);
+        invoice.preimage = '0000000000000000000000000000000000000000000000000000000000000000';
+        invoice.protocol = 'L402';
+      }
+    }
+
     // Handle DUAL Protocol Verification
     if (invoice.protocol === 'dual') {
       let txHash = (req.query.tx_hash || req.headers['payment-signature'] || req.headers['x-payment-signature']) as string;

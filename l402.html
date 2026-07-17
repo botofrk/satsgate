@@ -193,49 +193,238 @@
   .action-btn:hover { transform: translate(-2px, -2px); box-shadow: 6px 6px 0 #000; }
 
   .terminal {
-    background: #111;
-    border: 2px solid var(--border);
-    border-radius: 8px;
-    padding: 16px;
+    background: #0f0f11;
+    border: 3px solid var(--border);
+    border-radius: 12px;
+    padding: 24px;
     font-family: 'Fira Code', monospace;
     font-size: 13px;
     color: #e4e4e7;
     margin-top: 24px;
     display: none;
-    box-shadow: 6px 6px 0 #000;
+    box-shadow: 8px 8px 0 #000;
   }
-  .terminal-header { color: #f87171; margin-bottom: 8px; font-weight: bold; }
-  .terminal-success { color: #4ade80; margin-bottom: 8px; font-weight: bold; }
-  
+  .terminal-grid {
+    display: grid;
+    grid-template-columns: 1.1fr 1fr;
+    gap: 24px;
+  }
+  @media(max-width: 768px) {
+    .terminal-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+  .terminal-pane {
+    background: #18181b;
+    border: 2px solid #27272a;
+    border-radius: 8px;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+  }
+  .terminal-status-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 700;
+    color: #f87171;
+    font-size: 14px;
+    border-bottom: 1px solid #27272a;
+    padding-bottom: 12px;
+    margin-bottom: 16px;
+  }
+  .status-dot {
+    width: 10px;
+    height: 10px;
+    background: #ef4444;
+    border-radius: 50%;
+    display: inline-block;
+    animation: pulse 1.5s infinite;
+  }
+  @keyframes pulse {
+    0% { transform: scale(0.95); opacity: 0.5; }
+    50% { transform: scale(1.1); opacity: 1; }
+    100% { transform: scale(0.95); opacity: 0.5; }
+  }
   .qr-container {
     background: #fff;
-    padding: 16px;
-    border-radius: 8px;
+    padding: 12px;
+    border-radius: 6px;
     display: inline-block;
-    margin-top: 16px;
     border: 2px solid #000;
     box-shadow: 4px 4px 0 #000;
+    margin: 0 auto 16px auto;
   }
-  #qr-canvas { width: 200px !important; height: 200px !important; }
+  #qr-canvas {
+    width: 160px !important;
+    height: 160px !important;
+    display: block;
+  }
+  .invoice-actions {
+    margin-bottom: 16px;
+    width: 100%;
+  }
+  .invoice-text-wrapper {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: #0f0f11;
+    border: 1px solid #27272a;
+    border-radius: 6px;
+    padding: 8px 12px;
+    font-size: 11px;
+    gap: 8px;
+  }
+  .invoice-text-truncated {
+    color: #a1a1aa;
+    word-break: break-all;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 170px;
+  }
+  .btn-copy-small {
+    background: #ffc700;
+    color: #000;
+    border: 1px solid #000;
+    border-radius: 4px;
+    padding: 3px 8px;
+    font-size: 10px;
+    font-weight: 700;
+    cursor: pointer;
+    font-family: 'Space Grotesk', sans-serif;
+    box-shadow: 1px 1px 0 #000;
+  }
+  .btn-copy-small:active {
+    transform: translate(1px, 1px);
+    box-shadow: 0 0 0 #000;
+  }
+  .payment-waiting {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    color: #ffc700;
+    font-size: 13px;
+    font-weight: 700;
+    margin-bottom: 16px;
+  }
+  .btn-simulate-ln, .action-btn-simulate {
+    background: #10b981;
+    color: #fff;
+    border: 2px solid #000;
+    padding: 10px 14px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    width: 100%;
+    box-shadow: 3px 3px 0 #000;
+    transition: all 0.15s;
+    font-family: 'Space Grotesk', sans-serif;
+  }
+  .btn-simulate-ln:hover, .action-btn-simulate:hover {
+    transform: translate(-1px, -1px);
+    box-shadow: 4px 4px 0 #000;
+  }
+  .action-btn-web3 {
+    background: #3b82f6;
+    color: #fff;
+    border: 2px solid #000;
+    padding: 10px 14px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    width: 100%;
+    box-shadow: 3px 3px 0 #000;
+    transition: all 0.15s;
+    font-family: 'Space Grotesk', sans-serif;
+    margin-bottom: 8px;
+  }
+  .action-btn-web3:hover {
+    transform: translate(-1px, -1px);
+    box-shadow: 4px 4px 0 #000;
+  }
+  
+  .x402-info-card {
+    background: #0f0f11;
+    border: 1px solid #27272a;
+    border-radius: 6px;
+    padding: 12px;
+    font-size: 12px;
+    margin-bottom: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    text-align: left;
+  }
+  .info-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid #1f1f23;
+    padding-bottom: 6px;
+  }
+  .info-row:last-child {
+    border-bottom: none;
+    padding-bottom: 0;
+  }
+  .info-row strong {
+    color: #a1a1aa;
+  }
+  .info-row span {
+    color: #e4e4e7;
+    font-family: 'Fira Code', monospace;
+  }
+  .x402-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    width: 100%;
+  }
+
+  .logs-pane {
+    background: #09090b;
+  }
+  .logs-header {
+    font-size: 11px;
+    text-transform: uppercase;
+    color: #71717a;
+    letter-spacing: 1px;
+    margin-bottom: 12px;
+    border-bottom: 1px solid #18181b;
+    padding-bottom: 8px;
+    text-align: left;
+    font-weight: 700;
+  }
+  .logs-content {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    text-align: left;
+  }
+  .log-line {
+    line-height: 1.5;
+    font-size: 12px;
+  }
+  .status-line { color: #f87171; font-weight: 700; }
+  .header-line { color: #ffc700; word-break: break-all; }
+  .log-details { color: #a1a1aa; }
+  .system-log { color: #71717a; border-top: 1px dashed #27272a; margin-top: 8px; padding-top: 8px; }
+  
+  .terminal-success { color: #4ade80; font-size: 24px; font-weight: 800; }
   .spinner {
     display: inline-block;
-    width: 16px; height: 16px;
+    width: 14px; height: 14px;
     border: 2px solid rgba(255,255,255,0.2);
     border-radius: 50%;
-    border-top-color: #fff;
+    border-top-color: #ffc700;
     animation: spin 1s ease-in-out infinite;
     vertical-align: middle;
-    margin-right: 8px;
   }
   @keyframes spin { to { transform: rotate(360deg); } }
-
-  .invoice-text {
-    word-break: break-all;
-    color: var(--muted);
-    font-size: 11px;
-    margin-top: 12px;
-    max-width: 400px;
-  }
 
   footer {
     text-align: center;
@@ -330,44 +519,69 @@
     </div>
 
     <div class="terminal" id="terminal-view">
-      <div class="terminal-header" id="terminal-status">HTTP/1.1 402 Payment Required</div>
-      <div id="terminal-headers">Www-Authenticate: L402 macaroon="..."</div>
-      
-      <div id="qr-section">
-        <div class="qr-container">
-          <canvas id="qr-canvas"></canvas>
-        </div>
-        <div class="invoice-text" id="invoice-string"></div>
-        <div style="margin-top: 16px; color: var(--accent);">
-          <span class="spinner"></span> Waiting for payment...
-        </div>
-      </div>
+      <div class="terminal-grid">
+        <!-- Left Pane: Payment Interface -->
+        <div class="terminal-pane payment-pane">
+          <div class="terminal-status-header">
+            <span class="status-dot"></span> <span id="status-text-label">Payment Required</span>
+          </div>
 
-      <div id="x402-section" style="display:none; margin-top:16px;">
-        <div style="background:#222; border:1px solid #444; border-radius:6px; padding:12px; font-size:12px; margin-bottom:16px; text-align:left; color:#a1a1aa; line-height:1.6;">
-          <strong>Network:</strong> Base<br>
-          <strong>Token:</strong> USDC (<span id="x402-token-disp">...</span>)<br>
-          <strong>Recipient:</strong> <span id="x402-payto-disp">...</span><br>
-          <strong>Price:</strong> <span id="x402-price-disp">0.05</span> USDC
+          <div id="qr-section">
+            <div class="qr-container">
+              <canvas id="qr-canvas"></canvas>
+            </div>
+            <div class="invoice-actions">
+              <div class="invoice-text-wrapper">
+                <span class="invoice-text-truncated" id="invoice-string-truncated">Loading invoice...</span>
+                <button class="btn-copy-small" onclick="copyInvoiceText(this)">Copy</button>
+              </div>
+            </div>
+            <div class="payment-waiting">
+              <span class="spinner"></span> Waiting for payment...
+            </div>
+            <button class="btn-simulate-ln" onclick="simulateL402Payment()">Simulate Payment (1-Click)</button>
+          </div>
+
+          <div id="x402-section" style="display:none;">
+            <div class="x402-info-card">
+              <div class="info-row"><strong>Network:</strong> <span>Base</span></div>
+              <div class="info-row"><strong>Token:</strong> <span id="x402-token-disp">...</span></div>
+              <div class="info-row"><strong>Recipient:</strong> <span id="x402-payto-disp">...</span></div>
+              <div class="info-row"><strong>Price:</strong> <span id="x402-price-disp">0.05</span> USDC</div>
+            </div>
+            <div class="x402-actions">
+              <button class="action-btn-web3" id="demo-web3-btn" onclick="payWithWeb3Demo()">Pay with Web3 Wallet</button>
+              <button class="action-btn-simulate" onclick="simulateX402Payment()">Simulate Payment (1-Click)</button>
+            </div>
+            <div class="payment-waiting" style="margin-top: 16px;">
+              <span class="spinner"></span> Waiting for on-chain tx...
+            </div>
+          </div>
         </div>
-        <div style="display:flex; flex-direction:column; gap:8px;">
-          <button class="action-btn" id="demo-web3-btn" onclick="payWithWeb3Demo()" style="background:#3b82f6; border-color:#2563eb; width:100%;">Pay with Web3 Wallet</button>
-          <button class="action-btn" onclick="simulateX402Payment()" style="background:#10b981; border-color:#059669; width:100%;">Simulate Payment (1-Click)</button>
-        </div>
-        <div style="margin-top: 16px; color: var(--accent);">
-          <span class="spinner"></span> Waiting for on-chain tx...
+
+        <!-- Right Pane: Live HTTP Headers & Logs -->
+        <div class="terminal-pane logs-pane">
+          <div class="logs-header">HTTP Headers &amp; Logs</div>
+          <div class="logs-content">
+            <div class="log-line status-line" id="log-status-line">HTTP/1.1 402 Payment Required</div>
+            <div class="log-line header-line" id="log-authenticate-line">Www-Authenticate: L402 macaroon="..."</div>
+            <div class="log-line log-details">Accept: application/json</div>
+            <div class="log-line log-details">Content-Type: application/json</div>
+            <div class="log-line log-details" id="log-invoice-line" style="word-break: break-all;">Invoice: Loading...</div>
+            <div class="log-line system-log" id="log-activity-stream">> Listening for payment status updates...</div>
+          </div>
         </div>
       </div>
       
-      <div id="success-section" style="display:none; margin-top:20px; border-top:1px dashed #333; padding-top:16px;">
+      <div id="success-section" style="display:none; margin-top:24px; border-top:1px dashed #27272a; padding-top:24px; text-align:center;">
         <div class="terminal-success" id="terminal-success-status">HTTP/1.1 200 OK</div>
-        <div style="color:#fff; font-size:16px; margin-top:8px;">
+        <div style="color:#fff; font-size:18px; margin-top:12px;">
           🎉 <strong>Resource Unlocked!</strong>
         </div>
-        <div style="color:var(--muted); margin-top:8px;" id="success-message">
+        <div style="color:#a1a1aa; margin-top:8px; font-size:14px; font-style:italic;" id="success-message">
           "The future of AI is micropayments."
         </div>
-        <button class="action-btn" style="margin-top:20px; font-size:12px; padding: 8px 16px;" onclick="location.reload()">Reset Demo</button>
+        <button class="action-btn" style="margin-top:20px; font-size:13px; padding: 8px 16px; background: var(--accent); color: #000; border-color: #000;" onclick="location.reload()">Reset Demo</button>
       </div>
     </div>
   </div>
@@ -426,6 +640,7 @@
   let pollInterval;
   const API_URL = window.location.origin;
   let currentPaymentHash = '';
+  let currentRawInvoice = '';
   let currentX402PayTo = '';
   let currentX402Token = '';
   let currentX402Price = '0.05';
@@ -484,16 +699,18 @@
 
       if (protocol === 'L402') {
         if (!charge.payment_request) throw new Error("Invoice creation failed");
+        currentRawInvoice = charge.payment_request;
         
-        document.getElementById('terminal-status').innerText = 'HTTP/1.1 402 Payment Required';
-        document.getElementById('terminal-headers').innerText = `Www-Authenticate: L402 macaroon="..."\nInvoice: ${charge.payment_request.slice(0, 32)}...`;
+        document.getElementById('log-status-line').innerText = 'HTTP/1.1 402 Payment Required';
+        document.getElementById('log-authenticate-line').innerText = `Www-Authenticate: L402 macaroon="..."`;
+        document.getElementById('log-invoice-line').innerText = `Invoice: ${charge.payment_request.slice(0, 24)}...`;
+        
+        document.getElementById('invoice-string-truncated').innerText = charge.payment_request.slice(0, 10) + '...' + charge.payment_request.slice(-10);
         
         const invoiceStr = 'lightning:' + charge.payment_request.toUpperCase();
-        document.getElementById('invoice-string').innerText = charge.payment_request;
-        
         const canvas = document.getElementById('qr-canvas');
         QRCode.toCanvas(canvas, invoiceStr, {
-          width: 250,
+          width: 160,
           margin: 1,
           color: { dark: '#000000', light: '#ffffff' }
         });
@@ -507,11 +724,12 @@
         currentX402Token = charge.token;
         currentX402Price = charge.amount_usd.toString();
 
-        document.getElementById('terminal-status').innerText = 'HTTP/1.1 402 Payment Required';
-        document.getElementById('terminal-headers').innerText = `PAYMENT-REQUIRED: Base64EncodedJSONChallenge`;
+        document.getElementById('log-status-line').innerText = 'HTTP/1.1 402 Payment Required';
+        document.getElementById('log-authenticate-line').innerText = `PAYMENT-REQUIRED: Base64EncodedJSONChallenge`;
+        document.getElementById('log-invoice-line').innerText = `Contract: USDC on Base`;
 
         document.getElementById('x402-token-disp').innerText = currentX402Token.slice(0, 6) + '...' + currentX402Token.slice(-6);
-        document.getElementById('x402-payto-disp').innerText = currentX402PayTo;
+        document.getElementById('x402-payto-disp').innerText = currentX402PayTo.slice(0, 6) + '...' + currentX402PayTo.slice(-6);
         document.getElementById('x402-price-disp').innerText = currentX402Price;
 
         document.getElementById('qr-section').style.display = 'none';
@@ -527,11 +745,14 @@
     }
   }
 
-  function startPolling(paymentHash, txHash) {
+  function startPolling(paymentHash, txHash, forceSimulate) {
     if (pollInterval) clearInterval(pollInterval);
     pollInterval = setInterval(async () => {
       try {
-        const query = txHash ? `?tx_hash=${txHash}` : '';
+        let query = txHash ? `?tx_hash=${txHash}` : '';
+        if (forceSimulate) {
+          query = query ? query + '&simulate=true' : '?simulate=true';
+        }
         const res = await fetch(`${API_URL}/invoice/status/${paymentHash}${query}`);
         const data = await res.json();
         
@@ -545,8 +766,28 @@
     }, 2000);
   }
 
+  function simulateL402Payment() {
+    document.getElementById('log-activity-stream').innerText = '> Simulating payment settlement...';
+    startPolling(currentPaymentHash, null, true);
+  }
+
   async function simulateX402Payment() {
+    document.getElementById('log-activity-stream').innerText = '> Simulating on-chain transaction verification...';
     startPolling(currentPaymentHash, '0xmocktxhash');
+  }
+
+  function copyInvoiceText(btn) {
+    if (!currentRawInvoice) return;
+    navigator.clipboard.writeText(currentRawInvoice).then(() => {
+      btn.innerText = 'Copied!';
+      btn.style.background = '#10b981';
+      setTimeout(() => {
+        btn.innerText = 'Copy';
+        btn.style.background = '#ffc700';
+      }, 2000);
+    }).catch(err => {
+      console.error('Failed to copy text: ', err);
+    });
   }
 
   async function payWithWeb3Demo() {
@@ -621,10 +862,20 @@
     document.getElementById('qr-section').style.display = 'none';
     document.getElementById('x402-section').style.display = 'none';
     
-    document.getElementById('terminal-status').innerText = 'HTTP/1.1 200 OK (Payment Verified)';
-    document.getElementById('terminal-status').style.color = '#4ade80';
-    document.getElementById('terminal-headers').innerText = isX402 ? 'Authorization: Bearer <tx_hash>' : 'Authorization: L402 <macaroon>:<preimage>';
+    document.getElementById('status-text-label').innerText = 'Payment Verified';
+    document.getElementById('status-text-label').style.color = '#4ade80';
+    document.querySelector('.status-dot').style.background = '#4ade80';
+    document.querySelector('.status-dot').style.animation = 'none';
     
+    document.getElementById('log-status-line').innerText = 'HTTP/1.1 200 OK (Payment Verified)';
+    document.getElementById('log-status-line').style.color = '#4ade80';
+    document.getElementById('log-authenticate-line').innerText = isX402 ? 
+      'Authorization: Bearer 0xmocktxhash' : 
+      'Authorization: L402 macaroon="..." preimage="0000000000000000000000000000000000000000000000000000000000000000"';
+    
+    document.getElementById('log-activity-stream').innerText = '> Content unlocked successfully.';
+    document.getElementById('log-activity-stream').style.color = '#4ade80';
+
     document.getElementById('success-message').innerText = isX402 ? 
       'Unlocked via x402 USDC on Base network.' : 
       'Unlocked via L402 Lightning micropayments.';
