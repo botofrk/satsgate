@@ -252,7 +252,7 @@
     padding: 12px;
     border-radius: 6px;
     display: inline-block;
-    border: 2px solid #000;
+    border: 2px solid var(--accent);
     box-shadow: 4px 4px 0 #000;
     margin: 0 auto 16px auto;
   }
@@ -311,8 +311,8 @@
     margin-bottom: 16px;
   }
   .btn-simulate-ln, .action-btn-simulate {
-    background: #10b981;
-    color: #fff;
+    background: var(--accent);
+    color: #000;
     border: 2px solid #000;
     padding: 10px 14px;
     border-radius: 6px;
@@ -389,15 +389,15 @@
     background: #09090b;
   }
   .logs-header {
-    font-size: 11px;
+    font-size: 10px;
     text-transform: uppercase;
-    color: #71717a;
-    letter-spacing: 1px;
+    color: #a1a1aa;
+    letter-spacing: 1.5px;
     margin-bottom: 12px;
     border-bottom: 1px solid #18181b;
     padding-bottom: 8px;
     text-align: left;
-    font-weight: 700;
+    font-weight: 800;
   }
   .logs-content {
     display: flex;
@@ -406,8 +406,8 @@
     text-align: left;
   }
   .log-line {
-    line-height: 1.5;
-    font-size: 12px;
+    line-height: 1.6;
+    font-size: 13px;
   }
   .status-line { color: #f87171; font-weight: 700; }
   .header-line { color: #ffc700; word-break: break-all; }
@@ -562,7 +562,7 @@
         <!-- Right Pane: Live HTTP Headers & Logs -->
         <div class="terminal-pane logs-pane">
           <div class="logs-header">HTTP Headers &amp; Logs</div>
-          <div class="logs-content">
+          <div class="logs-content" id="logs-container">
             <div class="log-line status-line" id="log-status-line">HTTP/1.1 402 Payment Required</div>
             <div class="log-line header-line" id="log-authenticate-line">Www-Authenticate: L402 macaroon="..."</div>
             <div class="log-line log-details">Accept: application/json</div>
@@ -867,14 +867,37 @@
     document.querySelector('.status-dot').style.background = '#4ade80';
     document.querySelector('.status-dot').style.animation = 'none';
     
-    document.getElementById('log-status-line').innerText = 'HTTP/1.1 200 OK (Payment Verified)';
+    document.getElementById('log-status-line').innerText = 'HTTP/1.1 200 OK';
     document.getElementById('log-status-line').style.color = '#4ade80';
     document.getElementById('log-authenticate-line').innerText = isX402 ? 
       'Authorization: Bearer 0xmocktxhash' : 
       'Authorization: L402 macaroon="..." preimage="0000000000000000000000000000000000000000000000000000000000000000"';
     
-    document.getElementById('log-activity-stream').innerText = '> Content unlocked successfully.';
-    document.getElementById('log-activity-stream').style.color = '#4ade80';
+    const logsContainer = document.getElementById('logs-container');
+    
+    const oldStream = document.getElementById('log-activity-stream');
+    if (oldStream) oldStream.remove();
+    
+    const validationLine = document.createElement('div');
+    validationLine.className = 'log-line';
+    validationLine.style.color = '#38bdf8';
+    validationLine.innerText = isX402 ? 
+      '> Validating Base transaction signature...' : 
+      '> Verifying Lightning preimage cryptographic proof...';
+    logsContainer.appendChild(validationLine);
+    
+    const successResultLine = document.createElement('div');
+    successResultLine.className = 'log-line';
+    successResultLine.style.color = '#4ade80';
+    successResultLine.innerText = '> Settle status verified: true';
+    logsContainer.appendChild(successResultLine);
+
+    const unlockLine = document.createElement('div');
+    unlockLine.className = 'log-line system-log';
+    unlockLine.id = 'log-activity-stream';
+    unlockLine.style.color = '#4ade80';
+    unlockLine.innerText = '> Response status: 200 OK\n> Access granted. Resource unlocked.';
+    logsContainer.appendChild(unlockLine);
 
     document.getElementById('success-message').innerText = isX402 ? 
       'Unlocked via x402 USDC on Base network.' : 
