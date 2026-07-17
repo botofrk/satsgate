@@ -276,8 +276,8 @@
     margin-top: 48px;
   }
   table { width: 100%; border-collapse: collapse; text-align: left; font-size: 14px; }
-  th { padding: 18px 16px; font-weight: 800; border-bottom: 3px solid var(--border); background: #fafafa; }
-  td { padding: 18px 16px; border-bottom: 1px solid #eee; font-weight: 600; }
+  th { padding: 12px 16px; font-weight: 800; font-size: 11px; text-transform: uppercase; letter-spacing: 0.1em; border-bottom: 3px solid var(--border); background: #fafafa; }
+  td { padding: 12px 16px; border-bottom: 1px solid #eee; font-weight: 700; }
   tr:last-child td { border-bottom: none; }
 
   /* REGISTRATION / INTERACTIVE WIZARD */
@@ -482,28 +482,28 @@
       <tbody>
         <tr>
           <td><strong>Settlement Speed</strong></td>
-          <td style="color:#ef4444;">7 - 14 Days holding</td>
-          <td style="color:#22c55e; font-weight:800;">Instant (Seconds)</td>
+          <td style="color:#ef4444; font-weight:700;">✗ 7 - 14 Days holding</td>
+          <td style="color:#16a34a; font-weight:800;">✓ Instant (Seconds)</td>
         </tr>
         <tr>
           <td><strong>Custody Risk</strong></td>
-          <td style="color:#ef4444;">High (Account freezes &amp; funds locked)</td>
-          <td style="color:#22c55e; font-weight:800;">None (Direct to your wallet)</td>
+          <td style="color:#ef4444; font-weight:700;">✗ High (Frozen / locked accounts)</td>
+          <td style="color:#16a34a; font-weight:800;">✓ None (Direct to wallet)</td>
         </tr>
         <tr>
           <td><strong>Chargebacks</strong></td>
-          <td style="color:#ef4444;">Frequent (Buyer fraud risk)</td>
-          <td style="color:#22c55e; font-weight:800;">Zero (Cryptographically final)</td>
+          <td style="color:#ef4444; font-weight:700;">✗ High risk (Buyer disputes)</td>
+          <td style="color:#16a34a; font-weight:800;">✓ Zero (Cryptographic finality)</td>
         </tr>
         <tr>
-          <td><strong>Global Availability</strong></td>
-          <td style="color:#ef4444;">Restricted by local banking systems</td>
-          <td style="color:#22c55e; font-weight:800;">100% Borderless</td>
+          <td><strong>Global Accessibility</strong></td>
+          <td style="color:#ef4444; font-weight:700;">✗ Restricted by local banking</td>
+          <td style="color:#16a34a; font-weight:800;">✓ 100% Borderless</td>
         </tr>
         <tr>
           <td><strong>Micropayments ($0.05)</strong></td>
-          <td style="color:#ef4444;">Impossible (High flat fees)</td>
-          <td style="color:#22c55e; font-weight:800;">Fully supported</td>
+          <td style="color:#ef4444; font-weight:700;">✗ Impossible (High fixed fees)</td>
+          <td style="color:#16a34a; font-weight:800;">✓ Fully supported</td>
         </tr>
       </tbody>
     </table>
