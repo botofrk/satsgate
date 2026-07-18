@@ -113,7 +113,7 @@
   }
   h1 {
     font-family: 'Space Grotesk', sans-serif;
-    font-size: clamp(38px, 6vw, 64px);
+    font-size: clamp(28px, 6vw, 64px);
     font-weight: 700;
     line-height: 1.05;
     letter-spacing: -0.02em;
@@ -362,9 +362,62 @@
   .footer-links a { color: var(--fg); }
   .footer-links a:hover { text-decoration: underline; }
 
+  /* Hamburger Button */
+  .hamburger-btn {
+    display: none;
+    flex-direction: column;
+    justify-content: space-between;
+    width: 24px;
+    height: 18px;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+    z-index: 100;
+  }
+  .hamburger-btn span {
+    width: 100%;
+    height: 3px;
+    background-color: var(--fg);
+    border-radius: 2px;
+    transition: all 0.3s ease;
+  }
+
   @media(max-width: 768px) {
-    nav { flex-direction: column; gap: 16px; padding: 16px; }
-    .nav-links { flex-wrap: wrap; justify-content: center; width: 100%; }
+    nav { padding: 16px 24px; }
+    .hamburger-btn { display: flex; }
+    .nav-links {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background-color: var(--bg);
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      gap: 32px;
+      z-index: 90;
+      padding: 40px;
+    }
+    .nav-links.active {
+      display: flex;
+    }
+    .nav-links a {
+      font-size: 20px;
+      font-weight: 800;
+    }
+    /* Hamburger Transform when Active */
+    .hamburger-btn.active span:nth-child(1) {
+      transform: translateY(7.5px) rotate(45deg);
+    }
+    .hamburger-btn.active span:nth-child(2) {
+      opacity: 0;
+    }
+    .hamburger-btn.active span:nth-child(3) {
+      transform: translateY(-7.5px) rotate(-45deg);
+    }
     .grid-two { grid-template-columns: 1fr; }
     .mode-selector { grid-template-columns: 1fr; }
   }
@@ -383,6 +436,11 @@
     </svg>
     aipp<span>dev</span>
   </a>
+  <button class="hamburger-btn" aria-label="Toggle Menu" onclick="toggleMobileMenu()">
+    <span></span>
+    <span></span>
+    <span></span>
+  </button>
   <div class="nav-links">
     <a href="#how">How it works</a>
     <a href="#get-started">Get Started</a>
@@ -788,6 +846,30 @@ function pollDemoStatus(hash) {
     } catch (e) {}
   }, 2000);
 }
+
+function toggleMobileMenu() {
+  const navLinks = document.querySelector('.nav-links');
+  const hamburger = document.querySelector('.hamburger-btn');
+  navLinks.classList.toggle('active');
+  hamburger.classList.toggle('active');
+  if (navLinks.classList.contains('active')) {
+    document.body.style.overflow = 'hidden';
+  } else {
+    document.body.style.overflow = '';
+  }
+}
+
+document.querySelectorAll('.nav-links a').forEach(link => {
+  link.addEventListener('click', () => {
+    const navLinks = document.querySelector('.nav-links');
+    const hamburger = document.querySelector('.hamburger-btn');
+    if (navLinks.classList.contains('active')) {
+      navLinks.classList.remove('active');
+      hamburger.classList.remove('active');
+      document.body.style.overflow = '';
+    }
+  });
+});
 </script>
 </body>
 </html>
