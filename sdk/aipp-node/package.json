@@ -1,7 +1,7 @@
 {
-  "name": "aipp-node",
-  "version": "1.2.3",
-  "description": "Official Node.js SDK for AIPP - The Lightning Network Split-Payment Gateway",
+  "name": "@aipp/sdk",
+  "version": "1.0.0",
+  "description": "Official Node.js SDK for AIPP — Non-Custodial Developer Monetization Platform (L402 & x402)",
   "main": "dist/index.js",
   "module": "dist/index.mjs",
   "types": "dist/index.d.ts",
