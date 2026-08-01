@@ -196,13 +196,12 @@
       lnPanel.appendChild(qrContainer);
 
       loadQrCodeLib().then(QRCode => {
-        // BOLT11 / BIP-21 standard uppercase LIGHTNING: URI for 100% camera scanning across Phoenix, Satoshi, Zeus, Breez & Muun
-        const rawInvoice = invoice.replace(/^lightning:/i, '').toUpperCase();
-        const lightningUri = 'LIGHTNING:' + rawInvoice;
-        QRCode.toCanvas(qrCanvas, lightningUri, {
-          width: 560,
-          margin: 4,
-          errorCorrectionLevel: 'M',
+        // Pure lowercase lnbc... BOLT11 string with margin 2 & 600px retina canvas for 100% universal scanner recognition
+        const cleanInvoice = invoice.toLowerCase().replace(/^lightning:/i, '');
+        QRCode.toCanvas(qrCanvas, cleanInvoice, {
+          width: 600,
+          margin: 2,
+          errorCorrectionLevel: 'L',
           color: { dark: '#000000', light: '#ffffff' }
         }, (error) => {
           if (error) console.error('AIPP Paywall QR generation failed:', error);
