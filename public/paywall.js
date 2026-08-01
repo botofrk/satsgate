@@ -196,7 +196,8 @@
       lnPanel.appendChild(qrContainer);
 
       loadQrCodeLib().then(QRCode => {
-        QRCode.toCanvas(qrCanvas, invoice.toUpperCase(), {
+        const lightningUri = invoice.toLowerCase().startsWith('lnbc') ? invoice.toLowerCase() : ('lightning:' + invoice.toLowerCase());
+        QRCode.toCanvas(qrCanvas, lightningUri, {
           width: 440,
           margin: 1,
           errorCorrectionLevel: 'L',
