@@ -119,7 +119,7 @@
     // Create Paywall Badge with addEventListener (CSP compliant)
     const badge = document.createElement('div');
     badge.className = 'aipp-paywall-overlay-badge';
-    badge.innerHTML = `🔒 Unlock for $${price.toFixed(2)} (via Lightning / USDC)`;
+    badge.innerHTML = `🔒 Bu İçeriğin Devamını Oku ($${price.toFixed(2)})`;
     
     badge.addEventListener('click', (e) => {
       e.preventDefault();
