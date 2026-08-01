@@ -1,7 +1,7 @@
 # AIPP.dev — Current Project State & Next Steps
-*Son Güncelleme: 17 Temmuz 2026*
+*Son Güncelleme: 2 Ağustos 2026*
 
-Bu belge, AIPP projesinde bugüne kadar yapılan çalışmaları, en son uygulanan güvenlik sertleştirme (security hardening) işlemlerini, pazar yeri ve AI ajan entegrasyonlarını, arayüz / dokümantasyon cilalamalarını ve bir sonraki çalışma seansında kalınan yerden nasıl devam edileceğini özetlemektedir.
+Bu belge, AIPP projesinde bugüne kadar yapılan çalışmaları, en son uygulanan Chrome Extension geliştirme/yayınlama adımlarını, L402/x402 ödeme akışı optimizasyonlarını ve yarınki çalışma seansında kalınan yerden nasıl devam edileceğini özetlemektedir.
 
 ---
 
@@ -41,22 +41,24 @@ Bu belge, AIPP projesinde bugüne kadar yapılan çalışmaları, en son uygulan
 * **Canlı Ortam Senkronizasyonu:** Tüm HTML ve JS değişiklikleri `/home/hermes/aipp/aipp-key` dizinine ve Docker konteyneri (`aipp-key`) içine aktarıldı.
 
 
----
-
-## 🔍 Nerede Kaldık?
-
-Uygulama şu an **canlıda (Hetzner VPS) en güncel ve en güvenli haliyle** çalışmaktadır.
-* TypeScript derlemesi: `tsc` ➔ 0 Hata.
-* Sunucu durumu: Aktif (`docker ps` ➔ `aipp-key` çalışıyor).
-* Sağlık kontrolü: `https://aipp.dev/health` ➔ `{"status":"ok","db":"ok"}`.
-* Fiyat ve PaidMCP Manifestoları: Uç noktalar çalışıyor.
-* Testler: **Vitest** ve **Supertest** entegre edildi. Fiyat servisi ve API rotaları için yazılan 9 testin tamamı sorunsuz geçiyor (`9/9 passed`).
-* Git Durumu: Tüm değişiklikler commit edildi ve GitHub reposuna pushlandı (`main` branch güncellendi).
-* Paketler: `aipp-node` (npm) ve `aipp-sdk` (pip) **v1.2.1** sürümü ile canlıda yayınlandı.
+### 5. Chrome Extension (Manifest V3) & Ödeme Deneyimi
+* **Chrome Extension (v1.0.0):** İçerik üreticileri için No-Code DOM kilitleme, Quick Link üretme ve cüzdan anahtarı yönetimi panelleri eklendi.
+* **AIPP Özel Marka Logoları:** Siyah zemin üzerine elektrik sarısı Şimşek + Kilit Anahtarı amblemi üretildi; 16x16, 48x48, 128x128 PNG ikonları eklentiye entegre edildi.
+* **CSP & Manifest V3 Uyum:** Tüm `onclick` inline JS handler'ları `addEventListener` mimarisine dönüştürüldü. Dış script injection'ları kaldırıldı.
+* **Kullanıcı Dostu Kilit Etiketi:** Kilit butonu metni evrensel `🔒 Unlock Full Content ($0.10)` olarak güncellendi.
+* **Müstakil Ödeme Ekranı (`checkout.html`):** Blog okuyucularının dikkatini dağıtan uzun yazılar kaldırılarak ekranda tam ortalanmış, odaklanmış ödeme sayfası oluşturuldu.
+* **Özgün QR Kod Yapısı:** Fatura QR kodu orijinal çalışan haline (`paywall.js` original) getirildi.
 
 ---
 
-## 🚀 Sonraki Seans İçin Yol Haritası (Yapılacaklar)
+## 🔍 Nerede Kaldık? (Yarın Nereden Devam Edilecek?)
+
+Uygulama şu an **canlıda (Hetzner VPS) ve GitHub main branch'inde %100 güncel ve kararlı** durumda.
+
+1. **Önemli Test & Odak Noktası (Yarın İlk Yapılacak İş):**
+   - Mobil cüzdan (Zeus, Phoenix, Wallet of Satoshi) QR kod okuma kütüphanesini ve canvas renderer parametrelerini inceleyip mobil kameraların QR kodu 0.1 saniyede okumasını incelemek.
+2. **Chrome Web Store Yayın Hazırlığı:**
+   - Chrome Web Store mağaza görsellerini ve geliştirici portalı kayıtlarını kontrol etmek.
 
 Gelecek seanslarda sistemin sertleştirilmesini devam ettirmek için aşağıdaki orta-düşük öncelikli işler yapılabilir:
 
