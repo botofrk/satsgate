@@ -524,29 +524,67 @@ app.<span class="c-fn">post</span>(<span class="c-str">'/api/generate'</span>, <
   </div>
 </section>
 
-<!-- ── HOW IT WORKS ── -->
-<section class="section" id="how">
-  <span class="section-label">How It Works</span>
-  <h2>Three steps. Zero complexity.</h2>
-  <p class="section-sub">AIPP handles the payment infrastructure. You ship the product.</p>
-  <div class="steps">
-    <div class="step-card">
-      <div class="step-num">1</div>
-      <h3>Install the SDK</h3>
-      <p>One npm or pip install. Works with Express, FastAPI, FastMCP, and any Node.js or Python framework.</p>
-      <div class="step-code">npm install @aipp/sdk</div>
-    </div>
-    <div class="step-card">
-      <div class="step-num">2</div>
-      <h3>Set Your Price</h3>
-      <p>Wrap any route, function, or endpoint with one middleware call. Set the price in USD. That's all.</p>
-      <div class="step-code">protectApi({ price: 0.01 })</div>
-    </div>
-    <div class="step-card">
-      <div class="step-num" style="background:var(--green);border-color:var(--green);">3</div>
-      <h3>Start Earning</h3>
-      <p>Payments settle directly to your Lightning address or EVM wallet. Transparent platform fee applies.</p>
-      <div class="step-code" style="color:#86efac;">→ Funds in your wallet</div>
+<!-- ── GET STARTED / QUICK SETUP ── -->
+<section class="section" id="get-started">
+  <span class="section-label">Instant Setup</span>
+  <h2>Get your API key in 30 seconds</h2>
+  <p class="section-sub">No complex registration. Just enter your payout address and start receiving micro-settlements.</p>
+  <div class="wizard-wrap">
+    <div class="wizard-card">
+      <!-- STEP 0: Setup Wallet -->
+      <div class="wizard-step active" id="step0">
+        <p style="font-size:14px;color:var(--muted);margin-bottom:20px;font-weight:500;">Where should we route your payments?</p>
+        <div class="mode-selector">
+          <div class="mode-card active" id="card-mode-ln" onclick="setSetupMode('ln')">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="#0f0f11" style="margin-bottom:2px;"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg><br>Bitcoin Lightning
+          </div>
+          <div class="mode-card" id="card-mode-usdc" onclick="setSetupMode('usdc')">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="#2563eb" style="margin-bottom:2px;"><circle cx="12" cy="12" r="10"/><path d="M12 6v12M8 10h8M8 14h8" stroke="#fff" stroke-width="1.5"/></svg><br>Base USDC
+          </div>
+          <div class="mode-card" id="card-mode-both" onclick="setSetupMode('both')">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#0f0f11" stroke-width="2" style="margin-bottom:2px;"><circle cx="9" cy="12" r="5" stroke="#ffc700" stroke-width="2"/><circle cx="15" cy="12" r="5" stroke="#2563eb" stroke-width="2"/></svg><br>Dual (Both)
+          </div>
+        </div>
+        <div id="wrapper-ln-address">
+          <label class="input-label">Lightning Address (e.g. Alby / WoS):</label>
+          <input class="input-field" id="demo-ln-address" type="text" placeholder="yourname@getalby.com">
+          <div class="error-msg" id="ln-error">Please enter a valid Lightning Address (looks like an email)</div>
+        </div>
+        <div id="wrapper-usdc-address" style="display:none">
+          <label class="input-label">Base USDC Address (EVM):</label>
+          <input class="input-field" id="demo-usdc-address" type="text" placeholder="0x... (EVM wallet address)">
+          <div class="error-msg" id="usdc-error">Please enter a valid 0x EVM address</div>
+        </div>
+        <label class="input-label">Email (optional — for key recovery):</label>
+        <input class="input-field" id="demo-email" type="email" placeholder="you@example.com">
+        <button class="btn btn-primary" style="width:100%;justify-content:center;margin-top:6px;" onclick="demoRegisterMerchant()">Generate API Key →</button>
+      </div>
+
+      <!-- STEP 1: Try Checkout -->
+      <div class="wizard-step" id="step1">
+        <p style="font-size:14px;color:var(--muted);margin-bottom:20px;font-weight:500;">Test a live $0.01 micro-payment to your wallet.</p>
+        <div style="display:flex;gap:12px;margin-bottom:20px;">
+          <button class="btn btn-primary active" id="btn-demo-ln" onclick="setDemoPayMode('L402')" style="flex:1;display:inline-flex;align-items:center;justify-content:center;gap:6px;"><svg width="14" height="14" viewBox="0 0 24 24" fill="#0f0f11"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg> Lightning</button>
+          <button class="btn btn-ghost" id="btn-demo-usdc" onclick="setDemoPayMode('X402')" style="flex:1;display:inline-flex;align-items:center;justify-content:center;gap:6px;"><svg width="14" height="14" viewBox="0 0 24 24" fill="#2563eb"><circle cx="12" cy="12" r="10"/><path d="M12 6v12M8 10h8M8 14h8" stroke="#fff" stroke-width="1.5"/></svg> Base USDC</button>
+        </div>
+        <button class="btn btn-primary" id="demo-pay-btn" style="width:100%;" onclick="generateDemoInvoice()">Create Invoice</button>
+        <div id="demo-qr-area" style="display:none;margin-top:20px;">
+          <canvas id="demo-qr-canvas" style="display:block;margin:0 auto 12px;"></canvas>
+          <p id="demo-instructions" style="font-size:12px;color:var(--muted);word-break:break-all;"></p>
+          <p style="margin-top:12px;font-size:13px;font-weight:700;"><span class="dot" id="demo-status-dot"></span><span id="demo-status-text">Waiting for payment...</span></p>
+        </div>
+      </div>
+
+      <!-- STEP 2: Dashboard Access -->
+      <div class="wizard-step" id="step2">
+        <div style="margin-bottom:12px;display:inline-flex;align-items:center;justify-content:center;width:56px;height:56px;background:#f0fdf4;border:2px solid #22c55e;border-radius:50%;">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+        </div>
+        <h3 style="font-size:20px;font-weight:900;margin-bottom:6px;">API Key Ready & Saved!</h3>
+        <p style="font-size:14px;color:var(--muted);margin-bottom:24px;font-weight:500;">You can now add the SDK middleware to your backend.</p>
+        <a href="dashboard.html" class="btn btn-primary" style="display:block;text-align:center;margin-bottom:10px;">Open Dashboard →</a>
+        <a href="docs.html" class="btn btn-ghost" style="display:block;text-align:center;">Read Documentation</a>
+      </div>
     </div>
   </div>
 </section>
@@ -615,77 +653,6 @@ app.<span class="c-fn">post</span>(<span class="c-str">'/api/generate'</span>, <
     </div>
   </div>
   <p class="price-note">All plans: Non-custodial · Direct settlement · No hidden fees · Cancel anytime</p>
-</section>
-
-<!-- ── GET STARTED ── -->
-<section class="section" id="get-started">
-  <span class="section-label">Onboarding</span>
-  <h2>Get your API key</h2>
-  <p class="section-sub">Set up your payout wallet, grab your key, and start monetizing in under 60 seconds.</p>
-  <div class="wizard-wrap">
-    <div class="wizard-card">
-      <div class="wizard-tabs">
-        <button class="tab active" id="tab0" onclick="switchTab(0)">① Setup Wallet</button>
-        <button class="tab" id="tab1" onclick="switchTab(1)">② Try Checkout</button>
-        <button class="tab" id="tab2" onclick="switchTab(2)">③ Your Key</button>
-      </div>
-
-      <!-- STEP 0: Setup Wallet -->
-      <div class="wizard-step active" id="step0">
-        <p style="font-size:14px;color:var(--muted);margin-bottom:24px;font-weight:500;">Where should we settle your payments?</p>
-        <div class="mode-selector">
-          <div class="mode-card active" id="card-mode-ln" onclick="setSetupMode('ln')">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="#0f0f11" style="margin-bottom:4px;"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg><br>Bitcoin Lightning
-          </div>
-          <div class="mode-card" id="card-mode-usdc" onclick="setSetupMode('usdc')">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="#2563eb" style="margin-bottom:4px;"><circle cx="12" cy="12" r="10"/><path d="M12 6v12M8 10h8M8 14h8" stroke="#fff" stroke-width="1.5"/></svg><br>Base USDC
-          </div>
-          <div class="mode-card" id="card-mode-both" onclick="setSetupMode('both')">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#0f0f11" stroke-width="2" style="margin-bottom:4px;"><circle cx="9" cy="12" r="6" stroke="#ffc700" stroke-width="2.5"/><circle cx="15" cy="12" r="6" stroke="#2563eb" stroke-width="2.5"/></svg><br>Dual (Both)
-          </div>
-        </div>
-        <div id="wrapper-ln-address">
-          <label class="input-label">* Lightning Address:</label>
-          <input class="input-field" id="demo-ln-address" type="text" placeholder="e.g. yourname@getalby.com">
-          <div class="error-msg" id="ln-error">Please enter a valid Lightning Address (looks like an email)</div>
-        </div>
-        <div id="wrapper-usdc-address" style="display:none">
-          <label class="input-label">* USDC Wallet Address (Base network):</label>
-          <input class="input-field" id="demo-usdc-address" type="text" placeholder="0x... (EVM address)">
-          <div class="error-msg" id="usdc-error">Please enter a valid 0x EVM address</div>
-        </div>
-        <label class="input-label">Email (optional — for recovery):</label>
-        <input class="input-field" id="demo-email" type="email" placeholder="you@example.com">
-        <button class="btn btn-primary" style="width:100%;justify-content:center;" onclick="demoRegisterMerchant()">Generate My API Key →</button>
-      </div>
-
-      <!-- STEP 1: Try Checkout -->
-      <div class="wizard-step" id="step1">
-        <p style="font-size:14px;color:var(--muted);margin-bottom:24px;font-weight:500;">Test a live $0.01 payment to your wallet right now.</p>
-        <div style="display:flex;gap:12px;margin-bottom:24px;">
-          <button class="btn btn-primary active" id="btn-demo-ln" onclick="setDemoPayMode('L402')" style="flex:1;display:inline-flex;align-items:center;justify-content:center;gap:6px;"><svg width="14" height="14" viewBox="0 0 24 24" fill="#0f0f11"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg> Lightning</button>
-          <button class="btn btn-ghost" id="btn-demo-usdc" onclick="setDemoPayMode('X402')" style="flex:1;display:inline-flex;align-items:center;justify-content:center;gap:6px;"><svg width="14" height="14" viewBox="0 0 24 24" fill="#2563eb"><circle cx="12" cy="12" r="10"/><path d="M12 6v12M8 10h8M8 14h8" stroke="#fff" stroke-width="1.5"/></svg> Base USDC</button>
-        </div>
-        <button class="btn btn-primary" id="demo-pay-btn" style="width:100%;" onclick="generateDemoInvoice()">Create Invoice</button>
-        <div id="demo-qr-area" style="display:none;margin-top:24px;">
-          <canvas id="demo-qr-canvas" style="display:block;margin:0 auto 16px;"></canvas>
-          <p id="demo-instructions" style="font-size:12px;color:var(--muted);word-break:break-all;"></p>
-          <p style="margin-top:16px;font-size:13px;font-weight:700;"><span class="dot" id="demo-status-dot"></span><span id="demo-status-text">Waiting for payment...</span></p>
-        </div>
-      </div>
-
-      <!-- STEP 2: Dashboard Access -->
-      <div class="wizard-step" id="step2">
-        <div style="margin-bottom:16px;display:inline-flex;align-items:center;justify-content:center;width:64px;height:64px;background:#f0fdf4;border:2px solid #22c55e;border-radius:50%;">
-          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
-        </div>
-        <h3 style="font-size:20px;font-weight:900;margin-bottom:8px;">You're all set!</h3>
-        <p style="font-size:14px;color:var(--muted);margin-bottom:28px;font-weight:500;">Your API key is saved. Head to the dashboard to manage your monetized endpoints.</p>
-        <a href="dashboard.html" class="btn btn-primary" style="display:block;text-align:center;margin-bottom:12px;">Open Dashboard →</a>
-        <a href="docs.html" class="btn btn-ghost" style="display:block;text-align:center;">Browse the Docs</a>
-      </div>
-    </div>
-  </div>
 </section>
 
 <!-- ── FOOTER ── -->
