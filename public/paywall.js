@@ -199,9 +199,9 @@
         // Plain lowercase invoice for 100% BOLT11 compatibility across Zeus, Satoshi, Phoenix, Breez & Alby
         const cleanInvoice = invoice.toLowerCase().replace(/^lightning:/i, '');
         QRCode.toCanvas(qrCanvas, cleanInvoice, {
-          width: 440,
+          width: 520,
           margin: 1,
-          errorCorrectionLevel: 'M',
+          errorCorrectionLevel: 'L',
           color: { dark: '#000000', light: '#ffffff' }
         }, (error) => {
           if (error) console.error('AIPP Paywall QR generation failed:', error);
