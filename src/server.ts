@@ -132,7 +132,7 @@ async function bootstrap() {
 
 export { app };
 
-if (process.env.NODE_ENV !== 'test') {
+if (process.env.NODE_ENV !== 'test' && !process.env.VITEST) {
   bootstrap();
 }
 
