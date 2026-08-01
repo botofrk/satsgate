@@ -432,18 +432,18 @@ app.use('/api/v1/generate', protectApi({ price: 0.01 }), handler);</pre>
       </div>
       <!-- Commission Card -->
       <div class="stat-card">
-        <div class="label">AIPP Commission (1%)</div>
+        <div class="label">Platform Fees (Your Plan)</div>
         <div style="display:flex; justify-content:space-between; align-items:baseline; margin-bottom:8px; flex-wrap:wrap; gap:8px;">
           <div class="val" id="commission-val" style="font-size:24px;">— <sub class="notranslate" translate="no">sats</sub></div>
           <div class="val" id="commission-usdc-val" style="font-size:24px; color:#3b82f6;">— <sub class="notranslate" translate="no">USDC</sub></div>
         </div>
-        <div class="footer" style="color:var(--muted)">Total platform fees paid</div>
+        <div class="footer" style="color:var(--muted)">Transparent fees per your plan</div>
       </div>
       <!-- Transactions Card -->
       <div class="stat-card">
         <div class="label">Transactions Routed</div>
         <div class="val" id="tx-count-val">0</div>
-        <div class="footer">● Active Merchant Gateway</div>
+        <div class="footer">● Direct Settlement Active</div>
       </div>
     </div>
 
@@ -528,7 +528,7 @@ app.use('/api/v1/generate', protectApi({ price: 0.01 }), handler);</pre>
 
   <div style="font-size: 13px; font-weight: 600; color: var(--muted); margin-top: 8px;">
     Powered by ⚡ Bitcoin Lightning · LNBits · L402<br><br>
-    © 2026 aipp.dev — The non-custodial gateway
+    © 2026 aipp.dev — Non-Custodial Developer Monetization Platform
   </div>
 </footer>
 

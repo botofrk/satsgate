@@ -10,7 +10,11 @@
 
 AIPP is a **Set & Forget Monetization Platform** for developers. It eliminates the thousands of lines of boilerplate code required to charge for APIs, AI Agent tools (MCP), premium content, and digital downloads.
 
-Unlike traditional payment gateways, AIPP is **100% Non-Custodial**. Revenue settles instantly to your own Lightning address or EVM wallet—no bank accounts, no merchant approvals, no percentage cuts, and no holding of funds.
+**Revenue Model:** AIPP is a non-custodial monetization platform. Merchant funds are settled directly to the merchant wallet. AIPP charges a transparent platform fee according to the selected plan — no hidden costs, no surprise deductions.
+
+- **Direct settlement.** Funds go straight to your Lightning address or EVM wallet.
+- **Transparent fees.** A small platform fee applies per transaction based on your plan.
+- **No lock-in.** Non-custodial by design — AIPP never holds your funds.
 
 ---
 

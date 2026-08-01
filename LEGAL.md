@@ -13,10 +13,11 @@ AIPP.dev developers and code contributors do not provide banking, custody, money
 
 ---
 
-## 2. Nature of the 1% Platform Fee (Software Routing & Licensing Fee)
-The flat 1% routing fee applied by AIPP.dev is **not a financial commission or money transmission service fee.**
-* This fee is a **"Decentralized Software Routing & Licensing Fee"** designed to support the ongoing development, updates, and maintenance of the open-source software and its ecosystem.
-* Paralleling standard practices in Web3 and decentralized finance (DeFi) (such as MetaMask Swap fees or Uniswap router fees), this split is executed autonomously at the software code level. Funds are never pooled, held, or custodied by the developers before distribution.
+## 2. Nature of Platform Fees (Software Routing & Licensing Fee)
+AIPP.dev charges a **transparent platform fee** per successful transaction, based on the merchant's selected plan. The exact fee percentage is published on the pricing page and is never hidden.
+* This fee is a **"Software Routing & Licensing Fee"** designed to support the ongoing development, updates, and maintenance of the platform and its ecosystem.
+* Paralleling standard practices in Web3 and decentralized finance (DeFi) (such as MetaMask Swap fees or Uniswap router fees), this fee is applied autonomously at the software code level. Funds are never pooled, held in custody, or re-distributed by the developers before settlement.
+* The fee schedule is subject to change based on the merchant's active plan tier (Free, Pro, Business, or Enterprise).
 
 ---
 
