@@ -244,7 +244,8 @@
       lnCopyBtn.className = 'aipp-paywall-button aipp-paywall-copy';
       lnCopyBtn.innerText = 'Copy Invoice';
       lnCopyBtn.onclick = () => {
-        navigator.clipboard.writeText(invoice);
+        const cleanInv = invoice.toLowerCase().replace(/^lightning:/i, '');
+        navigator.clipboard.writeText(cleanInv);
         lnCopyBtn.innerText = 'Copied!';
         setTimeout(() => lnCopyBtn.innerText = 'Copy Invoice', 2000);
       };
