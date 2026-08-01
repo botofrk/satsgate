@@ -79,17 +79,11 @@ app.get('/health', async (req: Request, res: Response) => {
   }
 });
 
-// Serve ONLY the public/ directory as static — prevents .env and source code exposure
+// Serve ONLY the public/ directory as static — single source of truth for all HTML and assets
 app.use(express.static(path.join(__dirname, '../public')));
-// Also serve HTML files from root (index.html, dashboard.html, etc.) explicitly
-const ROOT_HTML_FILES = ['index.html', 'dashboard.html', 'docs.html', 'l402.html', 'admin.html'];
-ROOT_HTML_FILES.forEach(file => {
-  app.get(`/${file}`, (req: Request, res: Response) => {
-    res.sendFile(path.join(__dirname, '..', file));
-  });
-});
+// Redirect root to index
 app.get('/', (req: Request, res: Response) => {
-  res.sendFile(path.join(__dirname, '..', 'index.html'));
+  res.sendFile(path.join(__dirname, '../public/index.html'));
 });
 app.get('/paywall_demo.html', (req: Request, res: Response) => {
   res.redirect('/paywall-demo.html');

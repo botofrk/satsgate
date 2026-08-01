@@ -1,0 +1,967 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>aipp.dev — Developer Dashboard</title>
+<link rel="icon" type="image/x-icon" href="favicon.ico">
+<link rel="icon" type="image/png" sizes="32x32" href="favicon.png">
+<link rel="icon" type="image/svg+xml" href="favicon.svg">
+<link rel="apple-touch-icon" href="favicon-192.png">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script><style>
+  @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500;600;700&family=Fira+Code:wght@500;700&display=swap');
+  
+  *{margin:0;padding:0;box-sizing:border-box}
+  
+  :root {
+    --bg: #faf9f6;          /* Premium warm white */
+    --fg: #0f0f11;          /* Deep rich night black */
+    --accent: #ffc700;      /* Electric warm amber */
+    --card: #ffffff;
+    --border: #0f0f11;
+    --muted: #52525b;
+    --success: #16a34a;
+    --danger: #dc2626;
+    --radius: 6px;
+  }
+  
+  body {
+    background-color: var(--bg);
+    color: var(--fg);
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+  
+  header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 20px 40px;
+    border-bottom: 3px solid var(--border);
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    background: var(--bg);
+  }
+  
+  .logo {
+    font-weight: 800;
+    font-size: 22px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    text-decoration: none;
+    color: var(--fg);
+  }
+  .logo span { color: var(--muted); font-size: 14px; font-weight: 500; } }
+  
+  .nav-links {
+    display: flex;
+    gap: 24px;
+    align-items: center;
+  }
+  .nav-links a {
+    color: var(--fg);
+    text-decoration: none;
+    font-size: 15px;
+    font-weight: 700;
+    transition: all 0.2s;
+    border-bottom: 2px solid transparent;
+  }
+  .nav-links a:hover { border-bottom: 2px solid var(--fg); transform: translateY(-2px); }
+  
+  .nav-btn {
+    background: transparent;
+    color: var(--muted);
+    border: none;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    font-family: 'Inter', sans-serif;
+  }
+  .nav-btn:hover { color: var(--fg); }
+
+  .container {
+    max-width: 1000px;
+    width: 100%;
+    margin: 0 auto;
+    padding: 40px 24px;
+    flex: 1;
+  }
+
+  /* LOGIN VIEW */
+  .login-wrap {
+    max-width: 480px;
+    margin: 80px auto 0;
+    background: var(--card);
+    border: 2px solid var(--border);
+    border-radius: 12px;
+    padding: 40px;
+    text-align: center;
+    box-shadow: 8px 8px 0 #000;
+  }
+  .login-wrap h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: 32px;
+    font-weight: 700;
+    margin-bottom: 12px;
+  }
+  .login-wrap p {
+    color: var(--muted);
+    font-size: 14px;
+    margin-bottom: 32px;
+    font-weight: 500;
+  }
+  .login-input {
+    width: 100%;
+    background: #fff;
+    border: 2px solid var(--border);
+    border-radius: 8px;
+    padding: 14px 16px;
+    color: var(--fg);
+    font-family: 'Fira Code', monospace;
+    font-size: 14px;
+    outline: none;
+    margin-bottom: 24px;
+    text-align: center;
+    transition: all 0.2s;
+    box-shadow: inset 2px 2px 0 rgba(0,0,0,0.05);
+  }
+  .login-input:focus { border-color: #000; box-shadow: 4px 4px 0 #000; transform: translate(-2px, -2px); }
+  
+  .btn-primary {
+    background: var(--accent);
+    color: #fff;
+    border: 2px solid #000;
+    border-radius: 8px;
+    padding: 14px 24px;
+    font-weight: 700;
+    font-size: 14px;
+    cursor: pointer;
+    width: 100%;
+    font-family: 'Inter', sans-serif;
+    transition: all 0.2s;
+    box-shadow: 4px 4px 0 #000;
+  }
+  .btn-primary:hover { transform: translate(-2px, -2px); box-shadow: 6px 6px 0 #000; }
+
+  /* DASHBOARD VIEW */
+  .dashboard-view { display: none; }
+  .dashboard-view.active {
+    display: block;
+    animation: fadeInUp 0.4s ease forwards;
+  }
+
+  @keyframes fadeInUp {
+    from{opacity:0;transform:translateY(10px)}
+    to{opacity:1;transform:translateY(0)}
+  }
+
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 24px;
+    margin-bottom: 24px;
+  }
+  .stat-card {
+    background: var(--card);
+    border: 2px solid var(--border);
+    border-radius: 8px;
+    padding: 24px;
+    box-shadow: 5px 5px 0 #000;
+  }
+  .stat-card .label { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px; font-weight: 700; }
+  .stat-card .val { font-family: 'Inter', sans-serif; font-size: 32px; font-weight: 800; letter-spacing: -1px; }
+  .stat-card .val sub { font-size: 14px; font-weight: 500; color: var(--muted); }
+  .stat-card .footer { font-size: 13px; color: var(--success); margin-top: 16px; font-weight: 600; }
+
+  .grid-two-col { display: grid; grid-template-columns: 2fr 1fr; gap: 24px; margin-bottom: 24px; }
+  @media(max-width:900px){ .grid-two-col{grid-template-columns:1fr} }
+
+  .chart-card { background: var(--card); border: 2px solid var(--border); border-radius: 8px; padding: 24px; box-shadow: 6px 6px 0 #000; }
+  .chart-card h3 { font-family: 'Inter', sans-serif; font-size: 16px; font-weight: 700; margin-bottom: 24px; color: var(--fg); text-transform: uppercase; letter-spacing: 1px; }
+  .chart-container { position: relative; height: 260px; width: 100%; }
+
+  .ledger-card { background: var(--card); border: 2px solid var(--border); border-radius: 8px; padding: 24px; margin-top: 24px; box-shadow: 6px 6px 0 #000; }
+  .ledger-card h3 { font-family: 'Inter', sans-serif; font-size: 16px; font-weight: 700; margin-bottom: 24px; color: var(--fg); text-transform: uppercase; letter-spacing: 1px; }
+  
+  .table-wrap { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; text-align: left; font-size: 13px; }
+  th { color: var(--fg); font-weight: 700; padding: 16px 12px; border-bottom: 2px solid var(--border); text-transform: uppercase; font-size: 11px; letter-spacing: 0.5px; }
+  td { padding: 16px 12px; border-bottom: 2px solid var(--border); color: var(--fg); font-weight: 500; }
+  tr:last-child td { border-bottom: none; }
+  
+  .badge-type { display: inline-block; padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; }
+  .badge-type.settled { background: rgba(34, 197, 94, 0.1); color: var(--success); }
+  .badge-type.pending { background: rgba(245, 158, 11, 0.1); color: #f59e0b; }
+  .badge-type.expired { background: rgba(161, 161, 170, 0.1); color: #71717a; }
+  .badge-type.pending_threshold { background: rgba(56, 189, 248, 0.1); color: #38bdf8; }
+  .badge-type.pending_manual { background: rgba(139, 92, 246, 0.1); color: #8b5cf6; }
+  .badge-type.queued { background: rgba(56, 189, 248, 0.15); color: #0ea5e9; }
+  
+  .sats-val { font-family: 'Fira Code', monospace; font-size: 13px; }
+  .sats-val.positive { color: var(--success); }
+
+  .api-key-box {
+    background: var(--card);
+    border: 2px solid var(--border);
+    padding: 16px 24px;
+    border-radius: 8px;
+    margin-bottom: 32px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    box-shadow: 4px 4px 0 #000;
+  }
+  .api-key-text {
+    font-size: 14px;
+    color: var(--muted);
+    font-weight: 600;
+  }
+  #display-api-key {
+    background: #fefefe;
+    color: var(--fg);
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-family: 'Fira Code', monospace;
+    font-size: 13px;
+    margin-left: 8px;
+    border: 2px solid var(--border);
+  }
+  .btn-copy {
+    padding: 8px 16px;
+    font-size: 13px;
+    font-weight: 700;
+    background: #fff;
+    color: var(--fg);
+    border: 2px solid var(--border);
+    border-radius: 6px;
+    cursor: pointer;
+    font-family: 'Inter', sans-serif;
+    box-shadow: 2px 2px 0 #000;
+    transition: all 0.2s;
+  }
+  .btn-copy:hover {
+    transform: translate(-1px, -1px);
+    box-shadow: 3px 3px 0 #000;
+  }
+
+  footer { text-align: center; padding: 32px; color: var(--muted); font-size: 13px; border-top: 1px solid var(--border); margin-top: auto; font-family: 'Inter', sans-serif; }
+
+  @media (max-width: 800px) {
+    header {
+      flex-direction: column;
+      gap: 16px;
+      align-items: flex-start;
+      padding: 16px 20px;
+    }
+    .nav-links {
+      width: 100%;
+      overflow-x: auto;
+      padding-bottom: 4px;
+      -webkit-overflow-scrolling: touch;
+      gap: 16px;
+    }
+    .nav-links::-webkit-scrollbar { display: none; }
+    
+    .container {
+      padding: 24px 16px;
+    }
+    
+    .login-wrap {
+      padding: 24px;
+      margin-top: 40px;
+    }
+    
+    .api-key-box {
+      flex-direction: column;
+      align-items: stretch;
+      text-align: center;
+      padding: 16px;
+    }
+    .api-key-text {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    #display-api-key {
+      margin-left: 0;
+      display: block;
+      word-break: break-all;
+      white-space: normal;
+    }
+    .btn-copy {
+      width: 100%;
+    }
+    th, td {
+      padding: 12px 8px;
+    }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <a href="/" class="logo">
+    <svg width="28" height="28" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg" style="display: block; flex-shrink: 0;">
+      <rect width="32" height="32" rx="8" fill="#0f0f11"/>
+      <circle cx="14" cy="16" r="7" fill="none" stroke="#ffc700" stroke-width="2.5"/>
+      <circle cx="14" cy="16" r="2.5" fill="#ffc700"/>
+      <path d="M19.5 12 L24 16 L19.5 20" fill="none" stroke="#ffc700" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+    aipp<span>dev</span>
+  </a>
+  <div class="nav-links">
+    <a href="/#how">How it works</a>
+    <a href="/#get-started">Get Started</a>
+    <a href="docs.html">Docs</a>
+    <a href="l402.html">For AI Agents</a>
+    <a href="dashboard.html" style="border-bottom: 2px solid var(--fg)">Dashboard</a>
+    <button class="nav-btn" id="logout-btn" style="display:none" onclick="logout()">Sign out</button>
+  </div>
+</header>
+
+<div class="container">
+
+  <!-- LOGIN VIEW -->
+  <div id="login-view" class="login-wrap">
+    <h1>Sign in to Dashboard</h1>
+    <p>Enter your Lightning Address (email) or API Key.</p>
+    <input type="text" id="aipp-key-input" class="login-input" placeholder="e.g. you@domain.com or aipp_merch_..." autocomplete="off">
+    <button onclick="login()" class="btn-primary" id="login-btn">Unlock dashboard</button>
+    <div style="font-size:13px;color:var(--muted);margin-top:24px">
+      No account? <a href="index.html#get-started" style="color:var(--accent);text-decoration:none">Onboard in 3 seconds &rarr;</a>
+    </div>
+  </div>
+
+  <!-- MAIN DASHBOARD VIEW -->
+  <div id="dashboard-view" class="dashboard-view">
+    
+    <div class="api-key-box">
+      <div class="api-key-text">
+        Active API Key: 
+        <code id="display-api-key">aipp_...</code>
+      </div>
+      <button onclick="copyActiveKey(this)" class="btn-copy">Copy Key</button>
+    </div>
+
+    <!-- VOLATILITY NOTICE -->
+    <div style="background: var(--card); border: 2px solid var(--border); padding: 16px 24px; border-radius: 8px; margin-bottom: 32px; box-shadow: 4px 4px 0 #000; font-size: 13px; font-weight: 500; display: flex; align-items: center; gap: 12px;">
+      <span style="font-size: 20px;">💡</span>
+      <div>
+        <strong>Pricing Notice:</strong> Your items are priced in fiat values (USD). The actual Satoshi (sat) amount for each invoice is calculated dynamically in real-time at the moment of request based on the current market exchange rate.
+        <br>
+        <span style="color: var(--muted); font-size: 12px; font-weight: 400;">Sat amounts are calculated dynamically at invoice creation time using the live BTC/USD market rate.</span>
+      </div>
+    </div>
+
+    <!-- READY-TO-USE MIDDLEWARE SNIPPET -->
+    <div style="background: var(--card); border: 2px solid var(--border); padding: 24px; border-radius: 8px; margin-bottom: 32px; box-shadow: 4px 4px 0 #000;">
+      <h3 style="font-family: 'Inter', sans-serif; font-size: 16px; font-weight: 700; margin-bottom: 8px; color: var(--fg); text-transform: uppercase; letter-spacing: 1px;">⚡ 1-Line Middleware Snippet</h3>
+      <p style="color: var(--muted); font-size: 14px; margin-bottom: 16px;">Copy and paste this middleware into your Express or FastAPI app. Set <code>AIPP_KEY</code> in your <code>.env</code> file and start earning instantly.</p>
+      <pre style="background: #111; color: #fff; padding: 16px; border-radius: 6px; font-family: 'Fira Code', monospace; font-size: 13px; overflow-x: auto; margin-bottom: 12px;">// Node.js Express
+import { protectApi } from '@aipp/sdk';
+app.use('/api/v1/generate', protectApi({ price: 0.01 }), handler);</pre>
+    </div>
+
+    <!-- MARKETPLACE INTEGRATION -->
+    <div style="background: var(--card); border: 2px solid var(--border); padding: 24px; border-radius: 8px; margin-bottom: 32px; box-shadow: 4px 4px 0 #000;">
+      <h3 style="font-family: 'Inter', sans-serif; font-size: 16px; font-weight: 700; margin-bottom: 8px; color: var(--fg); text-transform: uppercase; letter-spacing: 1px;">Marketplace Integrations</h3>
+      <p style="color: var(--muted); font-size: 14px; margin-bottom: 16px;">List your monetized endpoints on AI directories like <a href="https://paidmcp.dev" target="_blank" style="color:var(--accent); font-weight: 600;">PaidMCP.dev</a> to reach global AI agents instantly.</p>
+      <div style="display: flex; gap: 12px; align-items: center;">
+        <button onclick="copyPaidMcpManifest(this)" class="btn-copy" style="background: var(--bg); color: var(--fg); box-shadow: 2px 2px 0 var(--border);">Copy PaidMCP Config</button>
+        <a href="https://paidmcp.dev/submit" target="_blank" style="font-size: 13px; color: var(--muted); text-decoration: none; font-weight: 600; transition: color 0.2s;" onmouseover="this.style.color='var(--fg)'" onmouseout="this.style.color='var(--muted)'">&rarr; Go to PaidMCP PR</a>
+      </div>
+    <!-- NO-CODE PAYMENT LINKS -->
+    <div style="background: var(--card); border: 2px solid var(--border); padding: 24px; border-radius: 8px; margin-bottom: 32px; box-shadow: 4px 4px 0 #000;">
+      <h3 style="font-family: 'Inter', sans-serif; font-size: 16px; font-weight: 700; margin-bottom: 8px; color: var(--fg); text-transform: uppercase; letter-spacing: 1px;">No-Code Payment Links</h3>
+      <p style="color: var(--muted); font-size: 14px; margin-bottom: 16px;">Create instant payment links for your products or services. Customers pay via Lightning or USDC, then get redirected to your content.</p>
+      
+      <!-- Link Creation Form -->
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin-bottom: 20px; background: #fafafa; padding: 16px; border: 2px dashed #ccc; border-radius: 8px;">
+        <div>
+          <label style="font-size: 11px; font-weight: 700; display: block; margin-bottom: 4px;">Product Title</label>
+          <input type="text" id="link-title" placeholder="e.g. My Premium Ebook" style="width: 100%; padding: 8px; border: 2px solid #000; border-radius: 4px; font-size: 13px;">
+        </div>
+        <div>
+          <label style="font-size: 11px; font-weight: 700; display: block; margin-bottom: 4px;">Price (USD)</label>
+          <input type="number" id="link-amount" step="0.01" min="0.01" max="100.00" placeholder="5.00" style="width: 100%; padding: 8px; border: 2px solid #000; border-radius: 4px; font-size: 13px;">
+        </div>
+        <div>
+          <label style="font-size: 11px; font-weight: 700; display: block; margin-bottom: 4px;">Redirect URL (Product/Content Link)</label>
+          <input type="url" id="link-redirect" placeholder="https://mycontent.com/download" style="width: 100%; padding: 8px; border: 2px solid #000; border-radius: 4px; font-size: 13px;">
+        </div>
+        <div style="display: flex; align-items: flex-end;">
+          <button onclick="createPaymentLink(this)" style="width: 100%; padding: 9px; background: #000; color: #ffcc00; border: 2px solid #000; border-radius: 4px; font-weight: 800; cursor: pointer; box-shadow: 2px 2px 0 #000; font-size:12px;">Generate Link</button>
+        </div>
+      </div>
+
+      <!-- Links List -->
+      <div class="table-wrap">
+        <table style="width: 100%;">
+          <thead>
+            <tr>
+              <th style="padding: 8px;">Product</th>
+              <th style="padding: 8px;">Price</th>
+              <th style="padding: 8px;">Link URL</th>
+              <th style="padding: 8px; text-align: right;">Action</th>
+            </tr>
+          </thead>
+          <tbody id="links-body">
+            <tr><td colspan="4" style="text-align:center;color:var(--muted);padding:12px;">Loading links...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- STATS ROW -->
+    <div class="stats-grid">
+      <!-- Volume Routed Card -->
+      <div class="stat-card">
+        <div class="label">Volume Routed</div>
+        <div style="display:flex; justify-content:space-between; align-items:baseline; margin-bottom:8px; flex-wrap:wrap; gap:8px;">
+          <div class="val" id="volume-val" style="font-size:24px;">— <sub class="notranslate" translate="no">sats</sub></div>
+          <div class="val" id="volume-usdc-val" style="font-size:24px; color:#3b82f6;">— <sub class="notranslate" translate="no">USDC</sub></div>
+        </div>
+        <div class="footer" id="merchant-ln-address">Destination: —</div>
+      </div>
+      <!-- Commission Card -->
+      <div class="stat-card">
+        <div class="label">Platform Fees (Your Plan)</div>
+        <div style="display:flex; justify-content:space-between; align-items:baseline; margin-bottom:8px; flex-wrap:wrap; gap:8px;">
+          <div class="val" id="commission-val" style="font-size:24px;">— <sub class="notranslate" translate="no">sats</sub></div>
+          <div class="val" id="commission-usdc-val" style="font-size:24px; color:#3b82f6;">— <sub class="notranslate" translate="no">USDC</sub></div>
+        </div>
+        <div class="footer" style="color:var(--muted)">Transparent fees per your plan</div>
+      </div>
+      <!-- Transactions Card -->
+      <div class="stat-card">
+        <div class="label">Transactions Routed</div>
+        <div class="val" id="tx-count-val">0</div>
+        <div class="footer">● Direct Settlement Active</div>
+      </div>
+    </div>
+
+    <!-- CHART ROW -->
+    <div class="chart-card">
+      <h3>Last 7 Days Usage</h3>
+      <div class="chart-container" style="position:relative;">
+        <canvas id="usageChart"></canvas>
+        <div id="chart-empty-state" style="display:none;position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;pointer-events:none;">
+          <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#52525b" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom:12px;"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg>
+          <p style="color:#52525b;font-size:13px;font-weight:600;margin:0;">No activity yet</p>
+          <p style="color:#3f3f46;font-size:12px;margin:4px 0 0;">Create your first invoice to start tracking</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- LEDGER ROW -->
+    <div class="ledger-card">
+      <h3>Recent Transactions</h3>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Hash</th>
+              <th>Status</th>
+              <th>Split Details</th>
+              <th>Amount</th>
+            </tr>
+          </thead>
+          <tbody id="ledger-body">
+            <tr><td colspan="5" style="text-align:center;color:var(--muted)">Loading...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<style>
+  .social-btn {
+    display: flex; align-items: center; justify-content: center;
+    width: 48px; height: 48px; background: #fff;
+    border: 2px solid var(--border); border-radius: 8px;
+    color: var(--fg); transition: all 0.2s; box-shadow: 3px 3px 0 #000;
+  }
+  .social-btn:hover { transform: translate(-2px, -2px); box-shadow: 5px 5px 0 #000; background: #f9f9f9; }
+  .footer-links a { color: var(--fg); text-decoration: none; transition: all 0.2s; }
+  .footer-links a:hover { text-decoration: underline; }
+</style>
+<footer style="border-top: 2px solid var(--border); padding: 60px 24px; background: var(--bg); text-align: center; display: flex; flex-direction: column; align-items: center; gap: 32px; color: var(--fg); font-family: 'Inter', sans-serif; margin-top: auto;">
+  
+  <div style="font-weight: 800; font-size: 24px; display: flex; align-items: center; gap: 8px;">
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="#000" stroke="#000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
+    aipp
+  </div>
+
+  <div style="display: flex; gap: 16px; flex-wrap: wrap; justify-content: center;">
+    <a href="https://t.me/aippdev" target="_blank" class="social-btn" title="Telegram">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.198 2.433a2.242 2.242 0 0 0-1.022.215l-18 7.333c-.76.31-.77 1.39-.02 1.72l4.88 2.12 1.34 5.91c.14.63.85.87 1.35.46l2.97-2.45 4.67 3.46c.55.4 1.33.15 1.5-.52l3.41-16.14a2.24 2.24 0 0 0-2.078-2.108z"></path><path d="m15.5 8.5-6.5 5.5"></path></svg>
+    </a>
+    <a href="https://x.com/aippdev" target="_blank" class="social-btn" title="X (Twitter)">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4l11.733 16h4.267l-11.733 -16z"></path><path d="M4 20l6.768 -6.768m2.46 -2.46l6.772 -6.772"></path></svg>
+    </a>
+    <a href="https://github.com/aippde/aipp-key" target="_blank" class="social-btn" title="GitHub">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"></path></svg>
+    </a>
+  </div>
+
+  <div class="footer-links" style="display: flex; gap: 16px; flex-wrap: wrap; justify-content: center; font-size: 14px; font-weight: 700;">
+    <a href="legal.html#privacy">Privacy Policy</a>
+    <span style="color:var(--muted)">|</span>
+    <a href="https://github.com/aippde/aipp-key/issues" target="_blank">Support</a>
+    <span style="color:var(--muted)">|</span>
+    <a href="legal.html">Legal Disclaimer</a>
+    <span style="color:var(--muted)">|</span>
+    <a href="l402.html">For AI Agents</a>
+    <span style="color:var(--muted)">|</span>
+    <a href="docs.html">API</a>
+  </div>
+
+  <div style="font-size: 13px; font-weight: 600; color: var(--muted); margin-top: 8px;">
+    Powered by ⚡ Bitcoin Lightning · LNBits · L402<br><br>
+    © 2026 aipp.dev — Non-Custodial Developer Monetization Platform
+  </div>
+</footer>
+
+<script>
+const AIPP_API = window.location.origin;
+
+let activeKey = '';
+let usageChart = null;
+let pollTimer = null;
+
+// Initialize
+window.onload = () => {
+  const saved = localStorage.getItem('aipp_api_key');
+  if (saved) {
+    activeKey = saved;
+    showDashboard();
+  }
+};
+
+// ── LOGIN / LOGOUT ──────────────────────────────────────
+async function login() {
+  const val = document.getElementById('aipp-key-input').value.trim();
+  if (val.length < 5) {
+    alert('Please enter a valid Lightning Address or API key.');
+    return;
+  }
+  
+  const btn = document.getElementById('login-btn');
+  const originalText = btn.textContent;
+  btn.textContent = 'Verifying...';
+  btn.disabled = true;
+
+  if (val.includes('@')) {
+    // It's a Lightning Address (email), let's get the API key
+    try {
+      const response = await fetch(`${AIPP_API}/merchant/register`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ln_address: val })
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to retrieve API Key');
+      }
+      
+      const data = await response.json();
+      activeKey = data.api_key;
+    } catch (e) {
+      alert('Error signing in with this Lightning Address.');
+      btn.textContent = originalText;
+      btn.disabled = false;
+      return;
+    }
+  } else {
+    // It's already an API key
+    activeKey = val;
+  }
+
+  localStorage.setItem('aipp_api_key', activeKey);
+  btn.textContent = originalText;
+  btn.disabled = false;
+  showDashboard();
+}
+
+function logout() {
+  activeKey = '';
+  localStorage.removeItem('aipp_api_key');
+  if(pollTimer) clearInterval(pollTimer);
+  document.getElementById('aipp-key-input').value = '';
+  document.getElementById('login-view').style.display = 'block';
+  document.getElementById('dashboard-view').classList.remove('active');
+  document.getElementById('logout-btn').style.display = 'none';
+}
+
+// ── LOAD DASHBOARD DATA ─────────────────────────────────
+async function showDashboard() {
+  document.getElementById('login-view').style.display = 'none';
+  document.getElementById('dashboard-view').classList.add('active');
+  document.getElementById('logout-btn').style.display = 'inline-block';
+  document.getElementById('display-api-key').textContent = activeKey;
+
+  await refreshDashboardData();
+  await loadStatsAndDrawChart();
+  await loadLedger();
+  await loadPaymentLinks();
+}
+
+function copyActiveKey(btn) {
+  navigator.clipboard.writeText(activeKey).then(() => {
+    const origText = btn.textContent;
+    btn.textContent = 'Copied!';
+    setTimeout(() => btn.textContent = origText, 1500);
+  });
+}
+
+async function copyPaidMcpManifest(btn) {
+  try {
+    const origText = btn.textContent;
+    btn.textContent = 'Generating...';
+    btn.disabled = true;
+    const r = await fetch(`${AIPP_API}/paidmcp.json`, {
+      headers: { 'X-Api-Key': activeKey }
+    });
+    if (!r.ok) throw new Error('Failed to fetch manifest');
+    const manifest = await r.json();
+    await navigator.clipboard.writeText(JSON.stringify(manifest, null, 2));
+    btn.textContent = 'Copied JSON!';
+    setTimeout(() => {
+      btn.textContent = origText;
+      btn.disabled = false;
+    }, 2000);
+  } catch (e) {
+    console.error('Failed to copy manifest', e);
+    alert('Error generating manifest.');
+    btn.textContent = 'Copy PaidMCP Config';
+    btn.disabled = false;
+  }
+}
+
+async function refreshDashboardData() {
+  try {
+    const r = await fetch(`${AIPP_API}/merchant/stats`, {
+      headers: { 'X-Api-Key': activeKey }
+    });
+    if (!r.ok) {
+      if(r.status === 401 || r.status === 404) {
+        alert('Invalid API key.');
+        logout();
+        return;
+      }
+      throw new Error();
+    }
+    const d = await r.json();
+    
+    // Calculate total stats
+    const stats = d.stats || [];
+    const totalVolume = stats.reduce((acc, curr) => acc + (curr.total_volume || 0), 0);
+    const totalCommission = stats.reduce((acc, curr) => acc + (curr.total_commission || 0), 0);
+    const totalUsdcVolume = stats.reduce((acc, curr) => acc + (curr.total_usdc_volume || 0), 0);
+    const totalUsdcCommission = totalUsdcVolume * 0.01;
+    const totalTransactions = stats.reduce((acc, curr) => acc + (curr.transactions_count || 0), 0);
+
+    // Update UI elements
+    document.getElementById('volume-val').innerHTML = `${totalVolume.toLocaleString()} <sub class="notranslate" translate="no">sats</sub>`;
+    document.getElementById('volume-usdc-val').innerHTML = `${totalUsdcVolume.toFixed(2)} <sub class="notranslate" translate="no">USDC</sub>`;
+    
+    document.getElementById('commission-val').innerHTML = `${totalCommission.toLocaleString()} <sub class="notranslate" translate="no">sats</sub>`;
+    document.getElementById('commission-usdc-val').innerHTML = `${totalUsdcCommission.toFixed(4)} <sub class="notranslate" translate="no">USDC</sub>`;
+    
+    document.getElementById('tx-count-val').textContent = totalTransactions.toLocaleString();
+    
+    let destText = '';
+    if (d.ln_address) destText += `LN: ${d.ln_address}`;
+    if (d.usdc_address) destText += `${destText ? ' | ' : ''}Base USDC: ${d.usdc_address.slice(0,6)}...${d.usdc_address.slice(-6)}`;
+    document.getElementById('merchant-ln-address').textContent = destText || 'Destination: —';
+  } catch(e) {
+    console.error('Failed to load dashboard metrics', e);
+  }
+}
+
+async function loadLedger() {
+  try {
+    const r = await fetch(`${AIPP_API}/merchant/transactions`, {
+      headers: { 'X-Api-Key': activeKey }
+    });
+    const txs = await r.json();
+    const body = document.getElementById('ledger-body');
+    body.innerHTML = '';
+
+    if (txs.length === 0) {
+      body.innerHTML = `<tr><td colspan="5" style="text-align:center;color:var(--muted);padding:24px">No transactions recorded yet.</td></tr>`;
+      return;
+    }
+
+    txs.forEach(tx => {
+      const date = new Date(tx.created_at).toLocaleString();
+      const isX402 = tx.protocol === 'x402';
+      const truncatedHash = tx.payment_hash.slice(0, 16) + '...';
+      const isTerminal = tx.status === 'expired';
+      const isPendingUnsettled = tx.status === 'pending';
+      const statusLabel = tx.status.replace('_', ' ');
+      const statusBadge = `<span class="badge-type ${tx.status}">${statusLabel}</span>`;
+      
+      let splitDetails = '';
+      let amountVal = '';
+      let amountClass = 'sats-val positive notranslate';
+
+      if (isTerminal || isPendingUnsettled) {
+        // Expired or still-pending: no money moved
+        splitDetails = `<span style="color:#52525b;font-style:italic;">Not settled</span>`;
+        if (isX402) {
+          amountVal = `${(tx.usdc_amount || 0).toFixed(2)} USDC`;
+        } else {
+          amountVal = `${tx.amount_sats} sats`;
+        }
+        amountClass = 'sats-val notranslate';
+      } else if (isX402) {
+        const totalAmount = tx.usdc_amount || 0;
+        const feeAmount = totalAmount * 0.01;
+        const forwardedAmount = totalAmount * 0.99;
+        splitDetails = `${forwardedAmount.toFixed(4)} forwarded / ${feeAmount.toFixed(4)} fee`;
+        amountVal = `${totalAmount.toFixed(2)} USDC`;
+        amountClass += ' notranslate';
+      } else {
+        // For Lightning: always recalculate fee as 1% (min 20 sats) from stored commission_sats
+        const commissionSats = tx.commission_sats || Math.max(20, Math.ceil(tx.amount_sats * 0.01));
+        const forwardedSats = tx.amount_sats - commissionSats;
+        splitDetails = `${forwardedSats} forwarded / ${commissionSats} fee`;
+        amountVal = `${tx.amount_sats} sats`;
+      }
+      
+      const row = `
+        <tr style="${isTerminal ? 'opacity:0.55;' : ''}">
+          <td style="color:var(--muted);font-size:12px">${date}</td>
+          <td style="font-family:'Fira Code',monospace;font-size:12px;color:var(--muted)" title="${tx.payment_hash}">${truncatedHash}</td>
+          <td>${statusBadge}</td>
+          <td style="font-size:12px">${splitDetails}</td>
+          <td class="${amountClass}" style="${isX402 && !isTerminal ? 'color:#3b82f6;' : ''}">${amountVal}</td>
+        </tr>
+      `;
+      body.insertAdjacentHTML('beforeend', row);
+    });
+  } catch (e) {
+    console.error('Failed to load ledger', e);
+  }
+}
+
+async function loadStatsAndDrawChart() {
+  try {
+    const r = await fetch(`${AIPP_API}/merchant/stats`, {
+      headers: { 'X-Api-Key': activeKey }
+    });
+    const d = await r.json();
+    const data = d.stats || [];
+
+    // Parse data for Chart.js
+    const labels = [];
+    const volumeData = [];
+    const txCountData = [];
+
+    data.forEach(item => {
+      labels.push(item.date);
+      volumeData.push(item.total_volume || 0);
+      txCountData.push(item.transactions_count || 0);
+    });
+
+    // Check if ALL values are zero (no real activity)
+    const hasActivity = data.some(d => (d.total_volume || 0) > 0 || (d.transactions_count || 0) > 0);
+
+    if (data.length === 0) {
+      const today = new Date().toISOString().split('T')[0];
+      labels.push(today);
+      volumeData.push(0);
+      txCountData.push(0);
+    }
+
+    // Show/hide empty state overlay
+    const emptyStateEl = document.getElementById('chart-empty-state');
+    if (emptyStateEl) {
+      emptyStateEl.style.display = hasActivity ? 'none' : 'block';
+    }
+
+    const ctx = document.getElementById('usageChart').getContext('2d');
+    
+    if (usageChart) {
+      usageChart.destroy();
+    }
+
+    // Chart styled for dark mode
+    usageChart = new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels: labels,
+        datasets: [
+          {
+            label: 'Transactions Count',
+            data: txCountData,
+            backgroundColor: 'rgba(245, 158, 11, 0.2)',
+            borderColor: '#f59e0b',
+            borderWidth: 1,
+            yAxisID: 'y'
+          },
+          {
+            label: 'Volume (Sats)',
+            type: 'line',
+            data: volumeData,
+            borderColor: '#38bdf8',
+            backgroundColor: 'rgba(56, 189, 248, 0.1)',
+            tension: 0.3,
+            borderWidth: 2,
+            fill: true,
+            yAxisID: 'y1'
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+          x: {
+            grid: { color: '#27272a' },
+            ticks: { color: '#a1a1aa', font: { family: 'Inter' } }
+          },
+          y: {
+            position: 'left',
+            grid: { color: '#27272a' },
+            ticks: { color: '#a1a1aa', stepSize: 1, font: { family: 'Inter' } },
+            title: { display: false }
+          },
+          y1: {
+            position: 'right',
+            grid: { drawOnChartArea: false },
+            ticks: { color: '#a1a1aa', font: { family: 'Inter' } },
+            title: { display: false }
+          }
+        },
+        plugins: {
+          legend: {
+            labels: { color: '#a1a1aa', font: { family: 'Inter' }, usePointStyle: true }
+          }
+        }
+      }
+    });
+
+  } catch(e) {
+    console.error('Failed to load chart stats', e);
+  }
+}
+
+// ── PAYMENT LINKS LOGIC ─────────────────────────────────
+async function createPaymentLink(btn) {
+  const title = document.getElementById('link-title').value.trim();
+  const amount = parseFloat(document.getElementById('link-amount').value);
+  const redirect = document.getElementById('link-redirect').value.trim();
+
+  if (!title || isNaN(amount) || amount < 0.01 || !redirect) {
+    alert('Please fill all fields correctly. Price must be at least 0.01 USD.');
+    return;
+  }
+
+  const origText = btn.textContent;
+  btn.textContent = 'Creating...';
+  btn.disabled = true;
+
+  try {
+    const res = await fetch(`${AIPP_API}/merchant/links/create`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Api-Key': activeKey
+      },
+      body: JSON.stringify({ title, amount_usd: amount, redirect_url: redirect })
+    });
+    if (!res.ok) throw new Error('Failed to create link');
+    
+    // Clear inputs
+    document.getElementById('link-title').value = '';
+    document.getElementById('link-amount').value = '';
+    document.getElementById('link-redirect').value = '';
+
+    await loadPaymentLinks();
+  } catch (e) {
+    alert('Error creating payment link.');
+  } finally {
+    btn.textContent = origText;
+    btn.disabled = false;
+  }
+}
+
+async function loadPaymentLinks() {
+  try {
+    const res = await fetch(`${AIPP_API}/merchant/links`, {
+      headers: { 'X-Api-Key': activeKey }
+    });
+    const links = await res.json();
+    const body = document.getElementById('links-body');
+    body.innerHTML = '';
+
+    if (links.length === 0) {
+      body.innerHTML = `<tr><td colspan="4" style="text-align:center;color:var(--muted);padding:12px">No payment links created yet.</td></tr>`;
+      return;
+    }
+
+    links.forEach(link => {
+      const displayUrl = link.url.replace(/^https?:\/\//, '');
+      const row = `
+        <tr>
+          <td style="font-weight: 700;">${link.title}</td>
+          <td>$${link.amount_usd.toFixed(2)}</td>
+          <td>
+            <a href="${link.url}" target="_blank" style="color:blue;text-decoration:underline;font-size:12px;">${displayUrl}</a>
+          </td>
+          <td style="text-align: right; display: flex; gap: 6px; justify-content: flex-end;">
+            <button onclick="copyText(this, '${link.url}')" class="btn-copy" style="padding: 4px 8px; font-size:11px; background:#fff; border: 2px solid #000; box-shadow: 2px 2px 0 #000; cursor:pointer;">Copy</button>
+            <button onclick="deleteLink(this, '${link.id}')" style="padding: 4px 8px; font-size:11px; background:#fee2e2; color:#ef4444; border: 2px solid #ef4444; box-shadow: 2px 2px 0 #ef4444; cursor:pointer; font-weight:700;">Delete</button>
+          </td>
+        </tr>
+      `;
+      body.insertAdjacentHTML('beforeend', row);
+    });
+  } catch (e) {
+    console.error('Failed to load links', e);
+  }
+}
+
+async function deleteLink(btn, linkId) {
+  if (!confirm('Are you sure you want to delete this payment link?')) return;
+  
+  const origText = btn.textContent;
+  btn.textContent = '...';
+  btn.disabled = true;
+
+  try {
+    const res = await fetch(`${AIPP_API}/merchant/links/${linkId}`, {
+      method: 'DELETE',
+      headers: { 'X-Api-Key': activeKey }
+    });
+    if (!res.ok) throw new Error('Delete failed');
+    await loadPaymentLinks();
+  } catch (e) {
+    alert('Error deleting link.');
+    btn.textContent = origText;
+    btn.disabled = false;
+  }
+}
+
+function copyText(btn, text) {
+  navigator.clipboard.writeText(text).then(() => {
+    const origText = btn.textContent;
+    btn.textContent = 'Copied!';
+    setTimeout(() => btn.textContent = origText, 1500);
+  });
+}
+</script>
+</body>
+</html>
