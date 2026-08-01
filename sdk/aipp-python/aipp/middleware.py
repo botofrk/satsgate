@@ -228,3 +228,76 @@ class DualMiddleware(BaseHTTPMiddleware):
                 status_code=500, 
                 media_type="application/json"
             )
+
+# ============================================================================
+# Roadmap v2.0 - High-Level Problem-Oriented Middleware ("Set & Forget")
+# ============================================================================
+
+import os
+import functools
+
+def parse_price(price):
+    if isinstance(price, (int, float)):
+        return {"amount_usd": float(price)}
+    clean = str(price).strip().lower()
+    if clean.endswith("sats") or clean.endswith("sat"):
+        val = clean.replace("sats", "").replace("sat", "").strip()
+        return {"amount_sats": int(val) if val.isdigit() else 100}
+    clean_usd = clean.replace("$", "").strip()
+    try:
+        return {"amount_usd": float(clean_usd)}
+    except ValueError:
+        return {"amount_usd": 0.01}
+
+def _get_client(custom_client=None):
+    if custom_client:
+        return custom_client
+    api_key = os.getenv("AIPP_KEY") or os.getenv("AIPP_API_KEY")
+    if not api_key:
+        raise ValueError("AIPP Error: AIPP_KEY environment variable is missing. Set AIPP_KEY in .env or pass client.")
+    base_url = os.getenv("AIPP_API_URL") or "https://aipp.dev"
+    return Aipp(api_key=api_key, base_url=base_url)
+
+def _get_jwt_secret(custom_secret=None):
+    return custom_secret or os.getenv("AIPP_JWT_SECRET") or os.getenv("AIPP_KEY") or "aipp_default_secret_key"
+
+def protect_agent(price=0.01, resource_id=None, client=None, jwt_secret=None):
+    """
+    Decorator for FastMCP or AI Agent tool endpoints.
+    """
+    def decorator(func):
+        @functools.wraps(func)
+        def wrapper(*args, **kwargs):
+            return func(*args, **kwargs)
+        wrapper.__aipp_protected__ = True
+        wrapper.__aipp_price__ = price
+        wrapper.__aipp_resource_id__ = resource_id or func.__name__
+        return wrapper
+    return decorator
+
+def protect_api(price=0.01, resource_id=None, client=None, jwt_secret=None):
+    """
+    Helper to construct DualMiddleware for FastAPI / Starlette applications.
+    """
+    parsed = parse_price(price)
+    c = _get_client(client)
+    secret = _get_jwt_secret(jwt_secret)
+    res_id = resource_id or "api_endpoint"
+    
+    def middleware_factory(app):
+        return DualMiddleware(
+            app=app,
+            client=c,
+            jwt_secret=secret,
+            resource_id=res_id,
+            amount_usd=parsed.get("amount_usd"),
+            amount_sats=parsed.get("amount_sats")
+        )
+    return middleware_factory
+
+def protect_content(price=0.10, resource_id=None, client=None, jwt_secret=None):
+    return protect_api(price=price, resource_id=resource_id or "content", client=client, jwt_secret=jwt_secret)
+
+def protect_download(price=1.00, resource_id=None, client=None, jwt_secret=None):
+    return protect_api(price=price, resource_id=resource_id or "download", client=client, jwt_secret=jwt_secret)
+

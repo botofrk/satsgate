@@ -304,3 +304,134 @@ export function dualPaywall(options: DualOptions) {
     }
   };
 }
+
+// ============================================================================
+// Roadmap v2.0 - High-Level Problem-Oriented Middleware ("Set & Forget")
+// ============================================================================
+
+export interface BaseProtectOptions {
+  /** Price in USD (e.g. 0.01 or "$0.01") or Sats (e.g. "100 sats") */
+  price: number | string;
+  /** Unique ID for the resource. Defaults to request URL. */
+  resourceId?: string;
+  /** Optional custom Aipp client instance. Defaults to process.env.AIPP_KEY */
+  client?: Aipp;
+  /** Optional JWT secret for L402 token signing. Defaults to process.env.AIPP_JWT_SECRET or AIPP_KEY */
+  jwtSecret?: string;
+  /** Expiration time in seconds for the paid token (Default: 3600s / 1h) */
+  expiresInSeconds?: number;
+}
+
+export function parsePrice(price: number | string): { amountUsd?: number; amountSats?: number } {
+  if (typeof price === 'number') {
+    return { amountUsd: price };
+  }
+  const clean = price.trim().toLowerCase();
+  if (clean.endsWith('sats') || clean.endsWith('sat')) {
+    const sats = parseInt(clean.replace(/sats?/, '').trim(), 10);
+    return { amountSats: isNaN(sats) ? 100 : sats };
+  }
+  const num = parseFloat(clean.replace('$', '').trim());
+  return { amountUsd: isNaN(num) ? 0.01 : num };
+}
+
+function getOrCreateClient(customClient?: Aipp): Aipp {
+  if (customClient) return customClient;
+  const apiKey = process.env.AIPP_KEY || process.env.AIPP_API_KEY;
+  if (!apiKey) {
+    throw new Error('AIPP Error: AIPP_KEY environment variable is missing. Set AIPP_KEY in .env or pass client instance to protect function.');
+  }
+  const baseUrl = process.env.AIPP_API_URL || 'https://aipp.dev';
+  return new Aipp({ apiKey, baseUrl });
+}
+
+function getJwtSecret(customSecret?: string): string {
+  return customSecret || process.env.AIPP_JWT_SECRET || process.env.AIPP_KEY || 'aipp_default_secret_key_change_in_prod';
+}
+
+/**
+ * Protects an API route with micro-payments.
+ * Example: app.post('/v1/ai', protectApi({ price: 0.01 }), handler);
+ */
+export function protectApi(options: BaseProtectOptions) {
+  const { amountUsd, amountSats } = parsePrice(options.price);
+  return (req: any, res: any, next: any) => {
+    const client = getOrCreateClient(options.client);
+    const jwtSecret = getJwtSecret(options.jwtSecret);
+    const resourceId = options.resourceId || req.originalUrl || req.url || 'api_endpoint';
+
+    return dualPaywall({
+      client,
+      jwtSecret,
+      resourceId,
+      amountUsd,
+      amountSats,
+      expiresInSeconds: options.expiresInSeconds || 3600
+    })(req, res, next);
+  };
+}
+
+/**
+ * Protects an AI Agent / MCP Server tool endpoint.
+ * Optimized for machine-to-machine HTTP 402 challenges.
+ */
+export function protectAgent(options: BaseProtectOptions) {
+  const { amountUsd, amountSats } = parsePrice(options.price);
+  return (req: any, res: any, next: any) => {
+    const client = getOrCreateClient(options.client);
+    const jwtSecret = getJwtSecret(options.jwtSecret);
+    const resourceId = options.resourceId || req.originalUrl || req.url || 'mcp_tool';
+
+    return dualPaywall({
+      client,
+      jwtSecret,
+      resourceId,
+      amountUsd,
+      amountSats,
+      expiresInSeconds: options.expiresInSeconds || 86400
+    })(req, res, next);
+  };
+}
+
+/**
+ * Protects premium web content / HTML paywalls.
+ */
+export function protectContent(options: BaseProtectOptions) {
+  const { amountUsd, amountSats } = parsePrice(options.price);
+  return (req: any, res: any, next: any) => {
+    const client = getOrCreateClient(options.client);
+    const jwtSecret = getJwtSecret(options.jwtSecret);
+    const resourceId = options.resourceId || req.originalUrl || req.url || 'content_page';
+
+    return dualPaywall({
+      client,
+      jwtSecret,
+      resourceId,
+      amountUsd,
+      amountSats,
+      expiresInSeconds: options.expiresInSeconds || 86400
+    })(req, res, next);
+  };
+}
+
+/**
+ * Protects file download endpoints.
+ */
+export function protectDownload(options: BaseProtectOptions) {
+  const { amountUsd, amountSats } = parsePrice(options.price);
+  return (req: any, res: any, next: any) => {
+    const client = getOrCreateClient(options.client);
+    const jwtSecret = getJwtSecret(options.jwtSecret);
+    const resourceId = options.resourceId || req.originalUrl || req.url || 'download_asset';
+
+    return dualPaywall({
+      client,
+      jwtSecret,
+      resourceId,
+      amountUsd,
+      amountSats,
+      expiresInSeconds: options.expiresInSeconds || 3600
+    })(req, res, next);
+  };
+}
+
