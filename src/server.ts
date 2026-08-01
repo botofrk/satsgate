@@ -132,7 +132,9 @@ async function bootstrap() {
 
 export { app };
 
-if (process.env.NODE_ENV !== 'test' && !process.env.VITEST) {
+const isTestEnv = process.env.NODE_ENV === 'test' || Boolean(process.env.VITEST) || Boolean(process.env.VITEST_WORKER_ID);
+
+if (!isTestEnv) {
   bootstrap();
 }
 
