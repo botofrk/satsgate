@@ -278,9 +278,9 @@
       usdcPayBtn.onclick = async () => {
         try {
           if (!window.ethereum) {
-            throw new Error('No Ethereum wallet found. Please install MetaMask or Coinbase Wallet.');
+            statusText.innerHTML = `<span style="color:#ff6b6b;font-size:12px;">No Web3 wallet installed in browser. Use <strong>Lightning QR tab</strong> or copy payment address below.</span>`;
+            return;
           }
-
           usdcPayBtn.disabled = true;
           usdcPayBtn.innerText = 'Connecting...';
 
