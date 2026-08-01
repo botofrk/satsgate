@@ -196,11 +196,9 @@
       lnPanel.appendChild(qrContainer);
 
       loadQrCodeLib().then(QRCode => {
-        // Pure lowercase lnbc... BOLT11 string with margin 2 & 600px retina canvas for 100% universal scanner recognition
-        const cleanInvoice = invoice.toLowerCase().replace(/^lightning:/i, '');
-        QRCode.toCanvas(qrCanvas, cleanInvoice, {
-          width: 600,
-          margin: 2,
+        QRCode.toCanvas(qrCanvas, invoice.toUpperCase(), {
+          width: 440,
+          margin: 1,
           errorCorrectionLevel: 'L',
           color: { dark: '#000000', light: '#ffffff' }
         }, (error) => {
