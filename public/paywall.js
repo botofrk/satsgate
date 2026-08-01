@@ -196,11 +196,12 @@
       lnPanel.appendChild(qrContainer);
 
       loadQrCodeLib().then(QRCode => {
-        const lightningUri = invoice.toLowerCase().startsWith('lnbc') ? invoice.toLowerCase() : ('lightning:' + invoice.toLowerCase());
-        QRCode.toCanvas(qrCanvas, lightningUri, {
+        // Plain lowercase invoice for 100% BOLT11 compatibility across Zeus, Satoshi, Phoenix, Breez & Alby
+        const cleanInvoice = invoice.toLowerCase().replace(/^lightning:/i, '');
+        QRCode.toCanvas(qrCanvas, cleanInvoice, {
           width: 440,
           margin: 1,
-          errorCorrectionLevel: 'L',
+          errorCorrectionLevel: 'M',
           color: { dark: '#000000', light: '#ffffff' }
         }, (error) => {
           if (error) console.error('AIPP Paywall QR generation failed:', error);
