@@ -124,7 +124,7 @@
     badge.addEventListener('click', (e) => {
       e.preventDefault();
       e.stopPropagation();
-      window.open(`https://aipp.dev/paywall-demo.html?price=${price}`, '_blank');
+      window.open(`https://aipp.dev/checkout.html?price=${price}`, '_blank');
     });
 
     container.appendChild(badge);
