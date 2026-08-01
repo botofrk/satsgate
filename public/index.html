@@ -413,11 +413,11 @@
 
 <!-- ── TRUST BAR ── -->
 <div class="trust-bar">
-  <div class="trust-item"><span class="trust-dot">⚡</span>Bitcoin Lightning</div>
-  <div class="trust-item"><span class="trust-dot">🔵</span>Base USDC (x402)</div>
-  <div class="trust-item"><span class="trust-dot">✓</span>Non-Custodial</div>
-  <div class="trust-item"><span class="trust-dot">✓</span>Transparent Fees</div>
-  <div class="trust-item"><span class="trust-dot">✓</span>Direct Settlement</div>
+  <div class="trust-item"><svg width="14" height="14" viewBox="0 0 24 24" fill="#ffc700"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>Bitcoin Lightning</div>
+  <div class="trust-item"><svg width="14" height="14" viewBox="0 0 24 24" fill="#3b82f6"><circle cx="12" cy="12" r="10"/><path d="M12 6v12M8 10h8M8 14h8" stroke="#fff" stroke-width="1.5"/></svg>Base USDC (x402)</div>
+  <div class="trust-item"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>Non-Custodial</div>
+  <div class="trust-item"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>Transparent Fees</div>
+  <div class="trust-item"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>Direct Settlement</div>
 </div>
 
 <!-- ── HERO ── -->
@@ -646,9 +646,15 @@ app.<span class="c-fn">post</span>(<span class="c-str">'/api/generate'</span>, <
       <div class="wizard-step active" id="step0">
         <p style="font-size:14px;color:var(--muted);margin-bottom:24px;font-weight:500;">Where should we settle your payments?</p>
         <div class="mode-selector">
-          <div class="mode-card active" id="card-mode-ln" onclick="setSetupMode('ln')">⚡<br>Bitcoin Lightning</div>
-          <div class="mode-card" id="card-mode-usdc" onclick="setSetupMode('usdc')">🔵<br>Base USDC</div>
-          <div class="mode-card" id="card-mode-both" onclick="setSetupMode('both')">⚡🔵<br>Dual (Both)</div>
+          <div class="mode-card active" id="card-mode-ln" onclick="setSetupMode('ln')">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="#0f0f11" style="margin-bottom:4px;"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg><br>Bitcoin Lightning
+          </div>
+          <div class="mode-card" id="card-mode-usdc" onclick="setSetupMode('usdc')">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="#2563eb" style="margin-bottom:4px;"><circle cx="12" cy="12" r="10"/><path d="M12 6v12M8 10h8M8 14h8" stroke="#fff" stroke-width="1.5"/></svg><br>Base USDC
+          </div>
+          <div class="mode-card" id="card-mode-both" onclick="setSetupMode('both')">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#0f0f11" stroke-width="2" style="margin-bottom:4px;"><circle cx="9" cy="12" r="6" stroke="#ffc700" stroke-width="2.5"/><circle cx="15" cy="12" r="6" stroke="#2563eb" stroke-width="2.5"/></svg><br>Dual (Both)
+          </div>
         </div>
         <div id="wrapper-ln-address">
           <label class="input-label">* Lightning Address:</label>
@@ -669,8 +675,8 @@ app.<span class="c-fn">post</span>(<span class="c-str">'/api/generate'</span>, <
       <div class="wizard-step" id="step1">
         <p style="font-size:14px;color:var(--muted);margin-bottom:24px;font-weight:500;">Test a live $0.01 payment to your wallet right now.</p>
         <div style="display:flex;gap:12px;margin-bottom:24px;">
-          <button class="btn btn-primary active" id="btn-demo-ln" onclick="setDemoPayMode('L402')" style="flex:1;">⚡ Lightning</button>
-          <button class="btn btn-ghost" id="btn-demo-usdc" onclick="setDemoPayMode('X402')" style="flex:1;">🔵 Base USDC</button>
+          <button class="btn btn-primary active" id="btn-demo-ln" onclick="setDemoPayMode('L402')" style="flex:1;display:inline-flex;align-items:center;justify-content:center;gap:6px;"><svg width="14" height="14" viewBox="0 0 24 24" fill="#0f0f11"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg> Lightning</button>
+          <button class="btn btn-ghost" id="btn-demo-usdc" onclick="setDemoPayMode('X402')" style="flex:1;display:inline-flex;align-items:center;justify-content:center;gap:6px;"><svg width="14" height="14" viewBox="0 0 24 24" fill="#2563eb"><circle cx="12" cy="12" r="10"/><path d="M12 6v12M8 10h8M8 14h8" stroke="#fff" stroke-width="1.5"/></svg> Base USDC</button>
         </div>
         <button class="btn btn-primary" id="demo-pay-btn" style="width:100%;" onclick="generateDemoInvoice()">Create Invoice</button>
         <div id="demo-qr-area" style="display:none;margin-top:24px;">
@@ -682,7 +688,9 @@ app.<span class="c-fn">post</span>(<span class="c-str">'/api/generate'</span>, <
 
       <!-- STEP 2: Dashboard Access -->
       <div class="wizard-step" id="step2">
-        <div style="font-size:48px;margin-bottom:16px;">🎉</div>
+        <div style="margin-bottom:16px;display:inline-flex;align-items:center;justify-content:center;width:64px;height:64px;background:#f0fdf4;border:2px solid #22c55e;border-radius:50%;">
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+        </div>
         <h3 style="font-size:20px;font-weight:900;margin-bottom:8px;">You're all set!</h3>
         <p style="font-size:14px;color:var(--muted);margin-bottom:28px;font-weight:500;">Your API key is saved. Head to the dashboard to manage your monetized endpoints.</p>
         <a href="dashboard.html" class="btn btn-primary" style="display:block;text-align:center;margin-bottom:12px;">Open Dashboard →</a>
@@ -707,7 +715,9 @@ app.<span class="c-fn">post</span>(<span class="c-str">'/api/generate'</span>, <
 <!-- ── SUCCESS MODAL ── -->
 <div class="modal-overlay" id="success-modal">
   <div class="modal-box">
-    <div style="font-size:40px;margin-bottom:12px;">🔑</div>
+    <div style="margin-bottom:12px;display:inline-flex;align-items:center;justify-content:center;width:56px;height:56px;background:var(--accent);border:2px solid var(--border);border-radius:12px;box-shadow:3px 3px 0 var(--border);">
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#0f0f11" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 2l-2 2m-2-2l2 2M3 11l8-8 10 10-8 8-10-10z"/><path d="M12 9l3 3"/></svg>
+    </div>
     <h3 style="font-size:20px;font-weight:900;margin-bottom:8px;">Your API Key</h3>
     <p style="font-size:13px;color:var(--muted);margin-bottom:20px;font-weight:500;">Save this securely. Use it in your SDK configuration.</p>
     <div id="modal-key-box" onclick="copyModalKey(this)" style="background:var(--fg);color:var(--accent);font-family:'Fira Code',monospace;font-size:12px;padding:14px 16px;border-radius:8px;cursor:pointer;word-break:break-all;margin-bottom:20px;font-weight:700;"></div>
