@@ -142,11 +142,4 @@
     });
   }
 
-  // Auto-Inject paywall.js CDN if page contains data-aipp-src attributes
-  if (document.querySelector('[data-aipp-src]')) {
-    const s = document.createElement('script');
-    s.src = 'https://aipp.dev/paywall.js';
-    document.head.appendChild(s);
-  }
-
 })();
