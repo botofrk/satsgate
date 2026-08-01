@@ -2,16 +2,42 @@
 const AIPP_API = 'https://aipp.dev';
 
 // Tab Switching
-window.switchTab = function(tabName) {
+function switchTab(tabName) {
   document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
   document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
 
-  document.getElementById(`tab-${tabName}`).classList.add('active');
-  document.getElementById(`panel-${tabName}`).classList.add('active');
-};
+  const btn = document.getElementById(`tab-${tabName}`);
+  const panel = document.getElementById(`panel-${tabName}`);
+  if (btn) btn.classList.add('active');
+  if (panel) panel.classList.add('active');
+}
+window.switchTab = switchTab;
 
-// Initialize Settings
+// Initialize Event Listeners on DOM load
 document.addEventListener('DOMContentLoaded', async () => {
+  // Bind tab click handlers
+  const tabCreator = document.getElementById('tab-creator');
+  const tabLinks = document.getElementById('tab-links');
+  const tabSettings = document.getElementById('tab-settings');
+
+  if (tabCreator) tabCreator.addEventListener('click', () => switchTab('creator'));
+  if (tabLinks) tabLinks.addEventListener('click', () => switchTab('links'));
+  if (tabSettings) tabSettings.addEventListener('click', () => switchTab('settings'));
+
+  // Bind action buttons
+  const startPickerBtn = document.getElementById('start-picker-btn');
+  if (startPickerBtn) startPickerBtn.addEventListener('click', startDOMPicker);
+
+  const saveSettingsBtn = document.getElementById('save-settings-btn');
+  if (saveSettingsBtn) saveSettingsBtn.addEventListener('click', saveSettings);
+
+  const genLinkBtn = document.getElementById('gen-link-btn');
+  if (genLinkBtn) genLinkBtn.addEventListener('click', generateQuickLink);
+
+  const copyLinkBtn = document.getElementById('copy-link-btn');
+  if (copyLinkBtn) copyLinkBtn.addEventListener('click', copyGeneratedLink);
+
+  // Load saved settings
   const data = await chrome.storage.sync.get(['ln_address', 'api_key']);
   if (data.ln_address) document.getElementById('setting-ln-address').value = data.ln_address;
   if (data.api_key) document.getElementById('setting-api-key').value = data.api_key;
