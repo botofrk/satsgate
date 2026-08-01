@@ -1,7 +1,7 @@
 from setuptools import setup, find_packages
 
 setup(
-    name="aipp",
+    name="aipp-sdk",
     version="1.0.0",
     description="Official Python SDK for AIPP — Non-Custodial Developer Monetization Platform (L402 & x402)",
     long_description=open("README.md", "r", encoding="utf-8").read() if open("README.md", "r", encoding="utf-8") else "",
