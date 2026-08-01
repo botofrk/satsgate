@@ -11,10 +11,10 @@ This rule contains critical connection details for the AIPP project. **Always re
 - **Standard SCP Command:** `scp -o StrictHostKeyChecking=no -i C:\Users\ucala\.ssh\id_ed25519 <file> root@89.167.84.31:/home/hermes/aipp/aipp-key/`
 
 ## GitHub Configuration
-- **GitHub Username:** `aippde`
-- **GitHub Repository:** `aipp-key.git`
-- **GitHub Token:** `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`
-- **Authentication Method:** Use the token directly in the URL for pushing/pulling, e.g., `https://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@github.com/aippde/aipp-key.git`
+- **GitHub Username:** `botofrk`
+- **GitHub Repository:** `satsgate.git`
+- **GitHub Token:** `[SET_VIA_ENV_OR_SECRET]`
+- **Authentication Method:** Use SSH or token authenticated HTTPS URL for pushing/pulling.
 
 ## Project Architecture
 - The main website (`index.html`, `dashboard.html`) is served directly from the root path via Express static files.

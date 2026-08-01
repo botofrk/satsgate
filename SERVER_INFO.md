@@ -33,7 +33,7 @@ Bu dosya, `aipp-key` projesinin canlı sunucu bağlantı bilgilerini, GitHub rep
   ```
 
 ## 🐙 GitHub Bilgileri
-- **Repo URL:** `https://github.com/aippde/aipp-key.git`
+- **Repo URL:** `https://github.com/botofrk/satsgate.git`
 - **Remote Adı:** `origin`
 - **Branch:** `main`
 
