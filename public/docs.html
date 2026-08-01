@@ -313,17 +313,14 @@
       <li><a href="#quick-start" class="active">Quick start</a></li>
       <li><a href="#sdks">Official SDKs</a></li>
       <li><a href="#authentication">Authentication</a></li>
-      <li><a href="#post-register">POST /merchant/register</a></li>
       <li><a href="#post-charge">POST /invoice/create</a></li>
       <li><a href="#get-charge">GET /invoice/status/:hash</a></li>
-      <li><a href="#get-receipt">GET /invoice/receipt/:hash</a></li>
       <li><a href="#get-paidmcp">GET /paidmcp.json</a></li>
       <li><a href="#l402">L402 protocol</a></li>
       <li><a href="#x402">x402 protocol</a></li>
       <li><a href="#dual-rail">Dual-Rail Hybrid</a></li>
       <li><a href="#agent-discovery">Agent Auto-Discovery</a></li>
       <li><a href="#agent-integration">Agent Autopay</a></li>
-      <li><a href="#machine-pricing">Pricing Discovery</a></li>
       <li><a href="#drop-in-paywall">Drop-in Paywall</a></li>
       <li><a href="#webhooks">Webhooks</a></li>
       <li><a href="#errors">Errors</a></li>
@@ -335,7 +332,6 @@
       <a href="#quick-start">Quick Start</a>
       <a href="#sdks">SDKs</a>
       <a href="#authentication">Auth</a>
-      <a href="#post-register">Register</a>
       <a href="#post-charge">Create Charge</a>
       <a href="#get-charge">Get Status</a>
       <a href="#l402">L402</a>
@@ -343,7 +339,6 @@
       <a href="#dual-rail">Dual-Rail</a>
       <a href="#agent-discovery">Auto-Discovery</a>
       <a href="#agent-integration">Autopay</a>
-      <a href="#machine-pricing">Pricing</a>
       <a href="#drop-in-paywall">Paywall</a>
       <a href="#webhooks">Webhooks</a>
       <a href="#errors">Errors</a>
@@ -414,19 +409,7 @@ mcp = FastMCP(<span class="c-str">"My Server"</span>)
       </div>
     </section>
 
-    <section id="post-register">
-      <h2>Register Merchant</h2>
-      <p><code>POST /merchant/register</code></p>
-      <div class="code-block">
-        <div class="code-header">Request</div>
-        <pre>
-{
-  <span class="c-key">"ln_address"</span>: <span class="c-str">"satoshi@getalby.com"</span>,
-  <span class="c-key">"usdc_address"</span>: <span class="c-str">"0x000000000000000000000000000000000000dead"</span>, <span class="c-comment">// EVM Wallet for Base USDC</span>
-  <span class="c-key">"email"</span>: <span class="c-str">"merchant@example.com"</span> <span class="c-comment">// Optional for payout notifications</span>
-}</pre>
-      </div>
-    </section>
+
 
     <section id="post-charge">
       <h2>Create an invoice</h2>
@@ -481,36 +464,7 @@ mcp = FastMCP(<span class="c-str">"My Server"</span>)
 
 
 
-    <section id="get-receipt">
-      <h2>Get Invoice Receipt <span style="font-size:12px;background:#22c55e22;color:#22c55e;padding:2px 8px;border-radius:4px;font-weight:600;vertical-align:middle;">NEW</span></h2>
-      <p><code>GET /invoice/receipt/:hash</code></p>
-      <p>Returns an <strong>EU AI Act Article 26</strong> compliant machine-readable receipt for a settled invoice. Useful for audit trails and regulatory compliance for AI-to-AI transactions.</p>
-      <div class="code-block">
-        <div class="code-header">&rarr; 200 OK</div>
-        <pre>
-{
-  <span class="c-key">"receipt_id"</span>: <span class="c-str">"rec_550e8400-e29b-41d4"</span>,
-  <span class="c-key">"transaction_id"</span>: <span class="c-str">"a3f2b9c1d0e4f5..."</span>,
-  <span class="c-key">"date"</span>: <span class="c-str">"2026-07-13T20:00:00.000Z"</span>,
-  <span class="c-key">"status"</span>: <span class="c-str">"settled"</span>,
-  <span class="c-key">"compliance"</span>: {
-    <span class="c-key">"regulation"</span>: <span class="c-str">"EU AI Act Article 26"</span>,
-    <span class="c-key">"note"</span>: <span class="c-str">"Verifiable record of a machine-to-machine transaction."</span>
-  },
-  <span class="c-key">"payment_details"</span>: {
-    <span class="c-key">"protocol"</span>: <span class="c-str">"L402"</span>,
-    <span class="c-key">"proof"</span>: <span class="c-str">"0000...preimage"</span>,
-    <span class="c-key">"merchant_destination"</span>: <span class="c-str">"merchant@ln.tips"</span>
-  },
-  <span class="c-key">"financials"</span>: {
-    <span class="c-key">"currency"</span>: <span class="c-str">"SATS"</span>,
-    <span class="c-key">"total_amount"</span>: <span class="c-num">1000</span>,
-    <span class="c-key">"merchant_amount"</span>: <span class="c-num">990</span>,
-    <span class="c-key">"platform_fee"</span>: <span class="c-num">10</span>
-  }
-}</pre>
-      </div>
-    </section>
+
 
     <section id="get-paidmcp">
       <h2>Marketplace Manifest <span style="font-size:12px;background:#22c55e22;color:#22c55e;padding:2px 8px;border-radius:4px;font-weight:600;vertical-align:middle;">NEW</span></h2>
@@ -665,33 +619,7 @@ client = AippClient(nwc_url=nwc_url)
       </div>
     </section>
 
-    <section id="machine-pricing">
-      <h2>Machine-Readable Pricing Discovery</h2>
-      <p>Before making requests, autonomous agents can query the pricing structure of an endpoint to evaluate budget constraints without triggering <code>402 Payment Required</code> challenge loops.</p>
-      <p>AIPP exposes a standardized <code>/pricing.json</code> manifest detailing pricing rates:</p>
-      
-      <div class="code-block">
-        <div class="code-header">GET /pricing.json</div>
-        <pre>{
-  <span class="c-key">"currency"</span>: <span class="c-str">"USD"</span>,
-  <span class="c-key">"endpoints"</span>: [
-    {
-      <span class="c-key">"path"</span>: <span class="c-str">"/premium-article-1"</span>,
-      <span class="c-key">"protocol"</span>: <span class="c-str">"L402"</span>,
-      <span class="c-key">"price_usd"</span>: <span class="c-num">0.005</span>,
-      <span class="c-key">"price_sats_fixed"</span>: <span class="c-num">21</span>,
-      <span class="c-key">"description"</span>: <span class="c-str">"Access premium article for AI Autonomy research"</span>
-    },
-    {
-      <span class="c-key">"path"</span>: <span class="c-str">"/chat"</span>,
-      <span class="c-key">"protocol"</span>: <span class="c-str">"L402"</span>,
-      <span class="c-key">"price_sats_fixed"</span>: <span class="c-num">5</span>,
-      <span class="c-key">"description"</span>: <span class="c-str">"Submit request to OpenAI proxy chatbot endpoint"</span>
-    }
-  ]
-}</pre>
-      </div>
-    </section>
+
 
     <section id="webhooks">
       <h2>Instant Settlement & Webhooks</h2>
@@ -710,16 +638,16 @@ client = AippClient(nwc_url=nwc_url)
       </div>
 
       <div class="code-block">
-        <div class="code-header">&rarr; 429 Too Many Requests (Spend Limit)</div>
+        <div class="code-header">&rarr; 402 Payment Required</div>
         <pre>{
-  <span class="c-key">"error"</span>: <span class="c-str">"Daily limit reached ($100). Resets at midnight UTC."</span>
+  <span class="c-key">"error"</span>: <span class="c-str">"Payment Required: L402 / x402 challenge issued"</span>
 }</pre>
       </div>
 
       <div class="code-block">
-        <div class="code-header">&rarr; 400 Bad Request (Single Request limit exceeded)</div>
+        <div class="code-header">&rarr; 429 Rate Limit Exceeded</div>
         <pre>{
-  <span class="c-key">"error"</span>: <span class="c-str">"Single request exceeds $10 limit"</span>
+  <span class="c-key">"error"</span>: <span class="c-str">"Rate limit exceeded. Please retry in a few seconds."</span>
 }</pre>
       </div>
     </section>
