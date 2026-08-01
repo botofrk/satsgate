@@ -3,11 +3,6 @@
   "name": "aipp.dev — Monetization & Autopay",
   "version": "1.0.0",
   "description": "Lock any web content or API in 1-click. Auto-pay micropayments via Bitcoin Lightning & Base USDC.",
-  "icons": {
-    "16": "icons/icon16.png",
-    "48": "icons/icon48.png",
-    "128": "icons/icon128.png"
-  },
   "action": {
     "default_popup": "popup/popup.html",
     "default_title": "aipp.dev Extension"
