@@ -316,7 +316,6 @@
       <li><a href="#post-register">POST /merchant/register</a></li>
       <li><a href="#post-charge">POST /invoice/create</a></li>
       <li><a href="#get-charge">GET /invoice/status/:hash</a></li>
-      <li><a href="#post-payout">POST /merchant/payout</a></li>
       <li><a href="#get-receipt">GET /invoice/receipt/:hash</a></li>
       <li><a href="#get-paidmcp">GET /paidmcp.json</a></li>
       <li><a href="#l402">L402 protocol</a></li>
@@ -339,7 +338,6 @@
       <a href="#post-register">Register</a>
       <a href="#post-charge">Create Charge</a>
       <a href="#get-charge">Get Status</a>
-      <a href="#post-payout">Payout</a>
       <a href="#l402">L402</a>
       <a href="#x402">x402</a>
       <a href="#dual-rail">Dual-Rail</a>
@@ -481,22 +479,7 @@ mcp = FastMCP(<span class="c-str">"My Server"</span>)
       </div>
     </section>
 
-    <section id="post-payout">
-      <h2>Withdraw Funds (Manual Payout)</h2>
-      <p><code>POST /merchant/payout</code></p>
-      <p>Triggers a withdrawal of your balance. Lightning payouts are processed via LN, while USDC payouts are managed automatically by the Background Payout Worker with flat 1% fee calculation.</p>
-      <div class="code-block">
-        <div class="code-header">Request (Empty Body)</div>
-        <pre>{}</pre>
-      </div>
-      <div class="code-block">
-        <div class="code-header">&rarr; 200 OK</div>
-        <pre>
-{
-  <span class="c-key">"message"</span>: <span class="c-str">"Payout triggered successfully"</span>
-}</pre>
-      </div>
-    </section>
+
 
     <section id="get-receipt">
       <h2>Get Invoice Receipt <span style="font-size:12px;background:#22c55e22;color:#22c55e;padding:2px 8px;border-radius:4px;font-weight:600;vertical-align:middle;">NEW</span></h2>
@@ -711,8 +694,8 @@ client = AippClient(nwc_url=nwc_url)
     </section>
 
     <section id="webhooks">
-      <h2>Webhooks</h2>
-      <p>When a charge is paid, AIPP automatically forwards 99% to your Lightning address and writes a transaction to your dashboard. You can configure a webhook URL for your backend to be notified instantly.</p>
+      <h2>Instant Settlement & Webhooks</h2>
+      <p>When an invoice is paid, funds settle directly to your destination Lightning address or EVM wallet in real-time. AIPP never holds custody of your revenue. You can also configure a webhook URL in your backend to receive instant JSON notifications.</p>
     </section>
 
     <section id="errors">
@@ -787,7 +770,7 @@ client = AippClient(nwc_url=nwc_url)
 
   <div style="font-size: 13px; font-weight: 600; color: var(--muted); margin-top: 8px;">
     Powered by ⚡ Bitcoin Lightning · LNBits · L402<br><br>
-    © 2026 aipp.dev — The non-custodial gateway
+    © 2026 aipp.dev — Non-Custodial Developer Monetization Platform
   </div>
 </footer>
 
