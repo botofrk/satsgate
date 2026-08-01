@@ -9,48 +9,54 @@
 
   * { margin: 0; padding: 0; box-sizing: border-box; }
 
+  html, body {
+    height: 100%;
+    overflow: hidden; /* Lock scrollbar to fit 100% viewport */
+  }
+
   body {
     background-color: #0a0a0b;
     color: #f4f4f5;
     font-family: 'Inter', -apple-system, sans-serif;
-    min-height: 100vh;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    padding: 24px;
+    padding: 16px;
   }
 
   .header {
-    margin-bottom: 24px;
+    margin-bottom: 12px;
     display: flex;
     align-items: center;
     gap: 8px;
     font-family: 'Space Grotesk', sans-serif;
-    font-size: 22px;
+    font-size: 20px;
     font-weight: 700;
   }
   .header span { color: #ffc700; }
 
   .checkout-card {
     width: 100%;
-    max-width: 440px;
+    max-width: 400px;
     background: #121214;
     border: 1px solid #27272a;
     border-radius: 16px;
-    padding: 28px;
+    padding: 16px 20px;
     box-shadow: 0 12px 32px rgba(0, 0, 0, 0.6);
   }
 
-  .paywall-wrapper {
-    width: 100%;
-  }
+  /* Override internal paywall margins for ultra compact zero-scroll fit */
+  .aipp-paywall-container { margin: 0 !important; }
+  .aipp-paywall-card { padding: 1.2rem !important; gap: 0.8rem !important; border: none !important; background: transparent !important; box-shadow: none !important; }
+  .aipp-paywall-qr-container { width: 180px !important; height: 180px !important; margin: 0.2rem 0 !important; padding: 0.6rem !important; }
+  .aipp-paywall-button { padding: 0.6rem 1rem !important; font-size: 0.9rem !important; }
 </style>
 </head>
 <body>
 
   <div class="header">
-    <svg width="28" height="28" viewBox="0 0 32 32" fill="none">
+    <svg width="24" height="24" viewBox="0 0 32 32" fill="none">
       <rect width="32" height="32" rx="8" fill="#0f0f11"/>
       <circle cx="14" cy="16" r="7" fill="none" stroke="#ffc700" stroke-width="2.5"/>
       <circle cx="14" cy="16" r="2.5" fill="#ffc700"/>
@@ -61,19 +67,10 @@
 
   <div class="checkout-card">
     <div id="aipp-checkout-container" class="paywall-wrapper" data-aipp-src="/premium-article-1">
-      <p style="text-align:center;color:#a1a1aa;font-size:13px;">Preparing checkout...</p>
+      <p style="text-align:center;color:#a1a1aa;font-size:12px;">Preparing checkout...</p>
     </div>
   </div>
 
-  <script src="/paywall.js?v=12"></script>
-  <script>
-    // Smooth auto-scroll to checkout card on mobile/small screens
-    document.addEventListener('DOMContentLoaded', () => {
-      const card = document.querySelector('.checkout-card');
-      if (card) {
-        card.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      }
-    });
-  </script>
+  <script src="/paywall.js?v=13"></script>
 </body>
 </html>
