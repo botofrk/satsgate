@@ -196,11 +196,12 @@
       lnPanel.appendChild(qrContainer);
 
       loadQrCodeLib().then(QRCode => {
-        // Plain lowercase invoice for 100% BOLT11 compatibility across Zeus, Satoshi, Phoenix, Breez & Alby
-        const cleanInvoice = invoice.toLowerCase().replace(/^lightning:/i, '');
-        QRCode.toCanvas(qrCanvas, cleanInvoice, {
-          width: 520,
-          margin: 1,
+        // Format as lightning:lnbc... URI for 100% universal camera scanning across Phoenix, Satoshi, Zeus, Breez & Muun
+        const rawInvoice = invoice.toLowerCase().replace(/^lightning:/i, '');
+        const lightningUri = 'lightning:' + rawInvoice;
+        QRCode.toCanvas(qrCanvas, lightningUri, {
+          width: 560,
+          margin: 2,
           errorCorrectionLevel: 'L',
           color: { dark: '#000000', light: '#ffffff' }
         }, (error) => {
