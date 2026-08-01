@@ -97,10 +97,16 @@ describe('Persistent Webhook Queue Integration Tests', () => {
     process.env.LNBITS_WEBHOOK_SECRET = 'test_webhook_secret_key_123456';
     const payload = { payment_hash: paymentHash };
     
-    // Send LNBits webhook request
+    const hmacSecret = 'test_webhook_secret_key_123456';
+    const hmacSig = crypto
+      .createHmac('sha256', hmacSecret)
+      .update(Buffer.from(JSON.stringify(payload)))
+      .digest('hex');
+
+    // Send LNBits webhook request with HMAC header signature
     const res = await request(app)
       .post('/lnbits-webhook')
-      .query({ secret: 'test_webhook_secret_key_123456' })
+      .set('x-lnbits-webhook-secret', hmacSig)
       .send(payload);
 
     expect(res.status).toBe(200);
