@@ -98,29 +98,34 @@
   }
 
   function lockElementWithPaywall(el, price) {
+    // Prevent locking body or html document directly
+    if (el === document.body || el === document.documentElement) return;
+
     // Generate paywall container wrapping selected element
     const container = document.createElement('div');
     container.style.position = 'relative';
     container.style.display = 'block';
     container.style.width = '100%';
 
-    if (el.parentNode) {
+    if (el.parentNode && el.parentNode.nodeType === 1) {
       el.parentNode.insertBefore(container, el);
       container.appendChild(el);
+    } else {
+      return;
     }
 
     el.classList.add('aipp-locked-element');
 
-    // Create Paywall Badge
+    // Create Paywall Badge with addEventListener (CSP compliant)
     const badge = document.createElement('div');
     badge.className = 'aipp-paywall-overlay-badge';
     badge.innerHTML = `🔒 Unlock for $${price.toFixed(2)} (via Lightning / USDC)`;
     
-    badge.onclick = (e) => {
+    badge.addEventListener('click', (e) => {
       e.preventDefault();
       e.stopPropagation();
       window.open(`https://aipp.dev/paywall-demo.html?price=${price}`, '_blank');
-    };
+    });
 
     container.appendChild(badge);
 
