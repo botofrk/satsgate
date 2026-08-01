@@ -360,6 +360,15 @@
       </div>
     </div>
 
+    <!-- READY-TO-USE MIDDLEWARE SNIPPET -->
+    <div style="background: var(--card); border: 2px solid var(--border); padding: 24px; border-radius: 8px; margin-bottom: 32px; box-shadow: 4px 4px 0 #000;">
+      <h3 style="font-family: 'Inter', sans-serif; font-size: 16px; font-weight: 700; margin-bottom: 8px; color: var(--fg); text-transform: uppercase; letter-spacing: 1px;">⚡ 1-Line Middleware Snippet</h3>
+      <p style="color: var(--muted); font-size: 14px; margin-bottom: 16px;">Copy and paste this middleware into your Express or FastAPI app. Set <code>AIPP_KEY</code> in your <code>.env</code> file and start earning instantly.</p>
+      <pre style="background: #111; color: #fff; padding: 16px; border-radius: 6px; font-family: 'Fira Code', monospace; font-size: 13px; overflow-x: auto; margin-bottom: 12px;">// Node.js Express
+import { protectApi } from '@aipp/sdk';
+app.use('/api/v1/generate', protectApi({ price: 0.01 }), handler);</pre>
+    </div>
+
     <!-- MARKETPLACE INTEGRATION -->
     <div style="background: var(--card); border: 2px solid var(--border); padding: 24px; border-radius: 8px; margin-bottom: 32px; box-shadow: 4px 4px 0 #000;">
       <h3 style="font-family: 'Inter', sans-serif; font-size: 16px; font-weight: 700; margin-bottom: 8px; color: var(--fg); text-transform: uppercase; letter-spacing: 1px;">Marketplace Integrations</h3>
