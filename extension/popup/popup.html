@@ -166,15 +166,14 @@
     background: #f0fdf4;
     border: 1px solid #bbf7d0;
     border-radius: 10px;
-    padding: 10px 12px;
-    margin-bottom: 12px;
+    padding: 10px 14px;
+    margin-bottom: 14px;
     display: flex;
     align-items: center;
     justify-content: space-between;
   }
-  .earnings-label { font-size: 11px; font-weight: 600; color: #166534; }
-  .earnings-val { font-family: 'Space Grotesk', sans-serif; font-size: 16px; font-weight: 700; color: #15803d; }
-  .earnings-note { font-size: 10px; color: #166534; opacity: 0.8; font-weight: 500; }
+  .earnings-label { font-size: 12px; font-weight: 600; color: #166534; }
+  .earnings-val { font-family: 'Space Grotesk', sans-serif; font-size: 18px; font-weight: 700; color: #15803d; }
 
   /* TRUST MICROCOPY */
   .trust-microcopy {
@@ -254,7 +253,7 @@
   <div class="panel active" id="panel-creator">
     <div class="card">
       <div class="card-title" style="font-size: 13px; color: #0f0f11;">Monetize Any Content</div>
-      <p style="font-size: 11px; color: #52525b; margin-bottom: 12px; font-weight: 500; line-height: 1.4;">
+      <p style="font-size: 11px; color: #52525b; margin-bottom: 14px; font-weight: 500; line-height: 1.4;">
         Pick any text, image or section. Set a price. Start earning instantly.
       </p>
       
@@ -262,23 +261,22 @@
         🎯 <strong>Picker Active:</strong> Hover over element & click to lock. Paywall HTML code will copy to clipboard automatically!
       </div>
 
-      <!-- LIVE EARNINGS ESTIMATOR -->
-      <div class="earnings-preview-box">
-        <div>
-          <div class="earnings-label">💰 Estimated You Receive</div>
-          <div class="earnings-note">Direct 100% to your wallet</div>
-        </div>
-        <div class="earnings-val" id="earnings-display">$0.10</div>
-      </div>
-
+      <!-- STEP 1: PRICE INPUT -->
       <div style="margin-bottom: 10px;">
         <label class="input-label">Lock Price (USD)</label>
         <div class="currency-input-wrap">
           <span class="currency-prefix">$</span>
-          <input class="input-field currency-input" id="lock-price" type="number" step="0.01" min="0.01" value="0.10" placeholder="0.10">
+          <input class="input-field currency-input" id="lock-price" type="text" value="0.10" placeholder="0.10">
         </div>
       </div>
 
+      <!-- STEP 2: YOU RECEIVE PREVIEW -->
+      <div class="earnings-preview-box">
+        <div class="earnings-label">You receive</div>
+        <div class="earnings-val" id="earnings-display">$0.10</div>
+      </div>
+
+      <!-- STEP 3: CTA BUTTON -->
       <button class="btn btn-primary" id="start-picker-btn">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
         Select & Protect Content
@@ -337,7 +335,7 @@
   </div>
 
   <div class="footer">
-    Powered by <a href="https://aipp.dev" target="_blank">aipp.dev</a> · Lightning & Base USDC
+    Powered by <a href="https://aipp.dev" target="_blank">AIPP</a> · ⚡ Lightning · ● USDC
   </div>
 
   <script src="popup.js"></script>

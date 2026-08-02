@@ -15,6 +15,7 @@
 
   function enablePicker() {
     isPickerActive = true;
+    document.body.classList.add('aipp-picker-active');
     showToast(`🎯 AIPP Picker Active: Hover & Click any element to lock ($${targetLockPrice.toFixed(2)}). Press ESC to cancel.`);
     document.addEventListener('mouseover', handleMouseOver, true);
     document.addEventListener('mouseout', handleMouseOut, true);
@@ -24,6 +25,7 @@
 
   function disablePicker() {
     isPickerActive = false;
+    document.body.classList.remove('aipp-picker-active');
     hideToast();
     if (currentHoverTarget) {
       currentHoverTarget.classList.remove('aipp-picker-hover');

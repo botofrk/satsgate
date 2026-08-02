@@ -42,7 +42,9 @@ document.addEventListener('DOMContentLoaded', async () => {
   const earningsDisplay = document.getElementById('earnings-display');
   if (lockPriceInput && earningsDisplay) {
     const updateEarnings = () => {
-      const val = parseFloat(lockPriceInput.value) || 0;
+      let raw = (lockPriceInput.value || '').replace(',', '.').trim();
+      let val = parseFloat(raw);
+      if (isNaN(val) || val < 0) val = 0;
       earningsDisplay.textContent = `$${val.toFixed(2)}`;
     };
     lockPriceInput.addEventListener('input', updateEarnings);
@@ -74,7 +76,8 @@ window.saveSettings = async function() {
 
 // Start DOM Element Picker
 window.startDOMPicker = async function() {
-  const price = parseFloat(document.getElementById('lock-price').value) || 0.10;
+  const rawPrice = (document.getElementById('lock-price').value || '').replace(',', '.').trim();
+  const price = parseFloat(rawPrice) || 0.10;
   const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
 
   if (!tab) {
