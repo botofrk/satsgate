@@ -108,8 +108,8 @@
     transition: all 0.2s ease;
     border: 1px solid transparent; display: inline-block;
   }
-  .btn-primary { background: #0f0f11; color: #ffffff; border-color: #0f0f11; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
-  .btn-primary:hover { background: #1a1a1e; transform: translateY(-1px); box-shadow: 0 4px 14px rgba(0,0,0,0.15); }
+  .btn-primary { background: var(--accent); color: #0f0f11; border-color: var(--accent); box-shadow: 0 2px 10px rgba(255, 199, 0, 0.3); font-weight: 700; }
+  .btn-primary:hover { background: #e6b300; transform: translateY(-1px); box-shadow: 0 4px 16px rgba(255, 199, 0, 0.4); }
   .btn-ghost { background: #ffffff; color: #0f0f11; border-color: #e4e4e7; box-shadow: 0 2px 6px rgba(0,0,0,0.03); }
   .btn-ghost:hover { background: #fafafa; border-color: #d4d4d8; transform: translateY(-1px); }
 
@@ -431,7 +431,6 @@
     <a href="#pricing">Pricing</a>
     <a href="docs.html">Docs</a>
     <a href="l402.html">For AI Agents</a>
-    <a href="aipp-extension.zip" style="color:var(--fg);font-size:13px;background:var(--accent);padding:6px 12px;border-radius:6px;border:1.5px solid var(--border);box-shadow:2px 2px 0 var(--border);display:inline-flex;align-items:center;gap:4px;">🧩 Chrome Extension</a>
     <a href="dashboard.html" class="nav-cta">Dashboard →</a>
   </div>
 </nav>
@@ -713,7 +712,7 @@ app.<span class="c-fn">post</span>(<span class="c-str">'/api/generate'</span>, <
         <input class="input-field" id="demo-email" type="email" placeholder="you@example.com" style="width:100%;padding:12px 14px;border:1px solid #d4d4d8;border-radius:8px;font-size:13px;outline:none;background:#fafafa;box-shadow:none;">
       </div>
 
-      <button onclick="demoRegisterMerchant()" style="width:100%;padding:13px;background:#0f0f11;color:#ffffff;border:none;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;transition:background 0.2s;">Generate API Key →</button>
+      <button onclick="demoRegisterMerchant()" class="btn btn-primary" style="width:100%;padding:14px;border:none;font-size:15px;cursor:pointer;">Generate API Key →</button>
     </div>
 
     <!-- STEP 1: Try Checkout -->
@@ -779,7 +778,7 @@ app.<span class="c-fn">post</span>(<span class="c-str">'/api/generate'</span>, <
       </li>
     </ul>
 
-    <a href="#get-started" style="display:block;padding:13px;background:#0f0f11;color:#ffffff;border-radius:8px;font-size:14px;font-weight:600;text-decoration:none;transition:background 0.2s;">Start Earning Free →</a>
+    <a href="#get-started" class="btn btn-primary" style="display:block;padding:14px;font-size:15px;text-decoration:none;">Start Earning Free →</a>
   </div>
   <p style="margin-top:20px;font-size:12px;color:#78716c;">All earnings settle directly into your wallet · Transparent & Non-custodial</p>
 </section>
