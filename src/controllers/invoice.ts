@@ -137,7 +137,7 @@ export const createInvoice = async (req: Request, res: Response, next: NextFunct
       }
       await checkLimit(apiKey, amount_usd);
 
-      const commission = Math.max(20, Math.ceil(amount_sats * 0.01));
+      const commission = Math.max(10, Math.ceil(amount_sats * 0.01));
       const forwarded = amount_sats - commission;
 
       let paymentHash = '';
