@@ -379,10 +379,12 @@
     .trust-item { padding: 14px 20px; font-size: 12px; }
     .mode-selector { grid-template-columns: 1fr; }
     .wizard-card { padding: 28px 20px; }
+    .story-grid { grid-template-columns: 1fr !important; }
   }
   @media(max-width: 480px) {
     .use-cases { grid-template-columns: 1fr; }
     .pricing-grid { grid-template-columns: 1fr; }
+    .story-grid { grid-template-columns: 1fr !important; }
   }
 </style>
 <script src="https://cdn.jsdelivr.net/npm/qrcode@1.4.4/build/qrcode.min.js"></script>
@@ -532,7 +534,7 @@ app.<span class="c-fn">post</span>(<span class="c-str">'/api/generate'</span>, <
   <h2>Who uses AIPP?</h2>
   <p class="section-sub">If you can create value, you should be able to get paid immediately.</p>
   
-  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:16px;text-align:left;">
+  <div class="story-grid" style="display:grid;grid-template-columns:repeat(3, 1fr);gap:16px;text-align:left;">
     <div style="background:#fff;border:2.5px solid var(--border);border-radius:10px;padding:20px;box-shadow:4px 4px 0 var(--border);">
       <div class="use-icon" style="margin-bottom:12px;">
         <!-- Graduation Cap SVG -->
