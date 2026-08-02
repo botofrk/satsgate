@@ -1,7 +1,7 @@
 # AIPP.dev — Current Project State & Master Blueprint
 *Son Güncelleme: 11 Ağustos 2026 (Salı Gecesi Seansı - v1.3.8)*
 
-Bu belge, AIPP (SatsGate) projesinde tamamlanan uçtan uca **Bitcoin Lightning (L402) & Base USDC (X402)** altyapısını, **Hermes AI Ajanı Entegrasyonunu**, **Nous Research Resmi PR Başarısını**, **Canlı Topluluk Başvurularını (Reddit, n8n, LangChain, Notion)**, **Resmi PyPI & NPM Paketlerini** ve **Yarınki Lansman Yol Haritasını** içerir.
+Bu belge, AIPP (SatsGate) projesinde tamamlanan uçtan uca **Bitcoin Lightning (L402) & Base USDC (X402)** altyapısını, **Hermes AI Ajanı Entegrasyonunu**, **Nous Research Resmi PR Başarısını**, **Canlı Topluluk Başvurularını (Reddit, n8n, LangChain, Notion)**, **Resmi PyPI & NPM Paketlerini**, **Marka Kit (Brand Kit) & 10/10 UX güncellemelerini** ve **Yarınki Lansman Yol Haritasını** içerir.
 
 ---
 
@@ -30,13 +30,12 @@ Bu belge, AIPP (SatsGate) projesinde tamamlanan uçtan uca **Bitcoin Lightning (
 - **Canlı Muhasebe Veritabanı:** `⚡ AIPP Live Revenues & Settlements` (`https://app.notion.com/p/3b9e8deab13b8135a747de3dc6d9a166`)
 - **Notion Şablon Satış Rehberi:** `Monetize Notion Templates & Research with AIPP` (`https://app.notion.com/p/Monetize-Notion-Templates-Research-with-AIPP-3b9e8deab13b8182ada8fd65bda80b0d`)
 
-### 5. 📧 Kurumsal Webmail Logo ve Teması
-- `mail.aipp.dev` üzerinde Roundcube Elastic teması için resmi vektörel `logo.svg` entegre edildi ve önbellekler sıfırlandı.
+### 5. 🎨 AIPP Resmi Marka Kit (Brand Kit) & Chrome Extension 10/10 UX
+- **Brand Kit:** Soft mikron gölgeler, `Space Grotesk` & `Inter` tipografisi, Warm Amber (`#ffc700`) accent ve mineral gri sistem.
+- **Chrome Extension:** Monetize Any Content, dinamik kazanç hesaplayıcısı, 4 adımlı mikro-infografik akış, pulsing picker.
 
-### 6. 🌐 Canlı Topluluk Başvuruları & Durumları
-- **Reddit:** `r/SideProject` için doğrulanmış ve sade metin hazırlandı.
-- **n8n Community:** Moderatör onay kuyruğunda (`community.n8n.io`).
-- **LangChain Community:** Moderatör onay kuyruğunda (`forum.langchain.com`).
+### 6. 📧 Kurumsal Webmail Logo ve Teması
+- `mail.aipp.dev` üzerinde Roundcube Elastic teması için resmi vektörel `logo.svg` entegre edildi ve önbellekler sıfırlandı.
 
 ---
 
@@ -51,3 +50,4 @@ Bu belge, AIPP (SatsGate) projesinde tamamlanan uçtan uca **Bitcoin Lightning (
    - `extension.zip` paketini Google Developer Console'a yüklemek.
 4. **📊 Topluluk Moderasyon Kontrolleri:**
    - n8n ve LangChain forum onaylarını kontrol edip gelen ilk yorumları yanıtlamak.
+
