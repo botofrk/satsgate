@@ -904,12 +904,11 @@ async function generateDemoInvoice() {
     document.getElementById('demo-qr-area').style.display = 'block';
     const instructionsEl = document.getElementById('demo-instructions');
     if (demoPayMode === 'L402') {
-      const cleanInvoice = data.payment_request.replace(/^lightning:/i, '').toLowerCase();
-      const qrURI = `LIGHTNING:${data.payment_request.replace(/^lightning:/i, '').toUpperCase()}`;
-      instructionsEl.textContent = 'Lightning Invoice (click to copy): ' + cleanInvoice;
+      const rawInvoice = data.payment_request.toLowerCase().replace(/^lightning:/i, '');
+      instructionsEl.textContent = 'Lightning Invoice (click to copy): ' + rawInvoice;
       instructionsEl.style.cursor = 'pointer';
-      instructionsEl.onclick = () => { navigator.clipboard.writeText(cleanInvoice); alert('Invoice copied!'); };
-      QRCode.toCanvas(document.getElementById('demo-qr-canvas'), qrURI, { width: 180, margin: 2, errorCorrectionLevel: 'M' });
+      instructionsEl.onclick = () => { navigator.clipboard.writeText(rawInvoice); alert('Invoice copied!'); };
+      QRCode.toCanvas(document.getElementById('demo-qr-canvas'), rawInvoice, { width: 180, margin: 2, errorCorrectionLevel: 'L' });
     } else {
       instructionsEl.innerHTML = `Send 0.01 USDC on Base to: <code style="font-size:9px;">${data.pay_to}</code>`;
     }

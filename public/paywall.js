@@ -196,12 +196,11 @@
       lnPanel.appendChild(qrContainer);
 
       loadQrCodeLib().then(QRCode => {
-        const cleanInvoice = invoice.replace(/^lightning:/i, '').toUpperCase();
-        const qrURI = `LIGHTNING:${cleanInvoice}`;
-        QRCode.toCanvas(qrCanvas, qrURI, {
+        const rawInvoice = invoice.toLowerCase().replace(/^lightning:/i, '');
+        QRCode.toCanvas(qrCanvas, rawInvoice, {
           width: 440,
           margin: 2,
-          errorCorrectionLevel: 'M',
+          errorCorrectionLevel: 'L',
           color: { dark: '#000000', light: '#ffffff' }
         }, (error) => {
           if (error) console.error('AIPP Paywall QR generation failed:', error);
