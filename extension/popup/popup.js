@@ -37,6 +37,18 @@ document.addEventListener('DOMContentLoaded', async () => {
   const copyLinkBtn = document.getElementById('copy-link-btn');
   if (copyLinkBtn) copyLinkBtn.addEventListener('click', copyGeneratedLink);
 
+  // Live Earnings Calculator
+  const lockPriceInput = document.getElementById('lock-price');
+  const earningsDisplay = document.getElementById('earnings-display');
+  if (lockPriceInput && earningsDisplay) {
+    const updateEarnings = () => {
+      const val = parseFloat(lockPriceInput.value) || 0;
+      earningsDisplay.textContent = `$${val.toFixed(2)}`;
+    };
+    lockPriceInput.addEventListener('input', updateEarnings);
+    updateEarnings();
+  }
+
   // Load saved settings
   const data = await chrome.storage.sync.get(['ln_address', 'api_key']);
   if (data.ln_address) document.getElementById('setting-ln-address').value = data.ln_address;

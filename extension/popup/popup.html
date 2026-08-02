@@ -102,6 +102,31 @@
 
   /* INPUT & BUTTON */
   .input-label { font-size: 11px; font-weight: 700; margin-bottom: 4px; display: block; color: #3f3f46; }
+  .currency-input-wrap {
+    display: flex;
+    align-items: center;
+    background: #fafafa;
+    border: 1px solid #e4e4e7;
+    border-radius: 8px;
+    padding: 0 10px;
+    margin-bottom: 12px;
+    transition: border-color 0.15s;
+  }
+  .currency-input-wrap:focus-within {
+    background: #fff;
+    border-color: #a1a1aa;
+    box-shadow: 0 0 0 3px rgba(0,0,0,0.04);
+  }
+  .currency-prefix { font-family: 'Space Grotesk', sans-serif; font-size: 13px; font-weight: 700; color: #0f0f11; margin-right: 4px; }
+  .currency-input {
+    border: none !important;
+    background: transparent !important;
+    padding: 8px 0 !important;
+    margin-bottom: 0 !important;
+    box-shadow: none !important;
+    font-size: 13px !important;
+    font-weight: 600 !important;
+  }
   .input-field {
     width: 100%;
     padding: 8px 10px;
@@ -118,10 +143,10 @@
 
   .btn {
     width: 100%;
-    padding: 9px;
+    padding: 10px;
     border: none;
     border-radius: 8px;
-    font-size: 12px;
+    font-size: 13px;
     font-weight: 700;
     cursor: pointer;
     transition: all 0.2s;
@@ -136,6 +161,45 @@
   .btn-dark { background: #0f0f11; color: #ffffff; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
   .btn-dark:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
 
+  /* EARNINGS PREVIEW BOX */
+  .earnings-preview-box {
+    background: #f0fdf4;
+    border: 1px solid #bbf7d0;
+    border-radius: 10px;
+    padding: 10px 12px;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .earnings-label { font-size: 11px; font-weight: 600; color: #166534; }
+  .earnings-val { font-family: 'Space Grotesk', sans-serif; font-size: 16px; font-weight: 700; color: #15803d; }
+  .earnings-note { font-size: 10px; color: #166534; opacity: 0.8; font-weight: 500; }
+
+  /* TRUST MICROCOPY */
+  .trust-microcopy {
+    font-size: 10px;
+    color: #71717a;
+    text-align: center;
+    margin-top: 8px;
+    font-weight: 500;
+    line-height: 1.3;
+  }
+
+  /* FLOW STEPS */
+  .flow-steps {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: #fafafa;
+    border: 1px solid #e4e4e7;
+    border-radius: 8px;
+    padding: 8px 10px;
+    margin-top: 14px;
+  }
+  .flow-step { font-size: 10px; font-weight: 600; color: #3f3f46; display: flex; align-items: center; gap: 3px; }
+  .flow-arrow { font-size: 10px; color: #a1a1aa; }
+
   /* TOOL / PICKER STATS */
   .picker-active-box {
     background: #fffbeb;
@@ -149,9 +213,9 @@
   }
 
   .footer {
-    text-align: center; font-size: 10px; color: #a1a1aa; font-weight: 600; margin-top: 12px;
+    text-align: center; font-size: 10px; color: #a1a1aa; font-weight: 500; margin-top: 12px;
   }
-  .footer a { color: #0f0f11; text-decoration: underline; }
+  .footer a { color: #0f0f11; text-decoration: underline; font-weight: 600; }
 </style>
 </head>
 <body>
@@ -189,24 +253,50 @@
   <!-- PANEL 1: CREATOR / DOM LOCKER -->
   <div class="panel active" id="panel-creator">
     <div class="card">
-      <div class="card-title">Element Picker (No-Code)</div>
+      <div class="card-title" style="font-size: 13px; color: #0f0f11;">Monetize Any Content</div>
       <p style="font-size: 11px; color: #52525b; margin-bottom: 12px; font-weight: 500; line-height: 1.4;">
-        Turn any webpage element into paid content. Pick an element to monetize, and the embed code is <strong>automatically copied to your clipboard</strong>.
+        Pick any text, image or section. Set a price. Start earning instantly.
       </p>
       
       <div class="picker-active-box" id="picker-status-box">
         🎯 <strong>Picker Active:</strong> Hover over element & click to lock. Paywall HTML code will copy to clipboard automatically!
       </div>
 
+      <!-- LIVE EARNINGS ESTIMATOR -->
+      <div class="earnings-preview-box">
+        <div>
+          <div class="earnings-label">💰 Estimated You Receive</div>
+          <div class="earnings-note">Direct 100% to your wallet</div>
+        </div>
+        <div class="earnings-val" id="earnings-display">$0.10</div>
+      </div>
+
       <div style="margin-bottom: 10px;">
         <label class="input-label">Lock Price (USD)</label>
-        <input class="input-field" id="lock-price" type="number" step="0.01" min="0.01" value="0.10">
+        <div class="currency-input-wrap">
+          <span class="currency-prefix">$</span>
+          <input class="input-field currency-input" id="lock-price" type="number" step="0.01" min="0.01" value="0.10" placeholder="0.10">
+        </div>
       </div>
 
       <button class="btn btn-primary" id="start-picker-btn">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><path d="M12 8v8M8 12h8"/></svg>
-        Pick & Lock Element
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+        Select & Protect Content
       </button>
+
+      <div class="trust-microcopy">
+        ⚡ 1-Click: HTML Paywall code is copied to clipboard automatically
+      </div>
+
+      <div class="flow-steps">
+        <div class="flow-step"><span>1️⃣</span> Pick</div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-step"><span>2️⃣</span> Price</div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-step"><span>3️⃣</span> Paste</div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-step"><span>4️⃣</span> Earn</div>
+      </div>
     </div>
   </div>
 
@@ -247,7 +337,7 @@
   </div>
 
   <div class="footer">
-    Powered by <a href="https://aipp.dev" target="_blank">aipp.dev</a> · L402 & x402
+    Powered by <a href="https://aipp.dev" target="_blank">aipp.dev</a> · Lightning & Base USDC
   </div>
 
   <script src="popup.js"></script>
