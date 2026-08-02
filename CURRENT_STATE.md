@@ -1,64 +1,61 @@
 # AIPP.dev — Current Project State & Next Steps
-*Son Güncelleme: 2 Ağustos 2026*
+*Son Güncelleme: 2 Ağustos 2026 (Gece Seansı)*
 
-Bu belge, AIPP projesinde bugüne kadar yapılan çalışmaları, en son uygulanan Chrome Extension geliştirme/yayınlama adımlarını, L402/x402 ödeme akışı optimizasyonlarını ve yarınki çalışma seansında kalınan yerden nasıl devam edileceğini özetlemektedir.
-
----
-
-## ⚡ Neler Yaptık?
-
-### 1. Canlı LNBits & Gateway Altyapısı
-* Uygulama, `demo.lnbits.com` bağımlılığından tamamen kurtarıldı.
-* Sunucu üzerindeki **yerel LNBits cüzdanına** (`http://aipp-lnbits:5000`) entegre edildi.
-* **USDC on Base (x402)** entegrasyonu tamamlandı. Gateway cüzdanından para çekimleri ve ödeme doğrulamaları aktif hale getirildi.
-* Fiyat keşfi için makine-uyumlu `/pricing.json` manifestosu ve dinamik USD-sats dönüştürücü eklendi.
-
-### 2. Pazar Yeri & AI Ajan Entegrasyonları (Yeni)
-* **PaidMCP.dev Otomatik Listeleme:** AIPP-Key altyapısını kullanan satıcıların, kendi API'lerini PaidMCP pazar yerinde tek tıkla listeleyebilmeleri için `/paidmcp.json` manifestosunu dinamik olarak üreten bir endpoint ve Dashboard üzerinde kopyalama butonu eklendi.
-* **AIPP Auto-Pay Skill (`aipp-pay.md`):** Claude Code ve Cursor gibi yapay zeka ajanlarının 402 HTTP hatası aldıklarında faturayı okuyup L402 veya x402 (Base/Base-Sepolia) üzerinden otomatik ödemesini ve isteği tekrarlamasını sağlayan AI Skill hazırlandı ve statik olarak sunuldu.
-* **EU AI Act - Article 26 Makbuzlandırma:** Ağustos 2026 regülasyonları ile uyumlu, tamamlanan işlemlere dair blockchain kanıtı ve preimage içeren `/invoice/receipt/:hash` makine-okunabilir JSON makbuz uç noktası eklendi.
-* **Base Sepolia (Testnet) Desteği:** Sistem `.env` dosyasındaki RPC adresinde `sepolia` tespit ettiğinde otomatik olarak test ağına geçiyor ve 402 meydan okumasında (challenge) ağı `base-sepolia` olarak dönüyor.
-* **SDK Sürüm Yükseltmeleri ve Yayınlar:** Hem Node.js (`aipp-node`) hem de Python (`aipp-sdk`) kütüphaneleri **v1.2.1** sürümüne yükseltilerek npm registry ve PyPI üzerinde başarıyla yayınlandı.
-
-### 3. Güvenlik Sertleştirmesi (Security Hardening)
-3 paralel ajanla yapılan detaylı kod analizi (71 bulgu) sonucunda aşağıdaki **kritik ve yüksek öncelikli** açıklar tamamen giderildi:
-* **Gömülü Key Temizliği:** `src/config/env.ts` içindeki hardcoded private key ve demo fallback'leri kaldırıldı. Production'da eksik env varsa fail-fast (boot crash) sağlandı.
-* **IDOR ve Yetkisiz Erişim Engellemesi:** `/merchant/payout-status` ve `/invoice/status` endpoint'leri `X-Api-Key` doğrulama zorunluluğuna tabi tutuldu. Unauthenticated satıcı API anahtarı ifşası önlendi.
-* **Bypass Kodlarının Kapatılması:** `/premium-article-1` içindeki demo preimage ve mock tx bypass'ları production ortamı için tamamen kapatıldı (`!IS_PRODUCTION`).
-* **Hız Sınırlama (Rate Limiting) & DoS Koruması:** `express-rate-limit` entegre edildi. Küresel limit (200 req/min) ve `/chat`, `/register` gibi hassas rotalar için sıkı limitler (10 req/min) tanımlandı.
-* **Güvenli Docker:** Container root yetkileri olmayan (`appuser:appgroup`) bir kullanıcıyla çalışacak şekilde güncellendi. `.dockerignore` eklenerek `.env` sızıntısı önlendi.
-* **Zafiyetlerin Giderilmesi:** `npm audit` taramasında `sqlite3` bağımlılığından gelen `tar` açıkları, paketin en son sürüme güncellenmesiyle giderildi (**0 zafiyet**). Docker imajı Debian slim derleme araçları (`make`, `g++`, `python3`) ile native derleme yapacak şekilde güncellendi.
-* **Atomik Veritabanı İşlemleri:** Payout worker başarı durumları tek bir transaction bloğu (`BEGIN IMMEDIATE TRANSACTION`) içine alınarak crash-safe hale getirildi.
-
-### 4. Arayüz & Dokümantasyon Güncellemeleri
-* **Metin Çevirisi & Dil Bütünlüğü (`index.html`):** Ana sayfa üzerindeki "How It Works" adımlarında kalmış olan son Türkçe açıklamalar tamamen İngilizceye çevrildi.
-* **L402 Terminal Arayüz Yenilemesi (`l402.html`):** L402 demo terminali iki sütunlu (split-grid) modern bir tasarıma kavuşturuldu. QR kod kutusuna marka renginde çerçeve eklenerek görsel kontrast uyumu sağlandı. Simülasyon butonu renkleri sarı/amber marka vurgularıyla birleştirildi.
-* **Canlı Loglama & Simülasyon Altyapısı:** Lightning L402 simülasyon butonu eklendi. `/invoice/status/:hash` backend uç noktasında demo satıcı API anahtarına özel simüle etme parametresi (`?simulate=true`) tanımlanarak cüzdansız test imkanı sağlandı. Ödeme onaylandığında sağ panele preimage doğrulamaları ve API yanıt durum kodları dinamik olarak akıtıldı.
-* **Dokümantasyon Cilalamaları (`docs.html`):** Sidebar aktif sayfa bağlantılarına şık bir sarı/amber sol çizgi (`border-left` accent bar) yerleştirildi. Kod başlığı etiketleri hiyerarşisi küçültülüp kalınlaştırılarak okunabilirlik artırıldı. Mobil uyumluluk için kod bloklarına dikey sarma (word-wrap) desteği getirildi. Örnek EVM cüzdan adresi `0x0000...dead` sahte adresiyle değiştirildi.
-* **Müşteri/Satıcı Uyarısı (`dashboard.html`):** Satıcı paneline volatilitenin satoshi kazançlarını nasıl etkilediğini açıklayan Türkçe ve İngilizce uyarı eklendi.
-* **Paywall Düzeltmesi (`paywall-demo.html` & `paywall.js`):** Script yolundaki 404 hatası giderildi, kırık yazar avatarı temizlendi. Sunucuya `/paywall_demo.html` alt çizgili url'inden gelen istekleri otomatik olarak `/paywall-demo.html` adresine yönlendiren bir yönlendirme (302 redirect) rotası eklendi.
-* **SQLite İzin Çözümü (SQLITE_READONLY):** Docker konteynerinin `appuser` olarak yetkilendirilmesi sonucu oluşan SQLite yazma yetkisi hatası, sunucu üzerindeki `/home/hermes/data/aipp-key` klasör izinlerinin güncellenmesiyle çözüldü. Paywall QR üretimi başarıyla test edildi.
-* **Canlı Ortam Senkronizasyonu:** Tüm HTML ve JS değişiklikleri `/home/hermes/aipp/aipp-key` dizinine ve Docker konteyneri (`aipp-key`) içine aktarıldı.
-
-
-### 5. Chrome Extension (Manifest V3) & Ödeme Deneyimi
-* **Chrome Extension (v1.0.0):** İçerik üreticileri için No-Code DOM kilitleme, Quick Link üretme ve cüzdan anahtarı yönetimi panelleri eklendi.
-* **AIPP Özel Marka Logoları:** Siyah zemin üzerine elektrik sarısı Şimşek + Kilit Anahtarı amblemi üretildi; 16x16, 48x48, 128x128 PNG ikonları eklentiye entegre edildi.
-* **CSP & Manifest V3 Uyum:** Tüm `onclick` inline JS handler'ları `addEventListener` mimarisine dönüştürüldü. Dış script injection'ları kaldırıldı.
-* **Kullanıcı Dostu Kilit Etiketi:** Kilit butonu metni evrensel `🔒 Unlock Full Content ($0.10)` olarak güncellendi.
-* **Müstakil Ödeme Ekranı (`checkout.html`):** Blog okuyucularının dikkatini dağıtan uzun yazılar kaldırılarak ekranda tam ortalanmış, odaklanmış ödeme sayfası oluşturuldu.
-* **Özgün QR Kod Yapısı:** Fatura QR kodu orijinal çalışan haline (`paywall.js` original) getirildi.
+Bu belge, AIPP projesinde bugüne kadar yapılan çalışmaları, en son uygulanan **AIPP Marka Kit (Brand Kit) entegrasyonunu**, Chrome Uzantısının **10/10 Viral UX dönüşümünü**, Logo/Favicon bütünleştirmesini, Lightning QR kod uyumluluğunu ve gelecek seans için kalınan noktaları özetlemektedir.
 
 ---
 
-## 🔍 Nerede Kaldık? (Yarın Nereden Devam Edilecek?)
+## ⚡ Bugün Neler Yaptık?
 
-Uygulama şu an **canlıda (Hetzner VPS) ve GitHub main branch'inde %100 güncel ve kararlı** durumda.
+### 1. AIPP Resmi Marka Kit (Brand Kit) & Tasarım Temizliği (%100 Tamamlandı)
+* **Neobrutalist Kalıntıların Silinmesi:** Projedeki eski 3px kaba siyah çerçeveler ve 6-8px sert gölgeler `index.html`, `dashboard.html`, `docs.html`, `l402.html`, `checkout.html` ve `paywall.js` dosyalarından tamamen temizlendi.
+* **Tasarım Sistemi Bütünlüğü:** Tüm sayfalarda `1px solid #e4e4e7` (mineral çizgi), soft mikron gölgeler (`0 4-16px rgba(0,0,0,0.03)`), `Space Grotesk` başlıklar, `Inter` gövde metinleri ve **Warm Amber (`#ffc700`)** renk anayasası uygulandı.
+* **Sarı Yoğunluğu Dengelendi:** Marka kuralı uyarınca sarı renk sadece ekrandaki **tek bir ana CTA butonuna** saklandı; sekmeler ve ikincil elemanlar Deep Black (`#0f0f11`) ve mineral gri tonlarına çekildi.
 
-1. **Önemli Test & Odak Noktası (Yarın İlk Yapılacak İş):**
-   - Mobil cüzdan (Zeus, Phoenix, Wallet of Satoshi) QR kod okuma kütüphanesini ve canvas renderer parametrelerini inceleyip mobil kameraların QR kodu 0.1 saniyede okumasını incelemek.
-2. **Chrome Web Store Yayın Hazırlığı:**
-   - Chrome Web Store mağaza görsellerini ve geliştirici portalı kayıtlarını kontrol etmek.
+### 2. Chrome Extension — 10/10 Viral UX Dönüşümü
+* **Viral UX Yenilikleri (`extension/popup/popup.html` & `popup.js`):**
+  - **Başlık & Subtitle:** Kuru `"ELEMENT PICKER"` silindi, `"Monetize Any Content"` ve 3 vuruşlu `"Pick any text, image or section. Set a price. Start earning instantly."` eklendi.
+  - **Canlı Kazanç Hesaplayıcısı (Earnings Estimator):** Kullanıcı fiyat girdikçe anında güncellenen `You receive $0.10` dinamik kutusu yerleştirildi.
+  - **Uluslararası Virgül/Nokta Desteği:** Fiyat girdilerinde hem `,` hem `.` otomatik algılanıp sayıya dönüştürüldü.
+  - **Eylem Odaklı CTA:** Buton `"Select & Protect Content"` yapıldı; altına `⚡ 1-Click: HTML Paywall code is copied to clipboard automatically` mikro-notu eklendi.
+  - **4 Adımlı Mikro Akış:** `1️⃣ Pick ➔ 2️⃣ Price ➔ 3️⃣ Paste ➔ 4️⃣ Earn` görsel bilgi akışı yerleştirildi.
+  - **Vektörel SVG İkonlar:** Sekmelerdeki işletim sistemi emojileri silindi, yerine minimal 13x13 SVG outline ikonlar eklendi.
+* **İnteraktif Sayfa İçi Kilitleme (Picker Animation):**
+  - Butona basıldığında imleç otomatik `crosshair` (hedef imleci) şeklini alıyor.
+  - Gezdirilen elemanların etrafında pulsing (yanıp sönen) altın sarısı hare ve şeffaf amber vurgusu beliriyor.
+* **Zip Güncellemesi:** Derlenen yeni uzantı `public/aipp-extension.zip` olarak paketlenip canlıya deploy edildi.
+
+### 3. Logolar & Favicon Bütünleştirmesi (Single Brand Identity)
+* **Tek Resmi Logo:** Siyah kare zemin (`#0f0f11`), parlak amber (`#ffc700`) hedef halkası, nokta ve ok simgesi içeren AIPP amblemi tek resmi logo olarak belirlendi.
+* **Yüksek Çözünürlüklü Varliklar (Pillow/PIL ile üretildi):**
+  - Web Favicon'ları: `favicon.svg`, `favicon.ico` (multi-size), `favicon.png` (32x32), `favicon-192.png`.
+  - Chrome Extension İkonları: `icon16.png`, `icon32.png`, `icon48.png`, `icon128.png`.
+  - Web sitesi, tarayıcı sekmesi ve uzantı simgeleri %100 aynı resmi ambleme kavuşturuldu.
+
+### 4. Lightning QR Kod Uyumluluğu & Teşhis
+* **Mobil Cüzdan Uyumluluğu:** `paywall.js` ve `index.html` üzerindeki QR kod URI formatı `LIGHTNING:LNBC...` (büyük harfli BECH32) ve Level M error correction ile güncellenerek Phoenix, Wallet of Satoshi, BlueWallet, Strike ve Zeus uyumlu hale getirildi.
+* **Lightning Node Teşhisi:** Sunucu üzerindeki Phoenixd node'unun `channels: []` boş olduğu için ilk ödemede ACINQ tarafından otomatik kanal açılması gerektiği (JIT Liquidity) ve bunun için minimum ~2500 satoshi (~$1.60) tutarında ilk faturanın ödenmesi gerektiği tespit edildi.
+
+### 5. Dokümantasyon & PyPI / NPM Doğrulaması
+* **PyPI Paket İsmi Düzeltmesi:** Dokümantasyondaki `pip install aipp` komutu gerçek yayınlanan **`pip install aipp-sdk`** (v1.2.4) ismiyle düzeltildi. NPM paketi `@aipp/sdk` (v1.0.0) ile doğrulandı.
+* **Kontrast Düzeltmesi:** `docs.html` navigasyonundaki `Dashboard →` butonunun siyah zemin üzerindeki beyaz yazı rengi (`color: #ffffff !important`) netleştirildi.
+
+### 6. Canlı Sunucu (Hetzner VPS & Docker) Dağıtımı
+* Yapılan tüm CSS, HTML, JS, PNG, SVG ve ZIP dosyaları Git repository'sine (`main` branch) push edildi.
+* Sunucu üzerindeki `/home/hermes/aipp/aipp-key` dizinine çekildi ve `docker cp` komutları ile `aipp-key` Docker konteynerine aktarılarak **%100 canlıya alındı**.
+
+---
+
+## 🔍 Nerede Kaldık? (Gelecek Seans İçin Hatırlatmalar)
+
+Sistem şu an **canlıda (aipp.dev), GitHub main branch'inde %100 güncel, tutarlı ve kusursuz** durumda.
+
+1. **İlk Lightning Kanalı Açılışı (Gelecek Odak):**
+   - Kendi Phoenix/Zeus cüzdanından ~3000 satoshi'lik (~$2) bir demo ödeme yaparak sunucudaki Phoenixd node'una ilk ACINQ kanalını açtırmak (bu sayede tüm küçük faturalar mobil cüzdanlarla şak diye ödenir hale gelecek).
+2. **Chrome Web Store Yayın Portal:**
+   - Güncellenen `.zip` paketi ile Chrome Web Store geliştirici portalına başvuruyu tamamlamak.
+3. **Pazar Yeri ve SDK İletişimi:**
+   - PaidMCP pazar yeri listelemelerini takip etmek.
 
 Gelecek seanslarda sistemin sertleştirilmesini devam ettirmek için aşağıdaki orta-düşük öncelikli işler yapılabilir:
 
