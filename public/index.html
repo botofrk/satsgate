@@ -386,6 +386,31 @@
     .pricing-grid { grid-template-columns: 1fr; }
     .story-grid { grid-template-columns: 1fr !important; }
   }
+
+  /* ── PILL SELECTOR ACTIVE STYLING ── */
+  .mode-pill {
+    padding: 10px 8px;
+    text-align: center;
+    font-size: 13px;
+    font-weight: 500;
+    border-radius: 8px;
+    cursor: pointer;
+    color: #71717a;
+    background: transparent;
+    border: 1px solid transparent;
+    transition: all 0.2s ease;
+  }
+  .mode-pill:hover {
+    color: #0f0f11;
+    background: rgba(255,255,255,0.6);
+  }
+  .mode-pill.active {
+    background: #0f0f11 !important;
+    color: #ffffff !important;
+    font-weight: 700 !important;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15) !important;
+    border: 1px solid #0f0f11 !important;
+  }
 </style>
 <script src="https://cdn.jsdelivr.net/npm/qrcode@1.4.4/build/qrcode.min.js"></script>
 </head>
@@ -664,13 +689,13 @@ app.<span class="c-fn">post</span>(<span class="c-str">'/api/generate'</span>, <
       
       <!-- Minimalist Claude-style Pill Selector -->
       <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;background:#f4f4f5;padding:4px;border-radius:10px;margin-bottom:24px;">
-        <div id="card-mode-ln" onclick="setSetupMode('ln')" style="padding:10px 8px;text-align:center;font-size:13px;font-weight:600;border-radius:8px;cursor:pointer;background:#fff;color:#0f0f11;box-shadow:0 1px 3px rgba(0,0,0,0.08);transition:all 0.2s;">
+        <div class="mode-pill active" id="card-mode-ln" onclick="setSetupMode('ln')">
           ⚡ Lightning
         </div>
-        <div id="card-mode-usdc" onclick="setSetupMode('usdc')" style="padding:10px 8px;text-align:center;font-size:13px;font-weight:500;border-radius:8px;cursor:pointer;color:#71717a;transition:all 0.2s;">
+        <div class="mode-pill" id="card-mode-usdc" onclick="setSetupMode('usdc')">
           🔵 Base USDC
         </div>
-        <div id="card-mode-both" onclick="setSetupMode('both')" style="padding:10px 8px;text-align:center;font-size:13px;font-weight:500;border-radius:8px;cursor:pointer;color:#71717a;transition:all 0.2s;">
+        <div class="mode-pill" id="card-mode-both" onclick="setSetupMode('both')">
           ✨ Dual Rail
         </div>
       </div>
