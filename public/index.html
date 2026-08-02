@@ -652,94 +652,115 @@ app.<span class="c-fn">post</span>(<span class="c-str">'/api/generate'</span>, <
 </section>
 
 <!-- ── GET STARTED / QUICK SETUP ── -->
-<section class="section" id="get-started">
-  <span class="section-label">Instant Activation</span>
-  <h2>Get Paid in under 30 seconds</h2>
-  <p class="section-sub" style="margin-bottom:20px;">No Company Required · No Approval · No Sales Calls · No Contracts</p>
-  <div class="wizard-wrap">
-    <div class="wizard-card">
-      <!-- STEP 0: Setup Wallet -->
-      <div class="wizard-step active" id="step0">
-        <p style="font-size:14px;color:var(--muted);margin-bottom:20px;font-weight:600;">Where should we send your money? (Your money never touches our wallet)</p>
-        <div class="mode-selector">
-          <div class="mode-card active" id="card-mode-ln" onclick="setSetupMode('ln')">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="#0f0f11" style="margin-bottom:2px;"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg><br>Bitcoin Lightning
-          </div>
-          <div class="mode-card" id="card-mode-usdc" onclick="setSetupMode('usdc')">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="#2563eb" style="margin-bottom:2px;"><circle cx="12" cy="12" r="10"/><path d="M12 6v12M8 10h8M8 14h8" stroke="#fff" stroke-width="1.5"/></svg><br>Base USDC
-          </div>
-          <div class="mode-card" id="card-mode-both" onclick="setSetupMode('both')">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#0f0f11" stroke-width="2" style="margin-bottom:2px;"><circle cx="9" cy="12" r="5" stroke="#ffc700" stroke-width="2"/><circle cx="15" cy="12" r="5" stroke="#2563eb" stroke-width="2"/></svg><br>Dual (Both)
-          </div>
+<section class="section" id="get-started" style="padding:72px 24px;">
+  <span class="section-label" style="letter-spacing:1px;font-size:11px;">Instant Activation</span>
+  <h2 style="font-family:'Space Grotesk',sans-serif;font-weight:600;letter-spacing:-0.02em;">Get Paid in under 30 seconds</h2>
+  <p class="section-sub" style="margin-bottom:32px;font-size:14px;color:var(--muted);">No Company Required · No Approval · No Sales Calls · No Contracts</p>
+  
+  <div style="max-width:560px;margin:0 auto;background:#ffffff;border:1px solid #e4e4e7;border-radius:16px;padding:36px;box-shadow:0 4px 20px rgba(0,0,0,0.03);text-align:left;">
+    <!-- STEP 0: Setup Wallet -->
+    <div class="wizard-step active" id="step0">
+      <p style="font-size:13px;color:#71717a;margin-bottom:20px;font-weight:500;line-height:1.5;">Where should we send your money? <span style="color:#10b981;font-weight:600;">(Direct to your wallet)</span></p>
+      
+      <!-- Minimalist Claude-style Pill Selector -->
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;background:#f4f4f5;padding:4px;border-radius:10px;margin-bottom:24px;">
+        <div id="card-mode-ln" onclick="setSetupMode('ln')" style="padding:10px 8px;text-align:center;font-size:13px;font-weight:600;border-radius:8px;cursor:pointer;background:#fff;color:#0f0f11;box-shadow:0 1px 3px rgba(0,0,0,0.08);transition:all 0.2s;">
+          ⚡ Lightning
         </div>
-        <div id="wrapper-ln-address">
-          <label class="input-label">Lightning Address (e.g. Alby / WoS):</label>
-          <input class="input-field" id="demo-ln-address" type="text" placeholder="yourname@getalby.com">
-          <div class="error-msg" id="ln-error">Please enter a valid Lightning Address (looks like an email)</div>
+        <div id="card-mode-usdc" onclick="setSetupMode('usdc')" style="padding:10px 8px;text-align:center;font-size:13px;font-weight:500;border-radius:8px;cursor:pointer;color:#71717a;transition:all 0.2s;">
+          🔵 Base USDC
         </div>
-        <div id="wrapper-usdc-address" style="display:none">
-          <label class="input-label">Base USDC Address (EVM):</label>
-          <input class="input-field" id="demo-usdc-address" type="text" placeholder="0x... (EVM wallet address)">
-          <div class="error-msg" id="usdc-error">Please enter a valid 0x EVM address</div>
-        </div>
-        <label class="input-label">Email (optional — for key recovery):</label>
-        <input class="input-field" id="demo-email" type="email" placeholder="you@example.com">
-        <button class="btn btn-primary" style="width:100%;justify-content:center;margin-top:6px;" onclick="demoRegisterMerchant()">Generate API Key →</button>
-      </div>
-
-      <!-- STEP 1: Try Checkout -->
-      <div class="wizard-step" id="step1">
-        <p style="font-size:14px;color:var(--muted);margin-bottom:20px;font-weight:500;">Test a live $0.01 micro-payment to your wallet.</p>
-        <div style="display:flex;gap:12px;margin-bottom:20px;">
-          <button class="btn btn-primary active" id="btn-demo-ln" onclick="setDemoPayMode('L402')" style="flex:1;display:inline-flex;align-items:center;justify-content:center;gap:6px;"><svg width="14" height="14" viewBox="0 0 24 24" fill="#0f0f11"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg> Lightning</button>
-          <button class="btn btn-ghost" id="btn-demo-usdc" onclick="setDemoPayMode('X402')" style="flex:1;display:inline-flex;align-items:center;justify-content:center;gap:6px;"><svg width="14" height="14" viewBox="0 0 24 24" fill="#2563eb"><circle cx="12" cy="12" r="10"/><path d="M12 6v12M8 10h8M8 14h8" stroke="#fff" stroke-width="1.5"/></svg> Base USDC</button>
-        </div>
-        <button class="btn btn-primary" id="demo-pay-btn" style="width:100%;" onclick="generateDemoInvoice()">Create Invoice</button>
-        <div id="demo-qr-area" style="display:none;margin-top:20px;">
-          <canvas id="demo-qr-canvas" style="display:block;margin:0 auto 12px;"></canvas>
-          <p id="demo-instructions" style="font-size:12px;color:var(--muted);word-break:break-all;"></p>
-          <p style="margin-top:12px;font-size:13px;font-weight:700;"><span class="dot" id="demo-status-dot"></span><span id="demo-status-text">Waiting for payment...</span></p>
+        <div id="card-mode-both" onclick="setSetupMode('both')" style="padding:10px 8px;text-align:center;font-size:13px;font-weight:500;border-radius:8px;cursor:pointer;color:#71717a;transition:all 0.2s;">
+          ✨ Dual Rail
         </div>
       </div>
 
-      <!-- STEP 2: Dashboard Access -->
-      <div class="wizard-step" id="step2">
-        <div style="margin-bottom:12px;display:inline-flex;align-items:center;justify-content:center;width:56px;height:56px;background:#f0fdf4;border:2px solid #22c55e;border-radius:50%;">
-          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
-        </div>
-        <h3 style="font-size:20px;font-weight:900;margin-bottom:6px;">API Key Ready & Saved!</h3>
-        <p style="font-size:14px;color:var(--muted);margin-bottom:24px;font-weight:500;">You can now add the SDK middleware to your backend.</p>
-        <a href="dashboard.html" class="btn btn-primary" style="display:block;text-align:center;margin-bottom:10px;">Open Dashboard →</a>
-        <a href="docs.html" class="btn btn-ghost" style="display:block;text-align:center;">Read Documentation</a>
+      <div id="wrapper-ln-address" style="margin-bottom:16px;">
+        <label style="display:block;font-size:12px;font-weight:600;color:#3f3f46;margin-bottom:6px;">Lightning Address (e.g. Alby / Wallet of Satoshi):</label>
+        <input class="input-field" id="demo-ln-address" type="text" placeholder="yourname@getalby.com" style="width:100%;padding:12px 14px;border:1px solid #d4d4d8;border-radius:8px;font-family:'Fira Code',monospace;font-size:13px;outline:none;background:#fafafa;box-shadow:none;">
+        <div class="error-msg" id="ln-error" style="font-size:11px;color:#ef4444;margin-top:4px;">Please enter a valid Lightning Address (looks like an email)</div>
       </div>
+
+      <div id="wrapper-usdc-address" style="display:none;margin-bottom:16px;">
+        <label style="display:block;font-size:12px;font-weight:600;color:#3f3f46;margin-bottom:6px;">Base USDC Address (EVM Wallet):</label>
+        <input class="input-field" id="demo-usdc-address" type="text" placeholder="0x... (EVM wallet address)" style="width:100%;padding:12px 14px;border:1px solid #d4d4d8;border-radius:8px;font-family:'Fira Code',monospace;font-size:13px;outline:none;background:#fafafa;box-shadow:none;">
+        <div class="error-msg" id="usdc-error" style="font-size:11px;color:#ef4444;margin-top:4px;">Please enter a valid 0x EVM address</div>
+      </div>
+
+      <div style="margin-bottom:24px;">
+        <label style="display:block;font-size:12px;font-weight:600;color:#3f3f46;margin-bottom:6px;">Email (optional — for key recovery):</label>
+        <input class="input-field" id="demo-email" type="email" placeholder="you@example.com" style="width:100%;padding:12px 14px;border:1px solid #d4d4d8;border-radius:8px;font-size:13px;outline:none;background:#fafafa;box-shadow:none;">
+      </div>
+
+      <button onclick="demoRegisterMerchant()" style="width:100%;padding:13px;background:#0f0f11;color:#ffffff;border:none;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;transition:background 0.2s;">Generate API Key →</button>
+    </div>
+
+    <!-- STEP 1: Try Checkout -->
+    <div class="wizard-step" id="step1">
+      <p style="font-size:13px;color:#71717a;margin-bottom:16px;font-weight:500;">Test a live $0.01 micro-payment to your wallet.</p>
+      <div style="display:flex;gap:8px;margin-bottom:16px;">
+        <button class="btn btn-primary active" id="btn-demo-ln" onclick="setDemoPayMode('L402')" style="flex:1;padding:10px;font-size:13px;">⚡ Lightning</button>
+        <button class="btn btn-ghost" id="btn-demo-usdc" onclick="setDemoPayMode('X402')" style="flex:1;padding:10px;font-size:13px;">🔵 Base USDC</button>
+      </div>
+      <button id="demo-pay-btn" onclick="generateDemoInvoice()" style="width:100%;padding:12px;background:#0f0f11;color:#fff;border:none;border-radius:8px;font-weight:600;font-size:14px;cursor:pointer;">Create Invoice</button>
+      <div id="demo-qr-area" style="display:none;margin-top:20px;text-align:center;">
+        <canvas id="demo-qr-canvas" style="display:block;margin:0 auto 12px;border:1px solid #e4e4e7;border-radius:8px;padding:8px;background:#fff;"></canvas>
+        <p id="demo-instructions" style="font-size:12px;color:#71717a;word-break:break-all;"></p>
+        <p style="margin-top:12px;font-size:13px;font-weight:600;color:#0f0f11;"><span class="dot" id="demo-status-dot"></span><span id="demo-status-text">Waiting for payment...</span></p>
+      </div>
+    </div>
+
+    <!-- STEP 2: Dashboard Access -->
+    <div class="wizard-step" id="step2" style="text-align:center;">
+      <div style="margin:0 auto 16px;display:inline-flex;align-items:center;justify-content:center;width:48px;height:48px;background:#ecfdf5;border-radius:50%;color:#10b981;">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+      </div>
+      <h3 style="font-size:18px;font-weight:700;margin-bottom:4px;">API Key Ready!</h3>
+      <p style="font-size:13px;color:#71717a;margin-bottom:20px;">You can now add the SDK middleware to your backend.</p>
+      <a href="dashboard.html" style="display:block;padding:12px;background:#0f0f11;color:#fff;border-radius:8px;font-size:14px;font-weight:600;text-align:center;margin-bottom:8px;text-decoration:none;">Open Dashboard →</a>
+      <a href="docs.html" style="display:block;padding:12px;background:#f4f4f5;color:#0f0f11;border-radius:8px;font-size:14px;font-weight:600;text-align:center;text-decoration:none;">Read Documentation</a>
     </div>
   </div>
 </section>
 
 <!-- ── PRICING ── -->
-<section class="section" id="pricing">
-  <span class="section-label">Pricing</span>
-  <h2>Fair, pay-as-you-earn pricing</h2>
-  <p class="section-sub">Zero monthly subscriptions. Zero setup fees. Pay only when you get paid.</p>
+<section class="section" id="pricing" style="padding:72px 24px;background:#fafaf9;border-top:1px solid #e7e5e4;">
+  <span class="section-label" style="letter-spacing:1px;font-size:11px;">Pricing</span>
+  <h2 style="font-family:'Space Grotesk',sans-serif;font-weight:600;letter-spacing:-0.02em;">Fair, pay-as-you-earn pricing</h2>
+  <p class="section-sub" style="margin-bottom:36px;font-size:14px;color:#78716c;">Zero monthly subscriptions. Zero setup fees. Pay only when you get paid.</p>
   
-  <div style="max-width:520px;margin:0 auto;">
-    <div class="price-card featured" style="padding:40px;text-align:center;">
-      <div>
-        <div class="price-plan" style="color:var(--accent);font-size:14px;">Usage-Based Model</div>
-        <div class="price-amount" style="margin:16px 0 8px;font-size:44px;">1% + 10 sats<sub>/sale</sub></div>
-      </div>
-      <span class="price-fee" style="margin:0 auto 20px;display:inline-block;padding:6px 14px;font-size:13px;">Zero Monthly Subscriptions</span>
-      <ul class="price-features" style="text-align:left;margin-bottom:24px;">
-        <li>Non-custodial: Payments go directly to your wallet</li>
-        <li>Instant settlement (Lightning & Base USDC)</li>
-        <li>Includes all 4 SDK plugins & Chrome Extension</li>
-        <li>Flat 1% fee + 10 satoshis (no hidden costs)</li>
-        <li>Zero lock-in, zero monthly commitment</li>
-      </ul>
-      <a href="#get-started" class="price-cta" style="padding:14px;font-size:16px;">Start Earning Free →</a>
-    </div>
+  <div style="max-width:480px;margin:0 auto;background:#ffffff;border:1px solid #e7e5e4;border-radius:16px;padding:36px;box-shadow:0 4px 20px rgba(0,0,0,0.03);text-align:center;">
+    <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#d97706;margin-bottom:8px;">Usage-Based Model</div>
+    <div style="font-family:'Space Grotesk',sans-serif;font-size:42px;font-weight:700;color:#0f0f11;line-height:1;margin-bottom:12px;">1% + 10 sats<sub style="font-size:14px;font-weight:500;color:#78716c;"> / sale</sub></div>
+    
+    <div style="display:inline-block;background:#fef3c7;color:#92400e;font-size:12px;font-weight:600;padding:4px 12px;border-radius:20px;margin-bottom:28px;">Zero Monthly Subscriptions</div>
+    
+    <ul style="list-style:none;padding:0;margin:0 0 28px;text-align:left;">
+      <li style="font-size:13px;color:#44403c;margin-bottom:10px;display:flex;align-items:center;gap:8px;">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+        Non-custodial: Direct settlement to your wallet
+      </li>
+      <li style="font-size:13px;color:#44403c;margin-bottom:10px;display:flex;align-items:center;gap:8px;">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+        Instant settlement (Bitcoin Lightning & Base USDC)
+      </li>
+      <li style="font-size:13px;color:#44403c;margin-bottom:10px;display:flex;align-items:center;gap:8px;">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+        Includes all 4 SDK plugins & Chrome Extension
+      </li>
+      <li style="font-size:13px;color:#44403c;margin-bottom:10px;display:flex;align-items:center;gap:8px;">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+        Flat 1% fee + 10 satoshis minimum (no hidden costs)
+      </li>
+      <li style="font-size:13px;color:#44403c;display:flex;align-items:center;gap:8px;">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+        Zero lock-in, zero monthly commitment
+      </li>
+    </ul>
+
+    <a href="#get-started" style="display:block;padding:13px;background:#0f0f11;color:#ffffff;border-radius:8px;font-size:14px;font-weight:600;text-decoration:none;transition:background 0.2s;">Start Earning Free →</a>
   </div>
-  <p class="price-note">All earnings settle directly into your wallet · Transparent & Non-custodial</p>
+  <p style="margin-top:20px;font-size:12px;color:#78716c;">All earnings settle directly into your wallet · Transparent & Non-custodial</p>
 </section>
 
 <!-- ── FOOTER ── -->
