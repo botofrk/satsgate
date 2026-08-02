@@ -43,8 +43,8 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 20px 40px;
-    border-bottom: 3px solid var(--border);
+    padding: 18px 40px;
+    border-bottom: 1px solid #e4e4e7;
     background: var(--bg);
     position: sticky;
     top: 0;
@@ -59,69 +59,65 @@
   }
   .logo span { color: var(--muted); font-size: 14px; font-weight: 500; }
   .nav-links { display: flex; align-items: center; gap: 28px; }
-  .nav-links a { font-weight: 700; font-size: 15px; position: relative; padding-bottom: 2px; }
-  .nav-links a::after {
-    content: ''; position: absolute; bottom: 0; left: 0;
-    width: 0; height: 2px; background: var(--fg); transition: width 0.2s;
-  }
-  .nav-links a:hover::after { width: 100%; }
+  .nav-links a { font-weight: 600; font-size: 14px; color: #3f3f46; position: relative; padding-bottom: 2px; }
+  .nav-links a:hover { color: var(--fg); }
   .nav-cta {
-    background: var(--fg); color: var(--bg) !important;
-    padding: 8px 18px; border-radius: 8px; font-weight: 800;
-    box-shadow: 3px 3px 0 var(--accent); transition: transform 0.15s, box-shadow 0.15s;
-    border: 2px solid var(--fg);
+    background: var(--fg); color: #ffffff !important;
+    padding: 9px 20px; border-radius: 8px; font-weight: 600; font-size: 14px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1); transition: all 0.2s ease;
+    border: none;
   }
-  .nav-cta:hover { transform: translate(-2px,-2px); box-shadow: 5px 5px 0 var(--accent); }
+  .nav-cta:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
 
   /* ─── HERO ─── */
   .hero {
     max-width: 1100px; margin: 0 auto;
-    padding: 64px 24px 32px; text-align: center;
+    padding: 72px 24px 40px; text-align: center;
     display: flex; flex-direction: column; align-items: center;
   }
   .badge {
-    background: var(--card); border: 2px solid var(--border);
-    padding: 6px 14px; border-radius: 20px;
-    font-size: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px;
-    margin-bottom: 20px; box-shadow: 3px 3px 0 var(--border);
+    background: #ffffff; border: 1px solid #e4e4e7;
+    padding: 6px 16px; border-radius: 20px;
+    font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: #52525b;
+    margin-bottom: 24px; box-shadow: 0 2px 8px rgba(0,0,0,0.03);
     display: inline-flex; align-items: center; gap: 6px;
   }
   h1 {
     font-family: 'Space Grotesk', sans-serif;
-    font-size: clamp(32px, 6vw, 68px);
-    font-weight: 700; line-height: 1.05; letter-spacing: -0.02em;
-    margin-bottom: 20px; max-width: 900px;
+    font-size: clamp(34px, 6vw, 68px);
+    font-weight: 700; line-height: 1.08; letter-spacing: -0.025em;
+    margin-bottom: 24px; max-width: 900px; color: #0f0f11;
   }
   h1 span {
-    background: var(--accent); padding: 2px 10px; border-radius: var(--radius);
-    border: 2px solid var(--border); box-shadow: 3px 3px 0 var(--border);
+    background: #fef3c7; color: #92400e; padding: 4px 14px; border-radius: 12px;
+    border: 1px solid #fde68a; box-shadow: none; font-weight: 700;
   }
   .hero-sub {
-    font-size: 18px; color: var(--muted); max-width: 600px;
-    margin-bottom: 32px; font-weight: 500; line-height: 1.6;
+    font-size: 17px; color: #52525b; max-width: 620px;
+    margin-bottom: 36px; font-weight: 400; line-height: 1.6;
   }
   .cta-group {
-    display: flex; gap: 16px; flex-wrap: wrap; justify-content: center;
+    display: flex; gap: 14px; flex-wrap: wrap; justify-content: center;
     margin-bottom: 48px;
   }
 
   /* ─── BUTTONS ─── */
   .btn {
-    padding: 13px 30px; border-radius: var(--radius);
-    font-size: 15px; font-weight: 700; cursor: pointer;
-    transition: transform 0.2s, box-shadow 0.2s;
-    border: 2px solid var(--border); display: inline-block;
+    padding: 13px 28px; border-radius: 8px;
+    font-size: 14px; font-weight: 600; cursor: pointer;
+    transition: all 0.2s ease;
+    border: 1px solid transparent; display: inline-block;
   }
-  .btn-primary { background: var(--accent); color: var(--fg); box-shadow: 4px 4px 0 var(--border); }
-  .btn-primary:hover { transform: translate(-3px,-3px); box-shadow: 7px 7px 0 var(--border); }
-  .btn-ghost { background: var(--card); color: var(--fg); box-shadow: 4px 4px 0 var(--border); }
-  .btn-ghost:hover { transform: translate(-3px,-3px); box-shadow: 7px 7px 0 var(--border); }
+  .btn-primary { background: #0f0f11; color: #ffffff; border-color: #0f0f11; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+  .btn-primary:hover { background: #1a1a1e; transform: translateY(-1px); box-shadow: 0 4px 14px rgba(0,0,0,0.15); }
+  .btn-ghost { background: #ffffff; color: #0f0f11; border-color: #e4e4e7; box-shadow: 0 2px 6px rgba(0,0,0,0.03); }
+  .btn-ghost:hover { background: #fafafa; border-color: #d4d4d8; transform: translateY(-1px); }
 
   /* ─── HERO CODE BLOCK ─── */
   .hero-code {
     width: 100%; max-width: 680px;
-    background: var(--fg); border-radius: 12px;
-    border: 3px solid var(--border); box-shadow: 8px 8px 0 var(--border);
+    background: #0f0f11; border-radius: 14px;
+    border: 1px solid #27272a; box-shadow: 0 8px 30px rgba(0,0,0,0.12);
     text-align: left; overflow: hidden; margin-bottom: 40px;
   }
   .code-tabs {
@@ -173,28 +169,28 @@
     gap: 20px; margin-top: 0;
   }
   .use-card {
-    background: var(--card); border: 3px solid var(--border);
-    border-radius: 12px; padding: 28px 24px;
-    box-shadow: 6px 6px 0 var(--border); text-align: left;
-    transition: transform 0.2s, box-shadow 0.2s;
+    background: #ffffff; border: 1px solid #e4e4e7;
+    border-radius: 14px; padding: 28px 24px;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.02); text-align: left;
+    transition: all 0.2s ease;
     display: flex; flex-direction: column; gap: 12px;
   }
-  .use-card:hover { transform: translate(-3px,-3px); box-shadow: 9px 9px 0 var(--border); }
+  .use-card:hover { transform: translateY(-2px); border-color: #d4d4d8; box-shadow: 0 8px 24px rgba(0,0,0,0.06); }
   .use-icon {
-    width: 44px; height: 44px;
+    width: 42px; height: 42px;
     display: flex; align-items: center; justify-content: center;
-    background: #fdf8e6; border: 1px solid #fee685;
+    background: #fafafa; border: 1px solid #e4e4e7;
     border-radius: 10px;
     flex-shrink: 0;
     margin-bottom: 4px;
   }
-  .use-card h3 { font-size: 16px; font-weight: 900; }
-  .use-card p { font-size: 13px; color: var(--muted); font-weight: 500; line-height: 1.5; flex: 1; }
+  .use-card h3 { font-size: 16px; font-weight: 700; color: #0f0f11; }
+  .use-card p { font-size: 13px; color: #52525b; font-weight: 400; line-height: 1.6; flex: 1; }
   .use-tag {
     display: inline-block; background: #f4f4f5;
-    border: 1.5px solid #d4d4d8; border-radius: 4px;
+    border: 1px solid #e4e4e7; border-radius: 6px;
     padding: 3px 8px; font-family: 'Fira Code', monospace;
-    font-size: 11px; font-weight: 700; color: var(--fg);
+    font-size: 11px; font-weight: 600; color: #3f3f46;
   }
 
   /* ─── HOW IT WORKS ─── */
@@ -203,20 +199,20 @@
     gap: 24px; position: relative;
   }
   .step-card {
-    background: var(--card); border: 3px solid var(--border);
-    border-radius: 12px; padding: 32px 28px;
-    box-shadow: 6px 6px 0 var(--border); text-align: left;
-    position: relative;
+    background: #ffffff; border: 1px solid #e4e4e7;
+    border-radius: 14px; padding: 32px 28px;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.02); text-align: left;
+    position: relative; transition: all 0.2s ease;
   }
+  .step-card:hover { transform: translateY(-2px); border-color: #d4d4d8; box-shadow: 0 8px 24px rgba(0,0,0,0.06); }
   .step-num {
-    width: 36px; height: 36px; background: var(--accent);
-    border: 2px solid var(--border); border-radius: 50%;
+    width: 34px; height: 34px; background: #fef3c7; color: #92400e;
+    border: 1px solid #fde68a; border-radius: 50%;
     display: flex; align-items: center; justify-content: center;
-    font-weight: 900; font-size: 16px; margin-bottom: 20px;
-    box-shadow: 2px 2px 0 var(--border);
+    font-weight: 700; font-size: 14px; margin-bottom: 20px;
   }
-  .step-card h3 { font-size: 18px; font-weight: 900; margin-bottom: 8px; }
-  .step-card p { font-size: 13px; color: var(--muted); font-weight: 500; line-height: 1.6; margin-bottom: 16px; }
+  .step-card h3 { font-size: 17px; font-weight: 700; margin-bottom: 8px; color: #0f0f11; }
+  .step-card p { font-size: 13px; color: #52525b; font-weight: 400; line-height: 1.6; margin-bottom: 16px; }
   .step-code {
     background: var(--fg); color: var(--accent);
     font-family: 'Fira Code', monospace; font-size: 12px;
@@ -560,7 +556,7 @@ app.<span class="c-fn">post</span>(<span class="c-str">'/api/generate'</span>, <
   <p class="section-sub">If you can create value, you should be able to get paid immediately.</p>
   
   <div class="story-grid" style="display:grid;grid-template-columns:repeat(3, 1fr);gap:16px;text-align:left;">
-    <div style="background:#fff;border:2.5px solid var(--border);border-radius:10px;padding:20px;box-shadow:4px 4px 0 var(--border);">
+    <div style="background:#fff;border:1px solid #e4e4e7;border-radius:14px;padding:22px;box-shadow:0 4px 16px rgba(0,0,0,0.02);transition:all 0.2s ease;">
       <div class="use-icon" style="margin-bottom:12px;">
         <!-- Graduation Cap SVG -->
         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#0f0f11" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -568,10 +564,10 @@ app.<span class="c-fn">post</span>(<span class="c-str">'/api/generate'</span>, <
           <path d="M6 12v5c3 3 9 3 12 0v-5"/>
         </svg>
       </div>
-      <strong style="font-size:15px;display:block;margin-bottom:4px;">Student</strong>
-      <p style="font-size:12px;color:var(--muted);margin:0;">Sold lecture notes & revision guides. Earned first $50 instantly.</p>
+      <strong style="font-size:15px;display:block;margin-bottom:4px;color:#0f0f11;">Student</strong>
+      <p style="font-size:12px;color:#52525b;margin:0;line-height:1.5;">Sold lecture notes & revision guides. Earned first $50 instantly.</p>
     </div>
-    <div style="background:#fff;border:2.5px solid var(--border);border-radius:10px;padding:20px;box-shadow:4px 4px 0 var(--border);">
+    <div style="background:#fff;border:1px solid #e4e4e7;border-radius:14px;padding:22px;box-shadow:0 4px 16px rgba(0,0,0,0.02);transition:all 0.2s ease;">
       <div class="use-icon" style="margin-bottom:12px;">
         <!-- Palette SVG -->
         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#0f0f11" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -582,10 +578,10 @@ app.<span class="c-fn">post</span>(<span class="c-str">'/api/generate'</span>, <
           <path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.92 0 1.7-.75 1.7-1.67 0-.42-.16-.84-.44-1.16-.28-.33-.44-.75-.44-1.17 0-.92.75-1.67 1.67-1.67H16c3.3 0 6-2.7 6-6 0-4.97-4.48-9-10-9z"/>
         </svg>
       </div>
-      <strong style="font-size:15px;display:block;margin-bottom:4px;">Designer</strong>
-      <p style="font-size:12px;color:var(--muted);margin:0;">Sold icon pack in 10 seconds. No store setup required.</p>
+      <strong style="font-size:15px;display:block;margin-bottom:4px;color:#0f0f11;">Designer</strong>
+      <p style="font-size:12px;color:#52525b;margin:0;line-height:1.5;">Sold icon pack in 10 seconds. No store setup required.</p>
     </div>
-    <div style="background:#fff;border:2.5px solid var(--border);border-radius:10px;padding:20px;box-shadow:4px 4px 0 var(--border);">
+    <div style="background:#fff;border:1px solid #e4e4e7;border-radius:14px;padding:22px;box-shadow:0 4px 16px rgba(0,0,0,0.02);transition:all 0.2s ease;">
       <div class="use-icon" style="margin-bottom:12px;">
         <!-- Bot Sparkles SVG -->
         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#0f0f11" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -593,10 +589,10 @@ app.<span class="c-fn">post</span>(<span class="c-str">'/api/generate'</span>, <
           <circle cx="12" cy="12" r="3" fill="#ffc700" stroke="#0f0f11" stroke-width="1.5"/>
         </svg>
       </div>
-      <strong style="font-size:15px;display:block;margin-bottom:4px;">AI Agent</strong>
-      <p style="font-size:12px;color:var(--muted);margin:0;">Paid another AI tool autonomously via L402 / x402.</p>
+      <strong style="font-size:15px;display:block;margin-bottom:4px;color:#0f0f11;">AI Agent</strong>
+      <p style="font-size:12px;color:#52525b;margin:0;line-height:1.5;">Paid another AI tool autonomously via L402 / x402.</p>
     </div>
-    <div style="background:#fff;border:2.5px solid var(--border);border-radius:10px;padding:20px;box-shadow:4px 4px 0 var(--border);">
+    <div style="background:#fff;border:1px solid #e4e4e7;border-radius:14px;padding:22px;box-shadow:0 4px 16px rgba(0,0,0,0.02);transition:all 0.2s ease;">
       <div class="use-icon" style="margin-bottom:12px;">
         <!-- Article / News SVG -->
         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#0f0f11" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -604,10 +600,10 @@ app.<span class="c-fn">post</span>(<span class="c-str">'/api/generate'</span>, <
           <path d="M18 14H10M18 18H10M18 10H10"/>
         </svg>
       </div>
-      <strong style="font-size:15px;display:block;margin-bottom:4px;">Blogger</strong>
-      <p style="font-size:12px;color:var(--muted);margin:0;">Locked premium article with Chrome Extension in 2 clicks.</p>
+      <strong style="font-size:15px;display:block;margin-bottom:4px;color:#0f0f11;">Blogger</strong>
+      <p style="font-size:12px;color:#52525b;margin:0;line-height:1.5;">Locked premium article with Chrome Extension in 2 clicks.</p>
     </div>
-    <div style="background:#fff;border:2.5px solid var(--border);border-radius:10px;padding:20px;box-shadow:4px 4px 0 var(--border);">
+    <div style="background:#fff;border:1px solid #e4e4e7;border-radius:14px;padding:22px;box-shadow:0 4px 16px rgba(0,0,0,0.02);transition:all 0.2s ease;">
       <div class="use-icon" style="margin-bottom:12px;">
         <!-- Code Brackets SVG -->
         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#0f0f11" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -615,10 +611,10 @@ app.<span class="c-fn">post</span>(<span class="c-str">'/api/generate'</span>, <
           <polyline points="8 6 2 12 8 18"/>
         </svg>
       </div>
-      <strong style="font-size:15px;display:block;margin-bottom:4px;">Developer</strong>
-      <p style="font-size:12px;color:var(--muted);margin-top:0;">Monetized API per request with 1 line of middleware code.</p>
+      <strong style="font-size:15px;display:block;margin-bottom:4px;color:#0f0f11;">Developer</strong>
+      <p style="font-size:12px;color:#52525b;margin-top:0;line-height:1.5;">Monetized API per request with 1 line of middleware code.</p>
     </div>
-    <div style="background:#fff;border:2.5px solid var(--border);border-radius:10px;padding:20px;box-shadow:4px 4px 0 var(--border);">
+    <div style="background:#fff;border:1px solid #e4e4e7;border-radius:14px;padding:22px;box-shadow:0 4px 16px rgba(0,0,0,0.02);transition:all 0.2s ease;">
       <div class="use-icon" style="margin-bottom:12px;">
         <!-- Rocket / Indie Hacker SVG -->
         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#0f0f11" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -626,39 +622,39 @@ app.<span class="c-fn">post</span>(<span class="c-str">'/api/generate'</span>, <
           <path d="M12 15l-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-3.05 11a22.35 22.35 0 0 1-3.95 2z"/>
         </svg>
       </div>
-      <strong style="font-size:15px;display:block;margin-bottom:4px;">Indie Hacker</strong>
-      <p style="font-size:12px;color:var(--muted);margin-top:0;">Monetized side project tools without creating a company.</p>
+      <strong style="font-size:15px;display:block;margin-bottom:4px;color:#0f0f11;">Indie Hacker</strong>
+      <p style="font-size:12px;color:#52525b;margin-top:0;line-height:1.5;">Monetized side project tools without creating a company.</p>
     </div>
   </div>
 </section>
 
 <!-- ── CHROME EXTENSION VIRAL SHOWCASE ── -->
-<section class="section" style="background:#f4f4f5;border-top:3px solid var(--border);border-bottom:3px solid var(--border);padding:56px 24px;">
+<section class="section" style="background:#fafaf9;border-top:1px solid #e7e5e4;border-bottom:1px solid #e7e5e4;padding:64px 24px;">
   <div style="max-width:900px;margin:0 auto;display:flex;flex-direction:column;align-items:center;">
     <span class="section-label">Flagship Experience</span>
-    <h2>Turn Any Website Into A Store.</h2>
-    <p class="section-sub" style="margin-bottom:28px;font-weight:700;color:var(--fg);">No CMS. No Backend. No Plugins. No Coding.</p>
+    <h2 style="font-family:'Space Grotesk',sans-serif;font-weight:600;">Turn Any Website Into A Store.</h2>
+    <p class="section-sub" style="margin-bottom:32px;font-weight:600;color:#0f0f11;">No CMS. No Backend. No Plugins. No Coding.</p>
     
-    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:16px;width:100%;text-align:center;margin-bottom:32px;">
-      <div style="background:#fff;border:2.5px solid var(--border);padding:18px;border-radius:10px;box-shadow:4px 4px 0 var(--border);">
-        <span style="font-size:20px;font-weight:900;color:var(--accent);background:var(--fg);width:32px;height:32px;display:inline-flex;align-items:center;justify-content:center;border-radius:50%;margin-bottom:8px;">1</span>
-        <strong style="font-size:15px;display:block;">Open Extension</strong>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:16px;width:100%;text-align:center;margin-bottom:36px;">
+      <div style="background:#fff;border:1px solid #e4e4e7;padding:20px;border-radius:12px;box-shadow:0 4px 16px rgba(0,0,0,0.02);">
+        <span style="font-size:16px;font-weight:700;color:#92400e;background:#fef3c7;width:32px;height:32px;display:inline-flex;align-items:center;justify-content:center;border-radius:50%;margin-bottom:10px;">1</span>
+        <strong style="font-size:14px;display:block;color:#0f0f11;">Open Extension</strong>
       </div>
-      <div style="background:#fff;border:2.5px solid var(--border);padding:18px;border-radius:10px;box-shadow:4px 4px 0 var(--border);">
-        <span style="font-size:20px;font-weight:900;color:var(--accent);background:var(--fg);width:32px;height:32px;display:inline-flex;align-items:center;justify-content:center;border-radius:50%;margin-bottom:8px;">2</span>
-        <strong style="font-size:15px;display:block;">Pick Element</strong>
+      <div style="background:#fff;border:1px solid #e4e4e7;padding:20px;border-radius:12px;box-shadow:0 4px 16px rgba(0,0,0,0.02);">
+        <span style="font-size:16px;font-weight:700;color:#92400e;background:#fef3c7;width:32px;height:32px;display:inline-flex;align-items:center;justify-content:center;border-radius:50%;margin-bottom:10px;">2</span>
+        <strong style="font-size:14px;display:block;color:#0f0f11;">Pick Element</strong>
       </div>
-      <div style="background:#fff;border:2.5px solid var(--border);padding:18px;border-radius:10px;box-shadow:4px 4px 0 var(--border);">
-        <span style="font-size:20px;font-weight:900;color:var(--accent);background:var(--fg);width:32px;height:32px;display:inline-flex;align-items:center;justify-content:center;border-radius:50%;margin-bottom:8px;">3</span>
-        <strong style="font-size:15px;display:block;">Set Price ($0.10)</strong>
+      <div style="background:#fff;border:1px solid #e4e4e7;padding:20px;border-radius:12px;box-shadow:0 4px 16px rgba(0,0,0,0.02);">
+        <span style="font-size:16px;font-weight:700;color:#92400e;background:#fef3c7;width:32px;height:32px;display:inline-flex;align-items:center;justify-content:center;border-radius:50%;margin-bottom:10px;">3</span>
+        <strong style="font-size:14px;display:block;color:#0f0f11;">Set Price ($0.10)</strong>
       </div>
-      <div style="background:#fff;border:2.5px solid var(--border);padding:18px;border-radius:10px;box-shadow:4px 4px 0 var(--border);">
-        <span style="font-size:20px;font-weight:900;color:var(--accent);background:var(--fg);width:32px;height:32px;display:inline-flex;align-items:center;justify-content:center;border-radius:50%;margin-bottom:8px;">4</span>
-        <strong style="font-size:15px;display:block;">Get Paid</strong>
+      <div style="background:#fff;border:1px solid #e4e4e7;padding:20px;border-radius:12px;box-shadow:0 4px 16px rgba(0,0,0,0.02);">
+        <span style="font-size:16px;font-weight:700;color:#92400e;background:#fef3c7;width:32px;height:32px;display:inline-flex;align-items:center;justify-content:center;border-radius:50%;margin-bottom:10px;">4</span>
+        <strong style="font-size:14px;display:block;color:#0f0f11;">Get Paid</strong>
       </div>
     </div>
     
-    <a href="aipp-extension.zip" class="btn btn-primary" style="display:inline-flex;align-items:center;gap:8px;font-size:16px;">
+    <a href="aipp-extension.zip" style="display:inline-flex;align-items:center;gap:8px;font-size:14px;font-weight:600;padding:13px 28px;background:#0f0f11;color:#fff;border-radius:8px;text-decoration:none;box-shadow:0 2px 8px rgba(0,0,0,0.1);">
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><path d="M12 8v8M8 12h8"/></svg>
       Download Chrome Extension 1-Click (.zip)
     </a>
@@ -666,13 +662,13 @@ app.<span class="c-fn">post</span>(<span class="c-str">'/api/generate'</span>, <
 </section>
 
 <!-- ── WHY AIPP EXISTS (STORY SECTION) ── -->
-<section class="section" style="padding:64px 24px;text-align:left;max-width:800px;">
+<section class="section" style="padding:72px 24px;text-align:left;max-width:800px;">
   <span class="section-label" style="text-align:center;">Our Mission</span>
-  <h2 style="text-align:center;margin-bottom:32px;">Why AIPP Exists</h2>
-  <div style="background:#fff;border:3px solid var(--border);border-radius:12px;padding:36px;box-shadow:8px 8px 0 var(--border);line-height:1.8;font-size:16px;color:var(--fg);">
+  <h2 style="text-align:center;margin-bottom:32px;font-family:'Space Grotesk',sans-serif;font-weight:600;">Why AIPP Exists</h2>
+  <div style="background:#fff;border:1px solid #e4e4e7;border-radius:16px;padding:40px;box-shadow:0 4px 20px rgba(0,0,0,0.03);line-height:1.8;font-size:15px;color:#3f3f46;">
     <p style="margin-bottom:16px;">Millions of creators, students, developers, and indie hackers never earn their first dollar because traditional payment systems are needlessly complex.</p>
-    <p style="margin-bottom:16px;">Company registrations. Stripe identity checks. PayPal restrictions. Banking friction. Country limitations.</p>
-    <p style="margin-bottom:0;font-weight:700;color:var(--fg);background:#fffbeb;padding:16px;border-left:4px solid var(--accent);border-radius:4px;">We built AIPP so anyone with a wallet can start getting paid today. If you can create value, you should be able to receive money immediately.</p>
+    <p style="margin-bottom:20px;">Company registrations. Stripe identity checks. PayPal restrictions. Banking friction. Country limitations.</p>
+    <p style="margin-bottom:0;font-weight:600;color:#0f0f11;background:#fef3c7;padding:16px 20px;border-left:4px solid #f59e0b;border-radius:6px;line-height:1.6;">We built AIPP so anyone with a wallet can start getting paid today. If you can create value, you should be able to receive money immediately.</p>
   </div>
 </section>
 
