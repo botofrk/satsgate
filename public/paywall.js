@@ -9,29 +9,29 @@
 .aipp-paywall-container { display: grid; width: 100%; margin: 2rem 0; border-radius: 12px; overflow: hidden; font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: rgba(10, 10, 10, 0.02); min-height: 200px; }
 .aipp-paywall-content-wrapper { grid-area: 1 / 1; filter: blur(8px); user-select: none; pointer-events: none; opacity: 0.6; max-height: 250px; overflow: hidden; transition: all 0.5s ease-in-out; padding: 1rem; }
 .aipp-paywall-content-wrapper.unlocked { filter: blur(0); user-select: auto; pointer-events: auto; opacity: 1; max-height: 10000px; }
-.aipp-paywall-overlay { grid-area: 1 / 1; display: flex; flex-direction: column; align-items: center; justify-content: center; background: rgba(10, 10, 10, 0.6); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); z-index: 10; color: white; text-align: center; padding: 2rem; box-sizing: border-box; transition: opacity 0.5s ease; }
+.aipp-paywall-overlay { grid-area: 1 / 1; display: flex; flex-direction: column; align-items: center; justify-content: center; background: rgba(0,0,0,0.55); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); z-index: 10; color: white; text-align: center; padding: 2rem; box-sizing: border-box; transition: opacity 0.5s ease; }
 .aipp-paywall-overlay.hidden { opacity: 0; pointer-events: none; }
-.aipp-paywall-card { background: rgba(25, 25, 25, 0.9); border: 1px solid rgba(255, 255, 255, 0.1); box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5); border-radius: 16px; padding: 2rem; max-width: 450px; width: 100%; display: flex; flex-direction: column; align-items: center; gap: 1.2rem; }
-.aipp-paywall-header { display: flex; flex-direction: column; gap: 0.5rem; margin-bottom: 0.5rem; }
-.aipp-paywall-title { font-size: 1.25rem; font-weight: 600; margin: 0; background: linear-gradient(90deg, #f7931a 0%, #3b82f6 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-.aipp-paywall-subtitle { font-size: 0.9rem; color: rgba(255, 255, 255, 0.7); margin: 0; }
-.aipp-paywall-qr-container { background: white; padding: 1rem; border-radius: 8px; display: flex; justify-content: center; align-items: center; width: 220px; height: 220px; margin: 0.5rem 0; }
+.aipp-paywall-card { background: #0f0f11; border: 1px solid rgba(255,255,255,0.08); box-shadow: 0 16px 48px rgba(0,0,0,0.5); border-radius: 16px; padding: 2rem; max-width: 450px; width: 100%; display: flex; flex-direction: column; align-items: center; gap: 1.2rem; }
+.aipp-paywall-header { display: flex; flex-direction: column; gap: 0.5rem; margin-bottom: 0.5rem; align-items: center; }
+.aipp-paywall-title { font-family: 'Space Grotesk', sans-serif; font-size: 1.2rem; font-weight: 700; margin: 0; color: #ffffff; letter-spacing: -0.02em; }
+.aipp-paywall-subtitle { font-size: 0.875rem; color: rgba(255, 255, 255, 0.55); margin: 0; }
+.aipp-paywall-qr-container { background: white; padding: 1rem; border-radius: 10px; display: flex; justify-content: center; align-items: center; width: 220px; height: 220px; margin: 0.5rem 0; }
 .aipp-paywall-qr-container img, .aipp-paywall-qr-container canvas { width: 100% !important; height: 100% !important; object-fit: contain; display: block; }
-.aipp-paywall-button { background: #f7931a; color: #111; border: none; border-radius: 8px; padding: 0.75rem 1.5rem; font-size: 1rem; font-weight: 600; cursor: pointer; transition: transform 0.2s, background 0.2s; width: 100%; display: flex; align-items: center; justify-content: center; gap: 0.5rem; }
-.aipp-paywall-button:hover { background: #f5d100; transform: translateY(-2px); }
+.aipp-paywall-button { background: #ffc700; color: #0f0f11; border: none; border-radius: 8px; padding: 0.75rem 1.5rem; font-size: 0.9375rem; font-weight: 700; cursor: pointer; transition: transform 0.2s, box-shadow 0.2s; width: 100%; display: flex; align-items: center; justify-content: center; gap: 0.5rem; font-family: 'Inter', sans-serif; }
+.aipp-paywall-button:hover { transform: translateY(-1px); box-shadow: 0 4px 16px rgba(255,199,0,0.35); }
 .aipp-paywall-button:active { transform: translateY(0); }
 .aipp-paywall-button svg { width: 20px; height: 20px; }
-.aipp-paywall-copy { background: rgba(255, 255, 255, 0.1); color: white; border: 1px solid rgba(255, 255, 255, 0.2); }
-.aipp-paywall-copy:hover { background: rgba(255, 255, 255, 0.2); color: white; }
-.aipp-paywall-loader { border: 3px solid rgba(255, 255, 255, 0.1); border-top: 3px solid #f7931a; border-radius: 50%; width: 24px; height: 24px; animation: aipp-spin 1s linear infinite; margin: 0 auto; }
+.aipp-paywall-copy { background: rgba(255, 255, 255, 0.06); color: rgba(255,255,255,0.8); border: 1px solid rgba(255, 255, 255, 0.12); }
+.aipp-paywall-copy:hover { background: rgba(255, 255, 255, 0.12); color: white; box-shadow: none; }
+.aipp-paywall-loader { border: 2px solid rgba(255, 255, 255, 0.1); border-top: 2px solid #ffc700; border-radius: 50%; width: 24px; height: 24px; animation: aipp-spin 1s linear infinite; margin: 0 auto; }
 @keyframes aipp-spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-.aipp-paywall-status { font-size: 0.85rem; color: rgba(255, 255, 255, 0.6); display: flex; align-items: center; justify-content: center; gap: 0.5rem; margin-top: 0.5rem; min-height: 20px; }
-.aipp-paywall-webln-error { font-size: 0.8rem; color: #ff6b6b; margin-bottom: 0.5rem; }
+.aipp-paywall-status { font-size: 0.8125rem; color: rgba(255, 255, 255, 0.45); display: flex; align-items: center; justify-content: center; gap: 0.5rem; margin-top: 0.5rem; min-height: 20px; }
+.aipp-paywall-webln-error { font-size: 0.8rem; color: #f87171; margin-bottom: 0.5rem; }
 
 /* Segmented Tabs */
-.aipp-paywall-tabs { display: flex; width: 100%; border-bottom: 1px solid rgba(255,255,255,0.1); margin-bottom: 1rem; background: rgba(0,0,0,0.2); border-radius: 8px; padding: 3px; }
-.aipp-paywall-tab { flex: 1; padding: 0.5rem; text-align: center; cursor: pointer; color: rgba(255,255,255,0.6); font-weight: 600; border-radius: 6px; transition: all 0.2s; font-size: 0.85rem; }
-.aipp-paywall-tab.active { color: white; background: rgba(255,255,255,0.1); box-shadow: 0 1px 3px rgba(0,0,0,0.2); }
+.aipp-paywall-tabs { display: flex; width: 100%; margin-bottom: 1rem; background: rgba(255,255,255,0.05); border-radius: 8px; padding: 3px; }
+.aipp-paywall-tab { flex: 1; padding: 0.5rem; text-align: center; cursor: pointer; color: rgba(255,255,255,0.45); font-weight: 600; border-radius: 6px; transition: all 0.2s; font-size: 0.8125rem; }
+.aipp-paywall-tab.active { color: #0f0f11; background: #ffc700; box-shadow: 0 1px 3px rgba(0,0,0,0.2); }
 .aipp-paywall-panel { display: none; width: 100%; flex-direction: column; align-items: center; gap: 1rem; }
 .aipp-paywall-panel.active { display: flex; }
   `;
