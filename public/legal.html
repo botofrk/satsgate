@@ -10,31 +10,31 @@
   
   *{margin:0;padding:0;box-sizing:border-box}
   :root{
-    --bg: #ffcc00;
-    --fg: #000000;
-    --muted: #111111;
-    --accent: #000000;
-    --border: #000000;
+    --bg: #faf9f6;
+    --fg: #0f0f11;
+    --muted: #71717a;
+    --accent: #ffc700;
+    --border: #e4e4e7;
     --card: #ffffff;
-    --radius: 8px;
+    --radius: 12px;
   }
   
   body{
     background-color: var(--bg);
     color: var(--fg);
     font-family: 'Inter', system-ui, -apple-system, sans-serif;
-    line-height: 1.6;
+    line-height: 1.7;
     -webkit-font-smoothing: antialiased;
     padding-bottom: 40px;
   }
   
-  nav{display:flex;align-items:center;justify-content:space-between;padding:24px 40px;border-bottom:2px solid var(--border);background:var(--bg);position:sticky;top:0;z-index:50;}
-  .logo{font-family: 'Inter', sans-serif;font-weight:700;font-size:20px;letter-spacing:-0.5px;text-decoration:none;color:var(--fg);display:flex;align-items:center;gap:8px;}
-  .logo span { color: var(--accent); }
+  nav{display:flex;align-items:center;justify-content:space-between;padding:20px 40px;border-bottom:1px solid var(--border);background:var(--bg);position:sticky;top:0;z-index:50;}
+  .logo{font-family: 'Space Grotesk', sans-serif;font-weight:700;font-size:20px;letter-spacing:-0.5px;text-decoration:none;color:var(--fg);display:flex;align-items:center;gap:8px;}
+  .logo span { color: var(--muted); font-size:14px; }
   
   .nav-links{display:flex;align-items:center;gap:24px;}
-  .nav-links a{color:var(--fg);font-size:15px;font-weight:700;text-decoration:none;}
-  .nav-links .nav-cta{background:#fff;color:var(--fg);padding:10px 20px;border-radius:8px;font-weight:800;border: 2px solid #000; box-shadow: 4px 4px 0 #000;}
+  .nav-links a{color:var(--fg);font-size:14px;font-weight:600;text-decoration:none;}
+  .nav-links .nav-cta{background:var(--fg);color:#fff;padding:8px 18px;border-radius:8px;font-weight:600;border: none; box-shadow: 0 2px 8px rgba(0,0,0,0.1);}
   
   .container {
     max-width: 800px;
@@ -44,17 +44,18 @@
   
   .legal-box {
     background: var(--card);
-    border: 3px solid var(--border);
-    border-radius: 12px;
-    padding: 40px;
-    box-shadow: 8px 8px 0 #000;
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 48px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.03);
   }
   
   h1 {
-    font-family: 'Playfair Display', serif;
-    font-size: 36px;
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 32px;
     font-weight: 700;
     margin-bottom: 16px;
+    letter-spacing: -0.02em;
   }
   
   .date {
