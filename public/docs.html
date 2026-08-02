@@ -350,7 +350,7 @@
       <h2>Quick start</h2>
       <ol>
         <li>Get your API key by registering your wallet on <strong>aipp.dev</strong>.</li>
-        <li>Install the SDK: <code>npm install @aipp/sdk</code> or <code>pip install aipp</code>.</li>
+        <li>Install the SDK: <code>npm install @aipp/sdk</code> or <code>pip install aipp-sdk</code>.</li>
         <li>Set <code>AIPP_KEY=your_api_key</code> in your <code>.env</code> file.</li>
         <li>Add the middleware to your API or MCP Server: <code>app.use(protectApi({ price: 0.01 }))</code>.</li>
         <li>Your software starts earning immediately. Payments settle 100% non-custodial directly to your wallet.</li>
@@ -375,7 +375,7 @@ app.post(<span class="c-str">'/v1/ai'</span>, protectApi({ price: <span class="c
         
         <div style="flex:1;min-width:300px;background:var(--card);border:2px solid var(--border);border-radius:8px;padding:20px;box-shadow:6px 6px 0 #000;">
           <h3 style="color:var(--fg);margin-bottom:12px;font-size:18px;font-weight:700;">🐍 Python / MCP Server</h3>
-          <code style="display:inline-block;margin-bottom:12px">pip install aipp</code>
+          <code style="display:inline-block;margin-bottom:12px">pip install aipp-sdk</code>
           <pre style="padding:16px;background:#111;border:2px solid var(--border);border-radius:6px;box-shadow:4px 4px 0 #000;color:#fff;font-size:13px;line-height:1.5;"><span class="c-key">from</span> mcp.server.fastmcp <span class="c-key">import</span> FastMCP
 <span class="c-key">from</span> aipp <span class="c-key">import</span> protect_agent
 
