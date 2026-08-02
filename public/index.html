@@ -309,18 +309,15 @@
 
   /* ─── TRUST BAR ─── */
   .trust-bar {
-    border-top: 3px solid var(--border); border-bottom: 3px solid var(--border);
-    background: var(--fg); color: var(--bg);
-    display: flex; justify-content: center; flex-wrap: wrap; gap: 0;
-    overflow: hidden;
+    border-bottom: 1px solid #e4e4e7;
+    background: #fafaf9; color: #52525b;
+    display: flex; justify-content: center; flex-wrap: wrap; gap: 24px;
+    padding: 12px 24px; font-size: 12px; font-weight: 500;
   }
   .trust-item {
-    padding: 18px 36px; font-size: 13px; font-weight: 800;
-    display: flex; align-items: center; gap: 8px;
-    border-right: 2px solid #2a2a2a;
+    padding: 0; font-size: 12px; font-weight: 600; color: #3f3f46;
+    display: flex; align-items: center; gap: 6px; border-right: none;
   }
-  .trust-item:last-child { border-right: none; }
-  .trust-dot { color: var(--accent); font-size: 16px; }
 
   /* ─── MODAL ─── */
   .modal-overlay {
@@ -437,11 +434,11 @@
 
 <!-- ── TRUST BAR ── -->
 <div class="trust-bar">
-  <div class="trust-item"><svg width="14" height="14" viewBox="0 0 24 24" fill="#ffc700"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>Bitcoin Lightning</div>
-  <div class="trust-item"><svg width="14" height="14" viewBox="0 0 24 24" fill="#3b82f6"><circle cx="12" cy="12" r="10"/><path d="M12 6v12M8 10h8M8 14h8" stroke="#fff" stroke-width="1.5"/></svg>Base USDC (x402)</div>
-  <div class="trust-item"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>Non-Custodial</div>
-  <div class="trust-item"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>Transparent Fees</div>
-  <div class="trust-item"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>Direct Settlement</div>
+  <div class="trust-item"><svg width="14" height="14" viewBox="0 0 24 24" fill="#d97706"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg> Bitcoin Lightning</div>
+  <div class="trust-item"><svg width="14" height="14" viewBox="0 0 24 24" fill="#2563eb"><circle cx="12" cy="12" r="10"/><path d="M12 6v12M8 10h8M8 14h8" stroke="#fff" stroke-width="1.5"/></svg> Base USDC (x402)</div>
+  <div class="trust-item"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> Non-Custodial</div>
+  <div class="trust-item"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> Transparent Fees</div>
+  <div class="trust-item"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> Direct Settlement</div>
 </div>
 
 <!-- ── HERO ── -->
