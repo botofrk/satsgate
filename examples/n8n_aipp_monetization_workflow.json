@@ -1,0 +1,109 @@
+{
+  "name": "AIPP Smart Tag Paywall for n8n Workflows",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "aipp-monetized-workflow",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "name": "Webhook Trigger",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [240, 300]
+    },
+    {
+      "parameters": {
+        "url": "=https://aipp.dev/invoice/status/{{ $json.body.payment_hash }}",
+        "options": {}
+      },
+      "name": "Verify AIPP Preimage",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [460, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{ $json.status }}",
+              "value2": "settled"
+            }
+          ]
+        }
+      },
+      "name": "Is Payment Settled?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [680, 300]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"status\": \"success\",\n  \"message\": \"Payment verified via AIPP Lightning Preimage.\",\n  \"data\": {\n    \"output\": \"Here is your premium AI generated workflow output.\",\n    \"preimage\": \"{{ $json.preimage }}\"\n  }\n}",
+        "options": {}
+      },
+      "name": "Deliver Premium Content",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [920, 200]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"error\": \"Payment required\",\n  \"code\": 402,\n  \"checkout_url\": \"https://aipp.dev/pay/p_YOUR_TAG_ID\"\n}",
+        "options": {
+          "responseCode": 402
+        }
+      },
+      "name": "Return HTTP 402 Challenge",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [920, 420]
+    }
+  ],
+  "connections": {
+    "Webhook Trigger": {
+      "main": [
+        [
+          {
+            "node": "Verify AIPP Preimage",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Verify AIPP Preimage": {
+      "main": [
+        [
+          {
+            "node": "Is Payment Settled?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Is Payment Settled?": {
+      "main": [
+        [
+          {
+            "node": "Deliver Premium Content",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Return HTTP 402 Challenge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
+}

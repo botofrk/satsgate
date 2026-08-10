@@ -194,6 +194,11 @@ code { font-family: 'JetBrains Mono', monospace; }
       <a href="#check-status" class="sidebar-link">Poll Settlement</a>
     </div>
     <div class="sidebar-section">
+      <div class="sidebar-title">AI &amp; Automations</div>
+      <a href="#langchain-agents" class="sidebar-link">LangChain &amp; AI Agents</a>
+      <a href="#n8n-workflows" class="sidebar-link">n8n No-Code Workflows</a>
+    </div>
+    <div class="sidebar-section">
       <div class="sidebar-title">Protocols</div>
       <a href="#l402-protocol" class="sidebar-link">Bitcoin Lightning (L402)</a>
       <a href="#x402-protocol" class="sidebar-link">Base USDC (x402)</a>
@@ -261,6 +266,53 @@ app.post('/api/generate-summary', protectApi({
   res.json({ result: "Premium AI analysis completed." });
 });</pre>
     </div>
+
+    <!-- SECTION: LANGCHAIN & AI AGENTS -->
+    <div class="section-block" id="langchain-agents">
+      <div class="endpoint-badge badge-post">AI M2M PROTOCOL · PYTHON / LANGCHAIN</div>
+      <h2>Autonomous AI Agents &amp; LangChain Tools</h2>
+      <p>Enable autonomous LLM agents (LangChain, CrewAI, LlamaIndex, Claude MCP) to execute machine-to-machine micro-payments with Bitcoin Lightning L402 and cryptographic preimages.</p>
+
+      <p><strong>Key Features:</strong></p>
+      <ul style="margin-left: 20px; font-size: 14px; color: var(--fg-muted); line-height: 1.7; margin-bottom: 20px;">
+        <li><strong>Zero-Human Micro-Payments:</strong> AI agents can pay $0.005 (8 sats) per API inference or database query autonomously.</li>
+        <li><strong>EU AI Act Article 26 Compliance:</strong> Every settlement returns a verifiable cryptographic receipt via <code>client.get_receipt(payment_hash)</code>.</li>
+      </ul>
+
+      <pre>
+# Python: pip install aipp-sdk
+from aipp import Aipp
+
+client = Aipp(api_key="aipp_merch_YOUR_KEY")
+
+# 1. Issue an L402 payment challenge for an AI tool
+charge = client.create_charge(amount_usd=0.05, protocol="L402", memo="AI Query")
+print("Invoice for Agent:", charge.payment_request)
+
+# 2. Verify settlement & get EU AI Act Art. 26 Receipt
+receipt = client.get_receipt(charge.payment_hash)
+if receipt.get("status") == "settled":
+    print("Settlement Proof Preimage:", receipt.get("preimage"))</pre>
+    </div>
+
+    <!-- SECTION: N8N AUTOMATION -->
+    <div class="section-block" id="n8n-workflows">
+      <div class="endpoint-badge badge-post">NO-CODE AUTOMATION · N8N / WEBHOOKS</div>
+      <h2>Monetizing n8n Workflows with Smart Tags</h2>
+      <p>Monetize any n8n workflow (e.g. AI Image Generation, Web Scraping, Financial PDF summary) in 3 minutes using AIPP Smart Price Tags and Webhook nodes.</p>
+
+      <p><strong>3-Step Integration Flow:</strong></p>
+      <ol style="margin-left: 20px; font-size: 14px; color: var(--fg-muted); line-height: 1.7; margin-bottom: 20px;">
+        <li>Create a Smart Tag on <a href="/#generator" style="color:var(--accent); font-weight:600;">aipp.dev</a> with your n8n Production Webhook URL as the redirect/fulfillment target.</li>
+        <li>In n8n, add an <strong>HTTP Request Node</strong> to verify the incoming payment: <code>GET https://aipp.dev/invoice/status/{{ $json.body.payment_hash }}</code>.</li>
+        <li>Use an <strong>If Node</strong>: If <code>status == "settled"</code>, deliver the premium AI workflow output; otherwise return an HTTP 402 challenge.</li>
+      </ol>
+
+      <div style="background:#f4f4f5; border:1px solid #e4e4e7; border-radius:10px; padding:16px; margin-bottom:20px; font-size:13px; color:var(--fg);">
+        ⚡ <strong>Download Ready-to-Import Workflow:</strong> Grab the complete n8n template JSON from our GitHub: <a href="https://github.com/botofrk/satsgate/blob/main/examples/n8n_aipp_monetization_workflow.json" target="_blank" rel="noopener" style="color:var(--accent); font-weight:700;">examples/n8n_aipp_monetization_workflow.json</a>
+      </div>
+    </div>
+
     <!-- SECTION: EXTENSION GUIDE -->
     <div class="section-block" id="extension-guide">
       <div class="endpoint-badge badge-post">CLIENT UTILITY · EXTENSION</div>
