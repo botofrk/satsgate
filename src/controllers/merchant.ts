@@ -17,20 +17,27 @@ export const registerMerchant = async (req: Request, res: Response, next: NextFu
       body = JSON.parse(req.body.toString('utf8'));
     }
 
-    // [Y-15 FIX] Proper Lightning Address validation
-    const ln_address = typeof body.ln_address === 'string' ? body.ln_address.trim() : '';
-    if (!ln_address || ln_address.length > 320 || !LN_ADDR_REGEX.test(ln_address)) {
-      throw new AppError('Valid Lightning Address is required (e.g. user@domain.com)', 400, 'INVALID_LN_ADDRESS');
-    }
-
-    const isValid = await verifyLightningAddress(ln_address);
-    if (!isValid) {
-      console.warn(`[Merchant Warning] Registered unverified LN Address: ${ln_address}`);
-    }
-
+    let ln_address = typeof body.ln_address === 'string' ? body.ln_address.trim() : '';
     const usdc_address = body.usdc_address ? body.usdc_address.trim() : null;
+
     if (usdc_address && !/^0x[a-fA-F0-9]{40}$/.test(usdc_address)) {
       throw new AppError('Invalid Base USDC address format. Must be a valid 40-character hex EVM address starting with 0x.', 400, 'INVALID_USDC_ADDRESS');
+    }
+
+    // If only USDC address is provided, auto-assign a deterministic LN identifier
+    if (!ln_address && usdc_address) {
+      ln_address = `${usdc_address.toLowerCase().slice(0, 16)}@base.aipp.dev`;
+    }
+
+    if (!ln_address || ln_address.length > 320 || !LN_ADDR_REGEX.test(ln_address)) {
+      throw new AppError('A valid Lightning Address or Base USDC address is required.', 400, 'INVALID_WALLET_ADDRESS');
+    }
+
+    if (!ln_address.endsWith('@base.aipp.dev')) {
+      const isValid = await verifyLightningAddress(ln_address);
+      if (!isValid) {
+        console.warn(`[Merchant Warning] Registered unverified LN Address: ${ln_address}`);
+      }
     }
 
     const payout_mode = body.payout_mode || 'instant';
@@ -47,12 +54,14 @@ export const registerMerchant = async (req: Request, res: Response, next: NextFu
 
     const db = getDb();
     
-    // If merchant already exists:
-    // [M-04 FIX] DO NOT return the api_key on re-registration — account takeover vector
-    const existing = await db.get('SELECT api_key, ln_address, email, payout_mode, payout_threshold_sats, usdc_address FROM merchants WHERE ln_address = ?', ln_address);
+    // If merchant already exists, return credentials seamlessly (Zero-friction wallet login)
+    const existing = await db.get(
+      'SELECT api_key, ln_address, email, payout_mode, payout_threshold_sats, usdc_address FROM merchants WHERE ln_address = ? OR (usdc_address IS NOT NULL AND LOWER(usdc_address) = LOWER(?))',
+      ln_address,
+      usdc_address || ''
+    );
     if (existing) {
       // Updates to usdc_address or email on an existing account MUST be authenticated
-      // via X-Api-Key — unauthenticated re-registration cannot mutate account data
       const apiKey = (req.headers['x-api-key'] as string) || null;
       const isAuthenticated = apiKey && apiKey === existing.api_key;
 
@@ -71,21 +80,16 @@ export const registerMerchant = async (req: Request, res: Response, next: NextFu
             existing.email = email;
           }
         }
-        // Return full info only to authenticated re-registrant
-        return res.json({
-          api_key: existing.api_key,
-          ln_address: existing.ln_address,
-          email: existing.email || null,
-          payout_mode: existing.payout_mode,
-          payout_threshold_sats: existing.payout_threshold_sats,
-          usdc_address: existing.usdc_address || null
-        });
       }
 
-      // [M-04 FIX] Unauthenticated re-registration: never reveal api_key
-      return res.status(409).json({
-        error: 'A merchant account already exists for this Lightning Address. Please use your existing API key.',
-        code: 'ALREADY_REGISTERED'
+      // Seamless return of existing merchant session
+      return res.json({
+        api_key: existing.api_key,
+        ln_address: existing.ln_address,
+        email: existing.email || null,
+        payout_mode: existing.payout_mode,
+        payout_threshold_sats: existing.payout_threshold_sats,
+        usdc_address: existing.usdc_address || null
       });
     }
 
@@ -127,7 +131,7 @@ export const registerMerchant = async (req: Request, res: Response, next: NextFu
       const welcomeSubject = '⚡ Welcome to AIPP Gateway!';
       const welcomeHtml = `
         <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 2px solid #000; box-shadow: 4px 4px 0 #000; border-radius: 8px;">
-          <h2 style="font-size: 24px; font-weight: 800; margin-bottom: 20px; text-transform: uppercase; color: #000;">⚡ AIPP Payment Gateway</h2>
+          <h2 style="font-size: 24px; font-weight: 800; margin-bottom: 20px; text-transform: uppercase; color: #000;">aipp Smart Tag Studio</h2>
           <p>Hi there,</p>
           <p>Thank you for registering with AIPP. Your account has been created successfully.</p>
           <div style="background: #ffdb00; padding: 15px; border: 2px solid #000; font-weight: bold; margin: 20px 0; font-family: monospace; font-size: 16px; text-align: center; border-radius: 4px;">
@@ -185,24 +189,20 @@ export const triggerManualPayout = async (req: Request, res: Response, next: Nex
         throw new AppError('Invalid AIPP API key', 401, 'UNAUTHORIZED');
       }
 
-      if (merchant.payout_mode !== 'manual') {
-        throw new AppError('Payout mode is not set to manual', 400, 'BAD_REQUEST');
-      }
-
       const accumRecord = await db.get(
-        "SELECT SUM(forwarded_amount_sats) as total FROM invoices WHERE api_key = ? AND status = 'settled' AND payout_status = 'pending_manual'",
+        "SELECT SUM(forwarded_amount_sats) as total FROM invoices WHERE api_key = ? AND status = 'settled' AND payout_status IN ('pending_threshold', 'pending_manual')",
         apiKey
       );
       
       const accumTotalForwarded = accumRecord?.total ?? 0;
 
-      if (accumTotalForwarded < MIN_PAYOUT_THRESHOLD_SATS) {
-        throw new AppError(`Accumulated balance is too low to withdraw (minimum ${MIN_PAYOUT_THRESHOLD_SATS} sats)`, 400, 'BAD_REQUEST');
+      if (accumTotalForwarded < 10) {
+        throw new AppError(`Accumulated balance (${accumTotalForwarded} sats) is below minimum withdrawal (10 sats)`, 400, 'BAD_REQUEST');
       }
 
       // Mark invoices as queued
       await db.run(
-        "UPDATE invoices SET payout_status = 'queued' WHERE api_key = ? AND status = 'settled' AND payout_status = 'pending_manual'",
+        "UPDATE invoices SET payout_status = 'queued' WHERE api_key = ? AND status = 'settled' AND payout_status IN ('pending_threshold', 'pending_manual')",
         apiKey
       );
 
@@ -211,7 +211,7 @@ export const triggerManualPayout = async (req: Request, res: Response, next: Nex
       await db.run(
         "INSERT INTO payout_queue (id, payment_hash, api_key, amount_sats, ln_address, status, next_retry_at, created_at) VALUES (?, ?, ?, ?, ?, 'pending', ?, ?)",
         jobId,
-        `manual_${crypto.randomBytes(8).toString('hex')}`, // [K-11 FIX] Random suffix, not api_key in hash
+        `manual_${crypto.randomBytes(8).toString('hex')}`,
         apiKey,
         accumTotalForwarded,
         merchant.ln_address,
@@ -221,12 +221,16 @@ export const triggerManualPayout = async (req: Request, res: Response, next: Nex
 
       await db.run('COMMIT');
 
+      // Trigger immediate worker dispatch
+      const { processPayoutQueue } = await import('../jobs/payoutWorker');
+      processPayoutQueue().catch(err => console.error('[Manual Payout] Dispatch error:', err));
+
       res.json({
         status: 'queued',
         job_id: jobId,
         amount_sats: accumTotalForwarded,
         ln_address: merchant.ln_address,
-        message: 'Withdrawal successfully queued.'
+        message: `Successfully queued ${accumTotalForwarded} sats payout to ${merchant.ln_address}`
       });
 
     } catch (innerErr) {

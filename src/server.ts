@@ -65,6 +65,17 @@ app.use('/chat', strictLimiter);
 app.use('/ticket', rateLimit({ windowMs: 60 * 1000, max: 5, standardHeaders: true, legacyHeaders: false }));
 app.use('/admin', rateLimit({ windowMs: 60 * 1000, max: 20, standardHeaders: true, legacyHeaders: false }));
 
+// Invoice creation: 5 per IP per minute — free to try, must pay to unlock
+const invoiceLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 5,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Too many invoice requests from this IP, please wait a minute.', code: 'RATE_LIMIT_EXCEEDED' }
+});
+app.use('/pay', invoiceLimiter);
+app.use('/t', invoiceLimiter);
+
 // API Routes
 app.use('/', apiRoutes);
 
@@ -79,12 +90,45 @@ app.get('/health', async (req: Request, res: Response) => {
   }
 });
 
+// API info endpoint & Host-based routing for api.aipp.dev
+app.get('/api', (req: Request, res: Response) => {
+  res.json({
+    name: 'AIPP Protocol (SatsGate) API',
+    version: '2.0.0',
+    status: 'online',
+    docs: 'https://aipp.dev/docs.html',
+    endpoints: {
+      create_tag: 'POST /merchant/links/create',
+      create_invoice: 'POST /invoice/create',
+      check_status: 'GET /invoice/status/:hash',
+      merchant_register: 'POST /merchant/register',
+      health: 'GET /health'
+    }
+  });
+});
+
+// Host-based root router for api.aipp.dev
+app.get('/', (req: Request, res: Response, next: NextFunction) => {
+  if (req.headers.host && req.headers.host.startsWith('api.')) {
+    return res.json({
+      name: 'AIPP Protocol (SatsGate) API',
+      version: '2.0.0',
+      status: 'online',
+      docs: 'https://aipp.dev/docs.html',
+      endpoints: {
+        create_tag: 'POST /merchant/links/create',
+        create_invoice: 'POST /invoice/create',
+        check_status: 'GET /invoice/status/:hash',
+        merchant_register: 'POST /merchant/register',
+        health: 'GET /health'
+      }
+    });
+  }
+  next();
+});
+
 // Serve ONLY the public/ directory as static — single source of truth for all HTML and assets
 app.use(express.static(path.join(__dirname, '../public')));
-// Redirect root to index
-app.get('/', (req: Request, res: Response) => {
-  res.sendFile(path.join(__dirname, '../public/index.html'));
-});
 app.get('/paywall_demo.html', (req: Request, res: Response) => {
   res.redirect('/paywall-demo.html');
 });
@@ -113,7 +157,7 @@ async function bootstrap() {
 
     // 6. Start Server
     app.listen(PORT, () => {
-      console.log(`⚡ AIPP Generic Payment Bridge listening on port ${PORT}`);
+      console.log(`⚡ aipp Smart Tag Server listening on port ${PORT}`);
       // [LOW-7 FIX] Log config status at debug level, no sensitive details
       if (!IS_PRODUCTION) {
         console.log(`⚡ LNBits API configured: ${LNBITS_INVOICE_KEY ? 'YES' : 'NO'}`);

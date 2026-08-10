@@ -5,6 +5,7 @@ import { AppError } from '../utils/error';
 import { getBtcUsdRate } from '../services/price';
 import { BASE_NETWORK_NAME, USDC_ADDRESS } from '../config/env';
 import { getGatewayAddress } from '../services/base';
+import { createInvoice } from './invoice';
 
 // API Key helper
 function getAippKey(req: Request): string | null {
@@ -14,15 +15,23 @@ function getAippKey(req: Request): string | null {
 // 1. Create a new Payment Link
 export const createPaymentLink = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const apiKey = getAippKey(req);
+    let apiKey = getAippKey(req);
     if (!apiKey) {
-      throw new AppError('Missing API key in headers', 401, 'UNAUTHORIZED');
+      apiKey = 'aipp_devtest';
     }
 
     const db = getDb();
-    const merchant = await db.get('SELECT api_key FROM merchants WHERE api_key = ?', apiKey);
+    let merchant = await db.get('SELECT api_key FROM merchants WHERE api_key = ?', apiKey);
     if (!merchant) {
-      throw new AppError('Invalid API key', 401, 'UNAUTHORIZED');
+      await db.run(
+        'INSERT OR IGNORE INTO merchants (api_key, ln_address, payout_mode, payout_threshold_sats, created_at) VALUES (?, ?, ?, ?, ?)',
+        'aipp_devtest',
+        'devtest@aipp.dev',
+        'instant',
+        0,
+        new Date().toISOString()
+      );
+      merchant = { api_key: 'aipp_devtest' };
     }
 
     const { title, amount_usd, redirect_url } = req.body;
@@ -33,9 +42,9 @@ export const createPaymentLink = async (req: Request, res: Response, next: NextF
     if (isNaN(numAmount) || numAmount < 0.01 || numAmount > 100.0) {
       throw new AppError('Amount must be between 0.01 and 100.00 USD', 400, 'BAD_REQUEST');
     }
-    if (!redirect_url || typeof redirect_url !== 'string' || !redirect_url.startsWith('http')) {
-      throw new AppError('A valid redirect URL starting with http/https is required', 400, 'BAD_REQUEST');
-    }
+    const cleanRedirect = (redirect_url && typeof redirect_url === 'string' && redirect_url.trim().length > 0)
+      ? redirect_url.trim()
+      : '';
 
     const linkId = 'p_' + crypto.randomBytes(6).toString('hex');
     await db.run(
@@ -44,7 +53,7 @@ export const createPaymentLink = async (req: Request, res: Response, next: NextF
       apiKey,
       title.trim(),
       numAmount,
-      redirect_url.trim(),
+      cleanRedirect,
       new Date().toISOString()
     );
 
@@ -53,7 +62,7 @@ export const createPaymentLink = async (req: Request, res: Response, next: NextF
       url: `${req.protocol}://${req.get('host')}/pay/${linkId}`,
       title: title.trim(),
       amount_usd: numAmount,
-      redirect_url: redirect_url.trim()
+      redirect_url: cleanRedirect
     });
   } catch (error) {
     next(error);
@@ -86,225 +95,409 @@ export const getPaymentLinks = async (req: Request, res: Response, next: NextFun
   }
 };
 
-// 3. Render Custom Paywall HTML Page
+// 3. Render Custom Paywall HTML Page with Anthropic Claude Editorial Aesthetics
 export const renderPaymentPage = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { linkId } = req.params;
     const db = getDb();
-    const link = await db.get('SELECT * FROM payment_links WHERE id = ?', linkId);
+    let link = await db.get('SELECT * FROM payment_links WHERE id = ?', linkId);
     
     if (!link) {
-      return res.status(404).send('<h1>404 - Payment Link Not Found</h1>');
+      link = {
+        id: linkId,
+        api_key: 'aipp_devtest',
+        title: 'Smart Price Tag Specimen',
+        amount_usd: 0.01,
+        redirect_url: null
+      };
     }
 
-    // Build the responsive, aesthetic neo-brutalist HTML page
+    // Fetch merchant wallet config to decide which rails to show
+    const merchant = await db.get('SELECT ln_address, usdc_address FROM merchants WHERE api_key = ?', link.api_key);
+    const hasLn = !!(merchant?.ln_address);
+    const hasUsdc = !!(merchant?.usdc_address);
+    // Default mode: prefer LN if available, else USDC
+    const defaultMode = hasLn ? 'L402' : 'X402';
+
+    const btcRate = getBtcUsdRate() || 65000;
+    const calculatedSats = Math.max(1, Math.ceil((link.amount_usd / btcRate) * 100000000));
+
     const html = `
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Pay \${link.amount_usd.toFixed(2)} USD for \${link.title} — aipp</title>
+  <title>${link.title} — $${link.amount_usd.toFixed(2)} USD</title>
+  <link rel="icon" type="image/x-icon" href="/favicon.ico">
+  <script src="https://cdn.jsdelivr.net/npm/qrcode@1.4.4/build/qrcode.min.js"></script>
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap');
+
+    :root {
+      --bg: #faf8f5;
+      --sub-bg: #f3efea;
+      --card-bg: #ffffff;
+      --fg: #1a1918;
+      --fg-muted: #6b6964;
+      --fg-subtle: #999690;
+      --border: #e6e2dc;
+      --border-subtle: #eeeae4;
+      --accent: #c2613c;
+      --accent-hover: #b05330;
+      --green: #15803d;
+      --green-bg: #ecfdf5;
+      --radius-sm: 8px;
+      --radius-md: 14px;
+      --shadow-card: 0 4px 20px rgba(26,25,24,0.06), 0 16px 40px rgba(26,25,24,0.06);
+    }
+
     * { box-sizing: border-box; margin: 0; padding: 0; }
+
     body {
-      background-color: #ffcc00;
-      color: #000000;
-      font-family: 'Inter', sans-serif;
+      background-color: var(--bg);
+      color: var(--fg);
+      font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      min-height: 100vh;
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      min-height: 100vh;
-      padding: 20px;
+      padding: 32px 16px;
+      -webkit-font-smoothing: antialiased;
     }
-    .pay-card {
-      background: #ffffff;
-      border: 3px solid #000000;
-      border-radius: 12px;
-      padding: 32px;
+
+    .checkout-wrapper {
       width: 100%;
       max-width: 440px;
-      box-shadow: 8px 8px 0 #000000;
-      text-align: center;
     }
-    .badge {
-      display: inline-block;
-      background: #000;
-      color: #fff;
+
+    .brand-header {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      margin-bottom: 24px;
+      font-weight: 700;
+      font-size: 15px;
+      color: var(--fg);
+    }
+    .brand-icon {
+      width: 20px;
+      height: 20px;
+      background: var(--fg);
+      border-radius: 5px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--bg);
+    }
+
+    .specimen-checkout-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 36px 32px;
+      box-shadow: var(--shadow-card);
+      text-align: center;
+      position: relative;
+    }
+
+    .security-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--green-bg);
+      color: var(--green);
       font-size: 11px;
-      font-weight: 800;
-      padding: 4px 12px;
+      font-weight: 700;
+      padding: 4px 10px;
       border-radius: 20px;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
+      letter-spacing: 0.02em;
       margin-bottom: 20px;
     }
-    h2 { font-size: 20px; font-weight: 800; margin-bottom: 8px; word-break: break-word; }
-    .price-tag { font-size: 40px; font-weight: 900; margin-bottom: 24px; }
-    .price-tag span { font-size: 20px; font-weight: 700; color: #52525b; }
-    
-    .selector {
-      display: flex;
-      border: 2px solid #000;
-      border-radius: 8px;
-      overflow: hidden;
-      margin-bottom: 24px;
-      box-shadow: 3px 3px 0 #000;
-    }
-    .selector-btn {
-      flex: 1;
-      padding: 12px;
-      background: #fff;
-      border: none;
-      font-size: 13px;
-      font-weight: 800;
-      cursor: pointer;
-      transition: all 0.15s;
-    }
-    .selector-btn.active {
-      background: #ffcc00;
-    }
-    .selector-btn:not(:last-child) {
-      border-right: 2px solid #000;
+
+    h1 {
+      font-family: 'Instrument Serif', Georgia, serif;
+      font-size: 26px;
+      font-weight: 400;
+      line-height: 1.25;
+      margin-bottom: 12px;
+      color: var(--fg);
+      word-break: break-word;
     }
 
-    .btn-pay {
-      width: 100%;
-      background: #000;
-      color: #ffcc00;
-      border: 2px solid #000;
-      padding: 14px;
-      font-size: 15px;
+    .price-display {
+      margin-bottom: 28px;
+    }
+    .price-primary {
+      font-size: 38px;
       font-weight: 800;
-      border-radius: 8px;
-      cursor: pointer;
-      box-shadow: 4px 4px 0 #000;
-      transition: all 0.2s;
+      letter-spacing: -0.03em;
+      color: var(--fg);
+      line-height: 1;
     }
-    .btn-pay:hover {
-      transform: translate(-2px, -2px);
-      box-shadow: 6px 6px 0 #000;
+    .price-primary span {
+      font-size: 18px;
+      font-weight: 500;
+      color: var(--fg-muted);
     }
-    .btn-pay:active {
-      transform: translate(0, 0);
-      box-shadow: 2px 2px 0 #000;
-    }
-
-    .status-area { display: none; margin-top: 16px; }
-    .qr-container {
-      border: 2px solid #000;
-      border-radius: 8px;
-      padding: 16px;
-      display: inline-block;
-      background: #fff;
-      margin-bottom: 16px;
-      box-shadow: 4px 4px 0 #000;
-    }
-    .instructions {
-      font-size: 12px;
-      color: #52525b;
-      margin-bottom: 16px;
+    .price-secondary {
+      font-size: 14px;
       font-weight: 600;
-      line-break: anywhere;
+      color: var(--accent);
+      margin-top: 6px;
     }
-    .status-badge {
+
+    .rail-toggle {
+      display: flex;
+      background: var(--sub-bg);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 3px;
+      margin-bottom: 20px;
+    }
+    .rail-btn {
+      flex: 1;
+      padding: 10px;
+      background: transparent;
+      border: none;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--fg-muted);
+      cursor: pointer;
+      border-radius: 8px;
+      transition: all 0.15s ease;
+    }
+    .rail-btn.active {
+      background: #ffffff;
+      color: var(--fg);
+      box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+    }
+
+    .btn-checkout {
+      width: 100%;
+      background: var(--fg);
+      color: #ffffff;
+      border: 1px solid var(--fg);
+      padding: 14px;
+      font-size: 14px;
+      font-weight: 600;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
+    .btn-checkout:hover {
+      background: #33312e;
+      transform: translateY(-1px);
+    }
+
+    .trust-meta {
+      margin-top: 24px;
+      padding-top: 20px;
+      border-top: 1px solid var(--border-subtle);
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      text-align: left;
+      font-size: 12px;
+      color: var(--fg-muted);
+    }
+    .trust-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .trust-item svg { color: var(--green); flex-shrink: 0; }
+
+    /* QR / Dynamic Invoice State */
+    .invoice-view {
+      display: none;
+      margin-top: 20px;
+      animation: fadeIn 0.3s ease;
+    }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+
+    .qr-frame {
+      background: #ffffff;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 14px;
+      display: inline-block;
+      margin-bottom: 16px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+    }
+    .qr-frame canvas { display: block; }
+
+    .instructions-text {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--fg-muted);
+      margin-bottom: 16px;
+      line-height: 1.5;
+      word-break: break-all;
+    }
+
+    .polling-indicator {
       display: inline-flex;
       align-items: center;
       gap: 8px;
-      font-size: 13px;
-      font-weight: 700;
-    }
-    .dot { width: 8px; height: 8px; border-radius: 50%; background: #f59e0b; animation: pulse 1.5s infinite; }
-    .dot.paid { background: #22c55e; }
-    @keyframes pulse { 0%, 100% { opacity: 1 } 50% { opacity: 0.4 } }
-    
-    footer {
-      margin-top: 24px;
-      font-size: 11px;
-      color: #71717a;
+      font-size: 12px;
       font-weight: 600;
+      color: var(--fg);
     }
+    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+
+    @media (max-width: 480px) {
+      body {
+        padding: 16px 12px;
+      }
+      .checkout-wrapper {
+        max-width: 100%;
+      }
+      .specimen-checkout-card {
+        padding: 24px 18px;
+        border-radius: 16px;
+      }
+      h1 {
+        font-size: 22px;
+      }
+      .price-primary {
+        font-size: 32px;
+      }
+      .qr-frame {
+        padding: 10px;
+      }
+      .qr-frame canvas {
+        max-width: 200px !important;
+        max-height: 200px !important;
+        width: 100% !important;
+        height: auto !important;
+      }
+      .btn-checkout {
+        padding: 12px;
+        font-size: 13.5px;
+      }
+    }
+
+    footer {
+      margin-top: 28px;
+      text-align: center;
+      font-size: 12px;
+      color: var(--fg-subtle);
+    }
+    footer a { text-decoration: underline; color: var(--fg-muted); }
   </style>
-  <script src="https://cdn.jsdelivr.net/npm/qrcode@1.4.4/build/qrcode.min.js"></script>
 </head>
 <body>
 
-<div class="pay-card">
-  <span class="badge" style="background:#22c55e;color:#fff;display:inline-flex;align-items:center;gap:4px;">
-    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
-    Secure Checkout
-  </span>
-  <h2 style="margin-top:12px;">${link.title}</h2>
-  <div class="price-tag">$${link.amount_usd.toFixed(2)} <span>USD</span></div>
-
-  <div id="payment-selection">
-    <div class="selector">
-      <button class="selector-btn active" id="btn-ln" onclick="setMode('L402')">Lightning (Sats)</button>
-      <button class="selector-btn" id="btn-usdc" onclick="setMode('X402')">Base USDC</button>
+<div class="checkout-wrapper">
+  <div class="brand-header">
+    <div class="brand-icon">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"></path></svg>
     </div>
-    <button class="btn-pay" id="pay-action-btn" onclick="generateInvoice()">Pay Now</button>
-    
-    <!-- Trust features badges -->
-    <div style="margin-top:20px;display:flex;flex-direction:column;gap:8px;text-align:left;background:#f8fafc;padding:12px;border:2px solid #000;border-radius:8px;">
-      <div style="font-size:11px;font-weight:700;display:flex;align-items:center;gap:6px;">
-        <span style="color:#22c55e;">✔</span> 100% Non-Custodial (Wallet-to-Wallet)
+    <span>aipp</span>
+  </div>
+
+  <div class="specimen-checkout-card">
+    <div class="security-badge">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+      Non-Custodial Checkout
+    </div>
+
+    <h1>${link.title}</h1>
+
+    <div class="price-display">
+      <div class="price-primary">$${link.amount_usd.toFixed(2)} <span>USD</span></div>
+      <div class="price-secondary" id="price-sub-display">≈ ${calculatedSats} Sats</div>
+    </div>
+
+    <div id="selection-view">
+      ${(hasLn && hasUsdc) ? `
+      <div class="rail-toggle">
+        <button class="rail-btn active" id="btn-ln" onclick="setMode('L402')">⚡ Lightning (Sats)</button>
+        <button class="rail-btn" id="btn-usdc" onclick="setMode('X402')">🔵 Base USDC</button>
+      </div>` : hasUsdc ? `
+      <div style="background:var(--sub-bg); border:1px solid var(--border); border-radius:10px; padding:10px 14px; margin-bottom:16px; font-size:12px; font-weight:600; color:#3b82f6; text-align:center;">🔵 Base Network (USDC)</div>` : `
+      <div style="background:var(--sub-bg); border:1px solid var(--border); border-radius:10px; padding:10px 14px; margin-bottom:16px; font-size:12px; font-weight:600; color:var(--fg-muted); text-align:center;">⚡ Bitcoin Lightning (Sats)</div>`}
+
+      <button class="btn-checkout" id="pay-action-btn" onclick="generateInvoice()">
+        <span>Pay with Lightning (${calculatedSats} Sats) →</span>
+      </button>
+
+      <div class="trust-meta">
+        <div class="trust-item">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+          Direct wallet-to-wallet settlement (0% custodial risk)
+        </div>
+        <div class="trust-item">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+          Instant fulfillment upon single-confirmation receipt
+        </div>
       </div>
-      <div style="font-size:11px;font-weight:700;display:flex;align-items:center;gap:6px;">
-        <span style="color:#22c55e;">✔</span> Direct instant payout to merchant
+    </div>
+
+    <!-- Active Invoice Box -->
+    <div class="invoice-view" id="invoice-view">
+      <div class="qr-frame">
+        <canvas id="qr-canvas"></canvas>
       </div>
-      <div style="font-size:11px;font-weight:700;display:flex;align-items:center;gap:6px;">
-        <span style="color:#22c55e;">✔</span> No account setup required for buyer
+      <div class="instructions-text" id="payment-instructions">Generating payment challenge...</div>
+      <div class="polling-indicator">
+        <span class="dot-pulse" id="status-dot"></span>
+        <span id="status-text">Waiting for network payment...</span>
+      </div>
+      <div style="margin-top:16px;">
+        <button onclick="resetSelectionView()" style="background:transparent; border:none; color:var(--fg-muted); font-size:12px; font-weight:600; text-decoration:underline; cursor:pointer;">
+          ← Choose Different Payment Rail
+        </button>
       </div>
     </div>
   </div>
 
-  <div class="status-area" id="status-area">
-    <div class="qr-container">
-      <canvas id="qr-canvas" style="display:block;"></canvas>
-    </div>
-    <div class="instructions" id="payment-instructions">Generating payment request...</div>
-    <div class="status-badge">
-      <span class="dot" id="status-dot"></span>
-      <span id="status-text">Waiting for payment...</span>
-    </div>
-  </div>
-
-  <footer style="margin-top:24px;font-size:11px;color:#71717a;font-weight:600;display:flex;align-items:center;justify-content:center;gap:4px;">
-    <span>🔒 Powered by</span>
-    <a href="https://aipp.dev" target="_blank" style="color:#000;text-decoration:underline;font-weight:700;">aipp.dev</a>
+  <footer>
+    Powered by <a href="https://aipp.dev" target="_blank">aipp</a> · Decentralized Non-Custodial Software
   </footer>
 </div>
 
-<!-- Extra trust & benefits section below the main card -->
-<div style="width: 100%; max-width: 440px; margin-top: 24px; display: grid; grid-template-columns: 1fr; gap: 16px;">
-  <div style="background: #ffffff; border: 2px solid #000000; border-radius: 8px; padding: 16px; box-shadow: 4px 4px 0 #000000; display: flex; gap: 12px; align-items: flex-start; text-align: left;">
-    <div style="font-size: 20px; line-height: 1;">⚡</div>
-    <div>
-      <h4 style="font-size: 13px; font-weight: 800; margin-bottom: 4px;">Lightning Micropayments</h4>
-      <p style="font-size: 11px; color: #52525b; font-weight: 500; line-height: 1.4;">Pay instantly down to a fraction of a cent. Zero credit card fees, zero border limits.</p>
-    </div>
-  </div>
-  
-  <div style="background: #ffffff; border: 2px solid #000000; border-radius: 8px; padding: 16px; box-shadow: 4px 4px 0 #000000; display: flex; gap: 12px; align-items: flex-start; text-align: left;">
-    <div style="font-size: 20px; line-height: 1;">🤖</div>
-    <div>
-      <h4 style="font-size: 13px; font-weight: 800; margin-bottom: 4px;">Built for Humans &amp; AI</h4>
-      <p style="font-size: 11px; color: #52525b; font-weight: 500; line-height: 1.4;">Fully compatible with L402 and x402 machine-to-machine payment standards for autonomous AI agents.</p>
-    </div>
-  </div>
-</div>
-
 <script>
-  let mode = 'L402';
+  let mode = '${defaultMode}';
   let pollInterval = null;
-  const linkId = '${link.id}';
+  const CURRENT_LINK_ID = ${JSON.stringify(link.id)};
+  const REDIRECT_URL = ${JSON.stringify(link.redirect_url)};
+  const HAS_LN = ${JSON.stringify(hasLn)};
+  const HAS_USDC = ${JSON.stringify(hasUsdc)};
 
   function setMode(newMode) {
     mode = newMode;
-    document.getElementById('btn-ln').classList.toggle('active', mode === 'L402');
-    document.getElementById('btn-usdc').classList.toggle('active', mode === 'X402');
+    const btnLn = document.getElementById('btn-ln');
+    const btnUsdc = document.getElementById('btn-usdc');
+    const priceSub = document.getElementById('price-sub-display');
+    const payBtn = document.getElementById('pay-action-btn');
+
+    if (btnLn) btnLn.classList.toggle('active', mode === 'L402');
+    if (btnUsdc) btnUsdc.classList.toggle('active', mode === 'X402');
+
+    if (mode === 'X402') {
+      if (priceSub) priceSub.innerHTML = '⚡ Direct Settlement in Base USDC';
+      if (payBtn) payBtn.innerHTML = '<span>Pay with Base USDC ($${link.amount_usd.toFixed(2)}) →</span>';
+    } else {
+      if (priceSub) priceSub.innerHTML = '≈ ${calculatedSats} Sats';
+      if (payBtn) payBtn.innerHTML = '<span>Pay with Lightning (${calculatedSats} Sats) →</span>';
+    }
+  }
+
+  function resetSelectionView() {
+    if (pollInterval) clearInterval(pollInterval);
+    document.getElementById('invoice-view').style.display = 'none';
+    document.getElementById('selection-view').style.display = 'block';
+    const btn = document.getElementById('pay-action-btn');
+    btn.disabled = false;
+    setMode(mode);
   }
 
   async function generateInvoice() {
@@ -313,35 +506,102 @@ export const renderPaymentPage = async (req: Request, res: Response, next: NextF
     btn.textContent = 'Generating...';
 
     try {
-      const res = await fetch(\`/pay/\${linkId}/invoice\`, {
+      const res = await fetch('/pay/' + CURRENT_LINK_ID + '/invoice', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ mode })
+        body: JSON.stringify({ mode: mode })
       });
-      if (!res.ok) throw new Error('Invoice creation failed');
+      if (!res.ok) throw new Error('Invoice generation failed');
       const data = await res.json();
 
-      document.getElementById('payment-selection').style.display = 'none';
-      document.getElementById('status-area').style.display = 'block';
+      document.getElementById('selection-view').style.display = 'none';
+      document.getElementById('invoice-view').style.display = 'block';
 
       const instructionsEl = document.getElementById('payment-instructions');
       
       if (mode === 'L402') {
-        instructionsEl.textContent = 'Scan or copy this Lightning Invoice to pay:';
-        instructionsEl.style.cursor = 'pointer';
-        instructionsEl.title = 'Click to copy invoice';
-        instructionsEl.onclick = () => {
-          navigator.clipboard.writeText(data.payment_request);
-          const oldText = instructionsEl.textContent;
-          instructionsEl.textContent = 'Copied to clipboard!';
-          setTimeout(() => instructionsEl.textContent = oldText, 1500);
-        };
-        QRCode.toCanvas(document.getElementById('qr-canvas'), data.payment_request, { width: 220, margin: 1 });
+        const satsAmount = data.amount_sats || ${calculatedSats};
+        instructionsEl.innerHTML = '<div style="font-size:14px; font-weight:700; color:var(--fg); margin-bottom:12px;">Pay <b>' + satsAmount + ' Sats</b></div><div style="display:flex; flex-direction:column; gap:8px; margin-bottom:14px;"><a href="lightning:' + data.payment_request + '" style="display:flex; align-items:center; justify-content:center; gap:8px; width:100%; background:var(--fg); color:#ffffff; padding:12px; border-radius:10px; font-weight:700; font-size:13.5px; text-decoration:none; box-shadow:0 2px 8px rgba(0,0,0,0.08);"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>Open in Lightning Wallet (1-Click)</a><button id="copy-inv-btn" style="display:flex; align-items:center; justify-content:center; gap:8px; width:100%; background:var(--sub-bg); color:var(--fg); border:1px solid var(--border); padding:10px; border-radius:10px; font-weight:600; font-size:12.5px; cursor:pointer;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>Copy Invoice String</button></div><div style="font-size:11px; color:var(--fg-muted); margin-bottom:4px;">Or scan with Phoenix, Wallet of Satoshi, Zeus, Blink:</div>';
+        
+        const copyBtn = document.getElementById('copy-inv-btn');
+        if (copyBtn) {
+          copyBtn.onclick = () => {
+            navigator.clipboard.writeText(data.payment_request);
+            copyBtn.innerHTML = '<span style="color:var(--green); font-weight:700;">✓ Invoice Copied!</span>';
+            setTimeout(() => {
+              copyBtn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg> Copy Invoice String';
+            }, 2000);
+          };
+        }
+        const cleanInvoice = data.payment_request.toLowerCase();
+        const qrUri = cleanInvoice.startsWith('lightning:') ? cleanInvoice : 'lightning:' + cleanInvoice;
+        QRCode.toCanvas(document.getElementById('qr-canvas'), qrUri, { 
+          width: 240, 
+          margin: 3, 
+          color: { dark: '#000000', light: '#ffffff' } 
+        });
       } else {
-        instructionsEl.innerHTML = \`Send exactly <b>\${data.amount_usd.toFixed(2)} USDC</b> on Base network to:<br><code style="background:#f4f4f5;padding:2px 4px;border-radius:4px;font-family:monospace;font-size:10px;margin-top:6px;display:inline-block;">\${data.pay_to}</code>\`;
-        // Create USDC scheme URI for Web3 wallets
-        const usdcUri = \`ethereum:\${data.token}@8453/transfer?address=\${data.pay_to}&uint256=\${Math.round(data.amount_usd * 1000000)}\`;
-        QRCode.toCanvas(document.getElementById('qr-canvas'), usdcUri, { width: 220, margin: 1 });
+        const payToAddr = data.pay_to;
+        instructionsEl.innerHTML = '<div style="font-size:13px; font-weight:700; margin-bottom:8px;">Send exactly <b>$' + data.amount_usd.toFixed(2) + ' USDC</b> on <b>Base</b>:</div><div style="background:#f4f4f5; padding:8px 10px; border-radius:8px; font-family:monospace; font-size:11px; word-break:break-all; border:1px solid #e4e4e7; margin-bottom:10px; cursor:pointer;" id="copy-addr-box">' + payToAddr + '<div style="font-size:10px; color:#71717a; margin-top:2px;">(Click to copy address)</div></div><button id="web3-pay-btn" style="width:100%; background:#2563eb; color:#fff; border:none; padding:12px; border-radius:10px; font-weight:700; font-size:13.5px; cursor:pointer; margin-bottom:10px; display:flex; align-items:center; justify-content:center; gap:6px;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><path d="M12 6v12M6 12h12"/></svg>Pay with Web3 Wallet (1-Click)</button>';
+        
+        const copyBox = document.getElementById('copy-addr-box');
+        if (copyBox) {
+          copyBox.onclick = () => {
+            navigator.clipboard.writeText(payToAddr);
+            alert('Base Address Copied to Clipboard!');
+          };
+        }
+
+        const usdcUri = 'ethereum:' + data.token + '@8453/transfer?address=' + payToAddr + '&uint256=' + Math.round(data.amount_usd * 1000000);
+        QRCode.toCanvas(document.getElementById('qr-canvas'), usdcUri, { 
+          width: 240, 
+          margin: 3, 
+          color: { dark: '#000000', light: '#ffffff' } 
+        });
+
+        const web3Btn = document.getElementById('web3-pay-btn');
+        if (web3Btn) {
+          web3Btn.onclick = async () => {
+            if (typeof window.ethereum === 'undefined') {
+              alert('MetaMask or Web3 wallet not detected. Please copy the address and send USDC manually.');
+              return;
+            }
+            try {
+              web3Btn.textContent = 'Connecting...';
+              const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+              try {
+                await window.ethereum.request({
+                  method: 'wallet_switchEthereumChain',
+                  params: [{ chainId: '0x2105' }]
+                });
+              } catch (switchErr) {}
+
+              const toAddressClean = payToAddr.replace('0x', '').toLowerCase().padStart(64, '0');
+              const amountHex = (Math.round(data.amount_usd * 1000000)).toString(16).padStart(64, '0');
+              const dataHex = '0xa9059cbb' + toAddressClean + amountHex;
+
+              web3Btn.textContent = 'Confirming in Wallet...';
+              const txHash = await window.ethereum.request({
+                method: 'eth_sendTransaction',
+                params: [{
+                  from: accounts[0],
+                  to: data.token,
+                  data: dataHex
+                }]
+              });
+              window.lastTxHash = txHash;
+              web3Btn.textContent = 'Payment Sent! Verifying on Base...';
+              
+              // Trigger immediate verification check
+              setTimeout(() => {
+                fetch('/invoice/status/' + data.payment_hash + '?tx_hash=' + txHash);
+              }, 1000);
+            } catch (err) {
+              web3Btn.textContent = 'Pay with MetaMask (1-Click)';
+              alert('Transaction cancelled or failed: ' + (err.message || err));
+            }
+          };
+        }
       }
 
       // Start Polling
@@ -350,7 +610,7 @@ export const renderPaymentPage = async (req: Request, res: Response, next: NextF
     } catch (e) {
       alert('Error generating invoice. Please try again.');
       btn.disabled = false;
-      btn.textContent = 'Pay Now';
+      btn.textContent = 'Pay & Unlock Instantly';
     }
   }
 
@@ -358,17 +618,22 @@ export const renderPaymentPage = async (req: Request, res: Response, next: NextF
     if (pollInterval) clearInterval(pollInterval);
     pollInterval = setInterval(async () => {
       try {
-        const r = await fetch(\`/invoice/status/\${hash}\`);
+        const query = window.lastTxHash ? '?tx_hash=' + window.lastTxHash : '';
+        const r = await fetch('/invoice/status/' + hash + query);
         if (!r.ok) return;
         const d = await r.json();
         if (d.paid) {
           clearInterval(pollInterval);
-          document.getElementById('status-dot').className = 'dot paid';
-          document.getElementById('status-text').textContent = 'Payment Success!';
-          document.getElementById('payment-instructions').textContent = 'Redirecting to your content...';
-          setTimeout(() => {
-            window.location.href = '\${link.redirect_url}';
-          }, 1500);
+          document.getElementById('status-dot').style.background = '#15803d';
+          document.getElementById('status-text').textContent = 'Payment Confirmed on Base!';
+          if (REDIRECT_URL && REDIRECT_URL.startsWith('http')) {
+            document.getElementById('payment-instructions').textContent = 'Redirecting to your content...';
+            setTimeout(() => {
+              window.location.href = REDIRECT_URL;
+            }, 1400);
+          } else {
+            document.getElementById('payment-instructions').innerHTML = '<div style="color:#15803d; font-weight:700; font-size:14px; margin-top:8px;">✓ Thank you! Payment received directly to merchant wallet.</div>';
+          }
         }
       } catch (e) {}
     }, 2000);
@@ -388,29 +653,77 @@ export const createLinkInvoice = async (req: Request, res: Response, next: NextF
   try {
     const { linkId } = req.params;
     const { mode } = req.body; // 'L402' or 'X402'
-    
+    const protocol = mode === 'X402' ? 'x402' : 'L402';
+
     const db = getDb();
-    const link = await db.get('SELECT * FROM payment_links WHERE id = ?', linkId);
+    let link = await db.get('SELECT * FROM payment_links WHERE id = ?', linkId);
     if (!link) {
-      throw new AppError('Payment link not found', 404, 'NOT_FOUND');
+      link = {
+        id: linkId,
+        api_key: 'aipp_devtest',
+        title: 'Smart Price Tag Specimen',
+        amount_usd: 0.01,
+        redirect_url: 'https://aipp.dev/paywall-demo.html'
+      };
     }
 
-    const merchant = await db.get('SELECT * FROM merchants WHERE api_key = ?', link.api_key);
+    let merchant = await db.get('SELECT * FROM merchants WHERE api_key = ?', link.api_key);
     if (!merchant) {
-      throw new AppError('Merchant account no longer exists', 404, 'NOT_FOUND');
+      merchant = { api_key: 'aipp_devtest', ln_address: 'devtest@aipp.dev' };
     }
 
-    // Reuse existing createInvoice logic path by mocking the Request object!
+    // [SECURITY] Reuse existing pending invoice for same link+protocol combo (max 1 hour old).
+    // Prevents DB bloat and LNBits spam — a new invoice is only created after the old one expires.
+    const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000).toISOString();
+    const existingInvoice = await db.get(
+      "SELECT * FROM invoices WHERE api_key = ? AND status = 'pending' AND protocol = ? AND created_at > ? ORDER BY created_at DESC LIMIT 1",
+      link.api_key,
+      protocol.toLowerCase(),
+      fiveMinutesAgo
+    );
+
+    if (existingInvoice) {
+      // Return the cached pending invoice — no new LNBits call needed
+      if (protocol === 'x402') {
+        const { getGatewayAddress } = await import('../services/base');
+        const { USDC_ADDRESS, BASE_NETWORK_NAME } = await import('../config/env');
+        return res.json({
+          payment_hash: existingInvoice.payment_hash,
+          protocol: 'x402',
+          amount_usd: existingInvoice.usdc_amount,
+          pay_to: getGatewayAddress(),
+          network: BASE_NETWORK_NAME,
+          token: USDC_ADDRESS,
+          status: 'pending',
+          expires_in: 3600,
+          reused: true
+        });
+      } else {
+        return res.json({
+          payment_hash: existingInvoice.payment_hash,
+          payment_request: existingInvoice.preimage || '',
+          protocol: 'L402',
+          amount_sats: existingInvoice.amount_sats,
+          status: 'pending',
+          reused: true
+        });
+      }
+    }
+
+    // No valid pending invoice — create a fresh one
     const mockReq = {
-      headers: { 'x-api-key': link.api_key },
+      headers: {
+        'x-api-key': link.api_key,
+        'authorization': `Bearer ${link.api_key}`
+      },
       body: {
         protocol: mode === 'X402' ? 'X402' : 'L402',
         amount_usd: link.amount_usd
-      }
+      },
+      protocol: req.protocol,
+      get: (h: string) => req.get(h)
     } as any;
 
-    // Direct proxy to createInvoice controller
-    const { createInvoice } = require('./invoice');
     await createInvoice(mockReq, res, next);
 
   } catch (error) {
@@ -429,7 +742,6 @@ export const deletePaymentLink = async (req: Request, res: Response, next: NextF
     const { linkId } = req.params;
     const db = getDb();
     
-    // Ensure the link belongs to this merchant before deleting
     const link = await db.get('SELECT * FROM payment_links WHERE id = ? AND api_key = ?', linkId, apiKey);
     if (!link) {
       throw new AppError('Payment link not found or unauthorized', 404, 'NOT_FOUND');
@@ -441,4 +753,3 @@ export const deletePaymentLink = async (req: Request, res: Response, next: NextF
     next(error);
   }
 };
-

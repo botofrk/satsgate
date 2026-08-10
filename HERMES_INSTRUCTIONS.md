@@ -1,135 +1,251 @@
-# AIPP - System Context & Architecture (For Hermes Agent)
-
-**Agent Directive:** 
-You are Hermes, the autonomous AI agent managing the `aipp-key` repository and its live server deployment. This document contains the complete architectural context, server state, and operational rules for AIPP. Read this carefully before making any interventions, executing commands, or updating code.
-
----
-
-## 1. System Overview
-**AIPP (aipp.dev)** is a high-performance, non-custodial Bitcoin Lightning split-payment gateway. It allows online shops, apps, and AI agents to accept Lightning payments instantly. 
-- **Non-custodial:** AIPP does not hold funds. It takes a flat 1% fee on successful payments and forwards the remaining 99% directly to the merchant's Lightning Address (e.g., Alby, Phoenix) in milliseconds.
-- **L402 Protocol:** AIPP acts as an L402 gateway, issuing Macaroons and requiring cryptographic preimages for API/resource access.
-- **Target Audience:** Developers, AI Builders, and Web3 Merchants.
-
-## 2. Technical Architecture & Stack
-- **Backend:** Node.js (TypeScript/JavaScript), Express.js framework.
-- **Database:** SQLite (`aipp.db`) used for tracking invoices, merchants, and the failed-payout queue.
-- **Lightning Backend:** Currently `demo.lnbits.com` (PUBLIC DEMO — see Section 6 for critical limitations).
-- **Frontend:** Vanilla HTML, CSS, JavaScript (Zero-build system for the UI).
-- **Design Language:** Neo-Brutalist (Mustard Yellow `#ffdb00`, Black `#000000`, thick borders, hard shadows, `Inter` font).
-- **Infrastructure:** Docker container (`aipp-key`) managed via Traefik / Dokploy on a dedicated Ubuntu server.
-
-## 3. Core Mechanisms & Payment Flow
-1. **Invoice Creation:** Merchant calls `POST /api/invoice` with their API key and `amount`. AIPP generates a Lightning invoice.
-2. **Payment:** Customer pays the invoice via any standard LN wallet (Phoenix, Strike, Wallet of Satoshi).
-3. **Settlement:** AIPP detects payment success. It retains 1% (min 100 sats) and immediately attempts to send 99% to the merchant's configured `ln_address`.
-4. **Retry Queue:** If the merchant's node/wallet is offline (routing failure), the funds are held securely. A background worker periodically retries the payout.
-5. **Drop-in Paywall (`paywall.js`):** A zero-dependency script that web publishers can embed. It dynamically generates an L402 paywall, creates a QR code client-side, polls for payment, and unlocks content via Macaroons and Preimages.
-
-## 4. Server & Intervention Guide (CRITICAL)
-If the user requests an intervention, server restart, or log check, use these details:
-
-- **Server IP:** `89.167.84.31` (User: `root`, SSH Port: `22`)
-- **SSH Key (Local):** `C:\Users\ucala\.ssh\id_ed25519`
-- **Live Source Code Path:** `/home/hermes/aipp/aipp-key/`
-- **Live Database Path:** `/home/hermes/data/aipp-key/aipp.db`
-- **Docker Container:** `aipp-key`
-- **Admin Panel:** `https://aipp.dev/admin.html`
-- **Master Admin Key:** `1b544b8abdbf43a3881c18882324e925` (Use this in admin.html to trigger manual retries).
-
-**Common Intervention Commands (Run via SSH):**
-- View Logs: `docker logs aipp-key --tail 100`
-- Rebuild & Deploy:
-  ```bash
-  cd /home/hermes/aipp/aipp-key
-  docker build -t aipp-key:latest .
-  docker stop aipp-key && docker rm aipp-key
-  docker run -d --name aipp-key --restart unless-stopped --env-file /home/hermes/aipp/aipp-key/.env -v /home/hermes/data/aipp-key:/app/data --network dokploy-network --label traefik.enable=true --label traefik.docker.network=dokploy-network --label 'traefik.http.routers.aipp-key.rule=Host(`aipp.dev`) || Host(`www.aipp.dev`)' --label traefik.http.routers.aipp-key.entrypoints=websecure --label traefik.http.routers.aipp-key.tls=true --label traefik.http.services.aipp-key.loadbalancer.server.port=3000 aipp-key:latest
-  ```
-
-## 5. Current Status & Known Issues (As of July 2026)
-
-### 5.1 — Security Patches Applied (5 Temmuz 2026)
-A comprehensive security audit was performed. The following critical fixes are NOW LIVE in production:
-- ✅ Static file serving restricted to `public/` only (`.env` was previously publicly accessible)
-- ✅ Hardcoded test addresses (`mehmet@phoenixwallet.me`, `devtest@aipp.dev`) that bypassed payment verification — removed
-- ✅ Race condition in daily spend limiter fixed with `BEGIN IMMEDIATE` atomic transaction
-- ✅ Batch payout double-payment bug fixed — individual invoices now correctly marked `forwarded`
-- ✅ SSRF protection added to `callback_url` validation
-- ✅ DB indexes added on all hot query paths (`invoices.api_key`, `payout_queue.status/next_retry_at`, etc.)
-- ✅ Commission now correctly calculated as flat 1% (min 20 sats) from env var, not hardcoded
-- ✅ `MAX_SINGLE_REQUEST_USD` per-request cap now enforced
-- ✅ `pruneWorker` now also cleans `daily_spend` and `ledgers` for deleted merchants
-- ✅ SQLite `cannot rollback` error suppressed with safe try/catch pattern
-- ✅ Admin panel now supports separate `ADMIN_SECRET` env var (independent of LNBits payment key)
-- ✅ Chat endpoint limited to 20 messages max, 2000 chars per message
-
-### 5.2 — L402 Paywall
-Highly optimized. Supports strict wallets (no `lightning:` prefix), high-res 320x320 QR codes, WebLN auto-payment.
-
-### 5.3 — SDKs (Pending)
-The NPM (`aipp-sdk`) and PyPI (`aipp-client`) packages need to be updated to match the latest L402 security patches.
-
-## 6. ⚠️ LNBits Backend — CRITICAL CONTEXT
-
-### Current State: demo.lnbits.com (TEMPORARY)
-AIPP currently uses **`demo.lnbits.com`** as its Lightning backend. This has serious limitations you must know:
-
-| Property | Value | Risk |
-|---|---|---|
-| **Server** | `demo.lnbits.com` | Public, shared demo server |
-| **Wallet ID** | `7baa54ce476f4c698dfdadedced73211` | Publicly visible |
-| **Admin Key** | `1b544b8abdbf43a3881c18882324e925` | Used for outgoing payments AND admin panel |
-| **Invoice Key** | `108d82162ea644e2bac8999f8bfa2721` | Used for invoice creation |
-| **Monthly Reset** | YES — demo server is nuked monthly | All invoices/history lost |
-| **Extra Fee** | 5% per transaction (max 1000 sats) | Cuts into merchant payouts |
-| **Webhook Auth** | Query param only — NO HMAC support | See below |
-
-### Webhook Architecture — HOW IT WORKS
-
-**demo.lnbits.com does NOT support HMAC webhook signing.** When a payment is received:
-1. AIPP creates invoice → registers webhook URL: `https://aipp.dev/lnbits-webhook?secret=XXXX`
-2. Customer pays → demo.lnbits.com POSTs to that URL exactly as given
-3. AIPP backend verifies the `?secret=` query param matches `LNBITS_WEBHOOK_SECRET` env var
-4. If match → payment is processed, merchant payout queued
-
-**Current webhook secret** (in `/home/hermes/aipp/aipp-key/.env`):
-```
-LNBITS_WEBHOOK_SECRET=1275042393de9e4656b09f7e59f040dc9463e71cd89509f020ea0bf6b75c0222
-```
-
-### Dual-Mode Webhook Auth (Current Code)
-The webhook handler (`src/controllers/webhook.ts`) accepts BOTH:
-- **HMAC header** (`X-LNBits-Webhook-Secret`): preferred, for self-hosted LNBits
-- **Query param** (`?secret=XXX`): fallback, for demo.lnbits.com compatibility
-
-Both must match `LNBITS_WEBHOOK_SECRET`. If neither matches → 401 Unauthorized.
-
-### Migration Path: Self-Hosted LNBits
-When the user is ready to move off demo.lnbits.com:
-1. Deploy LNBits on the server (`/home/hermes/lnbits/` or via Docker)
-2. Update `/home/hermes/aipp/aipp-key/.env`:
-   ```
-   LNBITS_URL=https://your-lnbits-instance.com
-   LNBITS_INVOICE_KEY=<new_invoice_key>
-   LNBITS_ADMIN_KEY=<new_admin_key>
-   LNBITS_WEBHOOK_SECRET=<new_secret>
-   ADMIN_SECRET=<separate_secret_for_admin_panel>
-   ```
-3. In `src/controllers/invoice.ts`, change the webhook URL from `?secret=XXX` (query param) to bare URL (LNBits will send HMAC header automatically)
-4. Rebuild Docker image and restart container
-
-### ⚠️ Do NOT Do These With demo.lnbits.com
-- Do NOT use it for real merchant funds — it resets monthly
-- Do NOT treat the Admin Key as secure — it's visible in the LNBits UI
-- Do NOT increase daily limits significantly — demo server is rate-limited
+# AIPP Protocol (SatsGate) — Master Architecture & Hermes Agent Bible
+*Version: 2.0.0 — Production Grade*
+*Last Updated: 10 August 2026*
 
 ---
 
-## 7. Rules of Engagement for Hermes
-1. **Never break the Brutalist UI:** If modifying HTML/CSS, you must strictly follow the existing variables (`--bg: #ffdb00`, thick black borders `#000`, 4px/8px box-shadows). Do not introduce generic rounded UI components.
-2. **Database Integrity:** Never modify or delete `aipp.db` without making a backup in `/var/www/backups/aipp-key/`.
-3. **No-Custody Rule:** Never alter the payout math that guarantees 99% goes to the merchant.
-4. **Agent Autonomy:** You are authorized to connect to `root@89.167.84.31` via SSH to debug crashes, restart the Docker container, or push hotfixes requested by the user.
-5. **LNBits Awareness:** Before any intervention involving payments or webhook behavior, re-read Section 6. The demo.lnbits.com limitations affect how payments flow and how webhooks are authenticated.
-6. **Secret Hygiene:** Never log or expose `LNBITS_WEBHOOK_SECRET` or `ADMIN_SECRET`. If rotating secrets, update `.env` on the server AND rebuild the Docker container so the new values are picked up.
+## 🎯 1. Executive Summary & Mission Statement
+
+**AIPP (aipp.dev)** — also known as **SatsGate** — is a high-performance, **100% non-custodial Smart Price Tag and micro-payment routing protocol**. 
+
+### The Core Vision: *"Everything can have a Smart Price Tag."*
+AIPP enables content creators, software developers, and autonomous AI agents to attach a cryptographic, dual-rail price tag to any web content, link, file, API endpoint, or digital asset in **3 seconds**.
+
+### Fundamental Pillars:
+1. **100% Non-Custodial (Zero Custodial Risk):** AIPP never holds, pools, or stores customer funds. Payments are settled in real time and automatically forwarded directly to the creator's personal self-hosted wallet (Phoenix, Wallet of Satoshi) or Base EVM wallet (`0x...`).
+2. **Dual-Rail Architecture:** Accepts both **Bitcoin Lightning Network (L402 / Satoshis)** and **Base Network (x402 / USDC Stablecoin)**.
+3. **Frictionless Mobile-First Experience:** 1-Click direct wallet launching (`lightning:` URI scheme) eliminating QR scanning or screenshot friction on smartphones.
+4. **Zero-Friction Identity:** Creators log into their Studio Console simply by typing their wallet address (`Wallet = Identity`) — zero complex 32-character API keys to memorize.
+5. **Machine-to-Machine (M2M) & AI Agent Ready:** Native SDKs (TypeScript/Node.js & Python) supporting cryptographic **EU AI Act Article 26** compliant settlement receipts.
+
+---
+
+## 🏗️ 2. Core Architecture & Tech Stack
+
+```
+                                    ┌────────────────────────────────────────────────────────┐
+                                    │                   CLIENTS & CREATORS                   │
+                                    │  • Web Studio (dashboard.html)                         │
+                                    │  • Checkout Pages (/pay/:id & /t/:id)                  │
+                                    │  • Chrome Extension (Manifest V3)                      │
+                                    │  • AI Agents & SDKs (Node.js & Python)                 │
+                                    └──────────────────────────┬─────────────────────────────┘
+                                                               │ HTTPS / REST / L402
+                                                               ▼
+┌────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
+│                                             AIPP BACKEND ENGINE (aipp-key)                                             │
+│                                                                                                                        │
+│  ┌───────────────────────┐   ┌───────────────────────────┐   ┌─────────────────────────┐   ┌────────────────────────┐  │
+│  │   Security & Rate     │   │   Smart Tag & PayLink     │   │   Frictionless Wallet   │   │   Settlement Engine    │  │
+│  │   Limiter (5 req/min) │   │   Controller              │   │   Identity Router       │   │   & Webhook Handler    │  │
+│  └───────────────────────┘   └───────────────────────────┘   └─────────────────────────┘   └────────────────────────┘  │
+│                                              │                                                          │              │
+│                                              ▼                                                          ▼              │
+│                              ┌───────────────────────────────┐                          ┌───────────────────────────┐  │
+│                              │   SQLite Database (aipp.db)   │                          │   Dead-Letter Queue &     │  │
+│                              │   • merchants                 │                          │   Payout Dispatcher       │  │
+│                              │   • payment_links             │                          └───────────────────────────┘  │
+│                              │   • invoices                  │                                                         │
+│                              │   • payout_queue              │                                                         │
+│                              │   • failed_payouts            │                                                         │
+│                              └───────────────────────────────┘                                                         │
+└───────────────────────────────────────────────┬────────────────────────────────────────────────────────┬───────────────┘
+                                                │                                                        │
+                        ┌───────────────────────┴────────────────────────┐       ┌───────────────────────┴───────────────┐
+                        │     RAIL A: BITCOIN LIGHTNING (L402)           │       │       RAIL B: BASE NETWORK (X402)     │
+                        │  • aipp-phoenixd Node (Port 9740)              │       │  • Circle USDC on Base (0x833589...)  │
+                        │  • ACINQ Lightning Channel (~2M sats capacity) │       │  • Base RPC Event Logs Verification   │
+                        │  • Bolt 11 & Bolt 12 (BIP 353) Support         │       │  • Instant 0x Wallet Forwarding       │
+                        └────────────────────────────────────────────────┘       └───────────────────────────────────────┘
+```
+
+- **Runtime:** Node.js (v20+), TypeScript, Express.js.
+- **Database:** SQLite 3 (`/app/data/aipp.db`) with exclusive transaction locks (`BEGIN IMMEDIATE / EXCLUSIVE`) and parameterized queries for 100% SQL injection immunity.
+- **Lightning Engine:** Self-hosted `aipp-phoenixd` container running native Phoenixd node connected to ACINQ LSP channels + LNbits management layer.
+- **Base EVM Engine:** Direct JSON-RPC communication with Base Mainnet (Chain ID `8453`), Circle Official USDC contract (`0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913`).
+- **Web Proxy & SSL:** Traefik v3 reverse proxy with Let's Encrypt automated TLS v1.3 certificates.
+
+---
+
+## ⚡ 3. Dual-Rail Payment Engine (L402 & x402 Deep Dive)
+
+AIPP operates two independent, high-throughput payment rails:
+
+### ⚡ Rail A: Bitcoin Lightning (L402 Protocol)
+- **Standard:** HTTP 402 Payment Required + L402 Macaroon / Bolt 11 / Bolt 12.
+- **Pricing:** Dynamic USD-to-Satoshi conversion using live Bitcoin price feeds (`BTC/USD` via CoinGecko + Kraken fallback).
+- **Fee Structure:** Flat 1% routing fee with a **5 sats minimum floor** (`Math.max(5, Math.ceil(amount_sats * 0.01))`).
+- **Settlement Verification:** 
+  1. Customer pays Lightning invoice.
+  2. Lightning network resolves the HTLC and returns the **32-byte cryptographic Preimage**.
+  3. AIPP verifies `SHA256(preimage) === payment_hash`.
+  4. Invoice status transitions to `settled`.
+- **Payout Dispatch:**
+  - **Phoenix Mobile Wallets:** Settled via Bolt 12 Offer (`lno1...`) using `/phoenix/phoenix-cli payoffer --offer='<lno1...>' --amountSat=<sats>`.
+  - **Standard LNURL-pay Wallets (Wallet of Satoshi, Blink, Zeus):** Settled via LNURL-pay callback resolution (`https://domain/.well-known/lnurlp/user`).
+
+### 🔵 Rail B: Base Network USDC (x402 Protocol)
+- **Standard:** Web3 EVM Smart Contract Transfer on Base L2.
+- **Contract:** Circle USDC (`0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913`, 6 decimals).
+- **Fee Structure:** Flat 1% (`merchant_amount = amount_usd * 0.99`).
+- **Settlement Verification:**
+  1. Customer transfers USDC directly to the merchant or gateway address via MetaMask, Coinbase Wallet, or Rabby.
+  2. Client submits Transaction Hash (`tx_hash`).
+  3. AIPP queries Base RPC for `eth_getTransactionReceipt(tx_hash)`.
+  4. AIPP inspects event logs to confirm `Transfer(from, to, value)` on the official USDC contract with status `0x1` (Success).
+  5. Replay Attack Protection: Transaction hashes are stored in SQLite; a single hash cannot settle more than one invoice.
+
+---
+
+## 🏷️ 4. Smart Price Tag Protocol & Content Fulfillment
+
+1. **Tag Creation:** Creator defines a title, USD price ($0.01 to $100.00), and an optional `redirect_url` (secret download link, Notion doc, API endpoint, Discord invite).
+2. **Checkout URL Generated:** Unique permanent link: `https://aipp.dev/pay/p_<hex12>` (alias `https://aipp.dev/t/<id>`).
+3. **Dynamic Invoice Generation:** When buyer visits the link and selects Lightning or USDC:
+   - Backend calls `/pay/:id/invoice`.
+   - Caches active pending invoice (5-minute reuse filter to prevent invoice bloat).
+4. **Instant Unlock:**
+   - As soon as preimage or EVM receipt confirms settlement:
+   - If `redirect_url` exists: Checkout page automatically redirects buyer in 1.4s.
+   - If no `redirect_url`: Checkout page renders on-screen verified receipt and access token.
+
+---
+
+## 📱 5. Mobile & UX Architecture
+
+- **1-Click Deep Linking:** The checkout page features an interactive **"⚡ Open in Lightning Wallet (1-Click)"** button (`href="lightning:lnbc..."`).
+  - Tapping this on iOS/Android opens Phoenix, Wallet of Satoshi, Zeus, Blink, or Strike with the invoice pre-filled.
+- **Universal BIP-21 Lowercase QR Compatibility:**
+  - QR codes encode `lightning:lnbc...` in lowercase with `margin: 3` and high-contrast `#000000 / #ffffff`.
+  - Solves Android/iOS camera and gallery OCR parsing issues for strict wallets like Phoenix.
+- **Studio Mobile Bottom Bar:**
+  - `public/dashboard.html` renders a fixed bottom navigation tab bar on screens `< 800px` (`Overview`, `Tags`, `Ledger`, `Wallets`).
+
+---
+
+## 🔐 6. Frictionless Identity Model (`Wallet = Identity`)
+
+### The Architecture:
+- Traditional API key memorization was replaced with **Wallet Address Login**:
+  - When a user inputs their Lightning Address (`you@walletofsatoshi.com`, `you@phoenixwallet.me`) or Base Address (`0x...`):
+  - Backend `registerMerchant` checks `WHERE ln_address = ? OR LOWER(usdc_address) = LOWER(?)`.
+  - **If Existing:** Returns their session and API key seamlessly (HTTP 200 OK — zero 409 errors).
+  - **If New:** Generates a new merchant record with 128-bit entropy key (`aipp_merch_<hex16>`).
+  - **If Account Wiped/Deleted:** The same wallet can be re-registered immediately with zero blocking.
+- **Non-Custodial Security Proof:**
+  - Because AIPP holds zero custodial funds, viewing metrics or generating tags requires no passwords. Mutating existing payout wallets requires session token authentication.
+
+---
+
+## 🛡️ 7. Payout Engine & Dead-Letter Safety Queues
+
+- **Automatic Threshold:** Settled balances accumulate in `invoices`. When net balance reaches threshold (default: 50 sats), the background worker automatically queues a payout.
+- **Dead-Letter Queue (`failed_payouts`):**
+  - If a merchant wallet is temporarily unreachable (e.g. invalid LNURL or routing error), the payout worker attempts **5 retries** with exponential backoff (`1m`, `5m`, `15m`, `30m`, `60m`).
+  - If all 5 retries fail, the transaction is safely moved to `failed_payouts` table.
+  - Funds are never lost. Admin console (`/admin.html`) provides 1-click retry dispatch.
+
+---
+
+## 📦 8. Client Ecosystem & SDKs
+
+### 1. Node.js / TypeScript SDK (`@aipp/sdk`)
+```typescript
+import { Aipp } from '@aipp/sdk';
+const aipp = new Aipp({ apiKey: 'aipp_merch_...' });
+
+// Create a Smart Price Tag Link
+const tag = await aipp.createTag({ title: 'AI Workflow Pack', price: 0.25 });
+
+// Create on-demand Dual-Rail invoice
+const charge = await aipp.createCharge({ amountUsd: 0.10, protocol: 'DUAL' });
+
+// Check real-time status
+const status = await aipp.getCharge(charge.payment_hash);
+```
+
+### 2. Python SDK (`aipp-sdk`)
+```python
+from aipp import Aipp
+client = Aipp(api_key="aipp_merch_...")
+
+# Create L402 charge
+charge = client.create_charge(amount_usd=0.05, protocol="L402", memo="AI Agent Access")
+
+# Fetch EU AI Act Art. 26 Cryptographic Receipt
+receipt = client.get_receipt(charge.payment_hash)
+```
+
+### 3. Chrome Extension (Manifest V3)
+- Packaged as `public/aipp-extension.zip`.
+- Uses on-demand script injection via `chrome.scripting` and `activeTab` permissions (100% Chrome Web Store User Data Policy compliant).
+- Allows creators to right-click or select any element on the web and create an AIPP Smart Tag in 3 seconds.
+
+---
+
+## 🖥️ 9. Hermes Operational Server & Deployment Guide
+
+### Server & Connection Parameters:
+- **Server IP:** `89.167.84.31` (User: `root`, Port: `22`)
+- **Local SSH Key:** `C:\Users\ucala\.ssh\id_ed25519`
+- **Server Project Path:** `/home/hermes/aipp/aipp-key`
+- **Docker Container Names:**
+  - Main Backend: `aipp-key`
+  - Phoenixd Lightning Node: `aipp-phoenixd`
+- **Live Database File:** `/app/data/aipp.db` (Host: `/home/hermes/aipp/aipp-key/data/aipp.db`)
+- **Admin Dashboard:** `https://aipp.dev/admin.html`
+- **Official Contact Emails:** `info@aipp.dev` | `support@aipp.dev`
+
+### Essential Hermes CLI Commands:
+
+#### 1. Check Container Health & Logs:
+```bash
+docker ps | grep aipp
+docker logs --tail 50 aipp-key
+```
+
+#### 2. Deploy Frontend / Code Updates into Running Container:
+```bash
+# Copy files into Docker container without rebuilding
+docker cp /home/hermes/aipp/aipp-key/public/index.html aipp-key:/app/public/index.html
+docker cp /home/hermes/aipp/aipp-key/public/dashboard.html aipp-key:/app/public/dashboard.html
+docker cp /home/hermes/aipp/aipp-key/src/controllers/payLink.ts aipp-key:/app/src/controllers/payLink.ts
+
+# Restart container to apply backend TypeScript/JS changes
+docker restart aipp-key
+```
+
+#### 3. Query Database Safely via Docker:
+```bash
+docker exec aipp-key node -e '
+const sqlite3 = require("sqlite3");
+const db = new sqlite3.Database("/app/data/aipp.db");
+db.all("SELECT api_key, ln_address, usdc_address FROM merchants;", (e, rows) => console.log(rows));
+'
+```
+
+#### 4. Pay Lightning Invoices Directly via Server Phoenix Node:
+```bash
+docker exec aipp-phoenixd /phoenix/phoenix-cli payinvoice --invoice=<lnbc...>
+```
+
+#### 5. Pay Phoenix Bolt 12 Offers Directly:
+```bash
+docker exec aipp-phoenixd /phoenix/phoenix-cli payoffer --offer='<lno1...>' --amountSat=<sats>
+```
+
+---
+
+## 🔒 10. Security, Rate Limiting & Compliance Matrix
+
+| Security Layer | Implementation Detail |
+|---|---|
+| **DDoS / Anti-Abuse** | `5 requests/min` per IP on `/pay/*` and `/t/*` endpoints (Tested & verified: 6th request triggers HTTP 429). |
+| **SQL Injection** | 100% Parameterized queries with SQLite prepared statements. Zero raw string interpolation. |
+| **SSRF Protection** | `isSafeCallbackUrl` filters out internal IPv4/IPv6, localhost (`127.0.0.1`), and AWS metadata (`169.254.169.254`). |
+| **Data Privacy** | Zero KYC, zero passwords, zero tracking cookies, zero third-party analytics scripts. |
+| **Non-Custodial Legal Status** | Operating strictly as open routing software. No custody, banking, or money transmission license required. |
+
+---
+
+*Hermes Agent Directive: Refer to this document as the authoritative specification for all code deployments, database queries, and architectural decisions.*

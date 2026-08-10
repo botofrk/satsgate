@@ -15,7 +15,7 @@ export async function sendEmail(to: string, subject: string, html: string): Prom
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
-        from: `AIPP Gateway <${fromAddress}>`,
+        from: `aipp Smart Tag Studio <${fromAddress}>`,
         to,
         subject,
         html

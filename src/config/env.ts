@@ -42,7 +42,7 @@ if (IS_PROD && !process.env.AIPP_BASE_PRIVATE_KEY) {
 }
 export const AIPP_BASE_PRIVATE_KEY = process.env.AIPP_BASE_PRIVATE_KEY || '';
 
-export const BASE_RPC_URL = process.env.BASE_RPC_URL || 'https://sepolia.base.org';
+export const BASE_RPC_URL = process.env.BASE_RPC_URL || 'https://mainnet.base.org';
 
 // [LOW-3 FIX] Chain ID must be explicitly set — URL sniffing is unreliable
 export const BASE_CHAIN_ID = process.env.BASE_CHAIN_ID
@@ -68,6 +68,6 @@ function safeInt(raw: string | undefined, fallback: number): number {
 export const FEE_PER_REQUEST_SATS = safeInt(process.env.FEE_PER_REQUEST_SATS, 5);
 export const DAILY_LIMIT_USD = safeInt(process.env.DAILY_LIMIT_USD, 100);
 export const MAX_SINGLE_REQUEST_USD = safeInt(process.env.MAX_SINGLE_REQUEST_USD, 10);
-export const MIN_TOPUP_SATS = safeInt(process.env.MIN_TOPUP_SATS, 100);
-export const MIN_PAYOUT_THRESHOLD_SATS = safeInt(process.env.MIN_PAYOUT_THRESHOLD_SATS, 1000);
+export const MIN_TOPUP_SATS = safeInt(process.env.MIN_TOPUP_SATS, 50);
+export const MIN_PAYOUT_THRESHOLD_SATS = safeInt(process.env.MIN_PAYOUT_THRESHOLD_SATS, 50);
 export const MAX_MERCHANTS = safeInt(process.env.MAX_MERCHANTS, 100);

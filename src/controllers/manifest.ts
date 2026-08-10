@@ -41,7 +41,7 @@ export const getAippAgentManifest = async (req: Request, res: Response) => {
 
   const agentManifest = {
     spec_version: "1.0",
-    name: "AIPP.dev AI Payment Gateway",
+    name: "aipp Smart Tag Studio",
     description: "Standardized non-custodial gateway for AI agent machine-to-machine payments.",
     version: "1.2.3",
     endpoints: {
