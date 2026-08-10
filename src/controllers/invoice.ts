@@ -128,8 +128,8 @@ export const createInvoice = async (req: Request, res: Response, next: NextFunct
       if (amount_usd === undefined || isNaN(amount_usd) || amount_usd < 0.01 || amount_usd > 100.0) {
         throw new AppError('USD amount must be between 0.01 and 100.00 USD (or equivalent sats)', 400, 'INVALID_AMOUNT');
       }
-      if (!Number.isInteger(amount_sats) || amount_sats < 100 || amount_sats > 100000) {
-        throw new AppError('Sats amount must be an integer between 100 and 100,000 satoshis (or equivalent USD)', 400, 'INVALID_AMOUNT');
+      if (!Number.isInteger(amount_sats) || amount_sats < 1 || amount_sats > 1000000) {
+        throw new AppError('Sats amount must be an integer between 1 and 1,000,000 satoshis (or equivalent USD)', 400, 'INVALID_AMOUNT');
       }
 
       if (MAX_SINGLE_REQUEST_USD > 0 && amount_usd > MAX_SINGLE_REQUEST_USD) {
@@ -137,8 +137,8 @@ export const createInvoice = async (req: Request, res: Response, next: NextFunct
       }
       await checkLimit(apiKey, amount_usd);
 
-      const commission = Math.max(10, Math.ceil(amount_sats * 0.01));
-      const forwarded = amount_sats - commission;
+      const commission = Math.max(5, Math.ceil(amount_sats * 0.01));
+      const forwarded = Math.max(1, amount_sats - commission);
 
       let paymentHash = '';
       let paymentRequest = '';
@@ -222,9 +222,9 @@ export const createInvoice = async (req: Request, res: Response, next: NextFunct
       amount_sats = Math.ceil((body.amount_usd / getBtcUsdRate()) * 100_000_000);
     }
 
-    // [I-03 FIX] Require integer amount_sats
-    if (!Number.isInteger(amount_sats) || amount_sats < 100 || amount_sats > 100000) {
-      throw new AppError('Transaction amount must be an integer between 100 and 100,000 satoshis (or equivalent USD)', 400, 'INVALID_AMOUNT');
+    // [I-03 FIX] Require integer amount_sats >= 1
+    if (!Number.isInteger(amount_sats) || amount_sats < 1 || amount_sats > 1000000) {
+      throw new AppError('Transaction amount must be an integer between 1 and 1,000,000 satoshis (or equivalent USD)', 400, 'INVALID_AMOUNT');
     }
 
     const costUsd = (amount_sats / 100_000_000) * getBtcUsdRate();
@@ -233,8 +233,8 @@ export const createInvoice = async (req: Request, res: Response, next: NextFunct
     }
     await checkLimit(apiKey, costUsd);
 
-    const commission = Math.max(20, Math.ceil(amount_sats * 0.01));
-    const forwarded = amount_sats - commission;
+    const commission = Math.max(5, Math.ceil(amount_sats * 0.01));
+    const forwarded = Math.max(1, amount_sats - commission);
 
     let paymentHash = '';
     let paymentRequest = '';
@@ -536,13 +536,23 @@ export const checkInvoiceStatus = async (req: Request, res: Response, next: Next
         if (verifyData.paid) {
           // [K-04 FIX] Also use direct settlement here instead of loopback HTTP
           await settleDemoInvoice(hash); // reuses the same atomic settlement logic
-          const updatedInvoice = await db.get('SELECT status FROM invoices WHERE payment_hash = ?', hash);
-          return res.json({ paid: updatedInvoice.status === 'settled', status: updatedInvoice.status, preimage: verifyData.preimage });
+          const updatedInvoice = await db.get('SELECT status, preimage, amount_sats FROM invoices WHERE payment_hash = ?', hash);
+          return res.json({ 
+            paid: updatedInvoice.status === 'settled', 
+            status: updatedInvoice.status, 
+            preimage: verifyData.preimage || updatedInvoice.preimage || null,
+            amount_sats: updatedInvoice.amount_sats
+          });
         }
       }
     }
 
-    res.json({ paid: invoice.status === 'settled', status: invoice.status, preimage: invoice.preimage || null });
+    res.json({ 
+      paid: invoice.status === 'settled', 
+      status: invoice.status, 
+      preimage: invoice.preimage || null,
+      amount_sats: invoice.amount_sats
+    });
   } catch (error) {
     next(error);
   }
@@ -566,8 +576,18 @@ export const getReceipt = async (req: Request, res: Response, next: NextFunction
       WHERE i.payment_hash = ?
     `, hash);
 
-    if (!invoice) {
-      throw new AppError('Invoice not found', 404, 'NOT_FOUND');
+    if (invoice.status === 'pending' && LNBITS_INVOICE_KEY && !hash.startsWith('demo_')) {
+      const verifyRes = await fetch(`${LNBITS_URL}/api/v1/payments/${hash}`, {
+        headers: { 'X-Api-Key': LNBITS_INVOICE_KEY }
+      });
+      if (verifyRes.ok) {
+        const verifyData = (await verifyRes.json()) as any;
+        if (verifyData.paid) {
+          await settleDemoInvoice(hash);
+          invoice.status = 'settled';
+          invoice.preimage = verifyData.preimage;
+        }
+      }
     }
 
     if (invoice.status !== 'settled') {
