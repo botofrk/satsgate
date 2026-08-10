@@ -181,6 +181,17 @@ receipt = client.get_receipt(charge.payment_hash)
 - Uses on-demand script injection via `chrome.scripting` and `activeTab` permissions (100% Chrome Web Store User Data Policy compliant).
 - Allows creators to right-click or select any element on the web and create an AIPP Smart Tag in 3 seconds.
 
+### 4. LangChain AI Agent Tool (`examples/langchain_aipp_agent.py`)
+- Python tool implementation for autonomous LLM agents (LangChain, CrewAI, LlamaIndex).
+- Agent receives HTTP 402 challenge, settles via Lightning, verifies preimage, and fetches EU AI Act Article 26 cryptographic receipts.
+
+### 5. n8n No-Code Workflow Monetization (`examples/n8n_aipp_monetization_workflow.json`)
+- 1-Click importable JSON workflow for n8n.
+- Integrates `Webhook Trigger` ➔ `HTTP Request (GET /invoice/status/:hash)` ➔ `IF status == 'settled'` ➔ `Deliver Output`.
+
+### 6. Live Global Research Showcase (`aipp.dev/#showcase`)
+- Live specimen tag `TAG-254EB7FB` (`p_254eb7fb9e10`) monetizing the *Emerging Markets Crypto Wallet Adoption & Non-Custodial Infrastructure Analysis (2026)* for $0.01 (16 sats) pointing to Notability.
+
 ---
 
 ## 🖥️ 9. Hermes Operational Server & Deployment Guide

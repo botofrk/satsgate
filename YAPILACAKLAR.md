@@ -1,34 +1,48 @@
-# Yapılacaklar Listesi (User Action Items)
+# AIPP: Akıllı Fiyat Etiketi & Ekosistem Yol Haritası (Master To-Do List)
+*Son Güncelleme: 10 Ağustos 2026*
 
-AIPP-Key projesi kod, mimari ve güvenlik anlamında şu an yayına hazır ve sunucuda çalışır durumda. Ancak, gerçek dünyada ödemeleri başarıyla alıp USDC'ye dönüştürebilmek için teknik dışı ve node yönetimine dair yapmanız gereken bazı işlemler bulunuyor.
-
-Sorduğunuz gibi **evet, en büyük adım Lightning Kanalı açmak**; ancak bilmeniz gereken birkaç küçük detay daha var. Aşağıdaki listeyi sırasıyla tamamlamanız yeterlidir:
-
-## 1. Lightning Kanalı ve Likidite (En Önemlisi)
-Müşterilerden Lightning ağı üzerinden sorunsuzca ödeme alabilmeniz için düğümünüzün (LND/Core Lightning) yeterli **INBOUND (Gelen) Likiditeye** sahip olması gerekmektedir. 
-
-* **Kanal Açma:** Büyük ve güvenilir düğümlerle (örneğin ACINQ, Kraken, veya popüler yönlendirme düğümleri) Lightning kanalları açın.
-* **Gelen Likidite (Inbound Liquidity):** Sadece kanal açmanız yetmez; bu kanallardan size para "gelebilmesi" için karşı tarafın size likidite sağlaması gerekir. Loop Out (Lightning Labs) hizmetini kullanarak veya `lnbig`, `bitrefill` gibi servislerden inbound likidite satın alarak bunu sağlayabilirsiniz.
-> [!IMPORTANT]  
-> Inbound likiditeniz dolduğunda yeni ödeme alamazsınız. Düzenli olarak kanallarınızı dengelemeli (rebalance) veya biriken satoshi'leri zincir üstüne (on-chain) çıkarıp kanalları boşaltmalısınız.
-
-## 2. Base (Ethereum) Cüzdanı İçin Gas Ücreti
-Satıcılara (Merchant) hak edişlerini USDC (veya EURC) olarak Base ağında gönderdiğimiz için bir işlem ücreti (Gas Fee) ödenmesi gerekir.
-* Akıllı sözleşme veya cüzdan sistemimizin kullandığı **Base cüzdan adresine (AIPP-Key sisteminin kendi cüzdanına)** bir miktar **Base ağında ETH (Ether)** göndermelisiniz. 
-* Base ağında ücretler çok düşüktür (genellikle 1 cent'ten az). 5-10 dolarlık bir ETH bile sizi aylar boyunca idare edebilir. 
-> [!WARNING]  
-> Cüzdanda Base ETH kalmazsa, sistem satıcıya USDC göndermek istediğinde "Yetersiz bakiye" (Insufficient Funds) hatası verecek ve aktarım (payout) gerçekleşmeyecektir.
-
-## 3. Merchant (Satıcı) Api Anahtarlarını Dağıtma
-Sistem hazır olduğuna göre, platformunuzu kullanacak satıcılara API anahtarlarını ve entegrasyon dokümantasyonunu ulaştırabilirsiniz. 
-* Satıcılar sisteme kendi Base cüzdan adresleriyle kaydolacaklardır. (Base ağındaki USDC veya EURC adresleri).
-* Satıcılara oluşturulan `API Key`'leri ileterek, L402 / X402 protokolüyle fatura oluşturmalarını (POST /invoice/create) sağlayın.
-
-## 4. Yedekleme
-Her şey tamamlandıktan sonra sunucunuzda çalışan Lightning düğümünün `channel.backup` dosyasını ve özel anahtarlarını güvenli bir offline (soğuk) ortamda yedeklemeyi unutmayın.
+Bu belge, AIPP projesinin teknik altyapısını, tamamlanan adımlarını ve önümüzdeki günlerin yol haritasını eksiksiz olarak kayıt altına alır.
 
 ---
-**Özetle şu anki göreviniz:**
-1. Base cüzdanına 5-10$ lık Base ETH atmak.
-2. Lightning düğümünüze Inbound (Gelen) likiditesi yüksek kanallar açmak.
-3. Test için kendi sisteminize küçük bir Lightning ödemesi yapıp, USDC olarak satıcıya (size) ulaştığını doğrulamak.
+
+## 🟢 TAMAMLANAN KRİTİK ALTYAPI & OPERASYONEL ADIMLAR (%100 Hazır)
+
+- [x] **1. Phoenixd & Lightning Kanalı (Inbound Likidite):** 
+  - ACINQ üzerinden ~2.000.000 satoshilik gelen kanal aktif. Lightning ödemeleri saniyeler içinde geçiyor.
+- [x] **2. Base (EVM) Merkezi Ödeme Cüzdanı & Gas Tankı:**
+  - Circle USDC (`0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913`) ve Base RPC doğrulamaları devrede.
+- [x] **3. Mobil 1-Tık Cüzdan Açma (`lightning:` URI & BIP-21):**
+  - Siyah **"⚡ Open in Lightning Wallet (1-Click)"** butonu ile iOS/Android'de Phoenix, Wallet of Satoshi, Zeus doğrudan faturayla açılıyor.
+- [x] **4. Sıfır Sürtünmeli Cüzdan Girişi (Wallet = Identity):**
+  - 32 haneli rastgele key ezberleme zorunluluğu bitti. Kullanıcı sadece cüzdan adresini yazarak paneline giriyor.
+- [x] **5. Resmi E-Posta Altyapısı & Mailu Kurulumu:**
+  - `info@aipp.dev` ve `support@aipp.dev` aktif; tüm web sayfaları güncellendi.
+- [x] **6. Hermes AI Ajanı Beyni & Destek Kılavuzu:**
+  - `HERMES_INSTRUCTIONS.md` ve `HERMES_SUPPORT_PLAYBOOK.md` hazırlandı.
+  - Zero-Data Auto-Purge (30 gün anonimleştirme, 90 gün kalıcı imha) devrede.
+- [x] **7. Global Canlı Vitrin (Emerging Markets Crypto Report):**
+  - `aipp.dev/#showcase` altında 12 sayfalık Notability araştırma raporu 16 sats ($0.01) ile kilitlendi ve canlıya alındı.
+- [x] **8. LangChain AI Agent & n8n No-Code Entegrasyonları:**
+  - `examples/langchain_aipp_agent.py` ve `examples/n8n_aipp_monetization_workflow.json` hazırlandı; `docs.html` güncellendi.
+  - Canlıda gerçek satoshiler ve EU AI Act Madde 26 makbuzu ile %100 test edildi.
+
+---
+
+## 🟡 YARININ EYLEM PLANI (11 Ağustos 2026 — 2. Madde: Lansman & Sosyal Medya)
+
+### 🎯 Odak: 2. Madde (Sosyal Medya Lansmanı & Topluluk İletişimi)
+- [ ] **1. X (Twitter) & Farcaster Lansman Tweet Zinciri (Viral Thread):**
+  - *"Stripe ve PayPal olmadan internetteki her şeye 3 saniyede fiyat etiketi koyun: SatsGate (aipp.dev)"* manifestosu.
+  - Emerging Markets canlı vitrin linki (`aipp.dev/#showcase`) ve 16 sats ile test etme çağrısı.
+- [ ] **2. 1 Dakikalık Ekran Kaydı / Demo Video Senaryosu:**
+  - 3 saniyede tag oluştur ➔ telefondan 1-tıkla öde ➔ makale Notability üzerinden açılsın.
+- [ ] **3. Topluluk Paylaşım Taslakları:**
+  - Reddit (r/Bitcoin, r/solana, r/LocalLLaMA), Hacker News ve Product Hunt için lansman başlıkları.
+- [ ] **4. Chrome Web Store Başvuru Formu Detayları:**
+  - `aipp-extension.zip` paketinin mağaza yayın metinleri.
+
+---
+
+## 🔴 15 AĞUSTOS YARIŞMA & BÜYÜME HEDEFLERİ (Building Türkiye)
+- [ ] 1.5 dakikalık "3 Saniyede Smart Price Tag Oluşturma" demo videosuyla yarışma kaydını tamamlamak.
+- [ ] Topluluklarda manifestoyu paylaşmak: *"Everything can have a Smart Price Tag."*

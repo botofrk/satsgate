@@ -1,99 +1,84 @@
-# AIPP.dev — Current Project State & Next Steps
-*Son Güncelleme: 2 Ağustos 2026*
+# AIPP.dev — Current Project State & Master Blueprint
+*Son Güncelleme: 10 Ağustos 2026 (Pazartesi Gece Kapanışı)*
 
-Bu belge, AIPP projesinde bugüne kadar yapılan çalışmaları, en son uygulanan Chrome Extension geliştirme/yayınlama adımlarını, L402/x402 ödeme akışı optimizasyonlarını ve yarınki çalışma seansında kalınan yerden nasıl devam edileceğini özetlemektedir.
-
----
-
-## ⚡ Neler Yaptık?
-
-### 1. Canlı LNBits & Gateway Altyapısı
-* Uygulama, `demo.lnbits.com` bağımlılığından tamamen kurtarıldı.
-* Sunucu üzerindeki **yerel LNBits cüzdanına** (`http://aipp-lnbits:5000`) entegre edildi.
-* **USDC on Base (x402)** entegrasyonu tamamlandı. Gateway cüzdanından para çekimleri ve ödeme doğrulamaları aktif hale getirildi.
-* Fiyat keşfi için makine-uyumlu `/pricing.json` manifestosu ve dinamik USD-sats dönüştürücü eklendi.
-
-### 2. Pazar Yeri & AI Ajan Entegrasyonları (Yeni)
-* **PaidMCP.dev Otomatik Listeleme:** AIPP-Key altyapısını kullanan satıcıların, kendi API'lerini PaidMCP pazar yerinde tek tıkla listeleyebilmeleri için `/paidmcp.json` manifestosunu dinamik olarak üreten bir endpoint ve Dashboard üzerinde kopyalama butonu eklendi.
-* **AIPP Auto-Pay Skill (`aipp-pay.md`):** Claude Code ve Cursor gibi yapay zeka ajanlarının 402 HTTP hatası aldıklarında faturayı okuyup L402 veya x402 (Base/Base-Sepolia) üzerinden otomatik ödemesini ve isteği tekrarlamasını sağlayan AI Skill hazırlandı ve statik olarak sunuldu.
-* **EU AI Act - Article 26 Makbuzlandırma:** Ağustos 2026 regülasyonları ile uyumlu, tamamlanan işlemlere dair blockchain kanıtı ve preimage içeren `/invoice/receipt/:hash` makine-okunabilir JSON makbuz uç noktası eklendi.
-* **Base Sepolia (Testnet) Desteği:** Sistem `.env` dosyasındaki RPC adresinde `sepolia` tespit ettiğinde otomatik olarak test ağına geçiyor ve 402 meydan okumasında (challenge) ağı `base-sepolia` olarak dönüyor.
-* **SDK Sürüm Yükseltmeleri ve Yayınlar:** Hem Node.js (`aipp-node`) hem de Python (`aipp-sdk`) kütüphaneleri **v1.2.1** sürümüne yükseltilerek npm registry ve PyPI üzerinde başarıyla yayınlandı.
-
-### 3. Güvenlik Sertleştirmesi (Security Hardening)
-3 paralel ajanla yapılan detaylı kod analizi (71 bulgu) sonucunda aşağıdaki **kritik ve yüksek öncelikli** açıklar tamamen giderildi:
-* **Gömülü Key Temizliği:** `src/config/env.ts` içindeki hardcoded private key ve demo fallback'leri kaldırıldı. Production'da eksik env varsa fail-fast (boot crash) sağlandı.
-* **IDOR ve Yetkisiz Erişim Engellemesi:** `/merchant/payout-status` ve `/invoice/status` endpoint'leri `X-Api-Key` doğrulama zorunluluğuna tabi tutuldu. Unauthenticated satıcı API anahtarı ifşası önlendi.
-* **Bypass Kodlarının Kapatılması:** `/premium-article-1` içindeki demo preimage ve mock tx bypass'ları production ortamı için tamamen kapatıldı (`!IS_PRODUCTION`).
-* **Hız Sınırlama (Rate Limiting) & DoS Koruması:** `express-rate-limit` entegre edildi. Küresel limit (200 req/min) ve `/chat`, `/register` gibi hassas rotalar için sıkı limitler (10 req/min) tanımlandı.
-* **Güvenli Docker:** Container root yetkileri olmayan (`appuser:appgroup`) bir kullanıcıyla çalışacak şekilde güncellendi. `.dockerignore` eklenerek `.env` sızıntısı önlendi.
-* **Zafiyetlerin Giderilmesi:** `npm audit` taramasında `sqlite3` bağımlılığından gelen `tar` açıkları, paketin en son sürüme güncellenmesiyle giderildi (**0 zafiyet**). Docker imajı Debian slim derleme araçları (`make`, `g++`, `python3`) ile native derleme yapacak şekilde güncellendi.
-* **Atomik Veritabanı İşlemleri:** Payout worker başarı durumları tek bir transaction bloğu (`BEGIN IMMEDIATE TRANSACTION`) içine alınarak crash-safe hale getirildi.
-
-### 4. Arayüz & Dokümantasyon Güncellemeleri
-* **Metin Çevirisi & Dil Bütünlüğü (`index.html`):** Ana sayfa üzerindeki "How It Works" adımlarında kalmış olan son Türkçe açıklamalar tamamen İngilizceye çevrildi.
-* **L402 Terminal Arayüz Yenilemesi (`l402.html`):** L402 demo terminali iki sütunlu (split-grid) modern bir tasarıma kavuşturuldu. QR kod kutusuna marka renginde çerçeve eklenerek görsel kontrast uyumu sağlandı. Simülasyon butonu renkleri sarı/amber marka vurgularıyla birleştirildi.
-* **Canlı Loglama & Simülasyon Altyapısı:** Lightning L402 simülasyon butonu eklendi. `/invoice/status/:hash` backend uç noktasında demo satıcı API anahtarına özel simüle etme parametresi (`?simulate=true`) tanımlanarak cüzdansız test imkanı sağlandı. Ödeme onaylandığında sağ panele preimage doğrulamaları ve API yanıt durum kodları dinamik olarak akıtıldı.
-* **Dokümantasyon Cilalamaları (`docs.html`):** Sidebar aktif sayfa bağlantılarına şık bir sarı/amber sol çizgi (`border-left` accent bar) yerleştirildi. Kod başlığı etiketleri hiyerarşisi küçültülüp kalınlaştırılarak okunabilirlik artırıldı. Mobil uyumluluk için kod bloklarına dikey sarma (word-wrap) desteği getirildi. Örnek EVM cüzdan adresi `0x0000...dead` sahte adresiyle değiştirildi.
-* **Müşteri/Satıcı Uyarısı (`dashboard.html`):** Satıcı paneline volatilitenin satoshi kazançlarını nasıl etkilediğini açıklayan Türkçe ve İngilizce uyarı eklendi.
-* **Paywall Düzeltmesi (`paywall-demo.html` & `paywall.js`):** Script yolundaki 404 hatası giderildi, kırık yazar avatarı temizlendi. Sunucuya `/paywall_demo.html` alt çizgili url'inden gelen istekleri otomatik olarak `/paywall-demo.html` adresine yönlendiren bir yönlendirme (302 redirect) rotası eklendi.
-* **SQLite İzin Çözümü (SQLITE_READONLY):** Docker konteynerinin `appuser` olarak yetkilendirilmesi sonucu oluşan SQLite yazma yetkisi hatası, sunucu üzerindeki `/home/hermes/data/aipp-key` klasör izinlerinin güncellenmesiyle çözüldü. Paywall QR üretimi başarıyla test edildi.
-* **Canlı Ortam Senkronizasyonu:** Tüm HTML ve JS değişiklikleri `/home/hermes/aipp/aipp-key` dizinine ve Docker konteyneri (`aipp-key`) içine aktarıldı.
-
-
-### 5. Chrome Extension (Manifest V3) & Ödeme Deneyimi
-* **Chrome Extension (v1.0.0):** İçerik üreticileri için No-Code DOM kilitleme, Quick Link üretme ve cüzdan anahtarı yönetimi panelleri eklendi.
-* **AIPP Özel Marka Logoları:** Siyah zemin üzerine elektrik sarısı Şimşek + Kilit Anahtarı amblemi üretildi; 16x16, 48x48, 128x128 PNG ikonları eklentiye entegre edildi.
-* **CSP & Manifest V3 Uyum:** Tüm `onclick` inline JS handler'ları `addEventListener` mimarisine dönüştürüldü. Dış script injection'ları kaldırıldı.
-* **Kullanıcı Dostu Kilit Etiketi:** Kilit butonu metni evrensel `🔒 Unlock Full Content ($0.10)` olarak güncellendi.
-* **Müstakil Ödeme Ekranı (`checkout.html`):** Blog okuyucularının dikkatini dağıtan uzun yazılar kaldırılarak ekranda tam ortalanmış, odaklanmış ödeme sayfası oluşturuldu.
-* **Özgün QR Kod Yapısı:** Fatura QR kodu orijinal çalışan haline (`paywall.js` original) getirildi.
+Bu belge, AIPP (SatsGate) projesinde tamamlanan uçtan uca **Bitcoin Lightning (L402 / Bolt 12) & Base USDC (X402)** altyapısını, **Hermes AI Ajanı Destek & Gizlilik Kalkanlarını**, **Global Canlı Vitrini (Emerging Markets Crypto Report Showcase)**, **LangChain & n8n Entegrasyonlarını ve Canlı Test Doğrulamalarını**, ayrıca **Yarın (11 Ağustos 2026)** sabah başlayacağımız **2. Madde (Sosyal Medya & Lansman Manifestosu)** eylem planını içerir.
 
 ---
 
-## 🔍 Nerede Kaldık? (Yarın Nereden Devam Edilecek?)
+## ⚡ Bugün Neler Yaptık ve Neleri Başardık? (10 Ağustos 2026)
 
-Uygulama şu an **canlıda (Hetzner VPS) ve GitHub main branch'inde %100 güncel ve kararlı** durumda.
+### 1. Resmi Alan Adı E-Postaları & Mailu Entegrasyonu
+- Eski geçici e-posta (`proton.me`) tüm kod tabanından, arayüzlerden (`index.html`, `docs.html`, `legal.html`) ve dokümantasyondan tamamen temizlendi.
+- Resmi kurumsal e-postalar devreye alındı:
+  - **`info@aipp.dev`** (Genel İletişim / İş Birlikleri)
+  - **`support@aipp.dev`** (7/24 Müşteri & Geliştirici Desteği)
 
-1. **Önemli Test & Odak Noktası (Yarın İlk Yapılacak İş):**
-   - Mobil cüzdan (Zeus, Phoenix, Wallet of Satoshi) QR kod okuma kütüphanesini ve canvas renderer parametrelerini inceleyip mobil kameraların QR kodu 0.1 saniyede okumasını incelemek.
-2. **Chrome Web Store Yayın Hazırlığı:**
-   - Chrome Web Store mağaza görsellerini ve geliştirici portalı kayıtlarını kontrol etmek.
+### 2. Hermes AI Ajanı Mimari Beyni & Otonom Destek Playbook'u
+- **Master Mimari Kılavuzu ([HERMES_INSTRUCTIONS.md](file:///c:/Users/faruk/Desktop/aipp-key/HERMES_INSTRUCTIONS.md)):**
+  - Sunucudaki Hermes ajanının eski Python/Streamlit dosyalarından kafasının karışması engellendi.
+  - Sistemin tek çatıda `aipp-key` konteynerinde çalıştığı, Traefik yönlendirmeleri, veritabanı şemaları ve operasyonel komutları yazıldı.
+- **Otonom Destek & Gizlilik Kılavuzu ([HERMES_SUPPORT_PLAYBOOK.md](file:///c:/Users/faruk/Desktop/aipp-key/HERMES_SUPPORT_PLAYBOOK.md)):**
+  - **Gizli Bilgi Kalkanı:** Hermes'in sunucu IP'sini, private key'leri, master şifreleri ve diğer satıcıların bilgilerini asla sızdırmayacağı kurallar tanımlandı.
+  - **6 Onaylı Destek Şablonu:** Ödeme takibi, bakiye çekimi, cüzdanla giriş, etiket oluşturma, SDK kullanımı ve komisyon soruları için profesyonel yanıt kalıpları hazırlandı.
+  - **Bölüm 5 (Zero-Data Auto-Purge):** 30 gün sonra e-postaların `[email]` şeklinde maskelenmesi ve 90 gün sonra kalıcı silinmesi kuralı devreye alındı.
 
-Gelecek seanslarda sistemin sertleştirilmesini devam ettirmek için aşağıdaki orta-düşük öncelikli işler yapılabilir:
+### 3. Küresel Canlı Vitrin (Global Live Demo Showcase)
+- **Ana Sayfa Vitrini (`public/index.html#showcase`):**
+  - **Başlık:** *"Emerging Markets Crypto Wallet Adoption & Non-Custodial Infrastructure Analysis (2026)"*
+  - **Metrikler:** `120M+ Active Wallets` · `Top 3 Global Velocity` · `88% Mobile Dominance`
+  - **Kilitli Önizleme:** 12 sayfalık Notability araştırma raporu AIPP Smart Tag (`TAG-254EB7FB`) ile kilitlendi.
+  - **Canlı 1-Tıkla Ödeme:** Dinamik QR kod ve 16 sats ($0.01) ödeme butonu entegre edildi.
 
-### 1. Webhook Dağıtık Yapısı & Güvenilirlik
-* **In-memory queue yerine DB persistence:** Şu an webhook tekrar denemeleri (`triggerWebhookWithRetry`) in-memory `setTimeout` ile yapılıyor. Sunucu çökerse denemeler kaybolur. Bunlar için `webhook_deliveries` adında bir DB tablosu oluşturulup arka planda worker ile durdurulup devam ettirilebilir.
+### 4. LangChain AI Agent & n8n No-Code Entegrasyonları (Doğrulandı)
+- **Dokümantasyon:** `public/docs.html` içine `#langchain-agents` ve `#n8n-workflows` bölümleri eklendi.
+- **Hazır Şablonlar:**
+  - `examples/langchain_aipp_agent.py` (Otonom AI ajanları için L402 challenge & EU AI Act Art. 26 makbuz aracı).
+  - `examples/n8n_aipp_monetization_workflow.json` (1-Tıkla n8n iş akışlarını paraya dönüştüren import edilebilir JSON şablonu).
+- **Canlı Para Testi:**
+  - Gerçek satoshilerle Python LangChain aracı çağrıldı, fatura kesildi, Phoenix üzerinden ödendi, preimage kanıtlandı ve **EU AI Act Madde 26 Resmi Kriptografik Makbuzu (`rec_f6c82d32-...`)** başarıyla üretildi!
+  - n8n HTTP doğrulama simülasyonu çalıştırıldı ve `status == "settled"` koşulu ile içerik teslimatı %100 doğrulandı!
 
-### 2. API Sürümlendirme (Versioning)
-* API rotalarını gelecekteki değişikliklerden korumak için `/v1/` prefix'ine geçilebilir.
-
-### 3. Fiyat Sağlayıcı Fallback Mekanizması
-* `price.ts` dosyasında CoinGecko'ya ek olarak Kraken fallback'i yapıldı ancak daha fazla API kaynağı eklenerek Bitcoin kuru daha da dayanıklı hale getirilebilir.
-
-### 4. Admin Paneli Brute Force Koruması
-* `/admin` endpoints için IP bazlı rate limit daha da düşürülebilir veya captcha eklenebilir.
+### 5. Sunucu ve Git Temizliği
+- Eski `core-satsgate-1` konteyneri kaldırıldı, `core` klasörü arşivlendi.
+- `https://api.aipp.dev/` artık 404 yerine doğrudan temiz bir JSON API özet sayfası dönüyor.
+- Sunucu ve yerel repolar: **`working tree clean`** ✅.
 
 ---
 
-## 🛠️ Yararlı Komutlar (Hızlı Başvuru)
+## 📊 Mevcut Sistem Durumu (Current Production Architecture)
 
-### Konteyner Durumunu Kontrol Etme
+- **Canlı Domain:** `https://aipp.dev` & `https://api.aipp.dev` (Traefik v3 + TLS v1.3)
+- **Sunucu & Docker:** Hetzner Cloud (`89.167.84.31`), `aipp-key` (Port 3000)
+- **Lightning Düğümü:** `aipp-phoenixd` (Port 9740, ACINQ Kanalı Aktif)
+- **Base EVM Ağı:** Circle USDC (`0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913`), Gas Tankı Dolu
+- **E-Posta Altyapısı:** Mailu (`info@aipp.dev`, `support@aipp.dev`) + Hermes Zero-Data Purge
+- **Emanetsiz Mimari:** %100 Non-Custodial (Sıfır fon riski, anında cüzdana aktarım)
+
+---
+
+## 🗓️ YARININ PLANI (11 Ağustos 2026 — 2. Madde: Lansman & Sosyal Medya)
+
+### 🎯 Odak Noktası: 2. Madde (Sosyal Medya & Lansman Manifestosu)
+- [ ] **1. Adım: X (Twitter) & Farcaster Lansman Tweet Zinciri (Viral Thread):**
+  - *"Stripe veya PayPal olmadan, internetteki herhangi bir linke, PDF'e veya AI prompt'una 3 saniyede fiyat etiketi koyun: SatsGate (aipp.dev)"* manifestosu.
+  - Emerging Markets canlı vitrin linki (`aipp.dev/#showcase`) ve 16 sats ile test etme çağrısı.
+- [ ] **2. Adım: 1 Dakikalık Ekran Kaydı & Video Demo Senaryosu:**
+  - 1️⃣ Sitede 3 saniyede Smart Tag oluşturma,
+  - 2️⃣ Cep telefonunda Phoenix / WoS ile "1-Tıkla Ödeme" butonuyla faturayı anında onaylama,
+  - 3️⃣ Kilitli Notability raporunun açılışı ve satıcı cüzdanına paranın saniyesinde düşüşü.
+- [ ] **3. Adım: Product Hunt & Topluluk Duyuru Taslakları:**
+  - Geliştirici ve içerik üretici toplulukları (Reddit, Hacker News, Farcaster) için lansman metinleri.
+- [ ] **4. Adım: Chrome Web Store Mağaza Başvuru Formu:**
+  - `public/aipp-extension.zip` paketinin mağaza listeleme detayları.
+
+---
+
+## 🛠️ Hızlı Erişim Komutları
+
 ```bash
-ssh -i ~/.ssh/id_ed25519 root@89.167.84.31 "docker ps | grep aipp-key"
-```
+# Canlı Konteyner Loglarını İzleme
+ssh root@89.167.84.31 "docker logs -f --tail 50 aipp-key"
 
-### Canlı Logları İzleme
-```bash
-ssh -i ~/.ssh/id_ed25519 root@89.167.84.31 "docker logs -f --tail 50 aipp-key"
-```
-
-### Yerelde TypeScript Derleme Testi
-```powershell
-node node_modules/typescript/bin/tsc --noEmit
-```
-
-### Sunucuyu Yeniden Başlatma
-```bash
-ssh -i ~/.ssh/id_ed25519 root@89.167.84.31 "docker restart aipp-key"
+# Sunucuyu Yeniden Başlatma
+ssh root@89.167.84.31 "docker restart aipp-key"
 ```

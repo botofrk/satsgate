@@ -1,5 +1,39 @@
 # AIPP-Key - Changelog & Implementation History
 
+## [v1.3.1] - 2026-08-10
+
+### 🌟 Live Monetization Showcase & Global Redesign
+- **Live Knowledge Monetization Showcase:** Integrated the live interactive demo section on `index.html` featuring the *Emerging Markets Crypto Wallet Adoption & Non-Custodial Infrastructure Analysis (2026)* report monetized for $0.01 (16 sats) with dynamic QR and 1-click checkout.
+- **Universal English Localization:** Standardized the entire showcase section, metrics (`120M+ Active Wallets`, `Top 3 Global Velocity`, `88% Mobile Dominance`), and research previews into professional English.
+- **Navbar & Footer Navigation:** Added direct `#showcase` deep links into the top navigation bar and footer.
+
+### 🤖 AI Agent & Automation Ecosystem
+- **LangChain & Python Tool Integration:** Added `examples/langchain_aipp_agent.py` and documentation in `docs.html#langchain-agents` for autonomous AI agent micro-payments with EU AI Act Article 26 cryptographic receipts.
+- **n8n No-Code Workflow Monetization:** Added `examples/n8n_aipp_monetization_workflow.json` and step-by-step guides in `docs.html#n8n-workflows` to monetize any n8n workflow using AIPP Webhooks and Preimage verification.
+- **Live Real-Money Verification:** Validated autonomous payment challenge, Phoenix settlement, preimage proof, and receipt generation via automated test suite.
+
+### ✉️ Domain Email & Hermes Autonomous Support
+- **Official Domain Inboxes:** Configured `info@aipp.dev` and `support@aipp.dev` across all footers and services.
+- **Hermes Master Architecture & Support Playbook:** Created `HERMES_INSTRUCTIONS.md` and `HERMES_SUPPORT_PLAYBOOK.md` with strict confidentiality guardrails and 6 standard support scenarios.
+- **Zero-Data Auto-Purge Policy:** Enforced 30-day email masking (`[email]`) and 90-day hard purge on support archives.
+
+## [v1.3.0] - 2026-08-09
+
+### 📱 Mobile-First UX & 1-Click Mobile Wallet Launcher
+- **Direct 1-Click Lightning Deep Linking (`lightning:` URI Scheme):** Added the prominent `Open in Lightning Wallet (1-Click)` button on checkout pages (`/pay/:id` & `/t/:id`). Automatically triggers Phoenix, Wallet of Satoshi, Zeus, Blink, or Strike with pre-loaded invoices on iOS & Android. Zero QR scanning or gallery screenshot friction needed.
+- **Universal BIP-21 Lowercase QR Compatibility:** Fixed Phoenix wallet QR scanning by encoding lowercase `lightning:lnbc...` URIs with high contrast and quiet zone padding (`margin: 3`).
+- **Mobile Bottom Navigation Bar:** Implemented a native mobile app bottom tab bar on `dashboard.html` (`Overview`, `Tags`, `Ledger`, `Wallets`).
+
+### 🛡️ Frictionless Wallet Identity (Zero Key Memorization)
+- **Direct Wallet Login:** Users can now sign into their private Studio console simply by entering their Lightning Address (`user@domain.com`) or Base EVM wallet (`0x...`). Eliminated 409 conflict errors and key recovery anxiety.
+- **Safe State Recovery:** Accounts maintain isolated balances and can be cleanly recreated if wiped.
+
+### ⚡ Live End-to-End Real-Money Settlements & SDK Verifications
+- **Verified Real Lightning Payments:** Fully tested with real satoshis via autonomous server nodes; verified settlement preimages in real time.
+- **Direct Mobile Payouts:** Dispatched real satoshi payouts to Phoenix Mobile Wallet via Bolt 12 Offer (`lno1...`) and Wallet of Satoshi.
+- **Compliance & AI Receipts:** Verified EU AI Act Article 26 cryptographic receipts via Python SDK (`aipp-python`) and Node.js SDK (`@aipp/sdk`).
+- **DDoS & Rate Limiting Hardening:** Verified 5 req/min limits with live stress testing (5 allowed, 6th/7th blocked with HTTP 429).
+
 ## [v1.2.2] - 2026-07-17
 
 ### 🎨 UI & UX Improvements
