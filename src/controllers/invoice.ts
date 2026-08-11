@@ -297,14 +297,17 @@ export const createInvoice = async (req: Request, res: Response, next: NextFunct
 };
 
 // [K-04 FIX] Internal settlement function — called directly instead of via loopback HTTP
-async function settleDemoInvoice(hash: string): Promise<void> {
+async function settleDemoInvoice(hash: string, preimage?: string): Promise<void> {
   const db = getDb();
   const release = await acquireTransactionLock();
   try {
     await db.run('BEGIN EXCLUSIVE TRANSACTION');
     const inv = await db.get('SELECT payment_hash, api_key, forwarded_amount_sats, status FROM invoices WHERE payment_hash = ?', hash);
     if (!inv || inv.status !== 'pending') {
-      await db.run('ROLLBACK');
+      if (inv && preimage) {
+        await db.run('UPDATE invoices SET preimage = ? WHERE payment_hash = ?', preimage, hash);
+      }
+      await db.run('COMMIT');
       return;
     }
     const merchant = await db.get('SELECT payout_mode, payout_threshold_sats, ln_address FROM merchants WHERE api_key = ?', inv.api_key);
@@ -315,8 +318,8 @@ async function settleDemoInvoice(hash: string): Promise<void> {
     const payoutMode = merchant.payout_mode || 'instant';
     const payout_status = payoutMode === 'manual' ? 'pending_manual' : 'pending_threshold';
     await db.run(
-      "UPDATE invoices SET status = 'settled', payout_status = ? WHERE payment_hash = ?",
-      payout_status, hash
+      "UPDATE invoices SET status = 'settled', payout_status = ?, preimage = ? WHERE payment_hash = ?",
+      payout_status, preimage || null, hash
     );
     await db.run('COMMIT');
   } catch (e) {
@@ -535,7 +538,7 @@ export const checkInvoiceStatus = async (req: Request, res: Response, next: Next
         const verifyData = (await verifyRes.json()) as any;
         if (verifyData.paid) {
           // [K-04 FIX] Also use direct settlement here instead of loopback HTTP
-          await settleDemoInvoice(hash); // reuses the same atomic settlement logic
+          await settleDemoInvoice(hash, verifyData.preimage); // reuses the same atomic settlement logic
           const updatedInvoice = await db.get('SELECT status, preimage, amount_sats FROM invoices WHERE payment_hash = ?', hash);
           return res.json({ 
             paid: updatedInvoice.status === 'settled', 
@@ -543,6 +546,19 @@ export const checkInvoiceStatus = async (req: Request, res: Response, next: Next
             preimage: verifyData.preimage || updatedInvoice.preimage || null,
             amount_sats: updatedInvoice.amount_sats
           });
+        }
+      }
+    }
+
+    if (invoice.status === 'settled' && !invoice.preimage && LNBITS_INVOICE_KEY && !hash.startsWith('demo_')) {
+      const verifyRes = await fetch(`${LNBITS_URL}/api/v1/payments/${hash}`, {
+        headers: { 'X-Api-Key': LNBITS_INVOICE_KEY }
+      });
+      if (verifyRes.ok) {
+        const verifyData = (await verifyRes.json()) as any;
+        if (verifyData.preimage) {
+          await db.run('UPDATE invoices SET preimage = ? WHERE payment_hash = ?', verifyData.preimage, hash);
+          invoice.preimage = verifyData.preimage;
         }
       }
     }
