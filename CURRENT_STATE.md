@@ -1,20 +1,21 @@
 # AIPP.dev — Current Project State & Master Blueprint
-*Son Güncelleme: 11 Ağustos 2026 (Salı Öğleden Sonra Seansı - v1.3.4)*
+*Son Güncelleme: 11 Ağustos 2026 (Salı Öğleden Sonra Seansı - v1.3.5)*
 
-Bu belge, AIPP (SatsGate) projesinde tamamlanan uçtan uca **Bitcoin Lightning (L402 / Bolt 12) & Base USDC (X402)** altyapısını, **Hermes AI Ajanı Beynini & Nous Research Hermes Agent Entegrasyonunu**, **Canlı Topluluk Başvurularını (n8n & LangChain)**, **Ecosystem Entegrasyonlarını (Ghost, Gradio, Make.com, Obsidian, CLI/Curl, Notion)** ve **Lansman Yol Haritasını** içerir.
+Bu belge, AIPP (SatsGate) projesinde tamamlanan uçtan uca **Bitcoin Lightning (L402 / Bolt 12) & Base USDC (X402)** altyapısını, **Hermes AI Ajanı Otonom Cüzdan & Skill Entegrasyonunu**, **Canlı Topluluk Başvurularını (n8n & LangChain)**, **Ecosystem Entegrasyonlarını (Ghost, Gradio, Make.com, Obsidian, CLI/Curl, Notion)** ve **Lansman Yol Haritasını** içerir.
 
 ---
 
 ## ⚡ Bugün Tamamlanan ve Canlıda Kanıtlanan Başarılar (11 Ağustos 2026)
 
-### 1. 🤖 Nous Research Hermes Agent Resmi Skill & Tool Entegrasyonu
-- **Resmi Araç Dosyası:** [`examples/hermes_aipp_agent_tool.py`](file:///c:/Users/faruk/Desktop/aipp-key/examples/hermes_aipp_agent_tool.py)
-- **Modül & Yetenek Paketi:** [`skills/hermes_agent_skill/`](file:///c:/Users/faruk/Desktop/aipp-key/skills/hermes_agent_skill/) (`SKILL.md`, `tool.py`, `README.md`)
-- **Canlı Otonom Test Sonucu:**
-  1. Hermes $0.01 (16 Sats) L402 faturası kesti (`lnbc160n1p48k88app5...`).
-  2. Hermes sunucudaki Phoenix düğümüyle faturayı Bitcoin Lightning üzerinden **1 saniyede** otonom olarak ödedi.
-  3. Preimage (`d188e070b32ca65fdcc1...`) doğrulandı ve **EU AI Act Madde 26 Resmi Makbuzu (`rec_d6a6ff82-...`)** başarıyla üretildi.
-  4. Test **%100 BAŞARIYLA** sonuçlandı!
+### 1. 🤖 Hermes AI Ajanı Otonom Olarak Canlıya Alındı & Kendini Yükseltti!
+- **Ajan Adı & Kimliği:** `hermes_agent`
+- **Bağlı Lightning Adresi:** `tickingpine37@walletofsatoshi.com`
+- **Özel Gizli Anahtar:** `/home/hermes/.secrets/hermes-agent-key`
+- **Otonom Self-Test Sonucu:**
+  - 16 Sats ($0.01) L402 faturası kesildi.
+  - Phoenixd üzerinden 16 sats + 4 sats komisyonla saniyesinde ödendi.
+  - Preimage ve **EU AI Act Madde 26 Resmi Makbuzu (`rec_7dce56a0-37d8-45c9-bdae-57b533683916`)** üretildi.
+  - `aipp-micropayments` yeteneği (`scripts/selftest.py`) Hermes'in kalıcı hafızasına başarıyla mühürlendi.
 
 ### 2. 🧩 n8n No-Code İş Akışı Monetizasyonu & Topluluk Başvurusu
 - **Hazır Şablon:** `examples/n8n_aipp_monetization_workflow.json`
@@ -40,9 +41,9 @@ Bu belge, AIPP (SatsGate) projesinde tamamlanan uçtan uca **Bitcoin Lightning (
 
 ## 🎯 SIRADAKİ ADIMLAR (Lansman & Dağıtım)
 
-1. **Nous Research Topluluğu & GitHub PR / Discussion:**
-   - Hazırladığımız `hermes_aipp_agent_tool.py` paketini Nous Research Discord ve GitHub deposuna sunmak.
-2. **X (Twitter) & Farcaster Viral Lansman Zinciri:**
+1. **X (Twitter) & Farcaster Viral Lansman Zinciri:**
    - 6 tweetlik hazır manifestoyu X ve Farcaster'da paylaşmak.
+2. **Nous Research Topluluğu & GitHub PR:**
+   - Hazırladığımız `hermes_aipp_agent_tool.py` paketini Nous Research Discord ve GitHub deposuna sunmak.
 3. **Chrome Web Store Mağaza Başvurusu:**
    - `extension.zip` paketini Google Developer Console'a yüklemek.
