@@ -194,9 +194,13 @@ code { font-family: 'JetBrains Mono', monospace; }
       <a href="#check-status" class="sidebar-link">Poll Settlement</a>
     </div>
     <div class="sidebar-section">
+      <div class="sidebar-title">No-Code &amp; Creators</div>
+      <a href="#notion-templates" class="sidebar-link">Notion Paywalls &amp; Embeds</a>
+      <a href="#n8n-workflows" class="sidebar-link">n8n No-Code Workflows</a>
+    </div>
+    <div class="sidebar-section">
       <div class="sidebar-title">AI &amp; Automations</div>
       <a href="#langchain-agents" class="sidebar-link">LangChain &amp; AI Agents</a>
-      <a href="#n8n-workflows" class="sidebar-link">n8n No-Code Workflows</a>
     </div>
     <div class="sidebar-section">
       <div class="sidebar-title">Protocols</div>
@@ -293,6 +297,24 @@ print("Invoice for Agent:", charge.payment_request)
 receipt = client.get_receipt(charge.payment_hash)
 if receipt.get("status") == "settled":
     print("Settlement Proof Preimage:", receipt.get("preimage"))</pre>
+    </div>
+
+    <!-- SECTION: NOTION TEMPLATES & EMBEDS -->
+    <div class="section-block" id="notion-templates">
+      <div class="endpoint-badge badge-post">CREATOR MONETIZATION · NOTION / EMBEDS</div>
+      <h2>Monetizing Notion Templates &amp; Pages in 3 Seconds</h2>
+      <p>Sell Notion templates, productivity dashboards, research notes, or client portals without Gumroad's 10% fee or 2-week payout delays.</p>
+
+      <p><strong>How to Monetize in 3 Steps:</strong></p>
+      <ol style="margin-left: 20px; font-size: 14px; color: var(--fg-muted); line-height: 1.7; margin-bottom: 20px;">
+        <li><strong>Get Your Duplicate Link:</strong> In your Notion page, click <em>Share ➔ Publish ➔ Allow duplicate as template</em> and copy the public link.</li>
+        <li><strong>Mint an AIPP Smart Tag:</strong> On <a href="/#generator" style="color:var(--accent); font-weight:600;">aipp.dev</a>, set your price (e.g. $1.00 / 1,500 sats), your Lightning/Base wallet, and paste your Notion duplicate link as the redirect target.</li>
+        <li><strong>Embed or Share:</strong> Paste your checkout URL directly in Notion using the <code>/embed https://aipp.dev/embed/p_...</code> command, or share it on Twitter/Reddit.</li>
+      </ol>
+
+      <div style="background:#f4f4f5; border:1px solid #e4e4e7; border-radius:10px; padding:16px; margin-bottom:20px; font-size:13px; color:var(--fg);">
+        🏷️ <strong>Gumroad vs AIPP:</strong> Gumroad charges 10% + 30¢ and holds payouts for 14 days. AIPP charges <strong>1% flat</strong> with <strong>zero holding time</strong> — payments land directly in your Phoenix or Base wallet upon settlement!
+      </div>
     </div>
 
     <!-- SECTION: N8N AUTOMATION -->

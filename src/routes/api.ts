@@ -25,13 +25,18 @@ router.post('/invoice/create', createInvoice);
 router.get('/invoice/status/:hash', checkInvoiceStatus);
 router.get('/invoice/receipt/:hash', getReceipt);
 
-// Payment Links
+// Payment Links & Smart Price Tags
 import { createPaymentLink, getPaymentLinks, renderPaymentPage, createLinkInvoice, deletePaymentLink } from '../controllers/payLink';
 router.post('/merchant/links/create', createPaymentLink);
+router.post('/api/tag/create', createPaymentLink);
 router.get('/merchant/links', getPaymentLinks);
 router.delete('/merchant/links/:linkId', deletePaymentLink);
 router.get('/pay/:linkId', renderPaymentPage);
+router.get('/t/:linkId', renderPaymentPage);
+router.get('/embed/:linkId', renderPaymentPage);
 router.post('/pay/:linkId/invoice', createLinkInvoice);
+router.post('/t/:linkId/invoice', createLinkInvoice);
+router.post('/embed/:linkId/invoice', createLinkInvoice);
 
 
 // Demo Paywall route

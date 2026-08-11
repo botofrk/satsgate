@@ -95,9 +95,10 @@ export const getPaymentLinks = async (req: Request, res: Response, next: NextFun
   }
 };
 
-// 3. Render Custom Paywall HTML Page with Anthropic Claude Editorial Aesthetics
 export const renderPaymentPage = async (req: Request, res: Response, next: NextFunction) => {
   try {
+    res.setHeader('Content-Security-Policy', "frame-ancestors *;");
+    res.removeHeader('X-Frame-Options');
     const { linkId } = req.params;
     const db = getDb();
     let link = await db.get('SELECT * FROM payment_links WHERE id = ?', linkId);
