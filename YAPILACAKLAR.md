@@ -1,48 +1,36 @@
-# AIPP: Akıllı Fiyat Etiketi & Ekosistem Yol Haritası (Master To-Do List)
-*Son Güncelleme: 10 Ağustos 2026*
-
-Bu belge, AIPP projesinin teknik altyapısını, tamamlanan adımlarını ve önümüzdeki günlerin yol haritasını eksiksiz olarak kayıt altına alır.
+# AIPP.dev — Yapılacaklar Listesi (Roadmap & Launch Checklist)
+*Son Güncelleme: 11 Ağustos 2026 (Salı Öğleden Sonra Seansı)*
 
 ---
 
-## 🟢 TAMAMLANAN KRİTİK ALTYAPI & OPERASYONEL ADIMLAR (%100 Hazır)
+## 🟢 TAMAMLANANLAR (Production Ready & Verified)
 
-- [x] **1. Phoenixd & Lightning Kanalı (Inbound Likidite):** 
-  - ACINQ üzerinden ~2.000.000 satoshilik gelen kanal aktif. Lightning ödemeleri saniyeler içinde geçiyor.
-- [x] **2. Base (EVM) Merkezi Ödeme Cüzdanı & Gas Tankı:**
-  - Circle USDC (`0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913`) ve Base RPC doğrulamaları devrede.
-- [x] **3. Mobil 1-Tık Cüzdan Açma (`lightning:` URI & BIP-21):**
-  - Siyah **"⚡ Open in Lightning Wallet (1-Click)"** butonu ile iOS/Android'de Phoenix, Wallet of Satoshi, Zeus doğrudan faturayla açılıyor.
-- [x] **4. Sıfır Sürtünmeli Cüzdan Girişi (Wallet = Identity):**
-  - 32 haneli rastgele key ezberleme zorunluluğu bitti. Kullanıcı sadece cüzdan adresini yazarak paneline giriyor.
-- [x] **5. Resmi E-Posta Altyapısı & Mailu Kurulumu:**
-  - `info@aipp.dev` ve `support@aipp.dev` aktif; tüm web sayfaları güncellendi.
-- [x] **6. Hermes AI Ajanı Beyni & Destek Kılavuzu:**
-  - `HERMES_INSTRUCTIONS.md` ve `HERMES_SUPPORT_PLAYBOOK.md` hazırlandı.
-  - Zero-Data Auto-Purge (30 gün anonimleştirme, 90 gün kalıcı imha) devrede.
-- [x] **7. Global Canlı Vitrin (Emerging Markets Crypto Report):**
-  - `aipp.dev/#showcase` altında 12 sayfalık Notability araştırma raporu 16 sats ($0.01) ile kilitlendi ve canlıya alındı.
-- [x] **8. LangChain AI Agent & n8n No-Code Entegrasyonları:**
-  - `examples/langchain_aipp_agent.py` ve `examples/n8n_aipp_monetization_workflow.json` hazırlandı; `docs.html` güncellendi.
-  - Canlıda gerçek satoshiler ve EU AI Act Madde 26 makbuzu ile %100 test edildi.
-
----
-
-## 🟡 YARININ EYLEM PLANI (11 Ağustos 2026 — 2. Madde: Lansman & Sosyal Medya)
-
-### 🎯 Odak: 2. Madde (Sosyal Medya Lansmanı & Topluluk İletişimi)
-- [ ] **1. X (Twitter) & Farcaster Lansman Tweet Zinciri (Viral Thread):**
-  - *"Stripe ve PayPal olmadan internetteki her şeye 3 saniyede fiyat etiketi koyun: SatsGate (aipp.dev)"* manifestosu.
-  - Emerging Markets canlı vitrin linki (`aipp.dev/#showcase`) ve 16 sats ile test etme çağrısı.
-- [ ] **2. 1 Dakikalık Ekran Kaydı / Demo Video Senaryosu:**
-  - 3 saniyede tag oluştur ➔ telefondan 1-tıkla öde ➔ makale Notability üzerinden açılsın.
-- [ ] **3. Topluluk Paylaşım Taslakları:**
-  - Reddit (r/Bitcoin, r/solana, r/LocalLLaMA), Hacker News ve Product Hunt için lansman başlıkları.
-- [ ] **4. Chrome Web Store Başvuru Formu Detayları:**
-  - `aipp-extension.zip` paketinin mağaza yayın metinleri.
+- [x] **Bitcoin Lightning (L402 / Bolt 12) & Base USDC (X402) Çift Raylı Altyapı.**
+- [x] **1-Tıkla Smart Tag Üretimi & Anahtarsız Giriş (`Wallet = Identity`).**
+- [x] **n8n No-Code İş Akışı Monetizasyon Şablonu (`examples/n8n_aipp_monetization_workflow.json`):**
+  - Gerçek satoshilerle canlı test edildi (439ms teslimat süresi).
+  - n8n Resmi Topluluk Forumuna (`community.n8n.io`) sunuldu.
+- [x] **LangChain & LangSmith Otonom Ajan Entegrasyonu:**
+  - `aipp-micropayments` yeteneği ve Python SDK canlı trace logları kanıtlandı.
+  - LangChain Resmi Topluluk Forumuna (`forum.langchain.com`) sunuldu.
+- [x] **Genişletilmiş Ekosistem Entegrasyonları:**
+  - **Notion Şablon Monetizasyonu:** `/embed` desteği eklendi.
+  - **Ghost / WordPress / Substack Widget:** `public/aipp-widget.js` canlıya alındı.
+  - **Hugging Face & Gradio AI Modelleri:** `examples/gradio_aipp_demo.py` hazırlandı.
+  - **Make.com & Zapier:** `examples/make_aipp_monetization_blueprint.json` hazırlandı.
+  - **Obsidian.md Kasa Satışı:** `examples/obsidian_aipp_paywall_note.md` hazırlandı.
+  - **Linux Terminal & Curl Paywall:** `curl https://aipp.dev/cli/:id` ile canlıda test edildi.
+- [x] **Mobil Duyarlılık (Responsive Suite Overhaul):**
+  - `public/index.html` üzerindeki tüm taşma, kayma ve dar ekran bozulmaları giderildi.
+- [x] **Resmi Dokümantasyon (`aipp.dev/docs.html`):** 7 büyük ekosistem bölümüyle yayında.
 
 ---
 
-## 🔴 15 AĞUSTOS YARIŞMA & BÜYÜME HEDEFLERİ (Building Türkiye)
-- [ ] 1.5 dakikalık "3 Saniyede Smart Price Tag Oluşturma" demo videosuyla yarışma kaydını tamamlamak.
-- [ ] Topluluklarda manifestoyu paylaşmak: *"Everything can have a Smart Price Tag."*
+## 🟡 SIRADAKİ ADIMLAR (2-3 Saat Sonraki Seans)
+
+- [ ] **1. Adım: X (Twitter) & Farcaster Viral Lansman Zinciri:**
+  - 6 tweetlik hazır manifestoyu X ve Farcaster'da paylaşmak.
+- [ ] **2. Adım: Reddit Topluluk Paylaşımları:**
+  - `r/Notion`, `r/LocalLLaMA`, `r/Bitcoin`, `r/SideProject` sublarında gönderileri paylaşmak.
+- [ ] **3. Adım: Chrome Web Store Mağaza Başvurusu:**
+  - `extension.zip` paketini Google Chrome Developer Console'a yüklemek.

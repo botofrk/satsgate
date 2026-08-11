@@ -1,87 +1,26 @@
-# AIPP-Key - Changelog & Implementation History
+# Changelog
 
-## [v1.3.1] - 2026-08-10
+All notable changes to the AIPP (SatsGate) protocol and application will be documented in this file.
 
-### 🌟 Live Monetization Showcase & Global Redesign
-- **Live Knowledge Monetization Showcase:** Integrated the live interactive demo section on `index.html` featuring the *Emerging Markets Crypto Wallet Adoption & Non-Custodial Infrastructure Analysis (2026)* report monetized for $0.01 (16 sats) with dynamic QR and 1-click checkout.
-- **Universal English Localization:** Standardized the entire showcase section, metrics (`120M+ Active Wallets`, `Top 3 Global Velocity`, `88% Mobile Dominance`), and research previews into professional English.
-- **Navbar & Footer Navigation:** Added direct `#showcase` deep links into the top navigation bar and footer.
+## [1.3.2] - 2026-08-11
+### Added
+- **Multi-Ecosystem Monetization Suite:**
+  - **Notion Paywalls & Embeds:** Added `/embed/:id` endpoint with `frame-ancestors *` CSP header for seamless embedding in Notion documents.
+  - **Ghost, WordPress & Substack Widget:** Created `public/aipp-widget.js` for 1-line client-side article blurring and instant unlock upon micro-payment.
+  - **Hugging Face & Gradio AI Monetization:** Created `examples/gradio_aipp_demo.py` for per-inference GPU compute monetization.
+  - **Make.com & Zapier Blueprint:** Created `examples/make_aipp_monetization_blueprint.json` importable workflow template.
+  - **Obsidian.md Vault & Notes Guide:** Created `examples/obsidian_aipp_paywall_note.md`.
+  - **Terminal / Curl Paywall:** Added `/cli/:id` and curl user-agent detection returning interactive ANSI colored ASCII QR codes and instant CLI unlocks.
+- **Community Submissions:**
+  - Submitted verified n8n workflow template to `community.n8n.io`.
+  - Submitted LangChain autonomous micro-payment tool to `forum.langchain.com`.
 
-### 🤖 AI Agent & Automation Ecosystem
-- **LangChain & Python Tool Integration:** Added `examples/langchain_aipp_agent.py` and documentation in `docs.html#langchain-agents` for autonomous AI agent micro-payments with EU AI Act Article 26 cryptographic receipts.
-- **n8n No-Code Workflow Monetization:** Added `examples/n8n_aipp_monetization_workflow.json` and step-by-step guides in `docs.html#n8n-workflows` to monetize any n8n workflow using AIPP Webhooks and Preimage verification.
-- **Live Real-Money Verification:** Validated autonomous payment challenge, Phoenix settlement, preimage proof, and receipt generation via automated test suite.
+### Fixed
+- **Mobile Responsiveness Overhaul:** Resolved horizontal overflow on small mobile viewports (320px-480px) in `public/index.html`.
+- **Graceful Invoice Polling:** Handled empty or unpaid invoice hashes in `GET /invoice/status` by returning `{ paid: false, status: 'pending' }` with HTTP 200 instead of 404.
 
-### ✉️ Domain Email & Hermes Autonomous Support
-- **Official Domain Inboxes:** Configured `info@aipp.dev` and `support@aipp.dev` across all footers and services.
-- **Hermes Master Architecture & Support Playbook:** Created `HERMES_INSTRUCTIONS.md` and `HERMES_SUPPORT_PLAYBOOK.md` with strict confidentiality guardrails and 6 standard support scenarios.
-- **Zero-Data Auto-Purge Policy:** Enforced 30-day email masking (`[email]`) and 90-day hard purge on support archives.
-
-## [v1.3.0] - 2026-08-09
-
-### 📱 Mobile-First UX & 1-Click Mobile Wallet Launcher
-- **Direct 1-Click Lightning Deep Linking (`lightning:` URI Scheme):** Added the prominent `Open in Lightning Wallet (1-Click)` button on checkout pages (`/pay/:id` & `/t/:id`). Automatically triggers Phoenix, Wallet of Satoshi, Zeus, Blink, or Strike with pre-loaded invoices on iOS & Android. Zero QR scanning or gallery screenshot friction needed.
-- **Universal BIP-21 Lowercase QR Compatibility:** Fixed Phoenix wallet QR scanning by encoding lowercase `lightning:lnbc...` URIs with high contrast and quiet zone padding (`margin: 3`).
-- **Mobile Bottom Navigation Bar:** Implemented a native mobile app bottom tab bar on `dashboard.html` (`Overview`, `Tags`, `Ledger`, `Wallets`).
-
-### 🛡️ Frictionless Wallet Identity (Zero Key Memorization)
-- **Direct Wallet Login:** Users can now sign into their private Studio console simply by entering their Lightning Address (`user@domain.com`) or Base EVM wallet (`0x...`). Eliminated 409 conflict errors and key recovery anxiety.
-- **Safe State Recovery:** Accounts maintain isolated balances and can be cleanly recreated if wiped.
-
-### ⚡ Live End-to-End Real-Money Settlements & SDK Verifications
-- **Verified Real Lightning Payments:** Fully tested with real satoshis via autonomous server nodes; verified settlement preimages in real time.
-- **Direct Mobile Payouts:** Dispatched real satoshi payouts to Phoenix Mobile Wallet via Bolt 12 Offer (`lno1...`) and Wallet of Satoshi.
-- **Compliance & AI Receipts:** Verified EU AI Act Article 26 cryptographic receipts via Python SDK (`aipp-python`) and Node.js SDK (`@aipp/sdk`).
-- **DDoS & Rate Limiting Hardening:** Verified 5 req/min limits with live stress testing (5 allowed, 6th/7th blocked with HTTP 429).
-
-## [v1.2.2] - 2026-07-17
-
-### 🎨 UI & UX Improvements
-- **Turkish Text Cleanup:** Translated all remaining Turkish descriptions to English on the homepage flow steps ("How It Works") to maintain complete English language consistency across user-facing pages.
-- **L402 Terminal Redesign (`l402.html`):** Overhauled the L402 challenge demo with a modern, responsive, dual-pane layout:
-  - Left pane displays the QR code payment interface, clean truncated invoice string (`lnbc5u1...wx0ete`), and a click-to-copy button.
-  - Right pane features a live HTTP logs and headers console with proper typography sizing and hierarchy.
-  - Embedded a thin brand-colored amber border around the QR container and colored the action buttons with amber backgrounds for UI consistency.
-  - Appended dynamic log rows showing preimage validation status, cryptographic verification status, and response code `200 OK` transitions when a payment is processed.
-- **Documentation Polish (`docs.html`):** Added a left border accent bar for active elements in the sidebar to highlight current reading sections dynamically. Integrated word-wrap styling for code blocks to prevent horizontal overflowing, improved code header styling hierarchy, and switched placeholder Ethereum addresses to safe dummy addresses (`0x0000...dead`).
-
-### ⚙️ Backend & Simulation Infrastructure
-- **Sandbox Simulation Bypass (`invoice.ts`):** Implemented a sandbox-safe checkout simulation flag (`?simulate=true` and `0xmocktxhash` checks) scoped specifically to the public demo merchant account. This permits users to instantly click "Simulate Payment" to mock-settle invoices in the database and unlock premium content without needing live keys or Base/Lightning mainnet transactions.
-- **Demo Re-Registration Fix:** Resolved a `409 Conflict` block on the demo page where repeating visits would trigger unauthenticated mock merchant registration warnings. Added a client-side recovery to automatically utilize the pre-existing mock merchant API key if already registered.
-
-## [v1.0.2] - 2026-07-03
-
-### 🚀 Features & SDK Updates
-- **USD Pricing / Synthetic Stablecoin Support (`amount_usd`):** Implemented the ability to create Lightning invoices priced in USD. Merchants and AI agents can now pass `amount_usd` instead of `amount_sats` to the `createInvoice` endpoint. The backend automatically converts the USD amount to satoshis using real-time BTC exchange rates.
-- **Node.js SDK (`aipp-node`):**
-  - Updated `ChargeParams` to accept an optional `amountUsd` property.
-  - Published `aipp-node@1.0.2` to NPM.
-- **Python SDK (`aipp-sdk`):**
-  - Updated `create_charge` to accept an optional `amount_usd` argument.
-  - Published `aipp-sdk@1.0.2` to PyPI.
-- **Documentation:**
-  - Added USD pricing examples to `docs.html` and educated users on utilizing "Stablesats" (like Blink or Strike) as settlement wallets to eliminate volatility risk.
-## [v1.0.1] - 2026-06-30
-
-### 🚀 Features & SDK Updates
-- **Payout Feature (`payout()`):** Implemented the automatic payout (withdrawal) logic for AIPP. Merchants and AI agents can now trigger `payout()` to forward their accumulated Lightning balances to their configured `ln_address`.
-- **Node.js SDK (`aipp-node`):**
-  - Added `payout()` method and `PayoutResponse` types.
-  - Published `aipp-node@1.0.1` to NPM.
-- **Python SDK (`aipp-sdk`):**
-  - Added `payout()` class method and `PayoutResponse` Pydantic models.
-  - Published `aipp-sdk@1.0.1` to PyPI.
-- **End-to-End (E2E) Testing:** Developed `test.js` covering the full lifecycle: `Merchant Registration` -> `Invoice Creation` -> `Payout Execution`. Verified that the minimum threshold (100 sats) constraints correctly reject premature payouts.
-
-### 🐛 Bug Fixes & Infrastructure
-- **LNBits / Phoenixd Integration Fix (520 / 401 Unauthorized Errors):** 
-  - Identified and resolved a critical Docker DNS conflict where a stale `phoenixd` container (`172.23.0.9`) conflicted with the primary Dokploy-deployed `aipp-phoenixd` container (`172.23.0.5`). 
-  - The internal DNS round-robining caused intermittent `401 Unauthorized` responses during `createInvoice` calls. Removed the rogue container, preventing downstream 520 errors in the AIPP backend.
-
-### 🎨 UI & UX Improvements (`index.html`)
-- **Modernized Demo Checkout:** Replaced the generic "Robot T-Shirt" placeholder product with a highly aesthetic, dark-mode "Premium LLM Inference" token visual, aligning the demo exactly with AIPP's "AI-to-AI Payment Protocol" vision.
-- **Bento Grid CSS Fix:** Restored a missing closing brace (`}`) in the CSS that broke the media queries and grid structures. The "Use Cases" section now beautifully renders as a 3-column Bento box layout on desktop and gracefully stacks on mobile.
-- **Footer Updates:** Added a direct contact mailto link (`aippdev@proton.me`) perfectly centered within the footer flexbox, ensuring responsive alignment across desktop and mobile screens.
-
----
-*Note: This file tracks the history of autonomous development sessions. Future sessions can reference this file to understand the current capabilities of the platform and SDKs.*
+## [1.3.1] - 2026-08-10
+### Added
+- **Global Showcase:** English Emerging Markets Crypto Adoption report on `public/index.html`.
+- **LangChain Autonomous Agent:** `examples/langchain_aipp_agent.py` with EU AI Act Article 26 receipts.
+- **n8n Workflow Template:** `examples/n8n_aipp_monetization_workflow.json`.
