@@ -3,7 +3,7 @@ import crypto from 'crypto';
 import { getDb } from '../config/database';
 import { AppError } from '../utils/error';
 import { getBtcUsdRate } from '../services/price';
-import { BASE_NETWORK_NAME, USDC_ADDRESS } from '../config/env';
+import { BASE_NETWORK_NAME, USDC_ADDRESS, LNBITS_URL, LNBITS_INVOICE_KEY } from '../config/env';
 import { getGatewayAddress } from '../services/base';
 import { createInvoice } from './invoice';
 
