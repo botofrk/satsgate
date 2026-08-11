@@ -336,15 +336,15 @@ export const checkInvoiceStatus = async (req: Request, res: Response, next: Next
     res.setHeader('Pragma', 'no-cache');
     res.setHeader('Expires', '0');
 
-    const hash = req.params.hash;
-    if (!hash) {
-      throw new AppError('Missing invoice hash', 400, 'BAD_REQUEST');
+    const hash = req.params.hash || (req.query.hash as string) || (req.query.payment_hash as string);
+    if (!hash || hash === 'undefined' || hash === 'null' || hash === '') {
+      return res.json({ paid: false, status: 'pending', error: 'Missing or empty invoice hash' });
     }
 
     const db = getDb();
     const invoice = await db.get('SELECT payment_hash, api_key, status, preimage, protocol, usdc_amount FROM invoices WHERE payment_hash = ?', hash);
     if (!invoice) {
-      throw new AppError('Invoice not found', 404, 'NOT_FOUND');
+      return res.json({ paid: false, status: 'pending', error: 'Invoice not found or pending settlement' });
     }
 
     // Allow simulation for the demo merchant (demo page testing)

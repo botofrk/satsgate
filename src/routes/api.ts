@@ -22,6 +22,7 @@ router.get('/merchant/transactions', getMerchantTransactions);
 
 // Invoice routes
 router.post('/invoice/create', createInvoice);
+router.get('/invoice/status', checkInvoiceStatus);
 router.get('/invoice/status/:hash', checkInvoiceStatus);
 router.get('/invoice/receipt/:hash', getReceipt);
 
