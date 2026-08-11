@@ -629,7 +629,9 @@ export const renderPaymentPage = async (req: Request, res: Response, next: NextF
           if (REDIRECT_URL && REDIRECT_URL.startsWith('http')) {
             document.getElementById('payment-instructions').textContent = 'Redirecting to your content...';
             setTimeout(() => {
-              window.location.href = REDIRECT_URL;
+              let target = REDIRECT_URL;
+              target += (target.includes('?') ? '&' : '?') + 'payment_hash=' + encodeURIComponent(hash);
+              window.location.href = target;
             }, 1400);
           } else {
             document.getElementById('payment-instructions').innerHTML = '<div style="color:#15803d; font-weight:700; font-size:14px; margin-top:8px;">✓ Thank you! Payment received directly to merchant wallet.</div>';

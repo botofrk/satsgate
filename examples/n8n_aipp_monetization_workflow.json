@@ -27,7 +27,7 @@
     },
     {
       "parameters": {
-        "httpMethod": "POST",
+        "httpMethod": "GET",
         "path": "aipp-monetized-workflow",
         "responseMode": "responseNode",
         "options": {}
@@ -39,7 +39,7 @@
     },
     {
       "parameters": {
-        "url": "=https://aipp.dev/invoice/status/{{ $json.body.payment_hash }}",
+        "url": "=https://aipp.dev/invoice/status/{{ $json.query.payment_hash || $json.body.payment_hash }}",
         "options": {}
       },
       "name": "Verify AIPP Preimage",
