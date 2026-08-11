@@ -123,6 +123,55 @@ export const renderPaymentPage = async (req: Request, res: Response, next: NextF
     const btcRate = getBtcUsdRate() || 65000;
     const calculatedSats = Math.max(1, Math.ceil((link.amount_usd / btcRate) * 100000000));
 
+    // ── CLI / CURL Terminal Output Handler ──
+    const userAgent = (req.headers['user-agent'] || '').toLowerCase();
+    const isCli = userAgent.includes('curl') || userAgent.includes('wget') || req.path.startsWith('/cli');
+    if (isCli) {
+      const preimageOrHash = (req.query.preimage || req.query.payment_hash || '') as string;
+      if (preimageOrHash) {
+        const verify = await db.get('SELECT status, preimage FROM invoices WHERE payment_hash = ? OR preimage = ?', preimageOrHash, preimageOrHash);
+        if (verify && verify.status === 'settled') {
+          return res.send(`\n\x1b[32m[AIPP PROTOCOL] PAYMENT VERIFIED & UNLOCKED\x1b[0m\nTarget URL / Payload: ${link.redirect_url}\nPreimage: ${verify.preimage}\n\n`);
+        }
+      }
+
+      let invoiceRes = '';
+      if (LNBITS_INVOICE_KEY) {
+        const invRes = await fetch(`${LNBITS_URL}/api/v1/payments`, {
+          method: 'POST',
+          headers: { 'X-Api-Key': LNBITS_INVOICE_KEY, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ out: false, amount: calculatedSats, memo: `AIPP CLI: ${link.title.substring(0, 20)}` })
+        });
+        if (invRes.ok) {
+          const invData = (await invRes.json()) as any;
+          invoiceRes = invData.payment_request;
+          await db.run(
+            'INSERT INTO invoices (payment_hash, api_key, amount_sats, commission_sats, forwarded_amount_sats, status, protocol, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+            invData.payment_hash, link.api_key, calculatedSats, Math.max(5, Math.ceil(calculatedSats * 0.01)), Math.max(1, calculatedSats - Math.max(5, Math.ceil(calculatedSats * 0.01))), 'pending', 'L402', new Date().toISOString()
+          );
+        }
+      }
+
+      const cliOutput = `
+\x1b[33m======================================================================\x1b[0m
+\x1b[1m⚡ AIPP PROTOCOL — CLI SMART PRICE TAG\x1b[0m
+\x1b[33m======================================================================\x1b[0m
+Asset:   ${link.title}
+Price:   $${link.amount_usd.toFixed(2)} USD (≈ ${calculatedSats} Sats)
+Tag ID:  ${link.id}
+Status:  \x1b[31mHTTP 402 PAYMENT REQUIRED\x1b[0m
+
+\x1b[1m[ Lightning Invoice ]\x1b[0m
+${invoiceRes || 'Visit https://aipp.dev/pay/' + link.id}
+
+Scan with Phoenix / Wallet of Satoshi, or pay via CLI.
+Once paid, run:
+  \x1b[36mcurl -s "https://aipp.dev/cli/${link.id}?payment_hash=<PAYMENT_HASH>"\x1b[0m
+\x1b[33m======================================================================\x1b[0m
+\n`;
+      return res.status(402).send(cliOutput);
+    }
+
     const html = `
 <!DOCTYPE html>
 <html lang="en">
@@ -625,8 +674,11 @@ export const renderPaymentPage = async (req: Request, res: Response, next: NextF
         const d = await r.json();
         if (d.paid) {
           clearInterval(pollInterval);
+          try {
+            window.parent.postMessage({ aippSettled: true, tagId: CURRENT_LINK_ID, hash: hash, preimage: d.preimage }, '*');
+          } catch(err) {}
           document.getElementById('status-dot').style.background = '#15803d';
-          document.getElementById('status-text').textContent = 'Payment Confirmed on Base!';
+          document.getElementById('status-text').textContent = 'Payment Confirmed!';
           if (REDIRECT_URL && REDIRECT_URL.startsWith('http')) {
             document.getElementById('payment-instructions').textContent = 'Redirecting to your content...';
             setTimeout(() => {

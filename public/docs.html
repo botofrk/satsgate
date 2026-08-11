@@ -196,11 +196,15 @@ code { font-family: 'JetBrains Mono', monospace; }
     <div class="sidebar-section">
       <div class="sidebar-title">No-Code &amp; Creators</div>
       <a href="#notion-templates" class="sidebar-link">Notion Paywalls &amp; Embeds</a>
-      <a href="#n8n-workflows" class="sidebar-link">n8n No-Code Workflows</a>
+      <a href="#blog-paywalls" class="sidebar-link">Ghost &amp; WordPress Blogs</a>
+      <a href="#n8n-workflows" class="sidebar-link">n8n &amp; Make.com Workflows</a>
+      <a href="#obsidian-vaults" class="sidebar-link">Obsidian Notes &amp; Vaults</a>
     </div>
     <div class="sidebar-section">
-      <div class="sidebar-title">AI &amp; Automations</div>
+      <div class="sidebar-title">AI &amp; Developers</div>
       <a href="#langchain-agents" class="sidebar-link">LangChain &amp; AI Agents</a>
+      <a href="#huggingface-gradio" class="sidebar-link">Hugging Face &amp; Gradio</a>
+      <a href="#cli-paywalls" class="sidebar-link">Terminal &amp; CLI Paywalls</a>
     </div>
     <div class="sidebar-section">
       <div class="sidebar-title">Protocols</div>
@@ -317,22 +321,81 @@ if receipt.get("status") == "settled":
       </div>
     </div>
 
-    <!-- SECTION: N8N AUTOMATION -->
-    <div class="section-block" id="n8n-workflows">
-      <div class="endpoint-badge badge-post">NO-CODE AUTOMATION · N8N / WEBHOOKS</div>
-      <h2>Monetizing n8n Workflows with Smart Tags</h2>
-      <p>Monetize any n8n workflow (e.g. AI Image Generation, Web Scraping, Financial PDF summary) in 3 minutes using AIPP Smart Price Tags and Webhook nodes.</p>
+    <!-- SECTION: BLOG PAYWALLS -->
+    <div class="section-block" id="blog-paywalls">
+      <div class="endpoint-badge badge-post">PUBLISHING · GHOST / WORDPRESS / SUBSTACK</div>
+      <h2>Pay-Per-Article Paywall Widget for Blogs</h2>
+      <p>Allow readers to unlock individual articles or premium chapters for <strong>$0.01 - $0.50 (16 - 750 Sats)</strong> without forcing a recurring monthly subscription.</p>
 
-      <p><strong>3-Step Integration Flow:</strong></p>
-      <ol style="margin-left: 20px; font-size: 14px; color: var(--fg-muted); line-height: 1.7; margin-bottom: 20px;">
-        <li>Create a Smart Tag on <a href="/#generator" style="color:var(--accent); font-weight:600;">aipp.dev</a> with your n8n Production Webhook URL as the redirect/fulfillment target.</li>
-        <li>In n8n, add an <strong>HTTP Request Node</strong> to verify the incoming payment: <code>GET https://aipp.dev/invoice/status/{{ $json.body.payment_hash }}</code>.</li>
-        <li>Use an <strong>If Node</strong>: If <code>status == "settled"</code>, deliver the premium AI workflow output; otherwise return an HTTP 402 challenge.</li>
-      </ol>
+      <p><strong>1-Line Embed Code:</strong></p>
+      <pre>
+&lt;!-- Paste inside any Ghost, WordPress, or HTML blog post --&gt;
+&lt;div data-aipp-tag="p_YOUR_TAG_ID" data-price="$0.05"&gt;
+  &lt;p&gt;This is your exclusive, premium article content unlocked instantly upon payment.&lt;/p&gt;
+&lt;/div&gt;
+&lt;script src="https://aipp.dev/aipp-widget.js"&gt;&lt;/script&gt;</pre>
+    </div>
+
+    <!-- SECTION: N8N & MAKE AUTOMATION -->
+    <div class="section-block" id="n8n-workflows">
+      <div class="endpoint-badge badge-post">NO-CODE AUTOMATION · N8N / MAKE.COM / ZAPIER</div>
+      <h2>Monetizing n8n &amp; Make.com Workflows</h2>
+      <p>Monetize any n8n or Make.com workflow (e.g. AI Image Generation, Web Scraping, Financial PDF summary) in 3 minutes using AIPP Smart Price Tags and Webhooks.</p>
 
       <div style="background:#f4f4f5; border:1px solid #e4e4e7; border-radius:10px; padding:16px; margin-bottom:20px; font-size:13px; color:var(--fg);">
-        ⚡ <strong>Download Ready-to-Import Workflow:</strong> Grab the complete n8n template JSON from our GitHub: <a href="https://github.com/botofrk/satsgate/blob/main/examples/n8n_aipp_monetization_workflow.json" target="_blank" rel="noopener" style="color:var(--accent); font-weight:700;">examples/n8n_aipp_monetization_workflow.json</a>
+        ⚡ <strong>Download Templates:</strong>
+        <ul style="margin-left: 20px; margin-top: 8px;">
+          <li><a href="https://github.com/botofrk/satsgate/blob/main/examples/n8n_aipp_monetization_workflow.json" target="_blank" rel="noopener" style="color:var(--accent); font-weight:700;">n8n Workflow JSON</a></li>
+          <li><a href="https://github.com/botofrk/satsgate/blob/main/examples/make_aipp_monetization_blueprint.json" target="_blank" rel="noopener" style="color:var(--accent); font-weight:700;">Make.com Blueprint JSON</a></li>
+        </ul>
       </div>
+    </div>
+
+    <!-- SECTION: OBSIDIAN VAULTS -->
+    <div class="section-block" id="obsidian-vaults">
+      <div class="endpoint-badge badge-post">PKM &amp; NOTES · OBSIDIAN.MD</div>
+      <h2>Monetizing Obsidian Notes &amp; Vaults</h2>
+      <p>Sell Obsidian vaults, research databases, or interactive canvas notes with zero platform fees and instant satoshi payouts.</p>
+      
+      <pre>
+&lt;!-- Embed in Obsidian Publish or Markdown notes --&gt;
+&lt;iframe src="https://aipp.dev/embed/p_YOUR_TAG_ID" style="width:100%; max-width:360px; height:380px; border:none; border-radius:10px;"&gt;&lt;/iframe&gt;</pre>
+    </div>
+
+    <!-- SECTION: HUGGING FACE & GRADIO -->
+    <div class="section-block" id="huggingface-gradio">
+      <div class="endpoint-badge badge-post">AI MODELS · HUGGING FACE / GRADIO</div>
+      <h2>Monetizing AI Models &amp; Gradio Spaces</h2>
+      <p>Charge users per inference or image generation to cover GPU costs on Hugging Face Spaces using Bitcoin Lightning L402.</p>
+
+      <pre>
+# Python Gradio Example (pip install aipp-sdk)
+from aipp import Aipp
+
+client = Aipp(api_key="aipp_merch_YOUR_KEY")
+
+def generate_image(prompt, preimage=None):
+    if not preimage:
+        charge = client.create_charge(amount_usd=0.02, protocol="L402", memo=f"GPU: {prompt[:20]}")
+        return {"status": "PAYMENT_REQUIRED", "invoice": charge.payment_request, "sats": charge.amount_sats}
+    
+    receipt = client.get_receipt(preimage)
+    if receipt.status == "settled":
+        return {"status": "SUCCESS", "image_url": "https://..."}</pre>
+    </div>
+
+    <!-- SECTION: CLI & TERMINAL -->
+    <div class="section-block" id="cli-paywalls">
+      <div class="endpoint-badge badge-post">DEVELOPER UTILITY · BASH / CLI</div>
+      <h2>Terminal &amp; Curl Paywalls</h2>
+      <p>Sell bash scripts, dotfiles, or datasets directly through the terminal with zero browser required.</p>
+
+      <pre>
+# 1. Trigger terminal paywall & get ASCII Lightning Invoice
+curl https://aipp.dev/cli/p_9c48c15180a1
+
+# 2. Pay with wallet, then unlock payload directly in stdout
+curl -s "https://aipp.dev/cli/p_9c48c15180a1?payment_hash=YOUR_HASH"</pre>
     </div>
 
     <!-- SECTION: EXTENSION GUIDE -->

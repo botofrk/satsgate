@@ -34,6 +34,7 @@ router.delete('/merchant/links/:linkId', deletePaymentLink);
 router.get('/pay/:linkId', renderPaymentPage);
 router.get('/t/:linkId', renderPaymentPage);
 router.get('/embed/:linkId', renderPaymentPage);
+router.get('/cli/:linkId', renderPaymentPage);
 router.post('/pay/:linkId/invoice', createLinkInvoice);
 router.post('/t/:linkId/invoice', createLinkInvoice);
 router.post('/embed/:linkId/invoice', createLinkInvoice);
