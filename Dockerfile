@@ -21,8 +21,8 @@ EXPOSE 3000
 
 ENV NODE_ENV=production
 
-# [HIGH-5 FIX] Set ownership and switch to non-root user
-RUN chown -R appuser:appgroup /app
+# [HIGH-5 FIX] Set ownership, permissions and switch to non-root user
+RUN chown -R appuser:appgroup /app && chmod -R 755 /app
 USER appuser
 
 CMD ["npx", "tsx", "src/server.ts"]
