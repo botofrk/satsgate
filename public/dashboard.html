@@ -1520,6 +1520,11 @@ async function loginWithPasskey() {
     const options = data.options;
     options.challenge = base64UrlToBuffer(options.challenge);
     if (options.allowCredentials) {
+      if (options.allowCredentials.length === 0) {
+        alert('Henüz sistemde aktif bir Passkey kaydınız bulunmuyor. Lütfen önce cüzdan adresinizle Passkey oluşturun.');
+        openPasskeyRegisterModal();
+        return;
+      }
       options.allowCredentials = options.allowCredentials.map(c => ({ ...c, id: base64UrlToBuffer(c.id) }));
     }
 

@@ -157,14 +157,15 @@ export async function getAuthenticationOptions(apiKey?: string, ceremonyType: 'l
   const db = getDb();
   let allowCredentials: any[] | undefined = undefined;
 
-  if (apiKey) {
-    const passkeys = await db.all('SELECT credential_id, transports FROM merchant_passkeys WHERE api_key = ?', apiKey);
-    if (passkeys.length > 0) {
-      allowCredentials = passkeys.map((p) => ({
-        id: p.credential_id,
-        transports: p.transports ? JSON.parse(p.transports) : undefined,
-      }));
-    }
+  const passkeys = apiKey
+    ? await db.all('SELECT credential_id, transports FROM merchant_passkeys WHERE api_key = ?', apiKey)
+    : await db.all('SELECT credential_id, transports FROM merchant_passkeys LIMIT 100');
+
+  if (passkeys.length > 0) {
+    allowCredentials = passkeys.map((p) => ({
+      id: p.credential_id,
+      transports: p.transports ? JSON.parse(p.transports) : undefined,
+    }));
   }
 
   const options = await generateAuthenticationOptions({
