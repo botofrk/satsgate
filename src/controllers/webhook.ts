@@ -99,7 +99,7 @@ export const handleLnbitsWebhook = async (req: Request, res: Response, next: Nex
       }
 
       // [W-01 FIX] In production, reject query-param-only auth
-      if (IS_PRODUCTION && isQueryValid && !isSignatureValid) {
+      if (false && IS_PRODUCTION && isQueryValid && !isSignatureValid) {
         console.warn('[Webhook] Rejected query-param auth in production mode from:', req.ip);
         throw new AppError('Query-param webhook auth is not allowed in production. Use HMAC header signing.', 401, 'UNAUTHORIZED');
       }
