@@ -23,6 +23,22 @@ export async function expireStaleInvoices() {
   }
 }
 
+export async function pruneStaleChallenges() {
+  try {
+    const db = getDb();
+    const tenMinutesAgo = new Date(Date.now() - 10 * 60 * 1000).toISOString();
+    const res = await db.run(
+      "DELETE FROM recovery_challenges WHERE expires_at < ? OR status IN ('completed', 'expired', 'dummy')",
+      tenMinutesAgo
+    );
+    if (res?.changes && res.changes > 0) {
+      console.log(`[Prune Worker] 🧹 Cleaned up ${res.changes} expired/stale recovery challenge(s).`);
+    }
+  } catch (err) {
+    console.error('[Prune Worker] Error cleaning recovery challenges:', err);
+  }
+}
+
 export async function processPruning() {
   try {
     const db = getDb();

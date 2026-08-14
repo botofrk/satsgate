@@ -637,16 +637,26 @@ export const verifyRecoveryChallenge = async (req: Request, res: Response, next:
       throw new AppError('Challenge ID is required.', 400, 'INVALID_CHALLENGE_ID');
     }
 
-    const db = getDb();
-    const challenge = await db.get("SELECT * FROM recovery_challenges WHERE id = ? AND status = 'pending'", challenge_id);
+    const UNIFIED_VERIFY_ERROR = new AppError(
+      'Recovery verification failed. Invalid challenge or signature.',
+      400,
+      'RECOVERY_VERIFICATION_FAILED'
+    );
 
-    if (!challenge) {
-      throw new AppError('Recovery challenge not found, expired, or already used.', 400, 'CHALLENGE_NOT_FOUND');
+    const db = getDb();
+    const challenge = await db.get("SELECT * FROM recovery_challenges WHERE id = ?", challenge_id);
+
+    // Dummy / Non-existent / Used challenge handling: execute dummy crypto verification for 100% latency parity
+    if (!challenge || challenge.status !== 'pending') {
+      try {
+        verifyMessage('Dummy challenge message to sign for execution latency parity', signature || '0x1234');
+      } catch {}
+      throw UNIFIED_VERIFY_ERROR;
     }
 
     if (new Date(challenge.expires_at).getTime() < Date.now()) {
       await db.run("UPDATE recovery_challenges SET status = 'expired' WHERE id = ?", challenge_id);
-      throw new AppError('Recovery challenge has expired. Please request a new challenge.', 400, 'CHALLENGE_EXPIRED');
+      throw UNIFIED_VERIFY_ERROR;
     }
 
     // Find the merchant
@@ -655,13 +665,16 @@ export const verifyRecoveryChallenge = async (req: Request, res: Response, next:
       : await db.get('SELECT api_key, ln_address, usdc_address FROM merchants WHERE LOWER(ln_address) = LOWER(?)', challenge.address);
 
     if (!merchant) {
-      throw new AppError('Recovery challenge not found, expired, or already used.', 400, 'CHALLENGE_NOT_FOUND');
+      try {
+        verifyMessage('Dummy challenge message to sign for execution latency parity', signature || '0x1234');
+      } catch {}
+      throw UNIFIED_VERIFY_ERROR;
     }
 
     // 1. Verify EVM Signature
     if (challenge.address_type === 'evm') {
       if (!signature || typeof signature !== 'string') {
-        throw new AppError('Signature is required for EVM wallet verification.', 400, 'MISSING_SIGNATURE');
+        throw UNIFIED_VERIFY_ERROR;
       }
 
       const messageToSign = `Sign this message to rotate your AIPP Merchant Key:\n\nChallenge ID: ${challenge.id}\nNonce: ${challenge.nonce}\nExpires: ${challenge.expires_at}`;
@@ -669,19 +682,19 @@ export const verifyRecoveryChallenge = async (req: Request, res: Response, next:
       try {
         recoveredAddress = verifyMessage(messageToSign, signature);
       } catch (err) {
-        throw new AppError('Invalid cryptographic signature format.', 400, 'INVALID_SIGNATURE');
+        throw UNIFIED_VERIFY_ERROR;
       }
 
       if (
         recoveredAddress.toLowerCase() !== challenge.address.toLowerCase() ||
         recoveredAddress.toLowerCase() !== (merchant.usdc_address || '').toLowerCase()
       ) {
-        throw new AppError('Cryptographic signature does not match registered merchant wallet.', 401, 'SIGNATURE_MISMATCH');
+        throw UNIFIED_VERIFY_ERROR;
       }
     } else {
-      // 2. Verify Lightning Address ownership via LN signature or proof
+      // 2. Verify Lightning Address ownership
       if (!signature && !preimage) {
-        throw new AppError('Wallet ownership verification signature or LN proof is required.', 400, 'MISSING_PROOF');
+        throw UNIFIED_VERIFY_ERROR;
       }
 
       if (signature) {
@@ -690,10 +703,10 @@ export const verifyRecoveryChallenge = async (req: Request, res: Response, next:
           const messageToSign = `Sign this message to rotate your AIPP Merchant Key:\n\nChallenge ID: ${challenge.id}\nNonce: ${challenge.nonce}\nExpires: ${challenge.expires_at}`;
           recoveredAddress = verifyMessage(messageToSign, signature);
         } catch {
-          throw new AppError('Invalid signature format.', 400, 'INVALID_SIGNATURE');
+          throw UNIFIED_VERIFY_ERROR;
         }
         if (merchant.usdc_address && recoveredAddress.toLowerCase() !== merchant.usdc_address.toLowerCase()) {
-          throw new AppError('Signature mismatch.', 401, 'SIGNATURE_MISMATCH');
+          throw UNIFIED_VERIFY_ERROR;
         }
       }
     }
