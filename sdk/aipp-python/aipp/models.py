@@ -32,8 +32,8 @@ class PayoutResponse(BaseModel):
     amount_sats: Optional[int] = None
     amount_usd: Optional[float] = None
 
-class ReceiptCompliance(BaseModel):
-    regulation: str
+class ReceiptRecord(BaseModel):
+    type: str
     note: str
 
 class ReceiptFinancials(BaseModel):
@@ -48,12 +48,12 @@ class ReceiptPaymentDetails(BaseModel):
     merchant_destination: Optional[str] = None
 
 class ReceiptResponse(BaseModel):
-    """EU AI Act Article 26 compliant receipt for a settled invoice."""
+    """Machine-readable receipt for a settled invoice."""
     receipt_id: str
     transaction_id: str
     date: str
     status: str
-    compliance: ReceiptCompliance
+    record: ReceiptRecord
     payment_details: ReceiptPaymentDetails
     financials: ReceiptFinancials
 

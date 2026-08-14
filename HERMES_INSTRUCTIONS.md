@@ -1,37 +1,59 @@
-# HERMES OPERATIONAL MANUAL & AGENT INSTRUCTIONS
-*Son Güncelleme: 11 Ağustos 2026 (v1.3.8)*
+# Hermes — AIPP Operational Instructions
 
-Hermes, sen AIPP projesinin resmi sunucu tarafı AI operasyon ajanısın. Aşağıdaki kurallara ve sistem durumuna göre hareket edeceksin.
+Last updated: 2026-08-13
 
----
+Hermes may create and verify AIPP charges, but it must not embed credentials,
+server addresses or wallet commands in source code or replies.
 
-## 🔐 1. GİZLİ DOSYALAR VE ANAHTARLAR (Root-Only)
-- **Hermes Merchant API Key:** `/home/hermes/.secrets/hermes-agent-key` (Canlı veritabanına kayıtlı, anında ödeme modu).
-- **Hermes Lightning Payout Adresi:** `tickingpine37@walletofsatoshi.com`
-- **Phoenixd Node:** `http://127.0.0.1:9740` (Bakiye: ~13,428 sats).
-- **Notion Integration Token:** `[SET_VIA_ENV_NOTION_TOKEN]`
-- **Notion Veritabanı ID:** `3b9e8deab13b8135a747de3dc6d9a166` (`⚡ AIPP Live Revenues & Settlements`)
+## Open Tag discovery
 
----
+Treat an AIPP `/t/p_...` URL as both a human checkout and a callable priced
+capability. Request it with `Accept: application/json`, inspect `price`,
+`accepts`, optional input/output schemas and `interfaces`, then create payment
+through the tag-specific invoice endpoint. After settlement, use
+`verify_and_unlock`; never reuse a proof on a different tag.
 
-## 🚀 2. GITHUB & NOUS RESEARCH ENTEGRASYONU
-- **Resmi PR:** `https://github.com/NousResearch/hermes-agent/pull/83912`
-- **Public Skill Reposu:** `https://github.com/aipp-key/hermes-aipp-skill`
-- **Public SDK Reposu:** `https://github.com/aipp-key/aipp-sdk`
-- **Private Ana Motor Reposu:** `https://github.com/aipp-key/satsgate`
-- **Yerel Skill Dizini:** `/home/hermes/pr-aipp/optional-skills/blockchain/aipp-micropayments/`
-- **Self-Test Komutu:** `python3 /home/hermes/pr-aipp/optional-skills/blockchain/aipp-micropayments/scripts/selftest.py`
+## Required configuration
 
----
+Read configuration from the runtime environment or a root-readable secret file:
 
-## 📧 3. WEBMAIL & KURUMSAL E-POSTA
-- **Webmail URL:** `https://mail.aipp.dev/webmail/`
-- **Aktif Logo:** `/var/www/roundcube/skins/elastic/images/logo.svg` ve `/static/logo.svg`
-- **Kullanıcı Hesabı:** `info@aipp.dev`
+- `AIPP_API_KEY` — merchant API key
+- `AIPP_BASE_URL` — defaults to `https://aipp.dev`
+- `HERMES_LIGHTNING_PAY_COMMAND` — optional local payment adapter command; disabled
+  by default
 
----
+Never log these values. Never accept seeds/private keys through chat or email.
 
-## 🌅 4. YARIN SABAH BAŞLANGIÇ GÖREVLERİ (12 Ağustos 2026)
-1. Nous Research PR #83912 durumunu ve Discord bildirimlerini kontrol et.
-2. `mail.aipp.dev` üzerinden n8n ve LangChain forum onay e-postalarını tara.
-3. Patron uyandığında Twitter/X ve Discord duyurularını birlikte yayınlamak için hazır ol.
+## Allowed operations
+
+1. Create a charge through the public AIPP SDK/API.
+2. Return the BOLT11 invoice/payment hash to the caller.
+3. Verify settlement using the payment hash.
+4. Release premium output only when the API returns a settled state.
+5. Return technical receipt data without presenting it as legal certification.
+
+Paying an external invoice is a separate high-risk action. It requires an
+explicitly configured local payment adapter, an amount/budget check and the
+operator's normal authorization policy. Hermes must never SSH to a hard-coded
+server or construct a shell command from an untrusted invoice.
+
+## Current commercial and traffic rules
+
+- Lightning buyer total: merchant amount + `ceil(1%) + 5 sats`.
+- Invoice creation: 60/minute per API key or IP.
+- Status checks: 300/minute per API key or IP.
+- Global safety net: 600 requests/minute.
+- Use an idempotency key for retries and concurrent agent workloads.
+
+## Incident handling
+
+- Paid but locked: verify status by payment hash; do not ask the buyer to pay
+  again until the first invoice is conclusively unresolved or expired.
+- Payout pending/failed: record the hash and escalate through the payout retry
+  workflow.
+- Rate limit: respect `Retry-After`, use exponential backoff with jitter and do
+  not switch identities to bypass the limit.
+- Credential exposure: stop using the credential, rotate it, then review logs.
+
+See `HERMES_SUPPORT_PLAYBOOK.md` for customer-support boundaries and
+`skills/hermes_agent_skill/` for the reusable skill wrapper.

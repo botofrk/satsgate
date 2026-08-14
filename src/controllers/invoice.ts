@@ -176,22 +176,7 @@ export const checkInvoiceStatus = async (req: Request, res: Response, next: Next
       return res.json({ paid: false, status: 'pending', error: 'Invoice not found or pending settlement' });
     }
 
-    // Allow simulation for the demo merchant (demo page testing)
-    const isDemoMerchant = invoice.api_key === 'aipp_merch_5053bb61d143c879';
     const queryTxHash = req.query.tx_hash as string;
-    if (invoice.status === 'pending' && isDemoMerchant && (req.query.simulate === 'true' || queryTxHash === '0xmocktxhash')) {
-      await settleDemoInvoice(hash);
-      invoice.status = 'settled';
-      if (invoice.protocol === 'x402' || queryTxHash === '0xmocktxhash') {
-        await db.run("UPDATE invoices SET preimage = '0xmocktxhash', protocol = 'x402' WHERE payment_hash = ?", hash);
-        invoice.preimage = '0xmocktxhash';
-        invoice.protocol = 'x402';
-      } else {
-        await db.run("UPDATE invoices SET preimage = '0000000000000000000000000000000000000000000000000000000000000000', protocol = 'L402' WHERE payment_hash = ?", hash);
-        invoice.preimage = '0000000000000000000000000000000000000000000000000000000000000000';
-        invoice.protocol = 'L402';
-      }
-    }
 
     // Handle DUAL Protocol Verification
     if (invoice.protocol === 'dual') {
@@ -442,7 +427,7 @@ export const getReceipt = async (req: Request, res: Response, next: NextFunction
     const invoice = await db.get(`
       SELECT 
         i.payment_hash, i.api_key, i.amount_sats, i.commission_sats, i.forwarded_amount_sats, 
-        i.status, i.protocol, i.usdc_amount, i.created_at, i.preimage,
+        i.status, i.protocol, i.usdc_amount, i.created_at, i.preimage, i.tag_id,
         m.ln_address, m.usdc_address
       FROM invoices i
       LEFT JOIN merchants m ON i.api_key = m.api_key
@@ -474,11 +459,13 @@ export const getReceipt = async (req: Request, res: Response, next: NextFunction
     const receipt = {
       receipt_id: `rec_${crypto.randomUUID()}`,
       transaction_id: invoice.payment_hash,
+      tag_id: invoice.tag_id || null,
+      resource: invoice.tag_id ? `/t/${invoice.tag_id}` : null,
       date: invoice.created_at,
       status: invoice.status,
-      compliance: {
-        regulation: 'EU AI Act Article 26',
-        note: 'This receipt serves as a verifiable record of a machine-to-machine transaction.'
+      record: {
+        type: 'machine-readable payment receipt',
+        note: 'This is a technical transaction record and is not a legal compliance certification.'
       },
       payment_details: {
         protocol: invoice.protocol,

@@ -1,60 +1,58 @@
-# AIPP Chrome Extension — Kurulum ve Kullanım Kılavuzu
+# AIPP Chrome Extension — Kurulum ve Kullanım
 
-Bu dosya, **AIPP Creator & Autopay Chrome Eklentisi'ni** Google Chrome tarayıcısına nasıl yükleyeceğinizi ve nasıl kullanacağınızı adım adım anlatır.
+Sürüm: 1.1.0 — 13 Ağustos 2026
 
----
+## Yükleme
 
-## 🚀 1. Eklentiyi Chrome'a Yükleme (Adım Adım)
+1. Chrome'da `chrome://extensions` adresini açın.
+2. **Geliştirici Modu**nu açın.
+3. **Paketlenmemiş öğe yükle**yi seçin.
+4. Projedeki `aipp-key/extension` klasörünü seçin.
 
-1. **Google Chrome** tarayıcınızı açın.
-2. Adres çubuğuna aşağıdaki adresi yazıp `Enter` tuşuna basın:
-   ```
-   chrome://extensions
-   ```
-3. Sayfanın sağ üst köşesinde bulunan **"Geliştirici Modu" (Developer Mode)** anahtarını açın.
-4. Sol üstte beliren **"Paketlenmemiş öğe yükle" (Load unpacked)** butonuna tıklayın.
-5. Dosya seçici penceresinde bilgisayarınızdaki şu klasörü seçin:
-   ```
-   C:\Users\ucala\Desktop\aipp-key\extension
-   ```
-6. Tebrikler! 🎉 **aipp.dev — Monetization & Autopay** eklentisi Chrome araç çubuğunuza eklendi.
+## İlk ayar
 
----
+**Payout Wallet** sekmesinde Lightning/Base adresinizi kaydederek yeni bir API
+anahtarı alın veya **Already have one?** bağlantısıyla mevcut anahtarınızı girin.
+Anahtar yalnızca bu Chrome profilinin yerel extension storage alanında tutulur;
+Chrome Sync'e veya dashboard URL'sine yazılmaz.
 
-## 🔒 2. Eklentiyi Kullanma (Sıfır Kod ile İçerik Kilitleme)
+## Quick Link
 
-### A. İlk Ayar (Cüzdan / API Key Bağlama):
-1. Chrome araç çubuğundaki **AIPP simgesine** (sarı halkalı simge) tıklayın.
-2. **⚙️ Wallet Key** sekmesine geçin.
-3. Lightning Adresinizi (örn: `yourname@getalby.com`) veya `aipp.dev` API Anahtarınızı girip **"Save Wallet Settings"** butonuna basın.
+Başlık, $0.01–$100 arası fiyat ve ödeme sonrası açılacak geçerli bir `http(s)`
+URL girin. **Generate Pay Link** gerçek bir Smart Tag üretir ve paylaşılabilir
+`aipp.dev/t/p_...` Open Tag bağlantısını verir. Bu tek URL tarayıcıda checkout,
+agent istemcisinde ise makine manifesti olarak çalışır. Eklenti sonuç ekranından
+insan bağlantısını veya Agent Manifest adresini ayrı ayrı kopyalayabilirsiniz.
 
-### B. Herhangi Bir Web Sayfasındaki İçeriği Kilitleme (No-Code Element Picker):
-1. Kilitlemek istediğiniz herhangi bir web sitesine gidin (Wordpress, Substack, Medium, vb.).
-2. AIPP Chrome eklentisini açın ve **🔒 Lock Content** sekmesindeki **"Pick & Lock Element"** butonuna tıklayın.
-3. Fareyi kilitli hale getirmek istediğiniz paragrafın, görselin veya indirme linkinin üzerine getirin (Öğe sarı renkle vurgulanacaktır).
-4. Sol tıklayın! Seçtiğiniz içerik anında blurlanır ve ödeme duvarı (Paywall) ile kilitlenir.
+## Create Tag / Element Picker
 
-### C. Hızlı Ödeme Linki (Quick Pay Link) Oluşturma:
-1. Eklenti menüsündeki **⚡ Quick Link** sekmesine tıklayın.
-2. Ürün Adı, Fiyat ($1.00) ve İndirme Linkini girip **"Generate Pay Link"** butonuna basın.
-3. Oluşan linki kopyalayıp müşterilerinize veya sosyal medyada paylaşın.
+1. Kontrol ettiğiniz web sayfasını açın.
+2. Fiyatı girip **Stick Tag to Element** düğmesine basın.
+3. Eklenti gerçek Smart Tag'i oluşturduktan sonra sayfadaki öğeyi seçin.
+4. Mevcut sayfada yalnızca bir önizleme gösterilir; yayınlanabilir embed kodu
+   panoya kopyalanır.
+5. Kalıcı olması için kodu web sitenizin editörüne yapıştırıp yayınlayın.
 
----
+## Önemli güvenlik sınırı
 
-## 📁 Eklenti Klasör Yapısı (Geliştiriciler İçin)
+Element Picker'ın ürettiği embed istemci tarafında görsel bir ödeme duvarıdır.
+Gizli içeriği HTML kaynak kodunun içine koymayın; teknik kullanıcılar istemci
+tarafı blur efektini kaldırabilir. Gerçekten gizli dosya, API çıktısı veya özel
+bağlantı için **Quick Link** ile ödeme sonrası fulfillment yönlendirmesini ya da
+sunucu tarafı HTTP 402 doğrulamasını kullanın.
 
-```
-c:\Users\ucala\Desktop\aipp-key\extension\
-├── manifest.json            # Chrome Manifest V3 konfigürasyonu
+## Klasör yapısı
+
+```text
+extension/
+├── manifest.json
 ├── popup/
-│   ├── popup.html           # Eklenti açılır pencere tasarımı
-│   └── popup.js             # Eklenti ön yüz mantığı
+│   ├── popup.html
+│   └── popup.js
 ├── content/
-│   ├── content.js           # Sayfa üstü element seçici (Picker) & paywall enjeksiyonu
-│   └── content.css          # Seçim vurgulama ve kilit stilleri
-└── background/
-    └── service_worker.js    # Arka plan servisleri & Sağ tık menüsü
+│   ├── content.js
+│   └── content.css
+└── icons/
 ```
 
----
-*Destek ve Dokümantasyon:* [aipp.dev/docs.html](https://aipp.dev/docs.html)
+Destek ve dokümantasyon: <https://aipp.dev/docs.html>

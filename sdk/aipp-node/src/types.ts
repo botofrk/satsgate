@@ -19,6 +19,8 @@ export interface ChargeResponse {
   token?: string;
   payment_request?: string; // For L402
   amount_sats?: number; // For L402
+  commission_sats?: number;
+  merchant_amount_sats?: number;
 }
 
 export interface ChargeStatus {
@@ -39,8 +41,8 @@ export interface PayoutResponse {
   amount_usd?: number;
 }
 
-export interface ReceiptCompliance {
-  regulation: string;
+export interface ReceiptRecord {
+  type: string;
   note: string;
 }
 
@@ -57,13 +59,13 @@ export interface ReceiptPaymentDetails {
   merchant_destination: string | null;
 }
 
-/** EU AI Act Article 26 compliant receipt for a settled invoice */
+/** Machine-readable receipt for a settled invoice. */
 export interface ReceiptResponse {
   receipt_id: string;
   transaction_id: string;
   date: string;
   status: string;
-  compliance: ReceiptCompliance;
+  record: ReceiptRecord;
   payment_details: ReceiptPaymentDetails;
   financials: ReceiptFinancials;
 }

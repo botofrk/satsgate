@@ -77,7 +77,7 @@ export class Aipp {
   }
 
   /**
-   * Retrieves an EU AI Act Article 26 compliant receipt for a settled invoice.
+   * Retrieves a machine-readable receipt for a settled invoice.
    * Only available for invoices with status = 'settled'.
    */
   async getReceipt(paymentHash: string): Promise<ReceiptResponse> {
@@ -93,9 +93,17 @@ export class Aipp {
    * Returns the PaidMCP.dev compatible marketplace manifest for this merchant.
    * Use this JSON to list your AIPP-protected endpoints on AI agent directories.
    */
-  async getMarketplaceManifest(): Promise<MarketplaceManifest> {
-    return this.request<MarketplaceManifest>('/paidmcp.json', {
-      method: 'GET',
+  /**
+   * Creates a 3-second Smart Price Tag
+   */
+  async createTag(params: { title: string; price: number; redirectUrl?: string }): Promise<{ id: string; url: string; title: string; amount_usd: number }> {
+    return this.request<{ id: string; url: string; title: string; amount_usd: number }>('/merchant/links/create', {
+      method: 'POST',
+      body: JSON.stringify({
+        title: params.title,
+        amount_usd: params.price,
+        redirect_url: params.redirectUrl || 'https://aipp.dev'
+      })
     });
   }
 }

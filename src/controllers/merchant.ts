@@ -55,7 +55,7 @@ export const registerMerchant = async (req: Request, res: Response, next: NextFu
 
     const db = getDb();
     
-    // If merchant already exists, return credentials seamlessly (Zero-friction wallet login)
+    // A public wallet address is not authentication. Never disclose an existing key for it.
     const existing = await db.get(
       'SELECT api_key, ln_address, email, payout_mode, payout_threshold_sats, usdc_address FROM merchants WHERE ln_address = ? OR (usdc_address IS NOT NULL AND LOWER(usdc_address) = LOWER(?))',
       ln_address,
@@ -83,7 +83,10 @@ export const registerMerchant = async (req: Request, res: Response, next: NextFu
         }
       }
 
-      // Seamless return of existing merchant session
+      if (!isAuthenticated) {
+        throw new AppError('This wallet is already registered. Sign in with your merchant API key.', 409, 'MERCHANT_EXISTS');
+      }
+
       return res.json({
         api_key: existing.api_key,
         ln_address: existing.ln_address,
@@ -339,7 +342,7 @@ export const getMerchantStats = async (req: Request, res: Response, next: NextFu
     if (!apiKey) throw new AppError('Missing API key', 401, 'UNAUTHORIZED');
     
     const db = getDb();
-    const merchant = await db.get('SELECT ln_address, usdc_address, payout_threshold_sats FROM merchants WHERE api_key = ?', apiKey);
+    const merchant = await db.get('SELECT ln_address, usdc_address, payout_mode, payout_threshold_sats FROM merchants WHERE api_key = ?', apiKey);
     if (!merchant) throw new AppError('Invalid API key', 401, 'UNAUTHORIZED');
 
     const rangeParam = req.query.range as string || '30';
@@ -403,9 +406,9 @@ export const getMerchantStats = async (req: Request, res: Response, next: NextFu
     for (const p of payoutStats) {
       if (!p.net_sats) continue;
       netEarnedSats += p.net_sats;
-      if (p.payout_status === 'completed') {
+      if (p.payout_status === 'forwarded' || p.payout_status === 'completed') {
         settledToWalletSats += p.net_sats;
-      } else if (p.payout_status === 'none') {
+      } else if (['none', 'pending_threshold', 'pending_manual'].includes(p.payout_status)) {
         availableToSettleSats += p.net_sats;
       }
     }
@@ -417,16 +420,19 @@ export const getMerchantStats = async (req: Request, res: Response, next: NextFu
       settledToWalletSats,
       availableToSettleSats,
       settlementThresholdSats: merchant.payout_threshold_sats,
+      payoutMode: merchant.payout_mode,
       lastSettlementAt: lastPayout?.created_at || null,
       lastSettlementStatus: lastPayout?.status || null,
       wallets: {
         lightning: {
           configured: !!merchant.ln_address,
+          address: merchant.ln_address || null,
           status: merchant.ln_address ? 'configured' : 'not_configured',
           lastSuccessfulSettlementAt: lastLn?.last_date || null
         },
         base: {
           configured: !!merchant.usdc_address,
+          address: merchant.usdc_address || null,
           status: merchant.usdc_address ? 'configured' : 'not_configured',
           lastSuccessfulSettlementAt: lastUsdc?.last_date || null
         }
@@ -468,10 +474,11 @@ export const getMerchantTransactions = async (req: Request, res: Response, next:
     if (isNaN(offset) || offset < 0) offset = 0;
 
     const txs = await db.all(
-      `SELECT payment_hash, amount_sats, commission_sats, forwarded_amount_sats, status, payout_status, protocol, usdc_amount, created_at 
-       FROM invoices 
-       WHERE api_key = ? AND (created_at >= ? OR ? = 'all') 
-       ORDER BY created_at DESC 
+      `SELECT i.payment_hash, i.amount_sats, i.commission_sats, i.forwarded_amount_sats, i.status, i.payout_status, i.protocol, i.usdc_amount, i.preimage, i.created_at,
+              (SELECT pq.payout_reference FROM payout_queue pq WHERE pq.payment_hash = i.payment_hash AND pq.api_key = i.api_key ORDER BY pq.created_at DESC LIMIT 1) AS payout_reference
+       FROM invoices i
+       WHERE i.api_key = ? AND (i.created_at >= ? OR ? = 'all') 
+       ORDER BY i.created_at DESC 
        LIMIT ? OFFSET ?`,
       apiKey, fromDateStr, isAll, limit, offset
     );

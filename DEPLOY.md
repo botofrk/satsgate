@@ -55,6 +55,7 @@ PORT=3000
 LNBITS_URL=https://legend.lnbits.com
 LNBITS_INVOICE_KEY=your_lnbits_read_invoice_key
 LNBITS_ADMIN_KEY=your_lnbits_admin_write_key
+AIPP_RECEIPT_SECRET=generate_a_long_random_value
 ```
 
 Make sure to replace `LNBITS_URL`, `LNBITS_INVOICE_KEY`, and `LNBITS_ADMIN_KEY` with your actual LNBits server credentials.
@@ -74,7 +75,7 @@ sudo npm install -y -g pm2
 Start the application with PM2 (using tsx runner for TypeScript):
 
 ```bash
-pm2 start "npx tsx index.ts" --name "aipp-gateway"
+pm2 start "npx tsx src/server.ts" --name "aipp-gateway"
 ```
 
 Configure PM2 to automatically start the application when the server reboots:
@@ -182,7 +183,7 @@ Defaults are set to automatically rotate logs once they hit 10MB or daily.
 
 ## 8. Post-Deployment Verification (Staging Sanity Check)
 
-To guarantee 100% transactional reliability and verify that funds routing, webhook callbacks, and split-commissions function correctly in production before launching publicly, perform the following dry-run tests:
+To verify routing, webhook callbacks and fee accounting before launch, perform the following staging tests:
 
 ### Step A: Register a Real Test Merchant
 1. Navigate to your live landing page: `https://your-domain.com`
@@ -190,18 +191,18 @@ To guarantee 100% transactional reliability and verify that funds routing, webho
 3. Input a real, active personal Lightning Address (e.g., `yourusername@getalby.com` or your Phoenix wallet address).
 4. Click **Get API Key** and copy your generated API Key (`aipp_merch_...`).
 
-### Step B: Perform a Small Real Payment (100 Sats)
+### Step B: Perform a Small Real Payment (100-Sat Merchant Price)
 1. Go to the **Checkout** tab on the live demo.
 2. Click **Buy Now** to generate a real BOLT11 invoice.
 3. Open a separate mobile Lightning wallet containing a small balance (e.g., Phoenix, Strike, Alby, Breez).
-4. Scan the QR code or copy the invoice string and pay **100 satoshis** (approx. $0.03).
+4. Confirm that checkout shows a 100-sat merchant price, a 6-sat AIPP fee and a 106-sat buyer total; then pay the invoice.
 
 ### Step C: Verify Payout & Ledger Integrity
 1. Once paid, check the **Payout Status** tab to confirm the payment was detected.
-2. Verify in your merchant cüzdan (receiver wallet) that you instantly received **99 satoshis** (99% split forwarding).
+2. Verify that the merchant payout is **100 satoshis**, or that it is visibly queued for retry if the destination is unavailable.
 3. Access your developer dashboard (`https://your-domain.com/dashboard.html`), log in with your API key, and check:
-   * **Volume Routed**: Should register 100 sats.
-   * **AIPP Commission (1%)**: Should register 1 sat.
+   * **Merchant Amount**: Should register 100 sats.
+   * **AIPP Fee**: Should register 6 sats (`ceil(1%) + 5`).
    * **Transactional Ledger**: The transaction status must be marked as `settled` with split details.
 
 ---

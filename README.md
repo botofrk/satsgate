@@ -1,4 +1,10 @@
-# AIPP — Developer Monetization Platform
+# AIPP — Open Smart Tags
+
+> **Price it once. Anyone can use it — human or agent.**
+
+An AIPP Open Tag is one URL that renders a compact checkout for a person and a
+machine-readable priced capability for an agent. Lightning and Base USDC share
+the same tag, exact-resource payment binding and fulfillment flow.
 
 > **Mission:** Make software monetization as easy as adding a middleware.  
 > **Vision:** Every API, AI Agent, MCP Server, and SaaS should be able to start accepting payments with one SDK.  
@@ -8,13 +14,15 @@
 
 ## ⚡ What is AIPP?
 
-AIPP is a **Set & Forget Monetization Platform** for developers. It eliminates the thousands of lines of boilerplate code required to charge for APIs, AI Agent tools (MCP), premium content, and digital downloads.
+AIPP is an **Open Tag publishing layer** for creators and developers. One priced
+URL can sell a link to a person, describe a callable tool to an agent, and bind
+the resulting payment proof to the exact resource being unlocked.
 
-**Revenue Model:** AIPP is a non-custodial monetization platform. Merchant funds are settled directly to the merchant wallet. AIPP charges a transparent platform fee according to the selected plan — no hidden costs, no surprise deductions.
+**Revenue Model:** AIPP charges a disclosed per-payment fee. Lightning payments are received by the AIPP gateway and the merchant amount is forwarded automatically to the configured wallet. AIPP does not provide prepaid credits or a spendable merchant balance.
 
-- **Direct settlement.** Funds go straight to your Lightning address or EVM wallet.
-- **Transparent fees.** A small platform fee applies per transaction based on your plan.
-- **No lock-in.** Non-custodial by design — AIPP never holds your funds.
+- **Automatic payout.** Merchant proceeds are forwarded to the configured wallet.
+- **Transparent fees.** Lightning costs 1% + 5 sats per successful payment.
+- **No subscription or prepaid credit.** Revenue comes from successful transactions.
 
 ---
 
@@ -22,7 +30,7 @@ AIPP is a **Set & Forget Monetization Platform** for developers. It eliminates t
 
 ### 1. Install the SDK
 ```bash
-npm install @aipp/sdk
+npm install aipp-sdk
 # or
 pip install aipp
 ```
@@ -32,7 +40,7 @@ pip install aipp
 #### Express.js / Node.js
 ```typescript
 import express from 'express';
-import { aipp, protectApi } from '@aipp/sdk';
+import { protectApi } from 'aipp-sdk';
 
 const app = express();
 
@@ -69,13 +77,13 @@ def search_database(query: str) -> str:
 
 ---
 
-## 🔒 Non-Custodial & Dual-Rail Settlement
+## 🔒 Lightning & Base USDC
 
 AIPP supports dual-rail micro-settlements:
 - ⚡ **Bitcoin Lightning Network** (via L402 / WebLN)
 - 🔵 **Base USDC** (via x402 / EVM Wallet)
 
-Funds settle **instantly** to your merchant wallet address.
+Successful payments trigger an automatic payout workflow to the merchant wallet. Failed or uncertain payouts are queued for reconciliation rather than exposed as spendable account credit.
 
 ---
 

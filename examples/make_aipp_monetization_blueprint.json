@@ -1,0 +1,73 @@
+{
+  "name": "AIPP Smart Tag Paywall for Make.com & Zapier",
+  "version": 1,
+  "description": "Monetize a Make.com scenario using AIPP Bitcoin Lightning and Base USDC payment challenges.",
+  "modules": [
+    {
+      "id": 1,
+      "module": "gateway:CustomWebHook",
+      "version": 1,
+      "parameters": {
+        "hook": "aipp-monetized-scenario"
+      },
+      "metadata": {
+        "designer": { "x": 100, "y": 200 }
+      }
+    },
+    {
+      "id": 2,
+      "module": "http:ActionMakeRequest",
+      "version": 3,
+      "parameters": {
+        "url": "https://aipp.dev/invoice/status/{{1.payment_hash}}",
+        "method": "GET",
+        "headers": [
+          { "name": "Content-Type", "value": "application/json" }
+        ]
+      },
+      "metadata": {
+        "designer": { "x": 350, "y": 200 }
+      }
+    },
+    {
+      "id": 3,
+      "module": "router:Router",
+      "version": 1,
+      "metadata": {
+        "designer": { "x": 600, "y": 200 }
+      }
+    },
+    {
+      "id": 4,
+      "module": "gateway:WebhookRespond",
+      "version": 1,
+      "parameters": {
+        "status": 200,
+        "body": "{\n  \"status\": \"success\",\n  \"data\": \"Premium automation payload delivered.\",\n  \"preimage\": \"{{2.data.preimage}}\"\n}"
+      },
+      "filter": {
+        "name": "Payment Is Settled",
+        "conditions": [[{ "a": "{{2.data.status}}", "o": "text:equal", "b": "settled" }]]
+      },
+      "metadata": {
+        "designer": { "x": 850, "y": 100 }
+      }
+    },
+    {
+      "id": 5,
+      "module": "gateway:WebhookRespond",
+      "version": 1,
+      "parameters": {
+        "status": 402,
+        "body": "{\n  \"error\": \"Payment required\",\n  \"code\": 402,\n  \"open_tag\": \"https://aipp.dev/t/p_YOUR_TAG_ID\",\n  \"manifest\": \"https://aipp.dev/t/p_YOUR_TAG_ID/manifest\"\n}"
+      },
+      "filter": {
+        "name": "Payment Unpaid / Pending",
+        "conditions": [[{ "a": "{{2.data.status}}", "o": "text:notequal", "b": "settled" }]]
+      },
+      "metadata": {
+        "designer": { "x": 850, "y": 300 }
+      }
+    }
+  ]
+}

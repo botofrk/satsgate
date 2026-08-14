@@ -2,22 +2,20 @@
 
 *Last Updated: July 15, 2026*
 
-AIPP.dev is an **open-source, non-custodial** payment routing software designed to be deployed and operated by merchants and AI agents on their own self-hosted infrastructure. This document outlines the legal status of the software, terms of use, and the nature of the platform fees.
+AIPP.dev is payment-challenge and automatic-payout software for Smart Tags, APIs and AI workflows. Hosted deployments may receive a payment before forwarding merchant proceeds, so this document does not claim that every deployment is legally non-custodial.
 
 ---
 
-## 1. Non-Custodial Software Status
-AIPP.dev developers and code contributors do not provide banking, custody, money transmission, or exchange services.
-* The software is designed to instantly route payments directly to destinations specified by the user (Lightning Address or EVM wallet addresses).
-* Geliştiricilerin/Developers have no access to, control over, or possession of users' private keys, funds, or databases.
+## 1. Software and Funds Flow
+Self-hosted operators and hosted service operators may have different responsibilities. In the hosted flow, customer funds can reach an AIPP-controlled gateway before merchant proceeds are forwarded automatically. Merchants do not receive a general-purpose spending account or prepaid credit balance from AIPP.
 
 ---
 
 ## 2. Nature of Platform Fees (Software Routing & Licensing Fee)
-AIPP.dev charges a **transparent platform fee** per successful transaction, based on the merchant's selected plan. The exact fee percentage is published on the pricing page and is never hidden.
+AIPP.dev charges a **transparent platform fee** per successful transaction. The amount is shown before payment.
 * This fee is a **"Software Routing & Licensing Fee"** designed to support the ongoing development, updates, and maintenance of the platform and its ecosystem.
-* Paralleling standard practices in Web3 and decentralized finance (DeFi) (such as MetaMask Swap fees or Uniswap router fees), this fee is applied autonomously at the software code level. Funds are never pooled, held in custody, or re-distributed by the developers before settlement.
-* The fee schedule is subject to change based on the merchant's active plan tier (Free, Pro, Business, or Enterprise).
+* Lightning pricing is currently 1% + 5 sats per successful payment.
+* Operators remain responsible for determining the legal, tax and licensing requirements applicable to their deployment and jurisdiction.
 
 ---
 

@@ -1,4 +1,6 @@
 #!/bin/bash
+# LEGACY: do not use for Open Tag production releases. It can rewrite compose
+# configuration. Use ./deploy_open_tag.sh and DEPLOY_OPEN_TAG.md instead.
 # AIPP-KEY Deploy Script - Sunucuda çalıştırın
 set -e
 

@@ -22,21 +22,50 @@ body.aipp-picker-active * {
   transition: all 0.4s ease !important;
 }
 
+.aipp-extension-preview {
+  position: relative !important;
+  display: block !important;
+  width: 100% !important;
+}
+
+#aipp-picker-toast {
+  position: fixed !important;
+  top: 16px !important;
+  left: 50% !important;
+  transform: translateX(-50%) !important;
+  max-width: min(620px, calc(100vw - 32px)) !important;
+  background: #fffdf9 !important;
+  color: #0f0f11 !important;
+  border: 1.5px solid #e8ddd4 !important;
+  padding: 12px 20px !important;
+  border-radius: 12px !important;
+  font: 700 12px/1.45 sans-serif !important;
+  z-index: 2147483647 !important;
+  box-shadow: 0 8px 24px rgba(26,25,24,0.12) !important;
+  text-align: center !important;
+}
+
 .aipp-paywall-overlay-badge {
   position: absolute !important;
   top: 50% !important;
   left: 50% !important;
   transform: translate(-50%, -50%) !important;
-  background: #0f0f11 !important;
-  color: #ffc700 !important;
-  border: 1px solid rgba(255, 199, 0, 0.4) !important;
-  padding: 12px 20px !important;
+  background: #fffdf9 !important;
+  color: #0f0f11 !important;
+  border: 1.5px solid #e8ddd4 !important;
+  border-top: 5px solid #ffc700 !important;
+  padding: 14px 24px !important;
   border-radius: 12px !important;
-  font-family: 'Space Grotesk', sans-serif !important;
+  font-family: 'Inter', sans-serif !important;
   font-size: 13px !important;
-  font-weight: 700 !important;
-  box-shadow: 0 8px 24px rgba(0,0,0,0.4) !important;
+  font-weight: 800 !important;
+  box-shadow: 0 8px 32px rgba(26,25,24,0.15), 0 2px 0 #e0d4c8, 0 4px 0 #d8ccc0 !important;
   z-index: 999999 !important;
   cursor: pointer !important;
   text-align: center !important;
+  transition: all 0.2s ease !important;
+}
+.aipp-paywall-overlay-badge:hover {
+  transform: translate(-50%, -52%) !important;
+  box-shadow: 0 12px 48px rgba(26,25,24,0.2), 0 2px 0 #e0d4c8, 0 4px 0 #d8ccc0 !important;
 }

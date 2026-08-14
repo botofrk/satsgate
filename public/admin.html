@@ -20,9 +20,10 @@
     --fg-subtle: #999690;
     --border: #e6e2dc;
     --border-subtle: #eeeae4;
-    --accent: #c2613c;
-    --accent-light: #fbeee7;
-    --accent-hover: #b05330;
+    --brand: #ffc700;
+  --accent: #806300;
+    --accent-light: #fffbdf;
+    --accent-hover: #eab600;
     --green: #15803d;
     --green-bg: #ecfdf5;
     --red: #b91c1c;
@@ -72,12 +73,7 @@
   .logo-icon {
     width: 24px;
     height: 24px;
-    background: var(--fg);
-    border-radius: 6px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: var(--bg);
+    display: block;
   }
   .admin-tag {
     font-family: 'JetBrains Mono', monospace;
@@ -287,7 +283,7 @@
     border-color: var(--fg-muted);
   }
   .btn-retry {
-    background: var(--accent);
+    background: var(--brand);
     color: #fff;
     border: none;
     padding: 6px 12px;
@@ -351,9 +347,7 @@
 <header>
   <div style="display:flex; align-items:center; gap:12px;">
     <a href="/" class="logo">
-      <div class="logo-icon">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/></svg>
-      </div>
+      <img class="logo-icon" src="/assets/aipp-mark.svg" alt="">
       <span>aipp</span>
     </a>
     <span class="admin-tag">Admin Console</span>
@@ -469,7 +463,8 @@ const API = window.location.origin + '/admin';
 let adminKey = '';
 
 window.onload = () => {
-  const saved = localStorage.getItem('aipp_admin_key');
+  const saved = sessionStorage.getItem('aipp_admin_key');
+  localStorage.removeItem('aipp_admin_key');
   if (saved) {
     adminKey = saved;
     showDashboard();
@@ -480,13 +475,13 @@ async function login() {
   const val = document.getElementById('admin-key-input').value.trim();
   if (!val) return;
   adminKey = val;
-  localStorage.setItem('aipp_admin_key', adminKey);
+  sessionStorage.setItem('aipp_admin_key', adminKey);
   showDashboard();
 }
 
 function logout() {
   adminKey = '';
-  localStorage.removeItem('aipp_admin_key');
+  sessionStorage.removeItem('aipp_admin_key');
   document.getElementById('admin-key-input').value = '';
   document.getElementById('login-view').style.display = 'block';
   document.getElementById('dashboard-view').classList.remove('active');

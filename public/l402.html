@@ -398,7 +398,6 @@
             <div class="payment-waiting">
               <span class="spinner"></span> Waiting for payment...
             </div>
-            <button class="btn-simulate-ln" onclick="simulateL402Payment()">Simulate Payment (1-Click)</button>
           </div>
 
           <div id="x402-section" style="display:none;">
@@ -410,7 +409,6 @@
             </div>
             <div class="x402-actions">
               <button class="action-btn-web3" id="demo-web3-btn" onclick="payWithWeb3Demo()">Pay with Web3 Wallet</button>
-              <button class="btn-simulate-ln" onclick="simulateX402Payment()">Simulate Payment (1-Click)</button>
             </div>
             <div class="payment-waiting" style="margin-top:16px;">
               <span class="spinner"></span> Waiting for on-chain tx...
@@ -483,7 +481,7 @@ app.<span class="c-fn">post</span>(<span class="c-str">'/mcp/tool'</span>, <span
     <a href="l402.html">For AI Agents</a>
     <a href="docs.html">Docs</a>
   </div>
-  <p>© 2026 aipp.dev · Non-Custodial Developer Monetization Platform</p>
+  <p>© 2026 aipp.dev · Smart Tag Developer Monetization Platform</p>
 </footer>
 
 <script src="https://cdn.jsdelivr.net/npm/qrcode@1.4.4/build/qrcode.min.js"></script>
@@ -505,7 +503,7 @@ app.<span class="c-fn">post</span>(<span class="c-str">'/mcp/tool'</span>, <span
         usdc_address: '0xFCAd0B19bB29D4674531d6f115237E16AfCE377c'
       })
     });
-    if (res.status === 409) return 'aipp_merch_5053bb61d143c879';
+    if (res.status === 409) throw new Error("Demo merchant already exists; configure a dedicated demo key on the server.");
     if (!res.ok) throw new Error("Failed to create mock merchant");
     const data = await res.json();
     return data.api_key;
@@ -575,12 +573,11 @@ app.<span class="c-fn">post</span>(<span class="c-str">'/mcp/tool'</span>, <span
     }
   }
 
-  function startPolling(paymentHash, txHash, forceSimulate) {
+  function startPolling(paymentHash, txHash) {
     if (pollInterval) clearInterval(pollInterval);
     pollInterval = setInterval(async () => {
       try {
         let query = txHash ? `?tx_hash=${txHash}` : '';
-        if (forceSimulate) query = query ? query + '&simulate=true' : '?simulate=true';
         const res = await fetch(`${API_URL}/invoice/status/${paymentHash}${query}`);
         const data = await res.json();
         if (data.status === 'settled') {
@@ -589,16 +586,6 @@ app.<span class="c-fn">post</span>(<span class="c-str">'/mcp/tool'</span>, <span
         }
       } catch(e) {}
     }, 2000);
-  }
-
-  function simulateL402Payment() {
-    document.getElementById('log-activity-stream').innerText = '> Simulating payment settlement...';
-    startPolling(currentPaymentHash, null, true);
-  }
-
-  async function simulateX402Payment() {
-    document.getElementById('log-activity-stream').innerText = '> Simulating on-chain transaction verification...';
-    startPolling(currentPaymentHash, '0xmocktxhash');
   }
 
   function copyInvoiceText(btn) {
@@ -658,9 +645,9 @@ app.<span class="c-fn">post</span>(<span class="c-str">'/mcp/tool'</span>, <span
     
     document.getElementById('log-status-line').innerText = 'HTTP/1.1 200 OK';
     document.getElementById('log-status-line').style.color = '#4ade80';
-    document.getElementById('log-authenticate-line').innerText = isX402 ? 
-      'Authorization: Bearer 0xmocktxhash' : 
-      'Authorization: L402 macaroon="..." preimage="0000000000000000000000000000000000000000000000000000000000000000"';
+    document.getElementById('log-authenticate-line').innerText = isX402 ?
+      'Payment-Signature: <verified Base transaction hash>' :
+      'Authorization: L402 <token>:<verified preimage>';
     
     const logsContainer = document.getElementById('logs-container');
     const oldStream = document.getElementById('log-activity-stream');

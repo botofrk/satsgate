@@ -43,6 +43,7 @@ export async function processPayoutQueue() {
 
       // 2. Process the job outside the database transaction (non-blocking)
       try {
+        let payoutReference = '';
         const isX402 = job.protocol === 'x402';
         // [K-11 FIX] is_demo is now determined by explicit flag, not string prefix
         const isDemo = !isX402 && (job.payment_hash.startsWith('demo_') || job.payment_hash.startsWith('mock_'));
@@ -50,10 +51,12 @@ export async function processPayoutQueue() {
         if (isX402) {
           console.log(`[Payout Worker] Processing job ${job.id} - ${job.usdc_amount} USDC to ${job.usdc_address}`);
           const txHash = await sendUsdcPayout(job.usdc_address, job.usdc_amount);
+          payoutReference = txHash;
           console.log(`[Payout Worker] ✅ USDC payout successful: ${txHash}`);
         } else {
           console.log(`[Payout Worker] Processing job ${job.id} - ${job.amount_sats} sats to ${job.ln_address}`);
           const payoutHash = await payLightningAddress(job.ln_address, job.amount_sats, isDemo);
+          payoutReference = payoutHash;
           console.log(`[Payout Worker] ✅ Lightning payout successful: ${payoutHash}`);
         }
         
@@ -61,10 +64,32 @@ export async function processPayoutQueue() {
         const releaseSuccess = await acquireTransactionLock();
         try {
           await db.run('BEGIN IMMEDIATE TRANSACTION');
-          await db.run("UPDATE payout_queue SET status = 'completed' WHERE id = ?", job.id);
+          // The queued amount is already the merchant net. Never calculate the fee twice.
+          const isX402 = job.protocol === 'x402';
+          let commissionSats = 0;
+          let forwardedSats = 0;
+          if (!isX402) {
+            if (job.payment_hash.startsWith('batch_') || job.payment_hash.startsWith('manual_')) {
+              const totals = await db.get(
+                "SELECT COALESCE(SUM(commission_sats), 0) AS fee, COALESCE(SUM(forwarded_amount_sats), 0) AS net FROM invoices WHERE api_key = ? AND payout_status = 'queued'",
+                job.api_key
+              );
+              commissionSats = totals?.fee ?? 0;
+              forwardedSats = totals?.net ?? job.amount_sats;
+            } else {
+              const invoiceAmounts = await db.get(
+                'SELECT commission_sats, forwarded_amount_sats FROM invoices WHERE payment_hash = ?',
+                job.payment_hash
+              );
+              commissionSats = invoiceAmounts?.commission_sats ?? 0;
+              forwardedSats = invoiceAmounts?.forwarded_amount_sats ?? job.amount_sats;
+            }
+          }
 
-          // Update individual invoices
-          if (job.payment_hash.startsWith('batch_')) {
+          await db.run("UPDATE payout_queue SET status = 'completed', payout_reference = ?, last_error = NULL WHERE id = ?", payoutReference, job.id);
+
+          // Update individual invoices only after their recorded amounts were read.
+          if (job.payment_hash.startsWith('batch_') || job.payment_hash.startsWith('manual_')) {
             await db.run(
               "UPDATE invoices SET payout_status = 'forwarded' WHERE api_key = ? AND payout_status = 'queued'",
               job.api_key
@@ -72,11 +97,6 @@ export async function processPayoutQueue() {
           } else {
             await db.run("UPDATE invoices SET payout_status = 'forwarded' WHERE payment_hash = ?", job.payment_hash);
           }
-
-          // [HIGH-4 FIX] Record actual commission in ledger (was always 0)
-          const isX402 = job.protocol === 'x402';
-          const commissionSats = isX402 ? 0 : Math.max(20, Math.ceil(job.amount_sats * 0.01));
-          const forwardedSats = isX402 ? 0 : (job.amount_sats - commissionSats);
 
           await db.run(
             'INSERT INTO ledgers (id, payment_hash, api_key, amount_sats, commission_sats, timestamp) VALUES (?, ?, ?, ?, ?, ?)',
@@ -149,10 +169,11 @@ export async function processPayoutQueue() {
         const newStatus = isUncertain ? 'uncertain' : 'failed_safe_to_retry';
 
         await db.run(
-          "UPDATE payout_queue SET status = ?, attempts = ?, next_retry_at = ? WHERE id = ?",
+          "UPDATE payout_queue SET status = ?, attempts = ?, next_retry_at = ?, last_error = ? WHERE id = ?",
           newStatus,
           attempts,
           nextRetry,
+          String(err.message || err).slice(0, 1000),
           job.id
         );
 

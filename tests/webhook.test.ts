@@ -128,5 +128,22 @@ describe('Persistent Webhook Queue Integration Tests', () => {
     const updatedDelivery = await db.get("SELECT * FROM webhook_deliveries WHERE id = ?", delivery.id);
     expect(updatedDelivery.status).toBe('completed');
     expect(fetchMock).toHaveBeenCalled();
+
+    // Verify HMAC signature headers were passed to merchant callback
+    const callbackCall = fetchMock.mock.calls.find(c => c[0] === 'https://merchant.example.com/callback');
+    expect(callbackCall).toBeDefined();
+    const requestOptions = callbackCall[1];
+    expect(requestOptions.headers['X-AIPP-Signature']).toBeDefined();
+    expect(requestOptions.headers['X-AIPP-Timestamp']).toBeDefined();
+    expect(requestOptions.headers['X-AIPP-Signature']).toMatch(/^t=\d+,v1=[a-f0-9]{64}$/);
+
+    // Verify merchant can validate signature using their API key
+    const sigHeader = requestOptions.headers['X-AIPP-Signature'];
+    const timestamp = requestOptions.headers['X-AIPP-Timestamp'];
+    const expectedSig = crypto
+      .createHmac('sha256', 'webhook_test_merchant_key')
+      .update(`${timestamp}.${requestOptions.body}`)
+      .digest('hex');
+    expect(sigHeader).toBe(`t=${timestamp},v1=${expectedSig}`);
   });
 });

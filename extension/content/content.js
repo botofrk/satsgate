@@ -1,147 +1,121 @@
-// AIPP Content Script — DOM Picker & L402 Autopay Detect
-(function() {
-  let isPickerActive = false;
-  let currentHoverTarget = null;
-  let targetLockPrice = 0.10;
+// AIPP Content Script — element picker for a real, previously minted Smart Tag.
+(function () {
+  if (globalThis.__aippContentScriptLoaded) return;
+  globalThis.__aippContentScriptLoaded = true;
 
-  // Listen for messages from Popup
-  chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-    if (request.action === 'START_PICKER') {
-      targetLockPrice = request.price || 0.10;
-      enablePicker();
-      sendResponse({ status: 'PICKER_ENABLED' });
+  let pickerActive = false;
+  let hoverTarget = null;
+  let tag = null;
+
+  chrome.runtime.onMessage.addListener((request, _sender, sendResponse) => {
+    if (request.action !== 'START_PICKER') return;
+    if (!request.tagId || !request.checkoutUrl) {
+      sendResponse({ status: 'ERROR', error: 'A real Smart Tag is required.' });
+      return;
     }
+    tag = {
+      id: request.tagId,
+      checkoutUrl: request.checkoutUrl,
+      price: Number(request.price) || 0.10
+    };
+    enablePicker();
+    sendResponse({ status: 'PICKER_ENABLED' });
   });
 
   function enablePicker() {
-    isPickerActive = true;
+    if (pickerActive) disablePicker();
+    pickerActive = true;
     document.body.classList.add('aipp-picker-active');
-    showToast(`🎯 AIPP Picker Active: Hover & Click any element to lock ($${targetLockPrice.toFixed(2)}). Press ESC to cancel.`);
-    document.addEventListener('mouseover', handleMouseOver, true);
-    document.addEventListener('mouseout', handleMouseOut, true);
-    document.addEventListener('click', handleClick, true);
-    document.addEventListener('keydown', handleKeyDown, true);
+    showToast(`Select an element for Smart Tag ${tag.id}. Press ESC to cancel.`);
+    document.addEventListener('mouseover', onMouseOver, true);
+    document.addEventListener('mouseout', onMouseOut, true);
+    document.addEventListener('click', onClick, true);
+    document.addEventListener('keydown', onKeyDown, true);
   }
 
   function disablePicker() {
-    isPickerActive = false;
+    pickerActive = false;
     document.body.classList.remove('aipp-picker-active');
-    hideToast();
-    if (currentHoverTarget) {
-      currentHoverTarget.classList.remove('aipp-picker-hover');
-      currentHoverTarget = null;
+    if (hoverTarget) hoverTarget.classList.remove('aipp-picker-hover');
+    hoverTarget = null;
+    document.removeEventListener('mouseover', onMouseOver, true);
+    document.removeEventListener('mouseout', onMouseOut, true);
+    document.removeEventListener('click', onClick, true);
+    document.removeEventListener('keydown', onKeyDown, true);
+  }
+
+  function showToast(message, timeout = 0) {
+    let toast = document.getElementById('aipp-picker-toast');
+    if (!toast) {
+      toast = document.createElement('div');
+      toast.id = 'aipp-picker-toast';
+      document.body.appendChild(toast);
     }
-    document.removeEventListener('mouseover', handleMouseOver, true);
-    document.removeEventListener('mouseout', handleMouseOut, true);
-    document.removeEventListener('click', handleClick, true);
-    document.removeEventListener('keydown', handleKeyDown, true);
+    toast.textContent = message;
+    toast.style.display = 'block';
+    if (timeout) setTimeout(() => { toast.style.display = 'none'; }, timeout);
   }
 
-  function showToast(msg) {
-    let t = document.getElementById('aipp-picker-toast');
-    if (!t) {
-      t = document.createElement('div');
-      t.id = 'aipp-picker-toast';
-      t.style.position = 'fixed';
-      t.style.top = '16px';
-      t.style.left = '50%';
-      t.style.transform = 'translateX(-50%)';
-      t.style.background = '#0f0f11';
-      t.style.color = '#ffc700';
-      t.style.border = '2px solid #ffc700';
-      t.style.padding = '10px 20px';
-      t.style.borderRadius = '8px';
-      t.style.fontSize = '12px';
-      t.style.fontWeight = '700';
-      t.style.zIndex = '9999999';
-      t.style.boxShadow = '0 4px 16px rgba(0,0,0,0.4)';
-      t.style.fontFamily = 'sans-serif';
-      document.body.appendChild(t);
-    }
-    t.innerHTML = msg;
-    t.style.display = 'block';
+  function onMouseOver(event) {
+    if (!pickerActive) return;
+    event.stopPropagation();
+    if (hoverTarget) hoverTarget.classList.remove('aipp-picker-hover');
+    hoverTarget = event.target;
+    hoverTarget.classList.add('aipp-picker-hover');
   }
 
-  function hideToast() {
-    const t = document.getElementById('aipp-picker-toast');
-    if (t) t.style.display = 'none';
+  function onMouseOut(event) {
+    if (pickerActive && event.target) event.target.classList.remove('aipp-picker-hover');
   }
 
-  function handleMouseOver(e) {
-    if (!isPickerActive) return;
-    e.stopPropagation();
-    if (currentHoverTarget) currentHoverTarget.classList.remove('aipp-picker-hover');
-    currentHoverTarget = e.target;
-    currentHoverTarget.classList.add('aipp-picker-hover');
-  }
-
-  function handleMouseOut(e) {
-    if (!isPickerActive) return;
-    e.stopPropagation();
-    if (e.target) e.target.classList.remove('aipp-picker-hover');
-  }
-
-  function handleClick(e) {
-    if (!isPickerActive) return;
-    e.preventDefault();
-    e.stopPropagation();
-
-    const selectedElement = e.target;
-    disablePicker();
-
-    // Lock the element
-    lockElementWithPaywall(selectedElement, targetLockPrice);
-  }
-
-  function handleKeyDown(e) {
-    if (e.key === 'Escape' && isPickerActive) {
+  function onKeyDown(event) {
+    if (event.key === 'Escape' && pickerActive) {
       disablePicker();
+      showToast('AIPP selection cancelled.', 1800);
     }
   }
 
-  function lockElementWithPaywall(el, price) {
-    // Prevent locking body or html document directly
-    if (el === document.body || el === document.documentElement) return;
+  function onClick(event) {
+    if (!pickerActive) return;
+    event.preventDefault();
+    event.stopImmediatePropagation();
+    const selected = event.target;
+    disablePicker();
+    attachPreviewAndCopyEmbed(selected);
+  }
 
-    // Generate paywall container wrapping selected element
-    const container = document.createElement('div');
-    container.style.position = 'relative';
-    container.style.display = 'block';
-    container.style.width = '100%';
-
-    if (el.parentNode && el.parentNode.nodeType === 1) {
-      el.parentNode.insertBefore(container, el);
-      container.appendChild(el);
-    } else {
+  async function attachPreviewAndCopyEmbed(element) {
+    if (!element || element === document.body || element === document.documentElement) {
+      showToast('Choose a smaller page element.', 2200);
       return;
     }
 
-    el.classList.add('aipp-locked-element');
+    const container = document.createElement('div');
+    container.className = 'aipp-extension-preview';
+    element.parentNode.insertBefore(container, element);
+    container.appendChild(element);
+    element.classList.add('aipp-locked-element');
 
-    // Create Paywall Badge with addEventListener (CSP compliant)
-    const badge = document.createElement('div');
+    const badge = document.createElement('button');
+    badge.type = 'button';
     badge.className = 'aipp-paywall-overlay-badge';
-    badge.innerHTML = `🔒 Unlock Full Content ($${price.toFixed(2)})`;
-    
-    badge.addEventListener('click', (e) => {
-      e.preventDefault();
-      e.stopPropagation();
-      window.open(`https://aipp.dev/checkout.html?price=${price}`, '_blank');
+    badge.textContent = `Unlock — $${tag.price.toFixed(2)}`;
+    badge.addEventListener('click', (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      window.open(tag.checkoutUrl, '_blank', 'noopener,noreferrer');
     });
-
     container.appendChild(badge);
 
-    // Generate HTML Embed Snippet & Copy to Clipboard for Editors (Blogger / WordPress)
-    const rawContentHtml = el.outerHTML;
-    const embedHtml = `<div data-aipp-src="demo" data-aipp-price="${price}">${rawContentHtml}</div>\n<script src="https://aipp.dev/paywall.js"></script>`;
+    const cleanContent = element.cloneNode(true);
+    cleanContent.classList.remove('aipp-locked-element', 'aipp-picker-hover');
+    const embed = `<div data-aipp-tag="${tag.id}" data-price="$${tag.price.toFixed(2)}">\n${cleanContent.outerHTML}\n</div>\n<script src="https://aipp.dev/aipp-widget.js" async></script>`;
 
-    navigator.clipboard.writeText(embedHtml).then(() => {
-      showToast(`✅ Locked! AIPP Paywall code copied to clipboard. Paste into your HTML editor.`);
-      setTimeout(hideToast, 4000);
-    }).catch(() => {
-      showToast(`✅ Locked element on page for $${price.toFixed(2)}!`);
-      setTimeout(hideToast, 3000);
-    });
+    try {
+      await navigator.clipboard.writeText(embed);
+      showToast(`Smart Tag ${tag.id} minted. Embed code copied. This page change is only a preview until you paste and publish the code.`, 6000);
+    } catch {
+      showToast(`Smart Tag ${tag.id} minted. Clipboard access failed.`, 5000);
+    }
   }
-
 })();

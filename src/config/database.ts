@@ -84,6 +84,8 @@ export async function initDb(): Promise<Database> {
       usdc_address TEXT,
       usdc_amount REAL,
       status TEXT NOT NULL DEFAULT 'pending', -- pending, processing, failed, completed
+      payout_reference TEXT,
+      last_error TEXT,
       attempts INTEGER NOT NULL DEFAULT 0,
       next_retry_at TEXT NOT NULL,
       created_at TEXT NOT NULL
@@ -121,6 +123,10 @@ export async function initDb(): Promise<Database> {
       title TEXT NOT NULL,
       amount_usd REAL NOT NULL,
       redirect_url TEXT NOT NULL,
+      capability_type TEXT NOT NULL DEFAULT 'link',
+      description TEXT,
+      input_schema TEXT,
+      output_schema TEXT,
       created_at TEXT NOT NULL
     );
   `);
@@ -196,12 +202,41 @@ export async function initDb(): Promise<Database> {
     // Ignore
   }
 
+  try {
+    await dbInstance.exec('ALTER TABLE payout_queue ADD COLUMN payout_reference TEXT;');
+  } catch (err) {
+    // Ignore
+  }
+
+  try {
+    await dbInstance.exec('ALTER TABLE payout_queue ADD COLUMN last_error TEXT;');
+  } catch (err) {
+    // Ignore
+  }
+
   // Migration: Add api_key column to webhook_deliveries
   try {
     await dbInstance.exec('ALTER TABLE webhook_deliveries ADD COLUMN api_key TEXT;');
   } catch (err) {
     // Ignore
   }
+
+  // Open Tag migrations. Invoices are bound to the exact priced capability so
+  // a proof for one tag cannot unlock another tag owned by the same merchant.
+  for (const migration of [
+    "ALTER TABLE payment_links ADD COLUMN capability_type TEXT NOT NULL DEFAULT 'link';",
+    'ALTER TABLE payment_links ADD COLUMN description TEXT;',
+    'ALTER TABLE payment_links ADD COLUMN input_schema TEXT;',
+    'ALTER TABLE payment_links ADD COLUMN output_schema TEXT;',
+    'ALTER TABLE invoices ADD COLUMN tag_id TEXT;'
+  ]) {
+    try {
+      await dbInstance.exec(migration);
+    } catch (err) {
+      // Column already exists.
+    }
+  }
+  await dbInstance.exec('CREATE INDEX IF NOT EXISTS idx_invoices_tag_id ON invoices (tag_id, status);');
 
   console.log('⚡ SQLite Database file initialized (aipp.db).');
 

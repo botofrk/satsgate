@@ -40,24 +40,28 @@ export const getAippAgentManifest = async (req: Request, res: Response) => {
   const baseUrl = `${protocol}://${host}`;
 
   const agentManifest = {
-    spec_version: "1.0",
+    spec_version: "1.1",
     name: "aipp Smart Tag Studio",
-    description: "Standardized non-custodial gateway for AI agent machine-to-machine payments.",
-    version: "1.2.3",
+    description: "Open Tags: one priced capability for people, agents and automated workflows.",
+    version: "1.3.0",
     endpoints: {
       create_invoice: `${baseUrl}/invoice/create`,
       invoice_status: `${baseUrl}/invoice/status/{hash}`,
       get_receipt: `${baseUrl}/invoice/receipt/{hash}`,
       pricing: `${baseUrl}/pricing.json`,
-      paidmcp: `${baseUrl}/paidmcp.json`
+      paidmcp: `${baseUrl}/paidmcp.json`,
+      open_tag: `${baseUrl}/t/{tag_id}`,
+      open_tag_manifest: `${baseUrl}/t/{tag_id}/manifest`,
+      open_tag_unlock: `${baseUrl}/t/{tag_id}/unlock/{payment_hash}`,
+      open_tag_receipt: `${baseUrl}/t/{tag_id}/receipt/{payment_hash}`
     },
     protocols: {
       L402: {
         name: "Bitcoin Lightning L402",
         pricing_unit: "SATS",
-        min_amount: 100,
-        max_amount: 100000,
-        settlement: "instant"
+        min_amount: 1,
+        max_amount: 1000000,
+        settlement: "verified then forwarded"
       },
       x402: {
         name: "USDC on Base (EVM)",
@@ -72,9 +76,15 @@ export const getAippAgentManifest = async (req: Request, res: Response) => {
         description: "Invoices can be paid via either Lightning (L402) or USDC (x402) dynamically."
       }
     },
+    open_tag: {
+      content_negotiation: true,
+      human_media_type: "text/html",
+      agent_media_type: "application/json",
+      payment_proof_scope: "exact-tag"
+    },
     fees: {
-      flat_rate: "1%",
-      min_lightning_fee_sats: 20
+      base_usdc: "1% with configured minimum",
+      lightning_fee: "1% + 5 sats"
     }
   };
 

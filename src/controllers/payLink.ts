@@ -3,7 +3,7 @@ import crypto from 'crypto';
 import { getDb } from '../config/database';
 import { AppError } from '../utils/error';
 import { getBtcUsdRate } from '../services/price';
-import { BASE_NETWORK_NAME, USDC_ADDRESS, LNBITS_URL, LNBITS_INVOICE_KEY } from '../config/env';
+import { BASE_NETWORK_NAME, USDC_ADDRESS, LNBITS_URL, LNBITS_INVOICE_KEY, IS_PRODUCTION } from '../config/env';
 import { getGatewayAddress } from '../services/base';
 import { checkLimit } from '../services/limiter';
 import { generateInvoiceData, InvoiceDomainError } from '../services/invoiceService';
@@ -26,35 +26,70 @@ export const createPaymentLink = async (req: Request, res: Response, next: NextF
       throw new AppError('Invalid API key', 401, 'UNAUTHORIZED');
     }
 
-    const { title, amount_usd, redirect_url } = req.body;
-    if (!title || typeof title !== 'string' || title.trim().length === 0) {
+    const { title, amount_usd, redirect_url, capability_type, description, input_schema, output_schema } = req.body;
+    if (!title || typeof title !== 'string' || title.trim().length === 0 || title.trim().length > 120) {
       throw new AppError('Title is required', 400, 'BAD_REQUEST');
     }
     const numAmount = Number(amount_usd);
     if (isNaN(numAmount) || numAmount < 0.01 || numAmount > 100.0) {
       throw new AppError('Amount must be between 0.01 and 100.00 USD', 400, 'BAD_REQUEST');
     }
-    const cleanRedirect = (redirect_url && typeof redirect_url === 'string' && redirect_url.trim().length > 0)
-      ? redirect_url.trim()
-      : '';
+    let cleanRedirect = '';
+    if (redirect_url && typeof redirect_url === 'string' && redirect_url.trim().length > 0) {
+      if (redirect_url.length > 2048) throw new AppError('Redirect URL is too long', 400, 'BAD_REQUEST');
+      try {
+        const parsed = new URL(redirect_url.trim());
+        if (!['https:', 'http:'].includes(parsed.protocol)) throw new Error('bad protocol');
+        cleanRedirect = parsed.toString();
+      } catch {
+        throw new AppError('Redirect URL must be a valid http(s) URL', 400, 'BAD_REQUEST');
+      }
+    }
 
     const linkId = 'p_' + crypto.randomBytes(6).toString('hex');
+    const capabilityType = ['link', 'file', 'ai', 'booking', 'api'].includes(capability_type)
+      ? capability_type
+      : 'link';
+    const cleanDescription = typeof description === 'string' ? description.trim().slice(0, 500) : '';
+    const normalizeSchema = (value: unknown) => {
+      if (value === undefined || value === null || value === '') return null;
+      const parsed = typeof value === 'string' ? JSON.parse(value) : value;
+      if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) throw new Error('schema');
+      const encoded = JSON.stringify(parsed);
+      if (encoded.length > 8000) throw new Error('schema');
+      return encoded;
+    };
+    let cleanInputSchema: string | null = null;
+    let cleanOutputSchema: string | null = null;
+    try {
+      cleanInputSchema = normalizeSchema(input_schema);
+      cleanOutputSchema = normalizeSchema(output_schema);
+    } catch {
+      throw new AppError('Input and output schemas must be JSON objects under 8 KB', 400, 'INVALID_SCHEMA');
+    }
     await db.run(
-      'INSERT INTO payment_links (id, api_key, title, amount_usd, redirect_url, created_at) VALUES (?, ?, ?, ?, ?, ?)',
+      'INSERT INTO payment_links (id, api_key, title, amount_usd, redirect_url, capability_type, description, input_schema, output_schema, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
       linkId,
       apiKey,
       title.trim(),
       numAmount,
       cleanRedirect,
+      capabilityType,
+      cleanDescription || null,
+      cleanInputSchema,
+      cleanOutputSchema,
       new Date().toISOString()
     );
 
     res.json({
       id: linkId,
-      url: `${req.protocol}://${req.get('host')}/pay/${linkId}`,
+      url: `${req.protocol}://${req.get('host')}/t/${linkId}`,
+      human_url: `${req.protocol}://${req.get('host')}/t/${linkId}`,
+      manifest_url: `${req.protocol}://${req.get('host')}/t/${linkId}/manifest`,
       title: title.trim(),
       amount_usd: numAmount,
-      redirect_url: cleanRedirect
+      redirect_url: cleanRedirect,
+      capability_type: capabilityType
     });
   } catch (error) {
     next(error);
@@ -78,7 +113,8 @@ export const getPaymentLinks = async (req: Request, res: Response, next: NextFun
     const host = `${req.protocol}://${req.get('host')}`;
     const formatted = links.map(l => ({
       ...l,
-      url: `${host}/pay/${l.id}`
+      url: `${host}/t/${l.id}`,
+      manifest_url: `${host}/t/${l.id}/manifest`
     }));
 
     res.json(formatted);
@@ -90,11 +126,15 @@ export const getPaymentLinks = async (req: Request, res: Response, next: NextFun
 export const renderPaymentPage = async (req: Request, res: Response, next: NextFunction) => {
   try {
     res.setHeader('Content-Security-Policy', "frame-ancestors *;");
+    res.setHeader('Link', `</t/${req.params.linkId}/manifest>; rel="describedby"; type="application/json"`);
     res.removeHeader('X-Frame-Options');
     const { linkId } = req.params;
     const db = getDb();
     let link = await db.get('SELECT * FROM payment_links WHERE id = ?', linkId);
     
+    if (!link && IS_PRODUCTION) {
+      throw new AppError('Smart Tag not found', 404, 'NOT_FOUND');
+    }
     if (!link) {
       link = {
         id: linkId,
@@ -121,7 +161,12 @@ export const renderPaymentPage = async (req: Request, res: Response, next: NextF
     if (isCli) {
       const preimageOrHash = (req.query.preimage || req.query.payment_hash || '') as string;
       if (preimageOrHash) {
-        const verify = await db.get('SELECT status, preimage FROM invoices WHERE payment_hash = ? OR preimage = ?', preimageOrHash, preimageOrHash);
+        const verify = await db.get(
+          'SELECT status, preimage FROM invoices WHERE tag_id = ? AND (payment_hash = ? OR preimage = ?)',
+          link.id,
+          preimageOrHash,
+          preimageOrHash
+        );
         if (verify && verify.status === 'settled') {
           return res.send(`\n\x1b[32m[AIPP PROTOCOL] PAYMENT VERIFIED & UNLOCKED\x1b[0m\nTarget URL / Payload: ${link.redirect_url}\nPreimage: ${verify.preimage}\n\n`);
         }
@@ -472,7 +517,7 @@ Once paid, run:
       <div class="trust-meta">
         <div class="trust-item">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
-          Direct wallet-to-wallet settlement (0% custodial risk)
+          Automatic payout to the merchant's configured wallet
         </div>
         <div class="trust-item">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
@@ -550,10 +595,15 @@ Once paid, run:
     btn.textContent = 'Generating...';
 
     try {
+      let checkoutId = sessionStorage.getItem('aipp_checkout_' + CURRENT_LINK_ID);
+      if (!checkoutId) {
+        checkoutId = (window.crypto && crypto.randomUUID) ? crypto.randomUUID() : Date.now() + '_' + Math.random();
+        sessionStorage.setItem('aipp_checkout_' + CURRENT_LINK_ID, checkoutId);
+      }
       const res = await fetch('/pay/' + CURRENT_LINK_ID + '/invoice', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ mode: mode })
+        body: JSON.stringify({ mode: mode, checkout_id: checkoutId })
       });
       if (!res.ok) throw new Error('Invoice generation failed');
       const data = await res.json();
@@ -565,7 +615,9 @@ Once paid, run:
       
       if (mode === 'L402') {
         const satsAmount = data.amount_sats || ${calculatedSats};
-        instructionsEl.innerHTML = '<div style="font-size:14px; font-weight:700; color:var(--fg); margin-bottom:12px;">Pay <b>' + satsAmount + ' Sats</b></div><div style="display:flex; flex-direction:column; gap:8px; margin-bottom:14px;"><a href="lightning:' + data.payment_request + '" style="display:flex; align-items:center; justify-content:center; gap:8px; width:100%; background:var(--fg); color:#ffffff; padding:12px; border-radius:10px; font-weight:700; font-size:13.5px; text-decoration:none; box-shadow:0 2px 8px rgba(0,0,0,0.08);"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>Open in Lightning Wallet (1-Click)</a><button id="copy-inv-btn" style="display:flex; align-items:center; justify-content:center; gap:8px; width:100%; background:var(--sub-bg); color:var(--fg); border:1px solid var(--border); padding:10px; border-radius:10px; font-weight:600; font-size:12.5px; cursor:pointer;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>Copy Invoice String</button></div><div style="font-size:11px; color:var(--fg-muted); margin-bottom:4px;">Or scan with Phoenix, Wallet of Satoshi, Zeus, Blink:</div>';
+        const merchantSats = data.merchant_amount_sats || Math.max(1, satsAmount - (data.commission_sats || 0));
+        const feeSats = data.commission_sats || 0;
+        instructionsEl.innerHTML = '<div style="font-size:12px; color:var(--fg-muted); margin-bottom:12px;"><div style="display:flex;justify-content:space-between"><span>Merchant price</span><b>' + merchantSats + ' sats</b></div><div style="display:flex;justify-content:space-between"><span>AIPP fee</span><b>' + feeSats + ' sats</b></div><div style="display:flex;justify-content:space-between;border-top:1px solid var(--border);margin-top:6px;padding-top:6px;font-size:14px;color:var(--fg)"><span>Total</span><b>' + satsAmount + ' sats</b></div></div><div style="display:flex; flex-direction:column; gap:8px; margin-bottom:14px;"><a href="lightning:' + data.payment_request + '" style="display:flex; align-items:center; justify-content:center; gap:8px; width:100%; background:var(--fg); color:#ffffff; padding:12px; border-radius:10px; font-weight:700; font-size:13.5px; text-decoration:none; box-shadow:0 2px 8px rgba(0,0,0,0.08);"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>Open in Lightning Wallet</a><button id="copy-inv-btn" style="display:flex; align-items:center; justify-content:center; gap:8px; width:100%; background:var(--sub-bg); color:var(--fg); border:1px solid var(--border); padding:10px; border-radius:10px; font-weight:600; font-size:12.5px; cursor:pointer;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>Copy Invoice</button></div><div style="font-size:11px; color:var(--fg-muted); margin-bottom:4px;">Or scan with your Lightning wallet:</div>';
         
         const copyBtn = document.getElementById('copy-inv-btn');
         if (copyBtn) {
@@ -663,6 +715,7 @@ Once paid, run:
     isSettled = true;
     if (pollInterval) clearInterval(pollInterval);
     if (sseSource) { sseSource.close(); sseSource = null; }
+    sessionStorage.removeItem('aipp_checkout_' + CURRENT_LINK_ID);
 
     try {
       window.parent.postMessage({ aippSettled: true, tagId: CURRENT_LINK_ID, hash: hash, preimage: d.preimage }, '*');
@@ -677,7 +730,7 @@ Once paid, run:
         window.location.href = target;
       }, 1000);
     } else {
-      document.getElementById('payment-instructions').innerHTML = '<div style="color:#15803d; font-weight:700; font-size:14px; margin-top:8px;">✓ Thank you! Payment received directly to merchant wallet.</div>';
+      document.getElementById('payment-instructions').innerHTML = '<div style="color:#15803d; font-weight:700; font-size:14px; margin-top:8px;">✓ Thank you! Payment confirmed; merchant payout is processing automatically.</div>';
     }
   }
 
@@ -735,11 +788,14 @@ Once paid, run:
 export const createLinkInvoice = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { linkId } = req.params;
-    const { mode } = req.body; // 'L402' or 'X402'
+    const { mode, checkout_id } = req.body; // 'L402' or 'X402'
     const protocol = mode === 'X402' ? 'x402' : 'L402';
 
     const db = getDb();
     let link = await db.get('SELECT * FROM payment_links WHERE id = ?', linkId);
+    if (!link && IS_PRODUCTION) {
+      throw new AppError('Smart Tag not found', 404, 'NOT_FOUND');
+    }
     if (!link) {
       link = {
         id: linkId,
@@ -751,6 +807,9 @@ export const createLinkInvoice = async (req: Request, res: Response, next: NextF
     }
 
     let merchant = await db.get('SELECT * FROM merchants WHERE api_key = ?', link.api_key);
+    if (!merchant && IS_PRODUCTION) {
+      throw new AppError('Merchant not found', 404, 'MERCHANT_NOT_FOUND');
+    }
     if (!merchant) {
       merchant = { api_key: 'aipp_devtest', ln_address: 'longingsavior14@walletofsatoshi.com' };
     }
@@ -763,7 +822,13 @@ export const createLinkInvoice = async (req: Request, res: Response, next: NextF
         apiKey: link.api_key,
         protocol: mode === 'X402' ? 'X402' : 'L402',
         amountUsd: link.amount_usd,
-        idempotencyKey: 'link_' + link.id + '_' + link.amount_usd
+        tagId: link.id,
+        idempotencyKey: typeof checkout_id === 'string' && /^[a-zA-Z0-9._-]{8,128}$/.test(checkout_id)
+          ? `link_${link.id}_${checkout_id}`
+          : undefined,
+        idempotencyFingerprint: typeof checkout_id === 'string'
+          ? crypto.createHash('sha256').update(`${link.id}:${link.amount_usd}:${mode}`).digest('hex')
+          : undefined
       });
     } catch (err: any) {
       if (err instanceof InvoiceDomainError) {

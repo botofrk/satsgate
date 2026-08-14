@@ -4,6 +4,7 @@ import { getBtcUsdRate } from './price';
 import { LNBITS_INVOICE_KEY, LNBITS_URL, LNBITS_WEBHOOK_SECRET, MAX_SINGLE_REQUEST_USD, USDC_ADDRESS, BASE_NETWORK_NAME } from '../config/env';
 import { getGatewayAddress } from './base';
 import { ethers } from 'ethers';
+import { calculateLightningFeeSats } from './fees';
 
 export class InvoiceDomainError extends Error {
   public code: string;
@@ -23,6 +24,7 @@ export interface GenerateInvoiceOptions {
   memo?: string;
   idempotencyKey?: string | null;
   idempotencyFingerprint?: string | null;
+  tagId?: string | null;
 }
 
 export interface InvoiceResult {
@@ -32,12 +34,14 @@ export interface InvoiceResult {
   amount_usd?: number;
   amount_sats?: number;
   commission_sats?: number;
+  merchant_amount_sats?: number;
   pay_to?: string;
   network?: string;
   token?: string;
   status: string;
   expires_in: number;
   challengeBase64?: string;
+  tag_id?: string;
 }
 
 export async function generateInvoiceData(options: GenerateInvoiceOptions): Promise<InvoiceResult> {
@@ -138,8 +142,11 @@ export async function generateInvoiceData(options: GenerateInvoiceOptions): Prom
     paymentHash = 'x402_' + crypto.randomBytes(16).toString('hex');
   } else {
     // LNBITS
-    finalCommissionSats = Math.max(5, Math.ceil(amount_sats! * 0.01));
-    finalForwardedSats = Math.max(1, amount_sats! - finalCommissionSats);
+    // Public prices are merchant-net prices. Add the disclosed AIPP fee on top.
+    const merchantPriceSats = amount_sats!;
+    finalCommissionSats = calculateLightningFeeSats(merchantPriceSats);
+    finalForwardedSats = merchantPriceSats;
+    amount_sats = merchantPriceSats + finalCommissionSats;
     
     if (LNBITS_INVOICE_KEY) {
       const webhookUrl = process.env.API_BASE_URL
@@ -207,8 +214,8 @@ export async function generateInvoiceData(options: GenerateInvoiceOptions): Prom
       `INSERT INTO invoices (
         payment_hash, api_key, amount_sats, commission_sats, forwarded_amount_sats, 
         status, callback_url, protocol, usdc_amount, 
-        usdc_amount_units, service_fee_usdc_units, net_usdc_units, created_at
-      ) VALUES (?, ?, ?, ?, ?, 'pending', ?, ?, ?, ?, ?, ?, ?)`,
+        usdc_amount_units, service_fee_usdc_units, net_usdc_units, tag_id, created_at
+      ) VALUES (?, ?, ?, ?, ?, 'pending', ?, ?, ?, ?, ?, ?, ?, ?)`,
       paymentHash, 
       options.apiKey, 
       amount_sats || 0, 
@@ -220,6 +227,7 @@ export async function generateInvoiceData(options: GenerateInvoiceOptions): Prom
       grossUnits.toString(),
       feeUnits.toString(),
       netUnits.toString(),
+      options.tagId || null,
       new Date().toISOString()
     );
     
@@ -243,8 +251,10 @@ export async function generateInvoiceData(options: GenerateInvoiceOptions): Prom
     payment_request: paymentRequest,
     amount_sats: amount_sats!,
     commission_sats: finalCommissionSats,
+    forwarded_amount_sats: finalForwardedSats,
     amount_usd,
     protocol: protocolLower
+    ,tag_id: options.tagId || undefined
   }, amount_usd, options.protocol);
 }
 
@@ -276,16 +286,20 @@ function formatResponse(dbRecord: any, amountUsd: number, originalProtocol: stri
     status: 'pending',
     expires_in: 3600
   };
+  if (dbRecord.tag_id) result.tag_id = dbRecord.tag_id;
 
   if (isL402) {
     result.payment_request = dbRecord.payment_request;
     result.amount_sats = dbRecord.amount_sats;
     result.commission_sats = dbRecord.commission_sats;
+    result.merchant_amount_sats = dbRecord.forwarded_amount_sats;
   }
 
   if (isDual) {
     result.payment_request = dbRecord.payment_request;
     result.amount_sats = dbRecord.amount_sats;
+    result.commission_sats = dbRecord.commission_sats;
+    result.merchant_amount_sats = dbRecord.forwarded_amount_sats;
     result.amount_usd = amountUsd;
   }
 
@@ -301,6 +315,7 @@ function formatResponse(dbRecord: any, amountUsd: number, originalProtocol: stri
       price: amountUsd.toFixed(2),
       token: USDC_ADDRESS,
       payment_hash: dbRecord.payment_hash
+      ,resource: dbRecord.tag_id ? `/t/${dbRecord.tag_id}` : undefined
     };
     result.challengeBase64 = Buffer.from(JSON.stringify(challengeObj), 'utf8').toString('base64');
     result.pay_to = challengeObj.payTo;

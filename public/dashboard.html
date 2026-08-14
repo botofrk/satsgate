@@ -21,9 +21,10 @@
   --fg-subtle: #999690;
   --border: #e6e2dc;
   --border-subtle: #eeeae4;
-  --accent: #c2613c;
-  --accent-light: #fbeee7;
-  --accent-hover: #b05330;
+  --brand: #ffc700;
+  --accent: #806300;
+  --accent-light: #fffbdf;
+  --accent-hover: #eab600;
   --green: #15803d;
   --green-bg: #ecfdf5;
   --red: #b91c1c;
@@ -75,8 +76,7 @@ button { font-family: inherit; }
   font-weight: 700; font-size: 18px;
 }
 .login-logo-icon {
-  width: 24px; height: 24px; background: var(--fg);
-  border-radius: 6px; display: flex; align-items: center; justify-content: center; color: var(--bg);
+  width: 24px; height: 24px; display: block;
 }
 .login-card h1 {
   font-family: 'Instrument Serif', Georgia, serif;
@@ -153,7 +153,7 @@ button { font-family: inherit; }
   margin-bottom: 4px;
 }
 .nav-item:hover { background: #262422; color: #fff; }
-.nav-item.active { background: var(--accent); color: #ffffff; }
+.nav-item.active { background: var(--brand); color: #0f0f11; }
 .sidebar-section-label {
   font-size: 10px; font-weight: 700; text-transform: uppercase;
   letter-spacing: 1px; color: #66635d; padding: 16px 14px 6px;
@@ -349,27 +349,21 @@ th { background: var(--sub-bg); font-size: 11px; font-weight: 700; text-transfor
 <div class="login-screen" id="login-screen">
   <div class="login-card">
     <div class="login-logo">
-      <div class="login-logo-icon">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"></path></svg>
-      </div>
+      <img class="login-logo-icon" src="/assets/aipp-mark.svg" alt="">
       <span style="font-weight:800; font-size:15px; letter-spacing:-0.02em;">aipp studio</span>
     </div>
 
     <h1>Merchant Access</h1>
-    <p>Sign in with your Lightning Address or merchant key to manage tags and track payouts.</p>
+    <p>Sign in with your private merchant key. A public wallet address is never accepted as proof of ownership.</p>
 
     <input class="login-input" id="login-input" type="text"
-      placeholder="Lightning Address or Merchant Key (e.g. you@walletofsatoshi.com)"
+      placeholder="Merchant key (aipp_merch_...)"
       autocomplete="off" onkeydown="if(event.key==='Enter')login()">
 
     <button class="login-btn" id="login-btn" onclick="login()">Enter Studio Console →</button>
 
-    <button class="demo-btn" onclick="quickLogin()">
-      ⚡ 1-Click Instant Demo Login (aipp_devtest)
-    </button>
-
     <p class="login-hint">
-      Need a new key? <a onclick="createInstantAccount()">Create Instant Free Key →</a>
+      New to AIPP? <a onclick="createInstantAccount()">Create a merchant key →</a>
     </p>
   </div>
 </div>
@@ -379,7 +373,7 @@ th { background: var(--sub-bg); font-size: 11px; font-weight: 700; text-transfor
   <!-- SIDEBAR -->
   <aside class="sidebar">
     <div class="sidebar-logo">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"></path></svg>
+      <img src="/assets/aipp-mark.svg" width="22" height="22" alt="">
       <span style="font-weight:800; font-size:16px; letter-spacing:-0.03em;">aipp studio</span>
     </div>
 
@@ -439,28 +433,43 @@ th { background: var(--sub-bg); font-size: 11px; font-weight: 700; text-transfor
         </div>
         
         <div class="stat-card">
-          <div class="stat-label">Service Fee (1%)</div>
+          <div class="stat-label">AIPP Fees</div>
           <div class="stat-value" id="volume-commission" style="color:var(--accent);">0 sats</div>
           <div class="stat-sub" style="color:var(--fg-muted); margin-top:8px; line-height:1.4;">
-            <span style="font-size:11px;">1% service fee applied<br>LN Min: 5 sats · Base Min: $0.01</span>
+            <span style="font-size:11px;">Lightning: 1% + 5 sats per successful payment</span>
           </div>
         </div>
         
         <div class="stat-card" style="display:flex; flex-direction:column; justify-content:space-between;">
           <div>
-            <div class="stat-label">Net Sent to Wallet</div>
-            <div class="stat-value" id="volume-net">0 sats</div>
-            <div class="stat-sub" id="payout-threshold-sub" style="display:flex; flex-direction:column; gap:4px; margin-top:8px;">
-              <div style="display:flex; justify-content:space-between; font-size:11px; color:var(--fg-muted);">
-                <span id="payout-mode-text">Settlement Threshold</span>
+            <div class="stat-label">Automatic Payout</div>
+            <div class="stat-value" id="volume-available">0 sats</div>
+          </div>
+          <div style="margin-top:12px;">
+            <div style="font-size:11px; color:var(--fg-muted); margin-bottom:12px; line-height:1.6;">
+              <div style="display:flex; justify-content:space-between; margin-bottom:4px;">
+                <span id="payout-mode-text" style="font-weight:700;">Manual Settlement</span>
                 <span id="threshold-progress-text" style="font-weight:700;">0 / 50 sats</span>
               </div>
-              <div style="width:100%; height:5px; background:var(--sub-bg); border-radius:3px; overflow:hidden;">
-                <div id="threshold-progress-bar" style="width:0%; height:100%; background:var(--accent); transition:width 0.3s;"></div>
+              <div id="threshold-progress-container" style="height:4px; background:var(--sub-bg); border-radius:2px; overflow:hidden; margin-bottom:8px; display:none;">
+                <div id="threshold-progress-bar" style="height:100%; width:0%; background:var(--accent); transition:width 0.3s;"></div>
+              </div>
+              <div style="display:flex; justify-content:space-between;">
+                <span>Total Net Earnings:</span>
+                <span id="volume-net" style="font-weight:600; color:var(--fg);">0 sats</span>
+              </div>
+              <div style="display:flex; justify-content:space-between;">
+                <span>Already Sent:</span>
+                <span id="volume-sent" style="font-weight:600; color:var(--fg);">0 sats</span>
+              </div>
+              <div style="display:flex; justify-content:space-between;">
+                <span>Last Sent:</span>
+                <span id="last-sent-text" style="font-weight:600; color:var(--fg);">Not yet</span>
               </div>
             </div>
+            
+            <button id="withdraw-btn" onclick="triggerWithdraw(this)" style="display:none; margin-top:8px; width:100%; padding:8px; background:var(--fg); color:#fff; border:none; border-radius:6px; font-weight:600; cursor:pointer;">Send to Wallet</button>
           </div>
-          <button id="withdraw-btn" class="btn-sm" style="background:var(--fg); color:#ffffff; border:none; margin-top:14px; cursor:pointer;" onclick="triggerWithdraw(this)">Send Eligible Settlements Now</button>
         </div>
         
         <div class="stat-card">
@@ -512,7 +521,8 @@ th { background: var(--sub-bg); font-size: 11px; font-weight: 700; text-transfor
     <!-- ── SMART TAGS (LINKS) PAGE ── -->
     <div class="page" id="page-links">
       <div class="form-card">
-        <h3 style="font-family:'Instrument Serif', Georgia, serif; font-size:22px; margin-bottom:16px;">Create a New Smart Tag</h3>
+        <h3 style="font-family:'Instrument Serif', Georgia, serif; font-size:22px; margin-bottom:6px;">Create an Open Tag</h3>
+        <p style="color:var(--fg-muted);font-size:13px;margin:0 0 16px;">One URL becomes a checkout for people and a machine-readable capability for agents.</p>
         <div class="form-grid">
           <div>
             <label class="field-label">Asset / Product Title</label>
@@ -616,12 +626,12 @@ th { background: var(--sub-bg); font-size: 11px; font-weight: 700; text-transfor
         <h3 style="font-family:'Instrument Serif', Georgia, serif; font-size:22px; margin-bottom:12px;">SDK Integration</h3>
         <p style="color:var(--fg-muted); font-size:14px; margin-bottom:20px;">Integrate Smart Price Tags directly inside your Express, Fastify, Next.js, or Python applications.</p>
         <pre style="background:#181716; color:#e6e2dc; padding:20px; border-radius:10px; font-family:'JetBrains Mono',monospace; font-size:13px; line-height:1.6; overflow-x:auto;">
-npm install @aipp/sdk
+npm install aipp-sdk
 
-import { aipp } from '@aipp/sdk';
+import { Aipp } from 'aipp-sdk';
 
+const aipp = new Aipp({ apiKey: process.env.AIPP_API_KEY });
 const tag = await aipp.createTag({
-  apiKey: process.env.AIPP_API_KEY,
   title: "LLM Workflow PDF",
   price: 0.25
 });
@@ -706,6 +716,12 @@ let merchantThreshold = 50;
 let currentRange = '30';
 let refreshInterval = null;
 
+function escapeHtml(value) {
+  return String(value ?? '').replace(/[&<>'"]/g, ch => ({
+    '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;'
+  })[ch]);
+}
+
 // Auto-refresh logic
 document.addEventListener('visibilitychange', () => {
   if (document.visibilityState === 'visible') {
@@ -756,30 +772,17 @@ function copyFullKey(btn) {
 }
 
 window.onload = () => {
-  const urlParams = new URLSearchParams(window.location.search);
-  const keyFromUrl = urlParams.get('key');
-  if (keyFromUrl) {
-    localStorage.setItem('aipp_api_key', keyFromUrl);
-    window.history.replaceState({}, document.title, window.location.pathname);
-    activeKey = keyFromUrl;
-    showApp();
-    return;
-  }
-
-  const saved = localStorage.getItem('aipp_api_key');
+  // Session-only storage limits accidental persistence on shared machines.
+  localStorage.removeItem('aipp_api_key');
+  const saved = sessionStorage.getItem('aipp_api_key');
   if (saved) {
     activeKey = saved;
     showApp();
   }
 };
 
-function quickLogin() {
-  document.getElementById('login-input').value = 'aipp_devtest';
-  login();
-}
-
 async function createInstantAccount() {
-  const ln = prompt('Enter your Lightning Address (e.g. yourname@walletofsatoshi.com):', 'longingsavior14@walletofsatoshi.com');
+  const ln = prompt('Enter your Lightning Address (e.g. yourname@wallet.com):');
   if (!ln) return;
 
   try {
@@ -789,13 +792,13 @@ async function createInstantAccount() {
       body: JSON.stringify({ ln_address: ln.trim() })
     });
     const d = await r.json();
-    activeKey = d.api_key || 'aipp_devtest';
-    localStorage.setItem('aipp_api_key', activeKey);
+    if (!r.ok || !d.api_key) throw new Error(d.error || 'Account could not be created');
+    activeKey = d.api_key;
+    sessionStorage.setItem('aipp_api_key', activeKey);
+    alert('Your merchant key is shown in Developer settings. Save it securely; your wallet address cannot be used to sign in.');
     showApp();
   } catch(e) {
-    activeKey = 'aipp_devtest';
-    localStorage.setItem('aipp_api_key', activeKey);
-    showApp();
+    alert(e.message || 'Account could not be created.');
   }
 }
 
@@ -805,39 +808,28 @@ async function login() {
   const btn = document.getElementById('login-btn');
   btn.textContent = 'Signing in...'; btn.disabled = true;
 
-  if (val.includes('@') || val.startsWith('0x')) {
-    try {
-      const payload = val.startsWith('0x') ? { usdc_address: val } : { ln_address: val };
-      const r = await fetch(`${AIPP_API}/merchant/register`, {
-        method: 'POST', 
-        headers: {'Content-Type':'application/json'},
-        body: JSON.stringify(payload)
-      });
-      const d = await r.json();
-      if (d.api_key) {
-        activeKey = d.api_key;
-      } else {
-        alert('Giriş yapılamadı: ' + (d.error || 'Geçersiz cüzdan adresi'));
-        btn.textContent = 'Enter Studio Console →'; btn.disabled = false;
-        return;
-      }
-    } catch(e) {
-      alert('Bağlantı hatası. Lütfen tekrar deneyiniz.');
-      btn.textContent = 'Enter Studio Console →'; btn.disabled = false;
-      return;
-    }
-  } else {
-    activeKey = val;
+  if (!/^aipp_merch_[a-f0-9]{32}$/i.test(val)) {
+    alert('Enter your private merchant key. Wallet addresses cannot be used to sign in.');
+    btn.textContent = 'Enter Studio Console →'; btn.disabled = false;
+    return;
   }
-
-  localStorage.setItem('aipp_api_key', activeKey);
-  btn.textContent = 'Enter Studio Console →'; btn.disabled = false;
-  showApp();
+  activeKey = val;
+  try {
+    const check = await fetch(`${AIPP_API}/merchant/stats`, { headers: {'X-Api-Key': activeKey}, cache: 'no-store' });
+    if (!check.ok) throw new Error('Invalid merchant key');
+    sessionStorage.setItem('aipp_api_key', activeKey);
+    btn.textContent = 'Enter Studio Console →'; btn.disabled = false;
+    showApp();
+  } catch (e) {
+    activeKey = '';
+    alert('Invalid merchant key.');
+    btn.textContent = 'Enter Studio Console →'; btn.disabled = false;
+  }
 }
 
 function logout() {
   activeKey = '';
-  localStorage.removeItem('aipp_api_key');
+  sessionStorage.removeItem('aipp_api_key');
   document.getElementById('app').classList.remove('visible');
   document.getElementById('login-screen').style.display = 'flex';
   document.getElementById('login-input').value = '';
@@ -861,8 +853,9 @@ async function loadMerchantInfo() {
     });
     if (!r.ok) return;
     const d = await r.json();
-    merchantLnAddress = d.ln_address || '';
-    merchantUsdcAddress = d.usdc_address || '';
+    merchantLnAddress = d.wallets?.lightning?.address || '';
+    merchantUsdcAddress = d.wallets?.base?.address || '';
+    merchantPayoutMode = d.payoutMode || 'instant';
     
     const lnEl = document.getElementById('merchant-ln-display');
     const usdcEl = document.getElementById('merchant-usdc-display');
@@ -1015,13 +1008,40 @@ async function loadStats(silent = false) {
     });
     
     const txCount = txSuccess + txPending + txFailed;
-    const netSats = Math.max(0, volSats - comSats);
     
     document.getElementById('volume-ln-sats').textContent = `${volSats.toLocaleString()} sats`;
     document.getElementById('volume-base-usd').textContent = `$${volUsd.toFixed(2)} USDC`;
-    
     document.getElementById('volume-commission').textContent = `${comSats.toLocaleString()} sats`;
-    document.getElementById('volume-net').textContent = `${netSats.toLocaleString()} sats`;
+    
+    const available = d.availableToSettleSats || 0;
+    const net = d.netEarnedSats || 0;
+    const sent = d.settledToWalletSats || 0;
+    const threshold = d.settlementThresholdSats || 50;
+
+    document.getElementById('volume-available').textContent = `${available.toLocaleString()} sats`;
+    document.getElementById('volume-net').textContent = `${net.toLocaleString()} sats`;
+    document.getElementById('volume-sent').textContent = `${sent.toLocaleString()} sats`;
+    
+    const lastSentEl = document.getElementById('last-sent-text');
+    if (lastSentEl) {
+      if (d.lastSettlementAt) {
+        const dObj = new Date(d.lastSettlementAt);
+        const isToday = dObj.toDateString() === new Date().toDateString();
+        const timeStr = dObj.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+        const dateStr = isToday ? `Today, ${timeStr}` : `${dObj.toLocaleDateString()} ${timeStr}`;
+        lastSentEl.textContent = dateStr;
+        if (d.lastSettlementStatus === 'completed') {
+           lastSentEl.textContent = `✓ ${dateStr}`;
+           lastSentEl.style.color = 'var(--green)';
+        } else {
+           lastSentEl.textContent = `⏳ ${dateStr}`;
+           lastSentEl.style.color = 'var(--accent)';
+        }
+      } else {
+        lastSentEl.textContent = 'Not yet';
+        lastSentEl.style.color = 'var(--fg-muted)';
+      }
+    }
     
     document.getElementById('tx-count').textContent = txCount.toLocaleString();
     document.getElementById('tx-successful').textContent = txSuccess;
@@ -1029,28 +1049,40 @@ async function loadStats(silent = false) {
     document.getElementById('tx-failed').textContent = txFailed;
     
     // Payout Threshold logic
-    const pct = Math.min(100, Math.round((netSats / merchantThreshold) * 100));
+    const pct = Math.min(100, Math.round((available / threshold) * 100));
     const progBar = document.getElementById('threshold-progress-bar');
+    const progContainer = document.getElementById('threshold-progress-container');
     const progText = document.getElementById('threshold-progress-text');
+    
     if (progBar) {
       progBar.style.width = `${pct}%`;
       progBar.style.background = pct >= 100 ? 'var(--green)' : 'var(--accent)';
     }
-    if (progText) progText.textContent = `${netSats} / ${merchantThreshold} sats`;
     
     const wBtn = document.getElementById('withdraw-btn');
     const pMode = document.getElementById('payout-mode-text');
     if (wBtn) {
       if (merchantPayoutMode === 'manual') {
         wBtn.style.display = 'block';
-        wBtn.textContent = 'Send Eligible Settlements Now';
+        wBtn.textContent = `Send ${available.toLocaleString()} sats to Wallet`;
+        wBtn.disabled = available < 10;
+        wBtn.style.opacity = available < 10 ? '0.5' : '1';
         if (pMode) pMode.textContent = 'Manual Settlement';
+        if (progContainer) progContainer.style.display = 'none';
+        if (progText) progText.style.display = 'none';
       } else if (merchantPayoutMode === 'instant') {
         wBtn.style.display = 'none';
         if (pMode) pMode.textContent = 'Instant Settlement Enabled';
+        if (progContainer) progContainer.style.display = 'none';
+        if (progText) progText.style.display = 'none';
       } else {
         wBtn.style.display = 'none';
         if (pMode) pMode.textContent = 'Settlement Threshold';
+        if (progText) {
+          progText.textContent = `${available} / ${threshold} sats`;
+          progText.style.display = 'block';
+        }
+        if (progContainer) progContainer.style.display = 'block';
       }
     }
 
@@ -1068,7 +1100,7 @@ async function loadStats(silent = false) {
       type: 'bar',
       data: {
         labels: labels,
-        datasets: [{ label: 'Successful Payments', data: data, backgroundColor: '#c2613c', borderRadius: 4 }]
+        datasets: [{ label: 'Successful Payments', data: data, backgroundColor: '#ffc700', borderRadius: 4 }]
       },
       options: {
         responsive: true, maintainAspectRatio: false,
@@ -1104,7 +1136,10 @@ function formatTxRow(tx) {
   const d = new Date(tx.created_at).toLocaleString([], {month:'short', day:'numeric', hour:'2-digit', minute:'2-digit'});
   let hashAction = '';
   if (tx.protocol === 'x402') {
-    hashAction = `<a href="https://basescan.org/tx/${tx.payment_hash}" target="_blank" style="color:var(--accent); text-decoration:none;">${tx.payment_hash.slice(0, 10)}... ↗</a>`;
+    const chainHash = /^0x[a-f0-9]{64}$/i.test(tx.preimage || '') ? tx.preimage : '';
+    hashAction = chainHash
+      ? `<a href="https://basescan.org/tx/${chainHash}" target="_blank" rel="noopener" style="color:var(--accent); text-decoration:none;">${chainHash.slice(0, 10)}... ↗</a>`
+      : `<span>${escapeHtml(tx.payment_hash).slice(0, 10)}...</span>`;
   } else {
     hashAction = `<span onclick="navigator.clipboard.writeText('${tx.payment_hash}'); alert('Copied Hash!')" style="cursor:pointer; color:var(--accent);" title="Click to copy hash">${tx.payment_hash.slice(0, 10)}... 📋</span>`;
   }
@@ -1116,7 +1151,13 @@ function formatTxRow(tx) {
   const netw = isUsd ? '🔵 Base' : '⚡ LN';
   
   let bStatus = 'badge-pending';
-  if (tx.status === 'settled') bStatus = 'badge-settled';
+  let displayStatus = tx.status;
+  if (tx.status === 'settled') {
+    bStatus = 'badge-settled';
+    if (tx.payout_status === 'forwarded' || tx.payout_status === 'completed') displayStatus = 'Paid · Sent';
+    else if (tx.payout_status === 'queued') displayStatus = 'Paid · Sending';
+    else displayStatus = 'Paid · Pending payout';
+  }
   if (tx.status === 'expired' || tx.status === 'failed') bStatus = 'badge-failed';
   
   return `<tr>
@@ -1126,7 +1167,7 @@ function formatTxRow(tx) {
     <td style="font-weight:600;">${gross}</td>
     <td style="color:var(--fg-muted);">${fee}</td>
     <td style="font-weight:700; color:var(--green);">${net}</td>
-    <td><span class="badge-status ${bStatus}">${tx.status}</span></td>
+    <td><span class="badge-status ${bStatus}">${escapeHtml(displayStatus)}</span></td>
   </tr>`;
 }
 
@@ -1175,14 +1216,19 @@ async function loadPaymentLinks() {
     }
     body.innerHTML = links.map(l => `
       <tr>
-        <td style="font-weight:700;">${l.title}</td>
-        <td>$${l.amount_usd.toFixed(2)}</td>
-        <td><a href="${l.url}" target="_blank" style="color:var(--accent); font-family:'JetBrains Mono',monospace; font-size:12px;">${l.url} ↗</a></td>
+        <td style="font-weight:700;">${escapeHtml(l.title)}</td>
+        <td>$${Number(l.amount_usd).toFixed(2)}</td>
+        <td><a href="${escapeHtml(l.url)}" target="_blank" rel="noopener" style="color:var(--accent); font-family:'JetBrains Mono',monospace; font-size:12px;">${escapeHtml(l.url)} ↗</a></td>
         <td style="text-align:right;">
-          <button class="btn-sm" onclick="navigator.clipboard.writeText('${l.url}'); alert('Tag link copied!');">Copy Link</button>
+          <button class="btn-sm" data-copy-url="${escapeHtml(l.url)}">Copy Tag</button>
+          <button class="btn-sm" data-copy-url="${escapeHtml(l.manifest_url || l.url + '/manifest')}">Agent JSON</button>
         </td>
       </tr>
     `).join('');
+    body.querySelectorAll('[data-copy-url]').forEach(btn => btn.addEventListener('click', () => {
+      navigator.clipboard.writeText(btn.dataset.copyUrl || '');
+      alert('Tag link copied!');
+    }));
   } catch(e) {}
 }
 
@@ -1202,11 +1248,13 @@ async function createPaymentLink(btn) {
       headers: {'Content-Type':'application/json', 'X-Api-Key': activeKey},
       body: JSON.stringify({ title, amount_usd: amount, redirect_url: redirect || null })
     });
-    if (!r.ok) throw new Error();
+    const d = await r.json();
+    if (!r.ok) throw new Error(d.error || 'Tag could not be created.');
     document.getElementById('link-title').value = '';
     await loadPaymentLinks();
-  } catch(e) {
     alert('Tag created!');
+  } catch(e) {
+    alert(e.message || 'Tag could not be created.');
   } finally {
     btn.disabled = false;
     btn.textContent = 'Mint Tag URL →';

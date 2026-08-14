@@ -64,7 +64,7 @@ class Aipp:
 
     def get_receipt(self, payment_hash: str) -> ReceiptResponse:
         """
-        Retrieves an EU AI Act Article 26 compliant receipt for a settled invoice.
+        Retrieves a machine-readable receipt for a settled invoice.
         Only available for invoices with status = 'settled'.
         """
         if not payment_hash:

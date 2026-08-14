@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>AIPP — Legal Disclaimer & Privacy Policy</title>
-<meta name="description" content="AIPP.dev legal disclaimer, license agreement, and privacy policy for the open-source non-custodial payment protocol.">
+<meta name="description" content="AIPP.dev legal disclaimer, license agreement, and privacy policy for Smart Tag payment software.">
 <link rel="icon" type="image/x-icon" href="favicon.ico">
 <link rel="icon" type="image/svg+xml" href="favicon.svg">
 <style>
@@ -21,9 +21,10 @@
   --fg-subtle: #999690;
   --border: #e6e2dc;
   --border-subtle: #eeeae4;
-  --accent: #c2613c;
-  --accent-light: #fbeee7;
-  --accent-hover: #b05330;
+  --brand: #ffc700;
+  --accent: #806300;
+  --accent-light: #fffbdf;
+  --accent-hover: #eab600;
   --green: #15803d;
   --green-bg: #ecfdf5;
   --radius-sm: 8px;
@@ -57,8 +58,7 @@ nav {
   font-weight: 700; font-size: 18px; letter-spacing: -0.02em; color: var(--fg);
 }
 .logo-icon {
-  width: 24px; height: 24px; background: var(--fg);
-  border-radius: 6px; display: flex; align-items: center; justify-content: center; color: var(--bg);
+  width: 24px; height: 24px; display: block;
 }
 .nav-links { display: flex; align-items: center; gap: 28px; }
 .nav-links a { font-size: 14px; font-weight: 500; color: var(--fg-muted); transition: color 0.15s; }
@@ -196,9 +196,7 @@ footer {
 <!-- NAV -->
 <nav>
   <a href="/" class="logo">
-    <div class="logo-icon">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/></svg>
-    </div>
+    <img class="logo-icon" src="/assets/aipp-mark.svg" alt="">
     <span>aipp</span>
   </a>
   <div class="nav-links">
@@ -211,32 +209,32 @@ footer {
 <!-- CONTENT -->
 <div class="container">
   <h1 class="page-title">Legal Disclaimer<br>&amp; Privacy Policy</h1>
-  <p class="page-sub">aipp — Open-source non-custodial Smart Tag publishing software</p>
+  <p class="page-sub">aipp — Smart Tag publishing and payment software</p>
   <span class="date-badge">Last Updated: August 2026</span>
 
   <!-- Section 1 -->
   <div class="legal-section">
-    <h2><span class="section-num">01</span> Non-Custodial Software Status</h2>
+    <h2><span class="section-num">01</span> Software and Settlement Model</h2>
     <div class="highlight-box">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
-      AIPP developers do not provide banking, custody, money transmission, or exchange services.
+      AIPP is Smart Tag and payment-automation software. Legal classification depends on the deployment and jurisdiction.
     </div>
-    <p>aipp is an <strong>open-source, non-custodial</strong> Smart Tag publishing software. It allows creators and developers to attach a cryptographic price tag to any digital asset, link, or content, and collect settlement directly into their own self-custody wallets.</p>
+    <p>AIPP allows creators and developers to attach a price tag to digital assets, links and content. In the hosted Lightning flow, buyer funds may reach AIPP before the merchant amount is forwarded.</p>
     <ul>
-      <li>The software mints Smart Tags that route settlements <strong>directly</strong> to destinations specified by the creator (Lightning Address or EVM wallet address).</li>
-      <li>Developers have no access to, control over, or possession of users' private keys, funds, or databases.</li>
-      <li>aipp does not hold any funds in transit — all settlements are direct wallet-to-wallet transfers initiated by the buyer's own wallet.</li>
+      <li>Merchants specify a Lightning Address or EVM payout destination.</li>
+      <li>AIPP does not require merchant wallet private keys.</li>
+      <li>Hosted payment flows may receive funds before automatically forwarding merchant proceeds. AIPP does not provide a general-purpose merchant spending balance.</li>
     </ul>
   </div>
 
   <!-- Section 2 -->
   <div class="legal-section">
     <h2><span class="section-num">02</span> Nature of the 1% Platform Fee</h2>
-    <p>The flat <strong>1% routing fee</strong> applied by AIPP.dev is <strong>not a financial commission or money transmission service fee</strong>, and is subject to a minimum floor of 5 satoshis per transaction.</p>
+    <p>For Lightning, the buyer currently pays the merchant price plus <strong>ceil(1%) + 5 satoshis</strong>. This is an AIPP platform fee; it is not described as a network fee.</p>
     <ul>
-      <li>This fee is a <strong>"Decentralized Software Routing &amp; Licensing Fee"</strong> designed to support the ongoing development, updates, and maintenance of the open-source software and its ecosystem.</li>
-      <li>Paralleling standard practices in Web3 and decentralized finance (DeFi) — such as MetaMask Swap fees or Uniswap router fees — this split is executed autonomously at the software code level.</li>
-      <li>Funds are <strong>never pooled, held, or custodied</strong> by the developers before distribution.</li>
+      <li>The fee supports operation and development of the hosted software.</li>
+      <li>The checkout should show the merchant price, AIPP fee and buyer total separately.</li>
+      <li>This page makes no legal conclusion about custody, money transmission, tax or licensing status.</li>
     </ul>
   </div>
 
@@ -264,12 +262,10 @@ footer {
 <!-- FOOTER -->
 <footer>
   <div class="logo">
-    <div class="logo-icon" style="width:20px;height:20px;">
-      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/></svg>
-    </div>
+    <img class="logo-icon" src="/assets/aipp-mark.svg" alt="" style="width:20px;height:20px;">
     <span>aipp protocol</span>
   </div>
-  <p>Universal, non-custodial Smart Tag publishing layer.</p>
+  <p>Universal Smart Tag publishing layer.</p>
   <div class="footer-links">
     <a href="/">Home</a>
     <a href="/dashboard.html">Studio</a>

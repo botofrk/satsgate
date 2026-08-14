@@ -6,6 +6,7 @@ import { handleChat, createTicket } from '../controllers/chat';
 import { verifyAdmin, getAdminStats, getFailedPayouts, retryPayout, getWaitlist } from '../controllers/admin';
 import { premiumArticle, getPricing } from '../controllers/demo';
 import { getPaidMcpManifest, getAippAgentManifest } from '../controllers/manifest';
+import { getOpenTag, getOpenTagManifest, unlockOpenTag, getOpenTagReceipt } from '../controllers/openTag';
 
 const router = Router();
 
@@ -48,7 +49,10 @@ router.post('/api/tag/create', createPaymentLink);
 router.get('/merchant/links', getPaymentLinks);
 router.delete('/merchant/links/:linkId', deletePaymentLink);
 router.get('/pay/:linkId', renderPaymentPage);
-router.get('/t/:linkId', renderPaymentPage);
+router.get('/t/:linkId/manifest', getOpenTagManifest);
+router.get('/t/:linkId/unlock/:hash', unlockOpenTag);
+router.get('/t/:linkId/receipt/:hash', getOpenTagReceipt);
+router.get('/t/:linkId', getOpenTag);
 router.get('/embed/:linkId', renderPaymentPage);
 router.get('/cli/:linkId', renderPaymentPage);
 router.post('/pay/:linkId/invoice', createLinkInvoice);

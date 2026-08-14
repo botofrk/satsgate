@@ -79,7 +79,7 @@
   font-size: 1.25rem;
   font-weight: 600;
   margin: 0;
-  background: linear-gradient(90deg, #f7931a 0%, #f5d100 100%);
+  background: linear-gradient(90deg, #ffc700 0%, #eab600 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }
@@ -109,7 +109,7 @@
 }
 
 .aipp-paywall-button {
-  background: #f7931a;
+  background: #ffc700;
   color: #111;
   border: none;
   border-radius: 8px;
@@ -126,7 +126,7 @@
 }
 
 .aipp-paywall-button:hover {
-  background: #f5d100;
+  background: #eab600;
   transform: translateY(-2px);
 }
 
@@ -152,7 +152,7 @@
 
 .aipp-paywall-loader {
   border: 3px solid rgba(255, 255, 255, 0.1);
-  border-top: 3px solid #f7931a;
+  border-top: 3px solid #ffc700;
   border-radius: 50%;
   width: 24px;
   height: 24px;

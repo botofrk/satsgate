@@ -1,7 +1,7 @@
 {
-  "name": "@aipp/sdk",
+  "name": "aipp-sdk",
   "version": "1.0.0",
-  "description": "Official Node.js SDK for AIPP — Non-Custodial Developer Monetization Platform (L402 & x402)",
+  "description": "Official Node.js / TypeScript SDK for AIPP Smart Tag payments (L402 & x402)",
   "main": "dist/index.js",
   "module": "dist/index.mjs",
   "types": "dist/index.d.ts",

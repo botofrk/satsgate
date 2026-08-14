@@ -1,6 +1,6 @@
 import express, { Request, Response, NextFunction } from 'express';
 import cors from 'cors';
-import rateLimit from 'express-rate-limit';
+import rateLimit, { ipKeyGenerator } from 'express-rate-limit';
 import { PORT, LNBITS_INVOICE_KEY, LNBITS_ADMIN_KEY, LNBITS_WEBHOOK_SECRET, IS_PRODUCTION, FEE_PER_REQUEST_SATS, DAILY_LIMIT_USD } from './config/env';
 import { initDb, getDb } from './config/database';
 import { errorHandler } from './utils/error';
@@ -30,7 +30,7 @@ app.use(cors({
     callback(new Error(`Origin ${origin} not allowed by CORS`));
   },
   methods: ['GET', 'POST', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-Api-Key', 'X-Admin-Key']
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Api-Key', 'X-Admin-Key', 'Idempotency-Key', 'X-Idempotency-Key']
 }));
 
 // [HIGH-2 FIX] Explicit body size limits to prevent DoS
@@ -41,10 +41,10 @@ app.use(express.json({ limit: '64kb' }));
 // [Y-22 / X-01 FIX] Global + per-route rate limiting
 // ─────────────────────────────────────────────────────────────────────────────
 
-// Global fallback: 200 req/min per IP
+// Global safety net. Endpoint-specific limits below provide the useful policy.
 const globalLimiter = rateLimit({
   windowMs: 60 * 1000,
-  max: 200,
+  max: 600,
   standardHeaders: true,
   legacyHeaders: false,
   message: { error: 'Too many requests, please slow down.', code: 'RATE_LIMIT_EXCEEDED' }
@@ -65,16 +65,30 @@ app.use('/chat', strictLimiter);
 app.use('/ticket', rateLimit({ windowMs: 60 * 1000, max: 5, standardHeaders: true, legacyHeaders: false }));
 app.use('/admin', rateLimit({ windowMs: 60 * 1000, max: 20, standardHeaders: true, legacyHeaders: false }));
 
-// Invoice creation: Temporarily increased to 100 for high-concurrency load testing
+const apiOrIpKey = (req: Request) => (req.headers['x-api-key'] as string) || ipKeyGenerator(req.ip || '127.0.0.1');
+
+// Agent-friendly policy: sustained 60/minute and enough room for a 20-request burst.
 const invoiceLimiter = rateLimit({
   windowMs: 60 * 1000,
-  max: 100,
+  max: 60,
+  keyGenerator: apiOrIpKey,
   standardHeaders: true,
   legacyHeaders: false,
   message: { error: 'Too many invoice requests from this IP, please wait a minute.', code: 'RATE_LIMIT_EXCEEDED' }
 });
 app.use('/pay', invoiceLimiter);
 app.use('/t', invoiceLimiter);
+app.use('/invoice/create', invoiceLimiter);
+
+const statusLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 300,
+  keyGenerator: apiOrIpKey,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Too many status checks. Retry shortly.', code: 'RATE_LIMIT_EXCEEDED' }
+});
+app.use('/invoice/status', statusLimiter);
 
 // API Routes
 app.use('/', apiRoutes);
@@ -93,12 +107,14 @@ app.get('/health', async (req: Request, res: Response) => {
 // API info endpoint & Host-based routing for api.aipp.dev
 app.get('/api', (req: Request, res: Response) => {
   res.json({
-    name: 'AIPP Protocol (SatsGate) API',
-    version: '2.0.0',
+    name: 'AIPP Open Tag API',
+    version: '2.1.0',
     status: 'online',
     docs: 'https://aipp.dev/docs.html',
     endpoints: {
       create_tag: 'POST /merchant/links/create',
+      read_tag: 'GET /t/:tag_id (HTML or JSON via Accept)',
+      tag_manifest: 'GET /t/:tag_id/manifest',
       create_invoice: 'POST /invoice/create',
       check_status: 'GET /invoice/status/:hash',
       merchant_register: 'POST /merchant/register',
@@ -111,12 +127,14 @@ app.get('/api', (req: Request, res: Response) => {
 app.get('/', (req: Request, res: Response, next: NextFunction) => {
   if (req.headers.host && req.headers.host.startsWith('api.')) {
     return res.json({
-      name: 'AIPP Protocol (SatsGate) API',
-      version: '2.0.0',
+      name: 'AIPP Open Tag API',
+      version: '2.1.0',
       status: 'online',
       docs: 'https://aipp.dev/docs.html',
       endpoints: {
         create_tag: 'POST /merchant/links/create',
+        read_tag: 'GET /t/:tag_id (HTML or JSON via Accept)',
+        tag_manifest: 'GET /t/:tag_id/manifest',
         create_invoice: 'POST /invoice/create',
         check_status: 'GET /invoice/status/:hash',
         merchant_register: 'POST /merchant/register',

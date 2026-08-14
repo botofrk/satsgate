@@ -1,5 +1,8 @@
 # AIPP.dev — Ekosistem Güncelleme ve Sürüm Prosedürü (Release Procedure)
 
+> Open Tag production releases use `deploy_open_tag.sh`. The legacy
+> `server_deploy.sh` must not be used because it edits compose configuration.
+
 Bu kılavuz, AIPP.dev projesinde yapılacak her güncellemenin projenin tüm bileşenlerine (SDK'lar, web sayfaları, sunucu, GitHub, NPM ve PyPI) eksiksiz ve hatasız bir şekilde yansıtılmasını sağlamak için takip edilecek **standart operasyon adımlarını (SOP)** içerir.
 
 ---
@@ -62,14 +65,14 @@ git push origin main
   python -m twine upload dist/* -u __token__ -p [PYPI_TOKEN] --skip-existing
   ```
 
-### Adım 7: Canlı Sunucu (VPS) Dağıtımı (Deployment)
-SSH anahtarını kullanarak Hetzner sunucusuna bağlanıp en güncel kodları çekin ve Docker imajını yeniden derleyin:
+### Adım 7: Canlı Sunucu Dağıtımı
+Sunucu adreslerini ve anahtar yollarını bu depoda tutmayın. Korunan runbook'taki değerleri ortam değişkenleriyle kullanın ve SSH host doğrulamasını açık bırakın:
 ```bash
 # 1. Sunucudaki git reposunu güncelleyin
-ssh -o StrictHostKeyChecking=no -i [SSH_KEY] root@89.167.84.31 "cd /home/hermes/aipp/aipp-key && git pull origin main"
+ssh -i "$AIPP_SSH_KEY_PATH" "$AIPP_DEPLOY_USER@$AIPP_DEPLOY_HOST" "cd '$AIPP_DEPLOY_PATH' && git pull --ff-only origin main"
 
 # 2. Docker imajını derleyin ve konteyneri güncelleyin
-ssh -o StrictHostKeyChecking=no -i [SSH_KEY] root@89.167.84.31 "cd /home/hermes/aipp/aipp-key && docker build -t aipp-key:latest . && docker stop aipp-key && docker rm aipp-key && docker run -d --name aipp-key --restart unless-stopped --network dokploy-network -v /home/hermes/data/aipp-key:/app/data --env-file /home/hermes/aipp/aipp-key/.env -l traefik.enable=true -l traefik.docker.network=dokploy-network -l 'traefik.http.routers.aipp-key.rule=Host(\`aipp.dev\`) || Host(\`www.aipp.dev\`)' -l traefik.http.routers.aipp-key.entrypoints=websecure -l traefik.http.routers.aipp-key.tls=true -l traefik.http.services.aipp-key.loadbalancer.server.port=3000 aipp-key:latest"
+ssh -i "$AIPP_SSH_KEY_PATH" "$AIPP_DEPLOY_USER@$AIPP_DEPLOY_HOST" "cd '$AIPP_DEPLOY_PATH' && ./server_deploy.sh"
 ```
 
 ### Adım 8: Servis Sağlık Kontrolü (Verification)
@@ -79,4 +82,7 @@ Sunucu üzerinde API'lerin doğru yanıt verdiğini test edin:
 curl -s -k -H 'Host: aipp.dev' https://localhost/health
 # Ajan Keşif Standardı
 curl -s -k -H 'Host: aipp.dev' https://localhost/aipp-agent.json
+
+# Open Tag: same URL, agent representation
+curl -s -k -H 'Host: aipp.dev' -H 'Accept: application/json' https://localhost/t/p_STAGING_TAG
 ```

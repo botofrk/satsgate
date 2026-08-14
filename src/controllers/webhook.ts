@@ -195,7 +195,7 @@ export const handleLnbitsWebhook = async (req: Request, res: Response, next: Nex
         const accumTotalForwarded = accumRecord?.total ?? 0;
         
         const effectiveThreshold = payoutMode === 'instant' 
-          ? MIN_PAYOUT_THRESHOLD_SATS 
+          ? 1
           : Math.max(MIN_PAYOUT_THRESHOLD_SATS, merchant.payout_threshold_sats || 0);
 
         if (accumTotalForwarded >= effectiveThreshold) {

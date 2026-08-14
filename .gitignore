@@ -1,5 +1,8 @@
 # Environment — NEVER commit real credentials
 .env
+.env*
+*.env
+core_env
 
 # Database file — contains live merchant & transaction data
 aipp.db
@@ -33,3 +36,18 @@ Thumbs.db
 # Scratch / temp files — never commit
 scratch/
 support-archive/
+temp_icon_gen/
+
+# Local one-off diagnostics and generated archives
+/check*.js
+/clear-db.js
+/delete_merchant.js
+/fix_user_wallet.js
+/set_secret.sh
+/test_pay.js
+/test_payout.js
+/test_x402.ts
+/unblock_ip.sh
+/scratch.js
+/extension.zip
+/public/zeus_*.html

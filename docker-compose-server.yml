@@ -57,6 +57,7 @@ services:
       FREE_CREDITS: 10
       API_BASE_URL: ${API_BASE_URL:-https://api.aipp.dev}
       LNURL_CALLBACK_BASE: ${LNURL_CALLBACK_BASE:-https://api.aipp.dev}
+      AIPP_BASE_PRIVATE_KEY: ${AIPP_BASE_PRIVATE_KEY}
     depends_on:
       postgres:
         condition: service_healthy

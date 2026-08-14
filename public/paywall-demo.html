@@ -17,7 +17,7 @@
     --fg-subtle: #999690;
     --border: #e6e2dc;
     --border-subtle: #eeeae4;
-    --accent: #c2613c;
+    --accent: #806300;
     --accent-light: #fbeee7;
     --accent-hover: #b05330;
     --radius-sm: 8px;
@@ -63,11 +63,7 @@
   .logo-icon {
     width: 24px;
     height: 24px;
-    background: var(--fg);
-    border-radius: 6px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    display: block;
     color: var(--bg);
   }
   .nav-btn {
@@ -159,9 +155,7 @@
 
 <header>
   <a href="/" class="logo">
-    <div class="logo-icon">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/></svg>
-    </div>
+    <img class="logo-icon" src="/assets/aipp-mark.svg" alt="">
     <span>aipp protocol</span>
   </a>
   <a href="/dashboard.html" class="nav-btn">Studio Console →</a>
@@ -180,7 +174,7 @@
 
   <p>In the rapidly evolving landscape of artificial intelligence, one of the most significant bottlenecks has been the inability of autonomous agents to interact with the traditional financial system. LLMs can write code, analyze data, and generate creative content, but when faced with a simple API paywall or a subscription requirement, they are stopped dead in their tracks.</p>
 
-  <p>This is where the L402 protocol and decentralized smart price tags come into play. By embedding micropayment capabilities directly into the HTTP protocol, we are opening the door for creators and machines to interact dynamically, with zero intermediaries and zero custody.</p>
+  <p>This is where L402-style payment challenges and Smart Tags come into play. AIPP verifies payment before releasing protected content and forwards the merchant amount through its settlement workflow.</p>
 
   <!-- This div will be replaced/unlocked by the paywall script -->
   <div data-aipp-src="/premium-article-1">

@@ -5,17 +5,42 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>aipp.dev Extension</title>
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@600;700&family=Inter:wght@400;500;600;700&family=Fira+Code:wght@500;700&display=swap');
-
   * { margin: 0; padding: 0; box-sizing: border-box; }
   
   body {
-    width: 340px;
+    width: 360px;
     background: #faf9f6;
     color: #0f0f11;
-    font-family: 'Inter', sans-serif;
-    padding: 16px;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    padding: 12px;
     -webkit-font-smoothing: antialiased;
+  }
+
+  /* STICKER WRAPPER */
+  .sticker-wrapper {
+    background: #fffdf9;
+    border: 1.5px solid #e8ddd4;
+    border-radius: 14px 14px 12px 12px;
+    box-shadow: 0 2px 0 #e0d4c8, 0 4px 0 #d8ccc0, 0 8px 24px rgba(26,25,24,0.10);
+    overflow: hidden;
+    position: relative;
+  }
+  .sticker-stripe {
+    height: 6px;
+    background: #ffc700;
+  }
+  .sticker-hole-cutout {
+    width: 24px;
+    height: 12px;
+    background: #faf9f6;
+    border-radius: 0 0 12px 12px;
+    border: 1.5px solid #e8ddd4;
+    border-top: none;
+    margin: 0 auto;
+    box-shadow: inset 0 2px 4px rgba(0,0,0,0.08);
+  }
+  .sticker-inner {
+    padding: 16px 20px 20px;
   }
 
   /* HEADER */
@@ -23,8 +48,6 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding-bottom: 12px;
-    border-bottom: 1px solid #e4e4e7;
     margin-bottom: 16px;
   }
   .logo {
@@ -88,45 +111,66 @@
 
   /* CARD */
   .card {
-    background: #ffffff;
-    border: 1px solid #e4e4e7;
-    border-radius: 12px;
-    padding: 14px;
+    background: transparent;
+    border: none;
+    border-radius: 0;
+    padding: 0;
     margin-bottom: 12px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.03);
+    box-shadow: none;
   }
   .card-title {
     font-size: 12px; font-weight: 800; text-transform: uppercase;
     letter-spacing: 0.5px; color: #71717a; margin-bottom: 8px;
   }
 
+  /* FUN PRICE INPUT */
+  .tag-price-writer {
+    display: flex;
+    align-items: baseline;
+    justify-content: center;
+    gap: 8px;
+    margin: 28px 0;
+  }
+  .tag-price-writer .currency-prefix {
+    font-size: 32px;
+    font-weight: 800;
+    color: #1a1a1a;
+  }
+  .tag-price-writer input {
+    font-size: 56px;
+    font-weight: 800;
+    color: #1a1a1a;
+    background: transparent;
+    border: none;
+    border-bottom: 3px dashed #d4d4d8;
+    width: 140px;
+    text-align: center;
+    outline: none;
+    padding: 0;
+    line-height: 1;
+    font-family: 'Space Grotesk', sans-serif;
+    letter-spacing: -2px;
+    transition: border-color 0.2s;
+  }
+  .tag-price-writer input::placeholder {
+    color: #a1a1aa;
+    opacity: 0.5;
+  }
+  .tag-price-writer input:focus {
+    border-bottom-color: #ffc700;
+  }
+  
+  .tag-price-sub {
+    text-align: center;
+    font-size: 12px;
+    color: #71717a;
+    margin-top: -16px;
+    margin-bottom: 28px;
+    font-weight: 600;
+  }
+
   /* INPUT & BUTTON */
   .input-label { font-size: 11px; font-weight: 700; margin-bottom: 4px; display: block; color: #3f3f46; }
-  .currency-input-wrap {
-    display: flex;
-    align-items: center;
-    background: #fafafa;
-    border: 1px solid #e4e4e7;
-    border-radius: 8px;
-    padding: 0 10px;
-    margin-bottom: 12px;
-    transition: border-color 0.15s;
-  }
-  .currency-input-wrap:focus-within {
-    background: #fff;
-    border-color: #a1a1aa;
-    box-shadow: 0 0 0 3px rgba(0,0,0,0.04);
-  }
-  .currency-prefix { font-family: 'Space Grotesk', sans-serif; font-size: 13px; font-weight: 700; color: #0f0f11; margin-right: 4px; }
-  .currency-input {
-    border: none !important;
-    background: transparent !important;
-    padding: 8px 0 !important;
-    margin-bottom: 0 !important;
-    box-shadow: none !important;
-    font-size: 13px !important;
-    font-weight: 600 !important;
-  }
   .input-field {
     width: 100%;
     padding: 8px 10px;
@@ -143,61 +187,48 @@
 
   .btn {
     width: 100%;
-    padding: 10px;
+    padding: 14px;
     border: none;
-    border-radius: 8px;
-    font-size: 13px;
-    font-weight: 700;
+    border-radius: 12px;
+    font-size: 14px;
+    font-weight: 800;
     cursor: pointer;
     transition: all 0.2s;
     font-family: 'Inter', sans-serif;
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 6px;
+    gap: 8px;
   }
-  .btn-primary { background: #ffc700; color: #0f0f11; box-shadow: 0 2px 8px rgba(255,199,0,0.3); }
-  .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(255,199,0,0.4); }
-  .btn-dark { background: #0f0f11; color: #ffffff; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
-  .btn-dark:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
-
-  /* EARNINGS PREVIEW BOX */
-  .earnings-preview-box {
-    background: #f0fdf4;
-    border: 1px solid #bbf7d0;
-    border-radius: 10px;
-    padding: 10px 14px;
-    margin-bottom: 14px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-  }
-  .earnings-label { font-size: 12px; font-weight: 600; color: #166534; }
-  .earnings-val { font-family: 'Space Grotesk', sans-serif; font-size: 18px; font-weight: 700; color: #15803d; }
+  .btn-primary { background: #ffc700; color: #0f0f11; box-shadow: 0 4px 12px rgba(255,199,0,0.3); border: 2px solid #eab308; }
+  .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 6px 16px rgba(255,199,0,0.4); }
+  .btn-dark { background: #0f0f11; color: #ffffff; box-shadow: 0 2px 8px rgba(0,0,0,0.1); border: 2px solid #000; }
+  .btn-dark:hover { transform: translateY(-2px); box-shadow: 0 6px 16px rgba(0,0,0,0.2); }
 
   /* TRUST MICROCOPY */
   .trust-microcopy {
-    font-size: 10px;
+    font-size: 11px;
     color: #71717a;
     text-align: center;
-    margin-top: 8px;
+    margin-top: 14px;
     font-weight: 500;
-    line-height: 1.3;
+    line-height: 1.4;
   }
 
-  /* FLOW STEPS */
-  .flow-steps {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    background: #fafafa;
-    border: 1px solid #e4e4e7;
-    border-radius: 8px;
-    padding: 8px 10px;
-    margin-top: 14px;
+  /* TOOL / PICKER STATS */
+  .picker-active-box {
+    background: #fffbeb;
+    border: 1.5px solid #fde68a;
+    border-radius: 6px;
+    padding: 10px;
+    font-size: 12px;
+    color: #b45309;
+    margin-bottom: 10px;
+    margin-top: 12px;
+    font-weight: 600;
+    text-align: center;
+    display: none;
   }
-  .flow-step { font-size: 10px; font-weight: 600; color: #3f3f46; display: flex; align-items: center; gap: 3px; }
-  .flow-arrow { font-size: 10px; color: #a1a1aa; }
 
   /* TOOL / PICKER STATS */
   .picker-active-box {
@@ -219,15 +250,15 @@
 </head>
 <body>
 
+<div class="sticker-wrapper">
+  <div class="sticker-stripe"></div>
+  <div class="sticker-hole-cutout"></div>
+  <div class="sticker-inner">
+
   <!-- HEADER -->
   <div class="header">
     <div class="logo">
-      <svg width="20" height="20" viewBox="0 0 32 32" fill="none">
-        <rect width="32" height="32" rx="6" fill="#0f0f11"/>
-        <circle cx="14" cy="16" r="7" fill="none" stroke="#ffc700" stroke-width="2.5"/>
-        <circle cx="14" cy="16" r="2.5" fill="#ffc700"/>
-        <path d="M19.5 12 L24 16 L19.5 20" fill="none" stroke="#ffc700" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
-      </svg>
+      <img src="../icons/icon32.png" width="18" height="18" alt="">
       aipp<span>extension</span>
     </div>
     <span class="badge-status" id="connection-status">Ready</span>
@@ -235,108 +266,123 @@
 
   <!-- TABS -->
   <div class="tabs">
-    <button class="tab-btn active" id="tab-creator">
-      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-      Lock Content
-    </button>
-    <button class="tab-btn" id="tab-links">
+    <button class="tab-btn active" id="tab-links">
       <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
       Quick Link
     </button>
+    <button class="tab-btn" id="tab-creator">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>
+      Create Tag
+    </button>
     <button class="tab-btn" id="tab-settings">
       <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12V7H5a2 2 0 0 1 0-4h14v4"/><path d="M3 5v14a2 2 0 0 0 2 2h16v-5"/><path d="M18 12a2 2 0 0 0 0 4h4v-4z"/></svg>
-      Wallet Key
+      Payout Wallet
     </button>
   </div>
 
-  <!-- PANEL 1: CREATOR / DOM LOCKER -->
-  <div class="panel active" id="panel-creator">
+  <!-- PANEL 1: QUICK PAYMENT LINKS (DEFAULT) -->
+  <div class="panel active" id="panel-links">
     <div class="card">
-      <div class="card-title" style="font-size: 13px; color: #0f0f11;">Monetize Any Content</div>
-      <p style="font-size: 11px; color: #52525b; margin-bottom: 14px; font-weight: 500; line-height: 1.4;">
-        Pick any text, image or section. Set a price. Start earning instantly.
-      </p>
+      <div class="card-title" style="text-align: center; margin-bottom: 16px;">Instant Payment Link</div>
       
-      <div class="picker-active-box" id="picker-status-box">
-        🎯 <strong>Picker Active:</strong> Hover over element & click to lock. Paywall HTML code will copy to clipboard automatically!
+      <div style="background: #fff; padding: 10px; border-radius: 8px; border: 1px solid #e4e4e7; margin-bottom: 12px;">
+        <label class="input-label">Title</label>
+        <input class="input-field" id="link-title" type="text" placeholder="e.g. Aristoteles Whitepaper PDF" style="margin-bottom: 0; background: transparent; border: none; padding: 0;">
       </div>
-
-      <!-- STEP 1: PRICE INPUT -->
-      <div style="margin-bottom: 10px;">
-        <label class="input-label">Lock Price (USD)</label>
-        <div class="currency-input-wrap">
-          <span class="currency-prefix">$</span>
-          <input class="input-field currency-input" id="lock-price" type="text" value="0.10" placeholder="0.10">
-        </div>
-      </div>
-
-      <!-- STEP 2: YOU RECEIVE PREVIEW -->
-      <div class="earnings-preview-box">
-        <div class="earnings-label">You receive</div>
-        <div class="earnings-val" id="earnings-display">$0.10</div>
-      </div>
-
-      <!-- STEP 3: CTA BUTTON -->
-      <button class="btn btn-primary" id="start-picker-btn">
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-        Select & Protect Content
-      </button>
-
-      <div class="trust-microcopy">
-        ⚡ 1-Click: HTML Paywall code is copied to clipboard automatically
-      </div>
-
-      <div class="flow-steps">
-        <div class="flow-step"><span>1️⃣</span> Pick</div>
-        <div class="flow-arrow">→</div>
-        <div class="flow-step"><span>2️⃣</span> Price</div>
-        <div class="flow-arrow">→</div>
-        <div class="flow-step"><span>3️⃣</span> Paste</div>
-        <div class="flow-arrow">→</div>
-        <div class="flow-step"><span>4️⃣</span> Earn</div>
-      </div>
-    </div>
-  </div>
-
-  <!-- PANEL 2: QUICK PAYMENT LINKS -->
-  <div class="panel" id="panel-links">
-    <div class="card">
-      <div class="card-title">Instant Payment Link</div>
-      <label class="input-label">Title</label>
-      <input class="input-field" id="link-title" type="text" placeholder="e.g. My Premium PDF">
       
-      <label class="input-label">Price (USD)</label>
-      <input class="input-field" id="link-amount" type="number" step="0.01" min="0.01" value="1.00">
+      <div style="background: #fff; padding: 10px; border-radius: 8px; border: 1px solid #e4e4e7; margin-bottom: 12px;">
+        <label class="input-label">Price (USD)</label>
+        <input class="input-field" id="link-amount" type="text" placeholder="0.25" style="margin-bottom: 0; background: transparent; border: none; padding: 0;">
+      </div>
 
-      <label class="input-label">Target Content URL</label>
-      <input class="input-field" id="link-target" type="url" placeholder="https://mycontent.com/file.zip">
+      <div style="background: #fff; padding: 10px; border-radius: 8px; border: 1px solid #e4e4e7; margin-bottom: 16px;">
+        <label class="input-label">Target Content URL</label>
+        <input class="input-field" id="link-target" type="url" placeholder="https://drive.google.com/... or Calendly link" style="margin-bottom: 0; background: transparent; border: none; padding: 0;">
+      </div>
 
       <button class="btn btn-dark" id="gen-link-btn">Generate Pay Link →</button>
     </div>
     <div id="link-result-box" style="display:none;" class="card">
-      <div class="card-title" style="color:#16a34a;">Link Generated!</div>
-      <input class="input-field" id="generated-link-input" readonly>
-      <button class="btn btn-primary" id="copy-link-btn">Copy Link</button>
+      <div class="card-title" style="color:#16a34a; text-align: center;">Link Generated!</div>
+      <input class="input-field" id="generated-link-input" readonly style="margin-bottom: 12px;">
+      <button class="btn btn-primary" id="copy-link-btn">Copy Tag</button>
+      <button class="btn btn-dark" id="copy-agent-btn" style="margin-top:8px;">Copy Agent Manifest</button>
+      <p class="trust-microcopy">One tag works as a checkout for people and a manifest for agents.</p>
+    </div>
+  </div>
+
+  <!-- PANEL 2: CREATOR / DOM LOCKER -->
+  <div class="panel" id="panel-creator">
+    <div class="card" style="text-align: center; padding-top: 8px;">
+      <div style="font-size: 14px; font-weight: 800; color: #0f0f11; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.5px;">Write your price</div>
+      <p style="font-size: 11px; color: #71717a; font-weight: 500;">How much for this content?</p>
+      
+      <div class="picker-active-box" id="picker-status-box">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="display:inline-block; vertical-align:middle; margin-right:4px;"><circle cx="12" cy="12" r="10"/><line x1="22" y1="12" x2="18" y2="12"/><line x1="6" y1="12" x2="2" y2="12"/><line x1="12" y1="6" x2="12" y2="2"/><line x1="12" y1="22" x2="12" y2="18"/></svg>
+        Hover over element &amp; click to attach tag
+      </div>
+
+      <div class="tag-price-writer">
+        <span class="currency-prefix">$</span>
+        <input id="lock-price" type="text" placeholder="0.10">
+      </div>
+      <div class="tag-price-sub" id="earnings-display">Listed merchant price: $0.10</div>
+
+      <button class="btn btn-primary" id="start-picker-btn">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"></path><line x1="7" y1="7" x2="7.01" y2="7"></line></svg>
+        Stick Tag to Element
+      </button>
+
+      <div class="trust-microcopy">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="display:inline-block; vertical-align:middle; margin-right:3px;"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+        Mints a real tag, then copies the visual embed code
+      </div>
     </div>
   </div>
 
   <!-- PANEL 3: SETTINGS -->
   <div class="panel" id="panel-settings">
     <div class="card">
-      <div class="card-title">Payout Wallet Settings</div>
-      <label class="input-label">Lightning Address</label>
-      <input class="input-field" id="setting-ln-address" type="text" placeholder="yourname@getalby.com">
+      <div class="card-title" style="text-align: center; margin-bottom: 16px;">Payout Wallet Settings</div>
+      
+      <div style="background: #fff; padding: 10px; border-radius: 8px; border: 1px solid #e4e4e7; margin-bottom: 12px;">
+        <label class="input-label" style="display:flex; align-items:center; gap:5px;">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#d97706" stroke-width="2.5"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+          Lightning Address (Bitcoin)
+        </label>
+        <input class="input-field" id="setting-ln-address" type="text" placeholder="yourname@getalby.com" style="margin-bottom: 0; background: transparent; border: none; padding: 0;">
+      </div>
 
-      <label class="input-label">AIPP API Key</label>
-      <input class="input-field" id="setting-api-key" type="text" placeholder="aipp_merch_...">
+      <div style="background: #fff; padding: 10px; border-radius: 8px; border: 1px solid #e4e4e7; margin-bottom: 12px;">
+        <label class="input-label" style="display:flex; align-items:center; gap:5px;">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><path d="M12 6v12M6 12h12"/></svg>
+          Base Address (USDC)
+        </label>
+        <input class="input-field" id="setting-evm-address" type="text" placeholder="0x..." style="margin-bottom: 0; background: transparent; border: none; padding: 0;">
+      </div>
 
-      <button class="btn btn-primary" id="save-settings-btn">Save Wallet Settings</button>
+      <div style="background: #fff; padding: 10px; border-radius: 8px; border: 1px solid #e4e4e7; margin-bottom: 16px;">
+        <label class="input-label" style="display:flex; justify-content:space-between; align-items:center;">
+          <span style="display:flex; align-items:center; gap:5px;">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="7.5" cy="15.5" r="5.5"/><path d="m21 2-9.6 9.6"/><path d="m15.5 7.5 3 3L22 7l-3-3"/></svg>
+            aipp Tag ID
+          </span>
+          <a href="#" id="existing-key-btn" style="color:#a1a1aa; font-weight: 500; font-size: 10px; text-decoration: underline;">Already have one?</a>
+        </label>
+        <input class="input-field" id="setting-api-key" type="password" autocomplete="off" placeholder="Auto-generated on save" readonly style="margin-bottom: 0; background: transparent; border: none; padding: 0; color: #71717a;">
+      </div>
+
+      <button class="btn btn-primary" id="save-settings-btn" style="margin-bottom: 8px;">Save Settings</button>
+      <button class="btn btn-dark" id="go-dashboard-btn" style="width: 100%;">View Sales Dashboard ↗</button>
     </div>
   </div>
 
   <div class="footer">
-    Powered by <a href="https://aipp.dev" target="_blank">AIPP</a> · ⚡ Lightning · ● USDC
-  </div>
+    Powered by <a href="https://aipp.dev" target="_blank">aipp</a> · Automatic merchant payout
+  </div> <!-- end of tabs panel 3 -->
+
+  </div> <!-- end of sticker-inner -->
+</div> <!-- end of sticker-wrapper -->
 
   <script src="popup.js"></script>
 </body>

@@ -95,10 +95,57 @@ describe('API Integration Tests via Supertest', () => {
   it('should return agent manifest on GET /aipp-agent.json', async () => {
     const res = await request(app).get('/aipp-agent.json');
     expect(res.status).toBe(200);
-    expect(res.body).toHaveProperty('spec_version', '1.0');
+    expect(res.body).toHaveProperty('spec_version', '1.1');
     expect(res.body).toHaveProperty('endpoints');
     expect(res.body.endpoints).toHaveProperty('create_invoice');
     expect(res.body).toHaveProperty('protocols');
+  });
+
+  it('serves one Open Tag as HTML or JSON and binds its payment proof', async () => {
+    const created = await request(app)
+      .post('/merchant/links/create')
+      .set('X-Api-Key', 'aipp_testkey')
+      .send({
+        title: 'Research summary',
+        amount_usd: 0.25,
+        redirect_url: 'https://example.com/result',
+        capability_type: 'api',
+        input_schema: { type: 'object', properties: { url: { type: 'string' } } }
+      });
+    expect(created.status).toBe(200);
+    expect(created.body.url).toContain(`/t/${created.body.id}`);
+    expect(created.body.manifest_url).toContain('/manifest');
+
+    const manifest = await request(app)
+      .get(`/t/${created.body.id}`)
+      .set('Accept', 'application/json');
+    expect(manifest.status).toBe(200);
+    expect(manifest.body).toHaveProperty('kind', 'aipp.open-tag');
+    expect(manifest.body).toHaveProperty('capability_type', 'api');
+    expect(manifest.body.payment_binding).toHaveProperty('proof_scope', 'exact-tag');
+
+    const html = await request(app)
+      .get(`/t/${created.body.id}`)
+      .set('Accept', 'text/html');
+    expect(html.status).toBe(200);
+    expect(html.text).toContain('Research summary');
+
+    const invoice = await request(app)
+      .post(`/t/${created.body.id}/invoice`)
+      .send({ mode: 'L402', checkout_id: 'open-tag-test-001' });
+    expect(invoice.status).toBe(200);
+    expect(invoice.body).toHaveProperty('tag_id', created.body.id);
+
+    await request(app).get(`/invoice/status/${invoice.body.payment_hash}`);
+    const unlocked = await request(app)
+      .get(`/t/${created.body.id}/unlock/${invoice.body.payment_hash}`);
+    expect(unlocked.status).toBe(200);
+    expect(unlocked.body).toHaveProperty('unlocked', true);
+    expect(unlocked.body.fulfillment).toHaveProperty('url', 'https://example.com/result');
+
+    const wrongTag = await request(app)
+      .get(`/t/p_wrong/unlock/${invoice.body.payment_hash}`);
+    expect(wrongTag.status).toBe(404);
   });
 
   it('should return agent-friendly 402 challenge on GET /premium-article-1 without auth', async () => {
@@ -111,5 +158,5 @@ describe('API Integration Tests via Supertest', () => {
     expect(res.body.payment_methods).toHaveProperty('lightning');
     expect(res.body.payment_methods).toHaveProperty('usdc_base');
     expect(res.body).toHaveProperty('instructions');
-  });
+  }, 15000);
 });

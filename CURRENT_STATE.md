@@ -1,53 +1,99 @@
-# AIPP.dev — Current Project State & Master Blueprint
-*Son Güncelleme: 11 Ağustos 2026 (Salı Gecesi Seansı - v1.3.8)*
+# AIPP — Current Project State
 
-Bu belge, AIPP (SatsGate) projesinde tamamlanan uçtan uca **Bitcoin Lightning (L402) & Base USDC (X402)** altyapısını, **Hermes AI Ajanı Entegrasyonunu**, **Nous Research Resmi PR Başarısını**, **Canlı Topluluk Başvurularını (Reddit, n8n, LangChain, Notion)**, **Resmi PyPI & NPM Paketlerini**, **Marka Kit (Brand Kit) & 10/10 UX güncellemelerini** ve **Yarınki Lansman Yol Haritasını** içerir.
+Last updated: 2026-08-13
 
----
+## Open Tag architecture
 
-## ⚡ 11 Ağustos 2026 Günü Tamamlanan Tarihi Başarılar
+A Smart Tag now has one canonical `/t/:id` URL. Browsers receive the compact
+checkout while agents requesting JSON receive the Open Tag manifest. Tag
+invoices persist `tag_id`; fulfillment and portable receipts reject proofs
+that are not bound to that exact tag. Legacy `/pay`, `/embed`, `/cli` and generic
+invoice routes remain available for compatibility.
 
-### 1. 📦 Resmi NPM & PyPI Paketleri Dünya Çapında Yayında!
-- **🐍 Python SDK (PyPI):** [`aipp-sdk v1.3.0`](https://pypi.org/project/aipp-sdk/1.3.0/)
-  - Kurulum: `pip install aipp-sdk`
-  - İçerik: Hermes Agent Skill, LangChain tool, EU AI Act Madde 26 makbuz doğrulayıcısı.
-- **☕ Node.js / TypeScript SDK (NPM):** [`aipp-sdk v1.0.0`](https://www.npmjs.com/package/aipp-sdk)
-  - Kurulum: `npm install aipp-sdk`
-  - İçerik: CJS, ESM, DTS tam tip tanımlı ve Express/Hono middleware destekli Node.js istemcisi.
+This is the authoritative project-status document. `STATUS.md` and
+`YAPILACAKLAR.md` point here so that old sessions do not become competing
+sources of truth.
 
-### 2. 🚀 Nous Research Hermes-Agent Resmi Pull Request (PR #83912)
-- **Resmi PR Linki:** [https://github.com/NousResearch/hermes-agent/pull/83912](https://github.com/NousResearch/hermes-agent/pull/83912)
-- **Bağımsız Skill Repo:** [https://github.com/aipp-key/hermes-aipp-skill](https://github.com/aipp-key/hermes-aipp-skill) (Public, logolu, kurulum rehberli)
-- **Eklenen Skill:** `optional-skills/blockchain/aipp-micropayments/`
+Detailed inspection versus runtime-test coverage is tracked separately in
+[`AUDIT_COVERAGE.md`](AUDIT_COVERAGE.md).
 
-### 3. 🏢 GitHub Kurumsal Yapılandırması (`aipp-key`)
-- **`aipp-key/aipp-sdk` (Public):** Açık kaynaklı Python & Node.js SDK'ları ve tüm 7 entegrasyon örneği.
-- **`aipp-key/hermes-aipp-skill` (Public):** Hermes AI Ajan eklentisi.
-- **`aipp-key/satsgate` (Private):** Ana sunucu motorumuz gizli ve tam güvende.
+## Product model
 
-### 4. 📝 Notion Developer Platformu Entegrasyonu
-- **Token:** `[SET_VIA_ENV_NOTION_TOKEN]`
-- **Canlı Muhasebe Veritabanı:** `⚡ AIPP Live Revenues & Settlements` (`https://app.notion.com/p/3b9e8deab13b8135a747de3dc6d9a166`)
-- **Notion Şablon Satış Rehberi:** `Monetize Notion Templates & Research with AIPP` (`https://app.notion.com/p/Monetize-Notion-Templates-Research-with-AIPP-3b9e8deab13b8182ada8fd65bda80b0d`)
+AIPP creates reusable Smart Price Tags for digital files, AI/prompt output,
+bookings, private links and physical items. A buyer pays at the tag checkout;
+access is released only after settlement is verified.
 
-### 5. 🎨 AIPP Resmi Marka Kit (Brand Kit) & Chrome Extension 10/10 UX
-- **Brand Kit:** Soft mikron gölgeler, `Space Grotesk` & `Inter` tipografisi, Warm Amber (`#ffc700`) accent ve mineral gri sistem.
-- **Chrome Extension:** Monetize Any Content, dinamik kazanç hesaplayıcısı, 4 adımlı mikro-infografik akış, pulsing picker.
+Lightning currently uses one customer invoice. The invoice amount is:
 
-### 6. 📧 Kurumsal Webmail Logo ve Teması
-- `mail.aipp.dev` üzerinde Roundcube Elastic teması için resmi vektörel `logo.svg` entegre edildi ve önbellekler sıfırlandı.
+`merchant price + ceil(merchant price × 1%) + 5 sats`
 
----
+The invoice first settles to AIPP's Lightning wallet and the merchant amount is
+forwarded immediately or through the retry queue. This is short-lived custody,
+not direct wallet-to-wallet settlement, and must be described honestly. Base
+USDC uses its own on-chain settlement flow.
 
-## 🎯 YARINKİ İLK ADIMLAR (12 Ağustos 2026 Çarşamba)
+## Completed in the 2026-08-13 review
 
-1. **📢 X (Twitter) & Farcaster Lansman Zincirini Ateşlemek:**
-   - 6 tweetlik hazır manifestoyu `pip install aipp-sdk` ve `npm install aipp-sdk` linkleriyle paylaşmak.
-   - `@NousResearch`, `@LangChainAI`, `@n8n_io`, `@base` hesaplarını etiketlemek.
-2. **💬 Nous Research Discord Sunucusunda Duyuru:**
-   - `#agent` ve `#skills` kanallarına PR #83912 ve `hermes-aipp-skill` linkini paylaşmak.
-3. **🧩 Chrome Web Store Eklentisi:**
-   - `extension.zip` paketini Google Developer Console'a yüklemek.
-4. **📊 Topluluk Moderasyon Kontrolleri:**
-   - n8n ve LangChain forum onaylarını kontrol edip gelen ilk yorumları yanıtlamak.
+- Centralized the Lightning fee formula in `src/services/fees.ts`.
+- Changed Lightning pricing so the merchant receives the listed price and the
+  customer pays the platform fee on top.
+- Fixed payout calculations and persisted payout references/errors.
+- Added database migration fields for payout observability.
+- Set agent-friendly limits: 60 invoice creations/minute per API key or IP,
+  300 status checks/minute, and a 600 request/minute global safety net.
+- Kept checkout idempotency so retries/concurrent requests do not create
+  accidental duplicate charges.
+- Closed Lightning-address registration takeover: an existing address cannot
+  be re-registered to obtain a new key.
+- Hardened the dashboard: session-only API key storage, key-only login, escaped
+  rendering, corrected API schema handling and clearer payout states.
+- Added an explicit price/merchant/platform-fee breakdown to checkout.
+- Removed unsupported legal/compliance claims and misleading statements such as
+  "100% non-custodial" from reviewed product pages.
+- Added production 404 behavior for unknown tags.
+- Audited Chrome extension v1.1.0: it now mints a real Smart Tag before element
+  selection, stores API keys locally instead of Chrome Sync, never places a key
+  in the dashboard URL, validates inputs and copies a working widget embed.
+- Documented that the DOM/widget element lock is a visual gate; confidential
+  material must use server-side verification or post-payment fulfillment.
+- Restricted widget unlock messages to the AIPP iframe origin and window.
+- Replaced the long feature-catalogue homepage with a compact 16 KB product
+  surface: one promise, one Smart Tag form and three progressive use cases.
+- Recorded the product/pain focus in `PRODUCT_FOCUS.md` so protocol expansion
+  does not re-clutter the primary user journey.
+- TypeScript build passes. Fee/pricing tests pass (9/9).
 
+## Verified but not fully completed
+
+- A full database-backed test run is still required in a Linux environment with
+  a compatible native `sqlite3` build. The uploaded `node_modules` contains a
+  platform-specific binary and is not a valid deployment artifact.
+- Changes have not been deployed to the live server by this review.
+- NPM/PyPI packages and the Chrome extension need a coordinated version bump and
+  publication after the API/wording changes are accepted.
+- Rotate every credential that appeared in historical Markdown, scripts or
+  examples. The repository now contains placeholders, but deletion does not
+  revoke a previously exposed credential.
+
+## Next release gate
+
+1. Rotate exposed/reused credentials and configure secrets only through the
+   deployment secret store.
+2. Install dependencies cleanly on Linux with `npm ci`, then run `npm run build`
+   and `npm test`.
+3. Test 1, 20 and 60 concurrent invoice creations, idempotent retries, payout
+   success, payout retry and failed-payout recovery against a staging wallet.
+4. Verify checkout, dashboard, docs, SDKs and Hermes skill against staging.
+5. Back up the production database, deploy, run smoke tests and monitor payout
+   failures before public launch.
+
+Production deployment must use `deploy_open_tag.sh`. It updates only the AIPP
+service with `--no-deps` and verifies that the Phoenix container identity,
+start time and persistent mounts remain unchanged.
+
+## Deliberate non-goals for this release
+
+- No credits or prepaid customer balance.
+- No merchant Lightning channel/LSP product.
+- No claim that routing is protocol-enforced or completely non-custodial.
+- No automated refund promise; refunds remain a merchant operation.

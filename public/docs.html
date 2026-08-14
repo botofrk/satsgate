@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>AIPP — Developer Documentation & API Reference</title>
-<meta name="description" content="Integrate non-custodial Smart Price Tags and dual-rail L402 / x402 micropayments in minutes.">
+<meta name="description" content="Create Smart Tags and add pay-per-use Lightning or Base USDC payments to apps and AI workflows.">
 <link rel="icon" type="image/x-icon" href="favicon.ico">
 <link rel="icon" type="image/svg+xml" href="favicon.svg">
 <style>
@@ -21,9 +21,10 @@
   --fg-subtle: #999690;
   --border: #e6e2dc;
   --border-subtle: #eeeae4;
-  --accent: #c2613c;
-  --accent-light: #fbeee7;
-  --accent-hover: #b05330;
+  --brand: #ffc700;
+  --accent: #806300;
+  --accent-light: #fffbdf;
+  --accent-hover: #eab600;
   --green: #15803d;
   --green-bg: #ecfdf5;
   --radius-sm: 8px;
@@ -58,8 +59,7 @@ header {
   color: var(--fg);
 }
 .logo-icon {
-  width: 28px; height: 28px; background: var(--fg);
-  border-radius: 7px; display: flex; align-items: center; justify-content: center; color: var(--bg);
+  width: 28px; height: 28px; display: block;
 }
 .logo span { font-family: 'Instrument Serif', Georgia, serif; font-size: 18px; color: var(--fg-muted); font-style: italic; }
 
@@ -159,16 +159,14 @@ code { font-family: 'JetBrains Mono', monospace; }
 
 <header>
   <a href="/" class="logo">
-    <div class="logo-icon">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"></path></svg>
-    </div>
+    <img class="logo-icon" src="/assets/aipp-mark.svg" alt="">
     <span style="font-family:'Plus Jakarta Sans',sans-serif; font-weight:800; font-size:19px; color:var(--fg); font-style:normal; letter-spacing:-0.03em;">aipp</span>
   </a>
 
   <div class="nav-links">
-    <a href="/#generator">Mint Tag</a>
-    <a href="/#extension">Extension</a>
-    <a href="/#usecases">Applications</a>
+    <a href="/#tag-form">Create Tag</a>
+    <a href="/#uses">Extension</a>
+    <a href="/#uses">Applications</a>
     <a href="/dashboard.html" class="nav-cta">Studio Console →</a>
   </div>
 </header>
@@ -190,7 +188,7 @@ code { font-family: 'JetBrains Mono', monospace; }
     <div class="sidebar-section">
       <div class="sidebar-title">API Reference</div>
       <a href="#create-tag" class="sidebar-link">Create Smart Tag</a>
-      <a href="#create-invoice" class="sidebar-link">Mint Invoice</a>
+      <a href="#create-invoice" class="sidebar-link">Create Invoice</a>
       <a href="#check-status" class="sidebar-link">Poll Settlement</a>
     </div>
     <div class="sidebar-section">
@@ -209,19 +207,19 @@ code { font-family: 'JetBrains Mono', monospace; }
     <div class="sidebar-section">
       <div class="sidebar-title">Protocols</div>
       <a href="#l402-protocol" class="sidebar-link">Bitcoin Lightning (L402)</a>
-      <a href="#x402-protocol" class="sidebar-link">Base USDC (x402)</a>
+      <a href="#x402-protocol" class="sidebar-link">Base USDC</a>
     </div>
   </aside>
 
   <!-- CONTENT -->
   <main class="docs-content">
     <h1 class="docs-title">Developer Documentation</h1>
-    <p class="docs-sub">Complete guides and API references for integrating non-custodial micropayments into any digital application or AI workflow.</p>
+    <p class="docs-sub">Guides and API references for adding pay-per-use payments to digital products and AI workflows.</p>
 
     <!-- SECTION: OVERVIEW -->
     <div class="section-block" id="overview">
       <h2>Architecture Overview</h2>
-      <p>aipp operates as an open-source, non-custodial smart price tag standard and payment challenge gateway. Rather than acting as an intermediary or holding user balances, aipp generates cryptographic payment requests settled autonomously between the buyer and the creator's wallet node.</p>
+      <p>AIPP creates payment challenges, verifies successful payments, deducts the disclosed service fee, and automatically forwards the merchant amount to the configured wallet. AIPP does not offer merchant spending accounts or prepaid balances.</p>
       
       <!-- Modern Visual Architecture Flow -->
       <div style="background:#181716; border:1px solid #292725; border-radius:14px; padding:28px; margin:20px 0; color:#fff;">
@@ -251,7 +249,7 @@ code { font-family: 'JetBrains Mono', monospace; }
           <div style="background:rgba(194,97,60,0.15); border:1px solid var(--accent); border-radius:10px; padding:12px 24px; display:inline-flex; align-items:center; gap:10px;">
             <div style="width:8px; height:8px; border-radius:50%; background:var(--accent);"></div>
             <div style="font-size:12px; font-weight:600; color:#f3efea;">
-              Autonomous Direct Payout ➔ <strong>Creator Wallet Node</strong> (Lightning / Base)
+              Automatic Payout ➔ <strong>Creator Wallet</strong> (Lightning / Base)
             </div>
           </div>
         </div>
@@ -261,15 +259,19 @@ code { font-family: 'JetBrains Mono', monospace; }
     <!-- SECTION: QUICKSTART -->
     <div class="section-block" id="quickstart">
       <h2>SDK Quickstart</h2>
-      <p>Protect any Express route or Python MCP tool with a single line of code:</p>
+      <p>Install the SDK, create a client, and protect an Express route:</p>
 
       <pre>
 // Node.js / Express
-import { protectApi } from '@aipp/sdk';
+import { Aipp, l402Paywall } from 'aipp-sdk';
 
-app.post('/api/generate-summary', protectApi({
-  price: 0.05, // 5 cents
-  wallet: 'creator@walletofsatoshi.com'
+const aipp = new Aipp({ apiKey: process.env.AIPP_API_KEY });
+
+app.post('/api/generate-summary', l402Paywall({
+  client: aipp,
+  jwtSecret: process.env.AIPP_JWT_SECRET,
+  resourceId: 'generate-summary',
+  amountUsd: 0.05
 }), async (req, res) => {
   res.json({ result: "Premium AI analysis completed." });
 });</pre>
@@ -283,24 +285,25 @@ app.post('/api/generate-summary', protectApi({
 
       <p><strong>Key Features:</strong></p>
       <ul style="margin-left: 20px; font-size: 14px; color: var(--fg-muted); line-height: 1.7; margin-bottom: 20px;">
-        <li><strong>Zero-Human Micro-Payments:</strong> AI agents can pay $0.005 (8 sats) per API inference or database query autonomously.</li>
-        <li><strong>EU AI Act Article 26 Compliance:</strong> Every settlement returns a verifiable cryptographic receipt via <code>client.get_receipt(payment_hash)</code>.</li>
+        <li><strong>Agent-friendly payments:</strong> AI agents can pay from $0.01 per API inference or database query.</li>
+        <li><strong>Machine-readable receipts:</strong> Settlements include a transaction identifier, timestamp, amounts and available payment proof.</li>
       </ul>
 
       <pre>
 # Python: pip install aipp-sdk
+import os
 from aipp import Aipp
 
-client = Aipp(api_key="aipp_merch_YOUR_KEY")
+client = Aipp(api_key=os.environ["AIPP_API_KEY"])
 
 # 1. Issue an L402 payment challenge for an AI tool
 charge = client.create_charge(amount_usd=0.05, protocol="L402", memo="AI Query")
 print("Invoice for Agent:", charge.payment_request)
 
-# 2. Verify settlement & get EU AI Act Art. 26 Receipt
+# 2. Verify settlement and read the payment receipt
 receipt = client.get_receipt(charge.payment_hash)
-if receipt.get("status") == "settled":
-    print("Settlement Proof Preimage:", receipt.get("preimage"))</pre>
+if receipt.status == "settled":
+    print("Transaction:", receipt.transaction_id)</pre>
     </div>
 
     <!-- SECTION: NOTION TEMPLATES & EMBEDS -->
@@ -312,12 +315,12 @@ if receipt.get("status") == "settled":
       <p><strong>How to Monetize in 3 Steps:</strong></p>
       <ol style="margin-left: 20px; font-size: 14px; color: var(--fg-muted); line-height: 1.7; margin-bottom: 20px;">
         <li><strong>Get Your Duplicate Link:</strong> In your Notion page, click <em>Share ➔ Publish ➔ Allow duplicate as template</em> and copy the public link.</li>
-        <li><strong>Mint an AIPP Smart Tag:</strong> On <a href="/#generator" style="color:var(--accent); font-weight:600;">aipp.dev</a>, set your price (e.g. $1.00 / 1,500 sats), your Lightning/Base wallet, and paste your Notion duplicate link as the redirect target.</li>
+        <li><strong>Create an AIPP Smart Tag:</strong> On <a href="/#tag-form" style="color:var(--accent); font-weight:600;">aipp.dev</a>, set your price, wallet, and paste your Notion duplicate link as the redirect target.</li>
         <li><strong>Embed or Share:</strong> Paste your checkout URL directly in Notion using the <code>/embed https://aipp.dev/embed/p_...</code> command, or share it on Twitter/Reddit.</li>
       </ol>
 
       <div style="background:#f4f4f5; border:1px solid #e4e4e7; border-radius:10px; padding:16px; margin-bottom:20px; font-size:13px; color:var(--fg);">
-        🏷️ <strong>Gumroad vs AIPP:</strong> Gumroad charges 10% + 30¢ and holds payouts for 14 days. AIPP charges <strong>1% flat</strong> with <strong>zero holding time</strong> — payments land directly in your Phoenix or Base wallet upon settlement!
+        🏷️ <strong>Transparent pricing:</strong> Lightning customers see the merchant price plus the AIPP fee (1% + 5 sats) before paying. Merchant payouts are sent automatically.
       </div>
     </div>
 
@@ -355,7 +358,7 @@ if receipt.get("status") == "settled":
     <div class="section-block" id="obsidian-vaults">
       <div class="endpoint-badge badge-post">PKM &amp; NOTES · OBSIDIAN.MD</div>
       <h2>Monetizing Obsidian Notes &amp; Vaults</h2>
-      <p>Sell Obsidian vaults, research databases, or interactive canvas notes with zero platform fees and instant satoshi payouts.</p>
+      <p>Sell Obsidian vaults, research databases, or interactive canvas notes with transparent fees and automatic satoshi payouts.</p>
       
       <pre>
 &lt;!-- Embed in Obsidian Publish or Markdown notes --&gt;
@@ -379,7 +382,7 @@ def generate_image(prompt, preimage=None):
         charge = client.create_charge(amount_usd=0.02, protocol="L402", memo=f"GPU: {prompt[:20]}")
         return {"status": "PAYMENT_REQUIRED", "invoice": charge.payment_request, "sats": charge.amount_sats}
     
-    receipt = client.get_receipt(preimage)
+    receipt = client.get_receipt(charge.payment_hash)
     if receipt.status == "settled":
         return {"status": "SUCCESS", "image_url": "https://..."}</pre>
     </div>
@@ -402,41 +405,53 @@ curl -s "https://aipp.dev/cli/p_9c48c15180a1?payment_hash=YOUR_HASH"</pre>
     <div class="section-block" id="extension-guide">
       <div class="endpoint-badge badge-post">CLIENT UTILITY · EXTENSION</div>
       <h2>1-Click Chrome Extension</h2>
-      <p>The AIPP Extension is an open-source browser companion that enables non-custodial content monetization across any web environment in under 3 seconds.</p>
+      <p>The AIPP Extension is a browser companion for creating and attaching Smart Tags to web content.</p>
       
       <p><strong>Two Core Operating Modes:</strong></p>
       <ul style="margin-left: 20px; font-size: 14px; color: var(--fg-muted); line-height: 1.7; margin-bottom: 20px;">
-        <li><strong>Mint Tag Mode:</strong> Activates a visual DOM element picker on your active tab. Click any text, image, or container to lock it and automatically generate the L402 paywall HTML snippet.</li>
-        <li><strong>Quick Link Mode:</strong> Packages private links (PDF downloads, Calendly bookings, Google Drive files) into a hosted checkout link (<code>https://aipp.dev/pay/p_...</code>) with zero server setup.</li>
+        <li><strong>Create Tag Mode:</strong> Activates a visual DOM element picker on your active tab. Click text, an image, or a container to attach a paywall snippet.</li>
+        <li><strong>Quick Link Mode:</strong> Packages private links into one Open Tag (<code>https://aipp.dev/t/p_...</code>). A browser gets checkout; an agent gets the manifest.</li>
       </ul>
     </div>
     <!-- SECTION: API CREATE TAG -->
     <div class="section-block" id="create-tag">
       <div class="endpoint-badge badge-post">POST /merchant/links/create</div>
-      <h2>Create Smart Price Tag</h2>
-      <p>Programmatically generate a hosted, shareable checkout URL for any digital product or asset.</p>
+      <h2>Create an AIPP Open Tag</h2>
+      <p>Create one priced capability that works for both people and software. The response includes a human URL and an agent manifest URL.</p>
 
       <pre>
 curl -X POST https://aipp.dev/merchant/links/create \
   -H "Content-Type: application/json" \
-  -H "X-Api-Key: aipp_devtest" \
+  -H "X-Api-Key: $AIPP_API_KEY" \
   -d '{
     "title": "Autonomous Agent Workflow Pack",
     "amount_usd": 0.25,
-    "redirect_url": "https://example.com/download"
+    "redirect_url": "https://example.com/download",
+    "capability_type": "api",
+    "description": "Summarize one research document",
+    "input_schema": {"type":"object","properties":{"url":{"type":"string"}}},
+    "output_schema": {"type":"object","properties":{"summary":{"type":"string"}}}
   }'</pre>
+      <h3>One URL, two interfaces</h3>
+      <pre># Friendly checkout for a person
+curl -H "Accept: text/html" https://aipp.dev/t/p_YOUR_TAG
+
+# Stable description for an agent, MCP tool or workflow
+curl -H "Accept: application/json" https://aipp.dev/t/p_YOUR_TAG
+# or GET /t/p_YOUR_TAG/manifest</pre>
+      <p>After payment, call <code>/t/:tag/unlock/:payment_hash</code>. A proof is accepted only when it belongs to that exact tag. The portable receipt is available at <code>/t/:tag/receipt/:payment_hash</code>.</p>
     </div>
 
     <!-- SECTION: API CREATE INVOICE -->
     <div class="section-block" id="create-invoice">
       <div class="endpoint-badge badge-post">POST /invoice/create</div>
-      <h2>Mint Dual-Rail Invoice Challenge</h2>
-      <p>Generate a combined Lightning Invoice (L402) and Base USDC payment challenge (x402) on demand.</p>
+      <h2>Create a Payment Challenge</h2>
+      <p>Generate a Lightning invoice, Base USDC challenge, or offer both payment methods.</p>
 
       <pre>
 curl -X POST https://aipp.dev/invoice/create \
   -H "Content-Type: application/json" \
-  -H "X-Api-Key: aipp_devtest" \
+  -H "X-Api-Key: $AIPP_API_KEY" \
   -d '{
     "amount_usd": 0.25,
     "protocol": "dual"
@@ -462,7 +477,7 @@ curl https://aipp.dev/invoice/status/337825c42df550de969dbe7546b3b35184622098ff9
     </div>
     <span style="font-weight:800; font-size:16px;">aipp</span>
   </div>
-  <p>Universal, non-custodial Smart Tag publishing layer.</p>
+  <p>Smart Tags and pay-per-use payments for creators and developers.</p>
   <div style="display:flex; flex-wrap:wrap; justify-content:center; gap:24px; font-weight:600; color:var(--fg);">
     <a href="/" style="color:inherit;">Home</a>
     <a href="/dashboard.html" style="color:inherit;">Studio</a>
@@ -470,7 +485,7 @@ curl https://aipp.dev/invoice/status/337825c42df550de969dbe7546b3b35184622098ff9
     <a href="/legal.html" style="color:inherit;">Terms &amp; Privacy</a>
     <a href="mailto:info@aipp.dev" style="color:var(--accent);">info@aipp.dev</a>
   </div>
-  <p style="font-size:11px; color:var(--fg-subtle);">© 2026 AIPP Protocol. Open Standard for Non-Custodial Commerce.</p>
+  <p style="font-size:11px; color:var(--fg-subtle);">© 2026 AIPP.</p>
 </footer>
 
 </body>

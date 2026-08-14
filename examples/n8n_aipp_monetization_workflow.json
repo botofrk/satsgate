@@ -77,7 +77,7 @@
     {
       "parameters": {
         "respondWith": "json",
-        "responseBody": "={\n  \"error\": \"Payment required\",\n  \"code\": 402,\n  \"message\": \"Please settle the micro-payment to execute this workflow.\",\n  \"checkout_url\": \"https://aipp.dev/pay/p_YOUR_TAG_ID_FROM_AIPP_DEV\"\n}",
+        "responseBody": "={\n  \"error\": \"Payment required\",\n  \"code\": 402,\n  \"message\": \"Please settle the micro-payment to execute this workflow.\",\n  \"open_tag\": \"https://aipp.dev/t/p_YOUR_TAG_ID_FROM_AIPP_DEV\",\n  \"manifest\": \"https://aipp.dev/t/p_YOUR_TAG_ID_FROM_AIPP_DEV/manifest\"\n}",
         "options": {
           "responseCode": 402
         }

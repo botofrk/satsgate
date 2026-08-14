@@ -1,7 +1,7 @@
 {
   "name": "aipp-backend",
   "version": "1.0.0",
-  "description": "Lightning L402 payment gateway API for AI agents",
+  "description": "Open Smart Tags: one priced capability for humans and agents over Lightning or Base USDC",
   "main": "src/server.ts",
   "scripts": {
     "dev": "tsx watch src/server.ts",

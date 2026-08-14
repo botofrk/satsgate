@@ -7,3 +7,17 @@ node_modules
 *.md
 !AIPP_KNOWLEDGE.md
 SDK/
+scratch
+temp_icon_gen
+extension.zip
+public/zeus_*.html
+check*.js
+clear-db.js
+delete_merchant.js
+fix_user_wallet.js
+set_secret.sh
+test_pay.js
+test_payout.js
+test_x402.ts
+unblock_ip.sh
+scratch.js

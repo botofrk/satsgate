@@ -2,8 +2,8 @@ from setuptools import setup, find_packages
 
 setup(
     name="aipp-sdk",
-    version="1.2.4",
-    description="Official Python SDK for AIPP — Non-Custodial Developer Monetization Platform (L402 & x402)",
+    version="1.3.0",
+    description="Official Python SDK for AIPP Smart Tag payments (L402 & x402)",
     long_description=open("README.md", "r", encoding="utf-8").read() if open("README.md", "r", encoding="utf-8") else "",
     long_description_content_type="text/markdown",
     author="AIPP",
