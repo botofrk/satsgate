@@ -1,0 +1,15 @@
+<svg width="180" height="48" viewBox="0 0 180 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <g transform="translate(0, 0) scale(0.75)">
+    <!-- Outer Ring -->
+    <path d="M 41.5 12.5 A 22 22 0 1 1 53.5 24.5" stroke="#111111" stroke-width="4.5" stroke-linecap="round"/>
+    <!-- Tilted Tag -->
+    <g transform="rotate(-35 32 32)">
+      <path d="M 27 25 L 32 18 L 37 25 L 37 44 C 37 46.2 35.2 48 33 48 L 31 48 C 28.8 48 27 46.2 27 44 Z" fill="#F59E0B"/>
+      <circle cx="32" cy="23" r="2.2" fill="#FFFFFF"/>
+    </g>
+  </g>
+  <!-- Wordmark -->
+  <text x="56" y="34" font-family="-apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', sans-serif" font-weight="800" font-size="28" letter-spacing="-0.5px">
+    <tspan fill="#111111">ai</tspan><tspan fill="#F59E0B">pp</tspan>
+  </text>
+</svg>
