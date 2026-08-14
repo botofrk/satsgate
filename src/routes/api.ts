@@ -24,7 +24,13 @@ router.get('/paidmcp.json', getPaidMcpManifest);
 router.get('/aipp-agent.json', getAippAgentManifest);
 router.get('/.well-known/aipp-agent.json', getAippAgentManifest);
 
-router.use('/merchant*', disablePrivateCaching);
+router.use((req: Request, res: Response, next: NextFunction) => {
+  if (req.path.startsWith('/merchant')) {
+    disablePrivateCaching(req, res, next);
+  } else {
+    next();
+  }
+});
 router.post('/merchant/register', registerMerchant);
 router.post('/merchant/recover', recoverMerchantKey);
 router.post('/merchant/waitlist', joinWaitlist);
