@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { registerMerchant, getMerchantStats, getMerchantTransactions, triggerManualPayout, getPayoutStatus, joinWaitlist, updateWalletSettings, recoverMerchantKey } from '../controllers/merchant';
+import { registerMerchant, getMerchantStats, getMerchantTransactions, triggerManualPayout, getPayoutStatus, joinWaitlist, updateWalletSettings, requestRecoveryChallenge, verifyRecoveryChallenge } from '../controllers/merchant';
 import { createInvoice, checkInvoiceStatus, getReceipt, streamInvoiceStatus } from '../controllers/invoice';
 import { handleLnbitsWebhook } from '../controllers/webhook';
 import { handleChat, createTicket } from '../controllers/chat';
@@ -28,7 +28,8 @@ router.get('/.well-known/aipp-agent.json', getAippAgentManifest);
 
 router.use(disablePrivateCaching);
 router.post('/merchant/register', registerMerchant);
-router.post('/merchant/recover', recoverMerchantKey);
+router.post('/merchant/recovery/challenge', requestRecoveryChallenge);
+router.post('/merchant/recovery/verify', verifyRecoveryChallenge);
 router.post('/merchant/waitlist', joinWaitlist);
 router.get('/merchant/stats', getMerchantStats);
 router.post('/merchant/payout', triggerManualPayout);

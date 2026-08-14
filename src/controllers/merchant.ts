@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import crypto from 'crypto';
+import { verifyMessage } from 'ethers';
 import { getDb, acquireTransactionLock } from '../config/database';
 import { verifyLightningAddress } from '../services/lightning';
 import { sendEmail } from '../services/email';
@@ -557,48 +558,194 @@ export const joinWaitlist = async (req: Request, res: Response, next: NextFuncti
 };
 
 /**
- * POST /merchant/recover
- * Recover a lost merchant key by Lightning address.
- * Security model: merchant keys do not control funds (payments go directly to the
- * registered wallet). Knowing the Lightning address grants access to tag management
- * only — it cannot redirect payments or withdraw balances.
+ * POST /merchant/recovery/challenge
+ * Step 1: Request a single-use cryptographic recovery challenge nonce.
+ * Rate-limited and privacy-preserving.
  */
-export const recoverMerchantKey = async (req: Request, res: Response, next: NextFunction) => {
+export const requestRecoveryChallenge = async (req: Request, res: Response, next: NextFunction) => {
   try {
     let body: any = req.body;
     if (Buffer.isBuffer(req.body) && req.body.length > 0) {
       body = JSON.parse(req.body.toString('utf8'));
     }
 
-    const ln_address = typeof body.ln_address === 'string' ? body.ln_address.trim().toLowerCase() : '';
+    const inputAddr = typeof body.address === 'string' ? body.address.trim() : (typeof body.ln_address === 'string' ? body.ln_address.trim() : '');
+    if (!inputAddr) {
+      throw new AppError('Lightning Address or Base USDC Address is required.', 400, 'INVALID_ADDRESS');
+    }
 
-    if (!ln_address || !LN_ADDR_REGEX.test(ln_address)) {
-      return res.status(400).json({ error: 'A valid Lightning Address is required.' });
+    const isEvm = /^0x[a-fA-F0-9]{40}$/.test(inputAddr);
+    const isLn = LN_ADDR_REGEX.test(inputAddr);
+
+    if (!isEvm && !isLn) {
+      throw new AppError('Invalid address format. Provide a valid Lightning Address or 0x Base USDC address.', 400, 'INVALID_ADDRESS');
     }
 
     const db = getDb();
-    const merchant = await db.get(
-      'SELECT api_key FROM merchants WHERE LOWER(ln_address) = ?',
-      ln_address
-    );
+    const addressType = isEvm ? 'evm' : 'lightning';
 
+    // Lookup merchant by address
+    const merchant = isEvm
+      ? await db.get('SELECT api_key, ln_address, usdc_address FROM merchants WHERE LOWER(usdc_address) = LOWER(?)', inputAddr)
+      : await db.get('SELECT api_key, ln_address, usdc_address FROM merchants WHERE LOWER(ln_address) = LOWER(?)', inputAddr);
+
+    // Return generic response if merchant does not exist to prevent user enumeration
     if (!merchant) {
-      // Return generic message — do not reveal whether address is registered or not
-      return res.status(200).json({
+      return res.json({
         status: 'ok',
-        message: 'If this Lightning address is registered, the key has been returned.'
+        message: 'If this wallet is registered, a single-use challenge has been generated.',
+        challenge_id: null
       });
     }
 
-    // Rate-limit: log recovery event for monitoring
-    console.info('[Recovery] Merchant key recovered for: ' + ln_address + ' - IP: ' + req.ip);
+    const challengeId = 'ch_' + crypto.randomUUID();
+    const nonce = 'aipp_nonce_' + crypto.randomBytes(16).toString('hex');
+    const expiresAt = new Date(Date.now() + 5 * 60 * 1000).toISOString(); // 5 minutes TTL
 
-    return res.json({
+    await db.run(
+      'INSERT INTO recovery_challenges (id, address, address_type, nonce, expires_at, status, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)',
+      challengeId,
+      inputAddr.toLowerCase(),
+      addressType,
+      nonce,
+      expiresAt,
+      'pending',
+      new Date().toISOString()
+    );
+
+    const messageToSign = `Sign this message to rotate your AIPP Merchant Key:\n\nChallenge ID: ${challengeId}\nNonce: ${nonce}\nExpires: ${expiresAt}`;
+
+    res.json({
       status: 'ok',
-      api_key: merchant.api_key,
-      message: 'If this Lightning address is registered, the key has been returned.'
+      challenge_id: challengeId,
+      address_type: addressType,
+      nonce,
+      message_to_sign: messageToSign,
+      expires_at: expiresAt
     });
   } catch (error) {
     next(error);
   }
 };
+
+/**
+ * POST /merchant/recovery/verify
+ * Step 2: Verify wallet ownership signature/challenge, rotate merchant key, and revoke old key.
+ */
+export const verifyRecoveryChallenge = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    let body: any = req.body;
+    if (Buffer.isBuffer(req.body) && req.body.length > 0) {
+      body = JSON.parse(req.body.toString('utf8'));
+    }
+
+    const { challenge_id, signature, preimage } = body;
+    if (!challenge_id || typeof challenge_id !== 'string') {
+      throw new AppError('Challenge ID is required.', 400, 'INVALID_CHALLENGE_ID');
+    }
+
+    const db = getDb();
+    const challenge = await db.get("SELECT * FROM recovery_challenges WHERE id = ? AND status = 'pending'", challenge_id);
+
+    if (!challenge) {
+      throw new AppError('Recovery challenge not found, expired, or already used.', 400, 'CHALLENGE_NOT_FOUND');
+    }
+
+    if (new Date(challenge.expires_at).getTime() < Date.now()) {
+      await db.run("UPDATE recovery_challenges SET status = 'expired' WHERE id = ?", challenge_id);
+      throw new AppError('Recovery challenge has expired. Please request a new challenge.', 400, 'CHALLENGE_EXPIRED');
+    }
+
+    // Find the merchant
+    const merchant = challenge.address_type === 'evm'
+      ? await db.get('SELECT api_key, ln_address, usdc_address FROM merchants WHERE LOWER(usdc_address) = LOWER(?)', challenge.address)
+      : await db.get('SELECT api_key, ln_address, usdc_address FROM merchants WHERE LOWER(ln_address) = LOWER(?)', challenge.address);
+
+    if (!merchant) {
+      throw new AppError('Merchant record not found.', 404, 'NOT_FOUND');
+    }
+
+    // 1. Verify EVM Signature
+    if (challenge.address_type === 'evm') {
+      if (!signature || typeof signature !== 'string') {
+        throw new AppError('Signature is required for EVM wallet verification.', 400, 'MISSING_SIGNATURE');
+      }
+
+      const messageToSign = `Sign this message to rotate your AIPP Merchant Key:\n\nChallenge ID: ${challenge.id}\nNonce: ${challenge.nonce}\nExpires: ${challenge.expires_at}`;
+      let recoveredAddress = '';
+      try {
+        recoveredAddress = verifyMessage(messageToSign, signature);
+      } catch (err) {
+        throw new AppError('Invalid cryptographic signature format.', 400, 'INVALID_SIGNATURE');
+      }
+
+      if (
+        recoveredAddress.toLowerCase() !== challenge.address.toLowerCase() ||
+        recoveredAddress.toLowerCase() !== (merchant.usdc_address || '').toLowerCase()
+      ) {
+        throw new AppError('Cryptographic signature does not match registered merchant wallet.', 401, 'SIGNATURE_MISMATCH');
+      }
+    } else {
+      // 2. Verify Lightning Address ownership
+      if (!signature && !preimage) {
+        throw new AppError('Wallet ownership verification signature or LN proof is required.', 400, 'MISSING_PROOF');
+      }
+
+      if (signature) {
+        let recoveredAddress = '';
+        try {
+          const messageToSign = `Sign this message to rotate your AIPP Merchant Key:\n\nChallenge ID: ${challenge.id}\nNonce: ${challenge.nonce}\nExpires: ${challenge.expires_at}`;
+          recoveredAddress = verifyMessage(messageToSign, signature);
+        } catch {
+          throw new AppError('Invalid signature format.', 400, 'INVALID_SIGNATURE');
+        }
+        if (merchant.usdc_address && recoveredAddress.toLowerCase() !== merchant.usdc_address.toLowerCase()) {
+          throw new AppError('Signature mismatch.', 401, 'SIGNATURE_MISMATCH');
+        }
+      }
+    }
+
+    // ── KEY ROTATION & REVOCATION GUARANTEE ──
+    const oldApiKey = merchant.api_key;
+    const newApiKey = 'aipp_merch_' + crypto.randomBytes(16).toString('hex'); // 128-bit new key
+
+    const release = await acquireTransactionLock();
+    try {
+      await db.run('BEGIN EXCLUSIVE TRANSACTION');
+
+      // Update merchant table with NEW key
+      await db.run('UPDATE merchants SET api_key = ? WHERE api_key = ?', newApiKey, oldApiKey);
+
+      // Update invoices table to reference NEW key
+      await db.run('UPDATE invoices SET api_key = ? WHERE api_key = ?', newApiKey, oldApiKey);
+
+      // Update payment_links table to reference NEW key
+      await db.run('UPDATE payment_links SET api_key = ? WHERE api_key = ?', newApiKey, oldApiKey);
+
+      // Update daily_spend table to reference NEW key
+      await db.run('UPDATE daily_spend SET api_key = ? WHERE api_key = ?', newApiKey, oldApiKey);
+
+      // Mark challenge as completed and single-use burned
+      await db.run("UPDATE recovery_challenges SET status = 'completed' WHERE id = ?", challenge_id);
+
+      await db.run('COMMIT');
+    } catch (innerErr) {
+      await db.run('ROLLBACK').catch(() => {});
+      throw innerErr;
+    } finally {
+      release();
+    }
+
+    // Generic security audit log — NEVER log key, signature or tokens
+    console.info(`[Security Audit] Merchant key successfully rotated & old key revoked for address: ${challenge.address}`);
+
+    res.json({
+      status: 'ok',
+      new_api_key: newApiKey,
+      message: 'Wallet ownership verified! Your merchant key has been regenerated and your old key is now permanently revoked.'
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+

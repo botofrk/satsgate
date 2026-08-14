@@ -117,6 +117,16 @@ export async function initDb(): Promise<Database> {
       created_at TEXT NOT NULL
     );
 
+    CREATE TABLE IF NOT EXISTS recovery_challenges (
+      id TEXT PRIMARY KEY,
+      address TEXT NOT NULL,
+      address_type TEXT NOT NULL,
+      nonce TEXT NOT NULL,
+      expires_at TEXT NOT NULL,
+      status TEXT NOT NULL DEFAULT 'pending',
+      created_at TEXT NOT NULL
+    );
+
     CREATE TABLE IF NOT EXISTS payment_links (
       id TEXT PRIMARY KEY,
       api_key TEXT NOT NULL,

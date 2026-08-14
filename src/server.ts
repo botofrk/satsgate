@@ -60,6 +60,8 @@ const strictLimiter = rateLimit({
   message: { error: 'Too many requests, please slow down.', code: 'RATE_LIMIT_EXCEEDED' }
 });
 app.use('/merchant/register', strictLimiter);
+app.use('/merchant/recovery/challenge', strictLimiter);
+app.use('/merchant/recovery/verify', strictLimiter);
 app.use('/merchant/waitlist', strictLimiter);
 app.use('/chat', strictLimiter);
 app.use('/ticket', rateLimit({ windowMs: 60 * 1000, max: 5, standardHeaders: true, legacyHeaders: false }));
