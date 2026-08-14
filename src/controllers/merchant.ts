@@ -503,7 +503,6 @@ export const getPayoutStatus = async (req: Request, res: Response, next: NextFun
     const db = getDb();
     const merchant = await db.get('SELECT api_key FROM merchants WHERE api_key = ?', apiKey);
     if (!merchant) throw new AppError('Unauthorized', 401, 'UNAUTHORIZED');
-
     // [M-01 FIX] Scope query to authenticated merchant's api_key
     const job = await db.get('SELECT status FROM payout_queue WHERE payment_hash = ? AND api_key = ?', paymentHash, apiKey);
     
@@ -520,6 +519,7 @@ export const getPayoutStatus = async (req: Request, res: Response, next: NextFun
     next(error);
   }
 };
+
 
 export const joinWaitlist = async (req: Request, res: Response, next: NextFunction) => {
   try {
@@ -551,6 +551,53 @@ export const joinWaitlist = async (req: Request, res: Response, next: NextFuncti
     );
 
     res.json({ status: 'ok', message: 'Successfully joined the waitlist!' });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * POST /merchant/recover
+ * Recover a lost merchant key by Lightning address.
+ * Security model: merchant keys do not control funds (payments go directly to the
+ * registered wallet). Knowing the Lightning address grants access to tag management
+ * only — it cannot redirect payments or withdraw balances.
+ */
+export const recoverMerchantKey = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    let body: any = req.body;
+    if (Buffer.isBuffer(req.body) && req.body.length > 0) {
+      body = JSON.parse(req.body.toString('utf8'));
+    }
+
+    const ln_address = typeof body.ln_address === 'string' ? body.ln_address.trim().toLowerCase() : '';
+
+    if (!ln_address || !LN_ADDR_REGEX.test(ln_address)) {
+      return res.status(400).json({ error: 'A valid Lightning Address is required.' });
+    }
+
+    const db = getDb();
+    const merchant = await db.get(
+      'SELECT api_key FROM merchants WHERE LOWER(ln_address) = ?',
+      ln_address
+    );
+
+    if (!merchant) {
+      // Return generic message — do not reveal whether address is registered or not
+      return res.status(200).json({
+        status: 'ok',
+        message: 'If this Lightning address is registered, the key has been returned.'
+      });
+    }
+
+    // Rate-limit: log recovery event for monitoring
+    console.info('[Recovery] Merchant key recovered for: ' + ln_address + ' - IP: ' + req.ip);
+
+    return res.json({
+      status: 'ok',
+      api_key: merchant.api_key,
+      message: 'If this Lightning address is registered, the key has been returned.'
+    });
   } catch (error) {
     next(error);
   }

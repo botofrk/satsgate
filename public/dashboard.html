@@ -377,6 +377,7 @@ th { background: var(--sub-bg); font-size: 11px; font-weight: 700; text-transfor
 
     <p class="login-hint">
       New to AIPP? <a onclick="createInstantAccount()">Create a merchant key →</a>
+      &nbsp;·&nbsp; <a onclick="recoverKey()">Forgot key?</a>
     </p>
   </div>
 </div>
@@ -792,6 +793,30 @@ window.onload = () => {
     showApp();
   }
 };
+
+async function recoverKey() {
+  const ln = prompt('Enter your registered Lightning Address to recover your merchant key:');
+  if (!ln || !ln.trim()) return;
+
+  try {
+    const r = await fetch(`${AIPP_API}/merchant/recover`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ln_address: ln.trim().toLowerCase() })
+    });
+    const d = await r.json();
+    if (d.api_key) {
+      // Auto-fill the login input with recovered key
+      document.getElementById('login-input').value = d.api_key;
+      document.getElementById('remember-me').checked = true;
+      alert('\u2705 Key recovered! It has been filled in for you. Click "Enter Studio Console" to sign in.');
+    } else {
+      alert('No account found for this Lightning Address. Please check the address and try again.');
+    }
+  } catch(e) {
+    alert('Recovery failed. Please try again.');
+  }
+}
 
 async function createInstantAccount() {
   const ln = prompt('Enter your Lightning Address (e.g. yourname@wallet.com):');

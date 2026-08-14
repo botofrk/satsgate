@@ -3,22 +3,6 @@
 .env*
 *.env
 core_env
-
-# Database file — contains live merchant & transaction data
-aipp.db
-aipp.db-shm
-aipp.db-wal
-
-# Node
-node_modules/
-dist/
-npm-debug.log*
-
-# OS
-.DS_Store
-Thumbs.db
-
-# IDE
 .vscode/
 .idea/
 
