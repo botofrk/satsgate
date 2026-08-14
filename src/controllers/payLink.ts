@@ -9,7 +9,15 @@ import { checkLimit } from '../services/limiter';
 import { generateInvoiceData, InvoiceDomainError } from '../services/invoiceService';
 // API Key helper
 function getAippKey(req: Request): string | null {
-  return (req.headers['x-api-key'] as string) || null;
+  const headerKey = (req.headers['x-api-key'] as string) || (req.headers['authorization'] as string);
+  if (headerKey) {
+    if (headerKey.startsWith('Bearer ')) return headerKey.slice(7).trim();
+    return headerKey.trim();
+  }
+  if (req.query.api_key && typeof req.query.api_key === 'string') {
+    return req.query.api_key.trim();
+  }
+  return null;
 }
 
 // 1. Create a new Payment Link
