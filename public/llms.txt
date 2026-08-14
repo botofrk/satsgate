@@ -83,9 +83,9 @@ print("Smart Tag URL:", tag.url)
 
 - `POST https://aipp.dev/merchant/register` — Register a merchant payout wallet (`ln_address`, `usdc_address`). Returns `api_key`.
 - `POST https://aipp.dev/merchant/links/create` — Create a new Smart Tag (`X-Api-Key` header required).
-- `GET https://aipp.dev/p/<TAG_ID>` — Human checkout & web paywall.
-- `GET https://aipp.dev/p/<TAG_ID>/manifest` — Machine-readable AI Agent manifest (JSON format with HTTP 402 challenge headers).
-- `GET https://aipp.dev/p/<TAG_ID>/status` — Poll settlement status of a tag invoice.
+- `GET https://aipp.dev/t/<TAG_ID>` — Human checkout & web paywall.
+- `GET https://aipp.dev/t/<TAG_ID>/manifest` — Machine-readable AI Agent manifest (JSON format with HTTP 402 challenge headers).
+- `GET https://aipp.dev/t/<TAG_ID>/status` — Poll settlement status of a tag invoice.
 
 ## Links & Additional Context
 
