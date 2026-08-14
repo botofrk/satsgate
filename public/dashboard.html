@@ -118,8 +118,16 @@ button { font-family: inherit; }
 }
 .demo-btn:hover { background: #eeeae4; }
 
-.login-hint { margin-top: 24px; font-size: 13px; color: var(--fg-muted); }
+.login-hint { margin-top: 20px; font-size: 13px; color: var(--fg-muted); }
 .login-hint a { color: var(--accent); font-weight: 700; cursor: pointer; text-decoration: underline; }
+.remember-row {
+  display: flex; align-items: center; justify-content: center;
+  gap: 8px; margin: -2px 0 14px; font-size: 13px; color: var(--fg-muted);
+}
+.remember-row input[type="checkbox"] {
+  width: 15px; height: 15px; accent-color: var(--accent); cursor: pointer;
+}
+.remember-row label { cursor: pointer; user-select: none; }
 
 /* ── APP SHELL ── */
 .app { display: none; min-height: 100vh; }
@@ -359,6 +367,11 @@ th { background: var(--sub-bg); font-size: 11px; font-weight: 700; text-transfor
     <input class="login-input" id="login-input" type="text"
       placeholder="Merchant key (aipp_merch_...)"
       autocomplete="off" onkeydown="if(event.key==='Enter')login()">
+
+    <div class="remember-row">
+      <input type="checkbox" id="remember-me" checked>
+      <label for="remember-me">Remember me on this device</label>
+    </div>
 
     <button class="login-btn" id="login-btn" onclick="login()">Enter Studio Console →</button>
 
@@ -772,9 +785,8 @@ function copyFullKey(btn) {
 }
 
 window.onload = () => {
-  // Session-only storage limits accidental persistence on shared machines.
-  localStorage.removeItem('aipp_api_key');
-  const saved = sessionStorage.getItem('aipp_api_key');
+  // Check localStorage first (remember me), then fallback to sessionStorage
+  const saved = localStorage.getItem('aipp_api_key') || sessionStorage.getItem('aipp_api_key');
   if (saved) {
     activeKey = saved;
     showApp();
@@ -794,7 +806,12 @@ async function createInstantAccount() {
     const d = await r.json();
     if (!r.ok || !d.api_key) throw new Error(d.error || 'Account could not be created');
     activeKey = d.api_key;
-    sessionStorage.setItem('aipp_api_key', activeKey);
+    const remember = document.getElementById('remember-me');
+    if (remember && remember.checked) {
+      localStorage.setItem('aipp_api_key', activeKey);
+    } else {
+      sessionStorage.setItem('aipp_api_key', activeKey);
+    }
     alert('Your merchant key is shown in Developer settings. Save it securely; your wallet address cannot be used to sign in.');
     showApp();
   } catch(e) {
@@ -817,7 +834,12 @@ async function login() {
   try {
     const check = await fetch(`${AIPP_API}/merchant/stats`, { headers: {'X-Api-Key': activeKey}, cache: 'no-store' });
     if (!check.ok) throw new Error('Invalid merchant key');
-    sessionStorage.setItem('aipp_api_key', activeKey);
+    const remember = document.getElementById('remember-me');
+    if (remember && remember.checked) {
+      localStorage.setItem('aipp_api_key', activeKey);
+    } else {
+      sessionStorage.setItem('aipp_api_key', activeKey);
+    }
     btn.textContent = 'Enter Studio Console →'; btn.disabled = false;
     showApp();
   } catch (e) {
@@ -829,6 +851,7 @@ async function login() {
 
 function logout() {
   activeKey = '';
+  localStorage.removeItem('aipp_api_key');
   sessionStorage.removeItem('aipp_api_key');
   document.getElementById('app').classList.remove('visible');
   document.getElementById('login-screen').style.display = 'flex';
