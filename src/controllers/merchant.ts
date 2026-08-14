@@ -713,20 +713,20 @@ export const verifyRecoveryChallenge = async (req: Request, res: Response, next:
     try {
       await db.run('BEGIN EXCLUSIVE TRANSACTION');
 
-      // Update merchant table with NEW key
+      // Atomic single-use challenge burn (concurrency protection)
+      const burnRes = await db.run("UPDATE recovery_challenges SET status = 'completed' WHERE id = ? AND status = 'pending'", challenge_id);
+      if (!burnRes || burnRes.changes === 0) {
+        throw new AppError('Recovery challenge has already been used or expired.', 400, 'CHALLENGE_ALREADY_USED');
+      }
+
+      // Update ALL 7 related tables atomically
       await db.run('UPDATE merchants SET api_key = ? WHERE api_key = ?', newApiKey, oldApiKey);
-
-      // Update invoices table to reference NEW key
       await db.run('UPDATE invoices SET api_key = ? WHERE api_key = ?', newApiKey, oldApiKey);
-
-      // Update payment_links table to reference NEW key
       await db.run('UPDATE payment_links SET api_key = ? WHERE api_key = ?', newApiKey, oldApiKey);
-
-      // Update daily_spend table to reference NEW key
+      await db.run('UPDATE payout_queue SET api_key = ? WHERE api_key = ?', newApiKey, oldApiKey);
       await db.run('UPDATE daily_spend SET api_key = ? WHERE api_key = ?', newApiKey, oldApiKey);
-
-      // Mark challenge as completed and single-use burned
-      await db.run("UPDATE recovery_challenges SET status = 'completed' WHERE id = ?", challenge_id);
+      await db.run('UPDATE webhook_deliveries SET api_key = ? WHERE api_key = ?', newApiKey, oldApiKey);
+      await db.run('UPDATE ledgers SET api_key = ? WHERE api_key = ?', newApiKey, oldApiKey);
 
       await db.run('COMMIT');
     } catch (innerErr) {
