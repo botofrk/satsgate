@@ -127,6 +127,41 @@ export async function initDb(): Promise<Database> {
       created_at TEXT NOT NULL
     );
 
+    CREATE TABLE IF NOT EXISTS merchant_passkeys (
+      id TEXT PRIMARY KEY,
+      api_key TEXT NOT NULL,
+      credential_id TEXT NOT NULL UNIQUE,
+      public_key TEXT NOT NULL,
+      counter INTEGER NOT NULL DEFAULT 0,
+      transports TEXT,
+      device_name TEXT NOT NULL,
+      created_at TEXT NOT NULL,
+      last_used_at TEXT NOT NULL,
+      FOREIGN KEY (api_key) REFERENCES merchants(api_key) ON DELETE CASCADE
+    );
+
+    CREATE TABLE IF NOT EXISTS webauthn_challenges (
+      id TEXT PRIMARY KEY,
+      challenge_hash TEXT NOT NULL,
+      ceremony_type TEXT NOT NULL,
+      api_key TEXT,
+      temp_registration_id TEXT,
+      expires_at TEXT NOT NULL,
+      used_at TEXT,
+      created_at TEXT NOT NULL
+    );
+
+    CREATE TABLE IF NOT EXISTS merchant_sessions (
+      id TEXT PRIMARY KEY,
+      api_key TEXT NOT NULL,
+      token_hash TEXT NOT NULL UNIQUE,
+      expires_at TEXT NOT NULL,
+      last_seen_at TEXT NOT NULL,
+      revoked_at TEXT,
+      created_at TEXT NOT NULL,
+      FOREIGN KEY (api_key) REFERENCES merchants(api_key) ON DELETE CASCADE
+    );
+
     CREATE TABLE IF NOT EXISTS payment_links (
       id TEXT PRIMARY KEY,
       api_key TEXT NOT NULL,

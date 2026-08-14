@@ -71,3 +71,7 @@ export const MAX_SINGLE_REQUEST_USD = safeInt(process.env.MAX_SINGLE_REQUEST_USD
 export const MIN_TOPUP_SATS = safeInt(process.env.MIN_TOPUP_SATS, 50);
 export const MIN_PAYOUT_THRESHOLD_SATS = safeInt(process.env.MIN_PAYOUT_THRESHOLD_SATS, 50);
 export const MAX_MERCHANTS = safeInt(process.env.MAX_MERCHANTS, 100);
+
+// WebAuthn Relying Party (RP) configuration
+export const RP_ID = process.env.RP_ID || (IS_PRODUCTION ? 'aipp.dev' : 'localhost');
+export const EXPECTED_ORIGIN = process.env.EXPECTED_ORIGIN || (IS_PRODUCTION ? 'https://aipp.dev' : 'http://localhost:3000');

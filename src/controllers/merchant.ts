@@ -6,11 +6,36 @@ import { verifyLightningAddress } from '../services/lightning';
 import { sendEmail } from '../services/email';
 import { processPayoutQueue } from '../jobs/payoutWorker';
 import { AppError } from '../utils/error';
-import { MIN_PAYOUT_THRESHOLD_SATS, MAX_MERCHANTS, IS_PRODUCTION } from '../config/env';
+import { MIN_PAYOUT_THRESHOLD_SATS, MAX_MERCHANTS, IS_PRODUCTION, LNBITS_INVOICE_KEY, LNBITS_URL } from '../config/env';
 
 // Valid Lightning Address regex (RFC 5321 local-part + valid domain)
 const LN_ADDR_REGEX = /^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,63}$/;
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+import { parseSessionCookie } from './passkeyAuth';
+import { verifyMerchantSession } from '../services/passkey';
+
+export async function extractApiKey(req: Request): Promise<string | null> {
+  if ((req as any).merchantApiKey) {
+    return (req as any).merchantApiKey;
+  }
+
+  const sessionToken = parseSessionCookie(req);
+  if (sessionToken) {
+    const sessionKey = await verifyMerchantSession(sessionToken);
+    if (sessionKey) return sessionKey;
+  }
+
+  const authHeader = req.headers.authorization;
+  if (authHeader && authHeader.toLowerCase().startsWith('bearer ')) {
+    const bearer = authHeader.substring(7).trim();
+    if (bearer.startsWith('aipp_sess_')) {
+      const sessionKey = await verifyMerchantSession(bearer);
+      if (sessionKey) return sessionKey;
+    }
+    return bearer;
+  }
+  return (req.headers['x-api-key'] as string) || null;
+}
 
 export const registerMerchant = async (req: Request, res: Response, next: NextFunction) => {
   try {
@@ -83,6 +108,7 @@ export const registerMerchant = async (req: Request, res: Response, next: NextFu
           }
         }
       }
+
 
       if (!isAuthenticated) {
         throw new AppError('This wallet is already registered. Sign in with your merchant API key.', 409, 'MERCHANT_EXISTS');
@@ -176,176 +202,13 @@ export const registerMerchant = async (req: Request, res: Response, next: NextFu
   }
 };
 
-export const triggerManualPayout = async (req: Request, res: Response, next: NextFunction) => {
-  try {
-    const authHeader = req.headers.authorization;
-    let apiKey = (req.headers['x-api-key'] as string) || null;
-    if (!apiKey && authHeader && authHeader.toLowerCase().startsWith('bearer ')) {
-      apiKey = authHeader.substring(7).trim();
-    }
-    
-    if (!apiKey) {
-      throw new AppError('Missing or invalid AIPP API key in headers', 401, 'UNAUTHORIZED');
-    }
-
-    const db = getDb();
-    
-    let accumTotalForwarded = 0;
-    let merchantDestination = '';
-    let jobId = '';
-
-    const release = await acquireTransactionLock();
-    try {
-      await db.run('BEGIN EXCLUSIVE TRANSACTION');
-      const merchant = await db.get('SELECT api_key, ln_address, payout_mode, email FROM merchants WHERE api_key = ?', apiKey);
-      if (!merchant) {
-        throw new AppError('Invalid AIPP API key', 401, 'UNAUTHORIZED');
-      }
-
-      const accumRecord = await db.get(
-        "SELECT SUM(forwarded_amount_sats) as total FROM invoices WHERE api_key = ? AND status = 'settled' AND payout_status IN ('pending_threshold', 'pending_manual')",
-        apiKey
-      );
-      
-      accumTotalForwarded = accumRecord?.total ?? 0;
-
-      if (accumTotalForwarded < 10) {
-        throw new AppError(`Accumulated balance (${accumTotalForwarded} sats) is below minimum withdrawal (10 sats)`, 400, 'BAD_REQUEST');
-      }
-
-      // Mark invoices as queued
-      await db.run(
-        "UPDATE invoices SET payout_status = 'queued' WHERE api_key = ? AND status = 'settled' AND payout_status IN ('pending_threshold', 'pending_manual')",
-        apiKey
-      );
-
-      // Create payout job
-      jobId = crypto.randomUUID();
-      merchantDestination = merchant.ln_address;
-      await db.run(
-        "INSERT INTO payout_queue (id, payment_hash, api_key, amount_sats, ln_address, status, next_retry_at, created_at) VALUES (?, ?, ?, ?, ?, 'pending', ?, ?)",
-        jobId,
-        `manual_${crypto.randomBytes(8).toString('hex')}`,
-        apiKey,
-        accumTotalForwarded,
-        merchant.ln_address,
-        new Date().toISOString(),
-        new Date().toISOString()
-      );
-
-      await db.run('COMMIT');
-    } catch (innerErr) {
-      await db.run('ROLLBACK').catch(() => {});
-      throw innerErr;
-    } finally {
-      release();
-    }
-
-    // Trigger immediate worker dispatch
-    processPayoutQueue().catch((err: any) => console.error('[Manual Payout] Dispatch error:', err));
-
-    res.json({
-      status: 'queued',
-      job_id: jobId,
-      amount_sats: accumTotalForwarded,
-      ln_address: merchantDestination,
-      message: `Successfully queued ${accumTotalForwarded} sats payout to ${merchantDestination}`
-    });
-  } catch (error) {
-    next(error);
-  }
-};
-
-// [M-06 FIX] Consistent case-insensitive Bearer header extraction helper
-function extractApiKey(req: Request): string | null {
-  const authHeader = req.headers.authorization;
-  if (authHeader && authHeader.toLowerCase().startsWith('bearer ')) {
-    return authHeader.substring(7).trim();
-  }
-  return (req.headers['x-api-key'] as string) || null;
-}
-
-export const updateWalletSettings = async (req: Request, res: Response, next: NextFunction) => {
-  try {
-    const apiKey = extractApiKey(req);
-    if (!apiKey) throw new AppError('Missing API key', 401, 'UNAUTHORIZED');
-
-    const db = getDb();
-    const merchant = await db.get('SELECT * FROM merchants WHERE api_key = ?', apiKey);
-    if (!merchant) throw new AppError('Merchant not found', 404, 'NOT_FOUND');
-
-    let body: any = req.body;
-    if (Buffer.isBuffer(req.body) && req.body.length > 0) {
-      body = JSON.parse(req.body.toString('utf8'));
-    }
-
-    const fields: string[] = [];
-    const values: any[] = [];
-
-    // ln_address update
-    if (body.ln_address !== undefined) {
-      const ln = body.ln_address.trim();
-      if (!ln || !LN_ADDR_REGEX.test(ln)) {
-        throw new AppError('Invalid Lightning Address format', 400, 'INVALID_LN_ADDRESS');
-      }
-      fields.push('ln_address = ?');
-      values.push(ln);
-    }
-
-    // usdc_address update
-    if (body.usdc_address !== undefined) {
-      const usdc = body.usdc_address ? body.usdc_address.trim() : null;
-      if (usdc && !/^0x[a-fA-F0-9]{40}$/.test(usdc)) {
-        throw new AppError('Invalid Base USDC address format', 400, 'INVALID_USDC_ADDRESS');
-      }
-      fields.push('usdc_address = ?');
-      values.push(usdc);
-    }
-
-    // payout_mode update
-    if (body.payout_mode !== undefined) {
-      const mode = body.payout_mode;
-      if (!['instant', 'threshold', 'manual'].includes(mode)) {
-        throw new AppError('payout_mode must be instant, threshold, or manual', 400, 'BAD_REQUEST');
-      }
-      fields.push('payout_mode = ?');
-      values.push(mode);
-    }
-
-    // payout_threshold_sats update
-    if (body.payout_threshold_sats !== undefined) {
-      const MAX_THRESHOLD = 10_000_000;
-      const raw = Number(body.payout_threshold_sats);
-      const threshold = isNaN(raw) || raw <= 0
-        ? MIN_PAYOUT_THRESHOLD_SATS
-        : Math.min(MAX_THRESHOLD, Math.max(MIN_PAYOUT_THRESHOLD_SATS, Math.floor(raw)));
-      fields.push('payout_threshold_sats = ?');
-      values.push(threshold);
-    }
-
-    if (fields.length === 0) {
-      throw new AppError('No valid fields to update', 400, 'BAD_REQUEST');
-    }
-
-    values.push(apiKey);
-    await db.run(`UPDATE merchants SET ${fields.join(', ')} WHERE api_key = ?`, ...values);
-
-    const updated = await db.get('SELECT api_key, ln_address, usdc_address, payout_mode, payout_threshold_sats FROM merchants WHERE api_key = ?', apiKey);
-    res.json({ success: true, merchant: updated });
-  } catch (error) {
-    next(error);
-  }
-};
-
 export const getMerchantStats = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const apiKey = extractApiKey(req);
+    const apiKey = await extractApiKey(req);
     if (!apiKey) throw new AppError('Missing API key', 401, 'UNAUTHORIZED');
     
     const db = getDb();
     const merchant = await db.get('SELECT ln_address, usdc_address, payout_mode, payout_threshold_sats FROM merchants WHERE api_key = ?', apiKey);
-    if (!merchant) throw new AppError('Invalid API key', 401, 'UNAUTHORIZED');
-
     const rangeParam = req.query.range as string || '30';
     let rangeQuery = '30';
     if (['1', '7', '30', 'all'].includes(rangeParam)) {
@@ -448,7 +311,7 @@ export const getMerchantStats = async (req: Request, res: Response, next: NextFu
 
 export const getMerchantTransactions = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const apiKey = extractApiKey(req);
+    const apiKey = await extractApiKey(req);
     if (!apiKey) throw new AppError('Missing API key', 401, 'UNAUTHORIZED');
     
     const db = getDb();
@@ -493,7 +356,7 @@ export const getMerchantTransactions = async (req: Request, res: Response, next:
 // [M-01 FIX] getPayoutStatus now requires authentication and scopes query to merchant
 export const getPayoutStatus = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const apiKey = extractApiKey(req);
+    const apiKey = await extractApiKey(req);
     if (!apiKey) throw new AppError('Missing API key', 401, 'UNAUTHORIZED');
 
     const paymentHash = req.params.payment_hash;
@@ -521,6 +384,148 @@ export const getPayoutStatus = async (req: Request, res: Response, next: NextFun
   }
 };
 
+export const triggerManualPayout = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const apiKey = await extractApiKey(req);
+    if (!apiKey) {
+      throw new AppError('Missing or invalid AIPP API key in headers', 401, 'UNAUTHORIZED');
+    }
+
+    const db = getDb();
+    let accumTotalForwarded = 0;
+    let merchantDestination = '';
+    let jobId = '';
+
+    const release = await acquireTransactionLock();
+    try {
+      await db.run('BEGIN EXCLUSIVE TRANSACTION');
+      const merchant = await db.get('SELECT api_key, ln_address, payout_mode, email FROM merchants WHERE api_key = ?', apiKey);
+      if (!merchant) {
+        throw new AppError('Invalid AIPP API key', 401, 'UNAUTHORIZED');
+      }
+
+      const accumRecord = await db.get(
+        "SELECT SUM(forwarded_amount_sats) as total FROM invoices WHERE api_key = ? AND status = 'settled' AND payout_status IN ('pending_threshold', 'pending_manual')",
+        apiKey
+      );
+
+      accumTotalForwarded = accumRecord?.total ?? 0;
+
+      if (accumTotalForwarded < 10) {
+        throw new AppError(`Accumulated balance (${accumTotalForwarded} sats) is below minimum withdrawal (10 sats)`, 400, 'BAD_REQUEST');
+      }
+
+      await db.run(
+        "UPDATE invoices SET payout_status = 'queued' WHERE api_key = ? AND status = 'settled' AND payout_status IN ('pending_threshold', 'pending_manual')",
+        apiKey
+      );
+
+      jobId = crypto.randomUUID();
+      merchantDestination = merchant.ln_address;
+      await db.run(
+        "INSERT INTO payout_queue (id, payment_hash, api_key, amount_sats, ln_address, status, next_retry_at, created_at) VALUES (?, ?, ?, ?, ?, 'pending', ?, ?)",
+        jobId,
+        `manual_${crypto.randomBytes(8).toString('hex')}`,
+        apiKey,
+        accumTotalForwarded,
+        merchant.ln_address,
+        new Date().toISOString(),
+        new Date().toISOString()
+      );
+
+      await db.run('COMMIT');
+    } catch (innerErr) {
+      await db.run('ROLLBACK').catch(() => {});
+      throw innerErr;
+    } finally {
+      release();
+    }
+
+    processPayoutQueue().catch((err: any) => console.error('[Manual Payout] Dispatch error:', err));
+
+    res.json({
+      status: 'queued',
+      job_id: jobId,
+      amount_sats: accumTotalForwarded,
+      ln_address: merchantDestination,
+      message: `Successfully queued ${accumTotalForwarded} sats payout to ${merchantDestination}`
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const updateWalletSettings = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const apiKey = await extractApiKey(req);
+    if (!apiKey) throw new AppError('Missing API key', 401, 'UNAUTHORIZED');
+
+    const db = getDb();
+    const merchant = await db.get('SELECT * FROM merchants WHERE api_key = ?', apiKey);
+    if (!merchant) throw new AppError('Merchant not found', 404, 'NOT_FOUND');
+
+    let body: any = req.body;
+    if (Buffer.isBuffer(req.body) && req.body.length > 0) {
+      body = JSON.parse(req.body.toString('utf8'));
+    }
+
+    const fields: string[] = [];
+    const values: any[] = [];
+
+    // ln_address update
+    if (body.ln_address !== undefined) {
+      const ln = body.ln_address.trim();
+      if (!ln || !LN_ADDR_REGEX.test(ln)) {
+        throw new AppError('Invalid Lightning Address format', 400, 'INVALID_LN_ADDRESS');
+      }
+      fields.push('ln_address = ?');
+      values.push(ln);
+    }
+
+    // usdc_address update
+    if (body.usdc_address !== undefined) {
+      const usdc = body.usdc_address ? body.usdc_address.trim() : null;
+      if (usdc && !/^0x[a-fA-F0-9]{40}$/.test(usdc)) {
+        throw new AppError('Invalid Base USDC address format', 400, 'INVALID_USDC_ADDRESS');
+      }
+      fields.push('usdc_address = ?');
+      values.push(usdc);
+    }
+
+    // payout_mode update
+    if (body.payout_mode !== undefined) {
+      const mode = body.payout_mode;
+      if (!['instant', 'threshold', 'manual'].includes(mode)) {
+        throw new AppError('payout_mode must be instant, threshold, or manual', 400, 'BAD_REQUEST');
+      }
+      fields.push('payout_mode = ?');
+      values.push(mode);
+    }
+
+    // payout_threshold_sats update
+    if (body.payout_threshold_sats !== undefined) {
+      const MAX_THRESHOLD = 10_000_000;
+      const raw = Number(body.payout_threshold_sats);
+      const threshold = isNaN(raw) || raw <= 0
+        ? MIN_PAYOUT_THRESHOLD_SATS
+        : Math.min(MAX_THRESHOLD, Math.max(MIN_PAYOUT_THRESHOLD_SATS, Math.floor(raw)));
+      fields.push('payout_threshold_sats = ?');
+      values.push(threshold);
+    }
+
+    if (fields.length === 0) {
+      throw new AppError('No valid fields to update', 400, 'BAD_REQUEST');
+    }
+
+    values.push(apiKey);
+    await db.run(`UPDATE merchants SET ${fields.join(', ')} WHERE api_key = ?`, ...values);
+
+    const updated = await db.get('SELECT api_key, ln_address, usdc_address, payout_mode, payout_threshold_sats FROM merchants WHERE api_key = ?', apiKey);
+    res.json({ success: true, merchant: updated });
+  } catch (error) {
+    next(error);
+  }
+};
 
 export const joinWaitlist = async (req: Request, res: Response, next: NextFunction) => {
   try {

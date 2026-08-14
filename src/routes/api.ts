@@ -26,6 +26,39 @@ router.get('/paidmcp.json', getPaidMcpManifest);
 router.get('/aipp-agent.json', getAippAgentManifest);
 router.get('/.well-known/aipp-agent.json', getAippAgentManifest);
 
+import {
+  registerOptions,
+  registerVerify,
+  loginOptions,
+  loginVerify,
+  addPasskeyOptions,
+  addPasskeyVerify,
+  listPasskeys,
+  deletePasskey,
+  migratePasskeyOptions,
+  verifyMigratePasskey,
+  getSession,
+  logout,
+  requireMerchantSession
+} from '../controllers/passkeyAuth';
+
+// Passkey Authentication Routes
+router.post('/auth/passkey/register/options', registerOptions);
+router.post('/auth/passkey/register/verify', registerVerify);
+router.post('/auth/passkey/login/options', loginOptions);
+router.post('/auth/passkey/login/verify', loginVerify);
+
+router.post('/auth/passkey/migrate/options', migratePasskeyOptions);
+router.post('/auth/passkey/migrate/verify', verifyMigratePasskey);
+
+router.get('/auth/session', requireMerchantSession, getSession);
+router.post('/auth/logout', logout);
+
+router.post('/auth/passkey/add/options', requireMerchantSession, addPasskeyOptions);
+router.post('/auth/passkey/add/verify', requireMerchantSession, addPasskeyVerify);
+router.get('/auth/passkeys', requireMerchantSession, listPasskeys);
+router.delete('/auth/passkeys/:id', requireMerchantSession, deletePasskey);
+
 router.use(disablePrivateCaching);
 router.post('/merchant/register', registerMerchant);
 router.post('/merchant/recovery/challenge', requestRecoveryChallenge);
