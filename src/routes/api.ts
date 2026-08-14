@@ -13,9 +13,11 @@ const router = Router();
 // Middleware to prevent caching of sensitive merchant data
 import { Request, Response, NextFunction } from 'express';
 function disablePrivateCaching(req: Request, res: Response, next: NextFunction) {
-  res.setHeader('Cache-Control', 'private, no-store, max-age=0');
-  res.setHeader('Pragma', 'no-cache');
-  res.setHeader('Vary', 'Authorization, X-Api-Key, Cookie');
+  if (req.path && req.path.startsWith('/merchant')) {
+    res.setHeader('Cache-Control', 'private, no-store, max-age=0');
+    res.setHeader('Pragma', 'no-cache');
+    res.setHeader('Vary', 'Authorization, X-Api-Key, Cookie');
+  }
   next();
 }
 
@@ -24,13 +26,7 @@ router.get('/paidmcp.json', getPaidMcpManifest);
 router.get('/aipp-agent.json', getAippAgentManifest);
 router.get('/.well-known/aipp-agent.json', getAippAgentManifest);
 
-router.use((req: Request, res: Response, next: NextFunction) => {
-  if (req.path.startsWith('/merchant')) {
-    disablePrivateCaching(req, res, next);
-  } else {
-    next();
-  }
-});
+router.use(disablePrivateCaching);
 router.post('/merchant/register', registerMerchant);
 router.post('/merchant/recover', recoverMerchantKey);
 router.post('/merchant/waitlist', joinWaitlist);
