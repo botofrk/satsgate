@@ -108,8 +108,25 @@ app.listen(3000, () => console.log('AIPP Protected Server running on port 3000')
 
 ---
 
-## 5. Contact & Support
+## 5. Troubleshooting & Common Integration Errors
+
+### Error 1: `401 Unauthorized - Invalid or missing X-Api-Key`
+- **Cause**: The API call to `/merchant/links/create` is missing the `X-Api-Key` header or using an unregistered merchant key.
+- **Solution**: Pass your valid merchant API key (`aipp_merch_...`) in the `X-Api-Key` HTTP header. If you do not have a key, register via `POST https://aipp.dev/merchant/register` with your `ln_address` or `usdc_address`.
+
+### Error 2: `400 Bad Request - Invalid Lightning Address`
+- **Cause**: The provided Lightning Address domain could not be resolved via LNURL/NIP-05.
+- **Solution**: Ensure your Lightning Address follows standard format (e.g., `user@walletofsatoshi.com`, `user@getalby.com`, `user@strike.me`).
+
+### Error 3: `402 Payment Required - Unsettled Invoice`
+- **Cause**: Content or destination URL accessed prior to verified settlement on Lightning Network or Base USDC.
+- **Solution**: Poll `https://aipp.dev/p/<TAG_ID>/status?invoice_id=...` until `settled: true` before accessing protected destination content.
+
+---
+
+## 6. Contact & Support
 
 - Website: https://aipp.dev
 - Email: info@aipp.dev
 - Documentation: https://aipp.dev/docs.html
+- LLM Spec: https://aipp.dev/llms.txt
