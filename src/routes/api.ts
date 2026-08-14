@@ -3,7 +3,7 @@ import { registerMerchant, getMerchantStats, getMerchantTransactions, triggerMan
 import { createInvoice, checkInvoiceStatus, getReceipt, streamInvoiceStatus } from '../controllers/invoice';
 import { handleLnbitsWebhook } from '../controllers/webhook';
 import { handleChat, createTicket } from '../controllers/chat';
-import { verifyAdmin, getAdminStats, getFailedPayouts, retryPayout, getWaitlist } from '../controllers/admin';
+import { verifyAdmin, getAdminStats, getFailedPayouts, retryPayout, getWaitlist, getMerchantsList } from '../controllers/admin';
 import { premiumArticle, getPricing } from '../controllers/demo';
 import { getPaidMcpManifest, getAippAgentManifest } from '../controllers/manifest';
 import { getOpenTag, getOpenTagManifest, unlockOpenTag, getOpenTagReceipt } from '../controllers/openTag';
@@ -69,6 +69,7 @@ router.get('/pricing.json', getPricing);
 
 // Admin routes
 router.get('/admin/stats', verifyAdmin, getAdminStats);
+router.get('/admin/merchants', verifyAdmin, getMerchantsList);
 router.get('/admin/failed-payouts', verifyAdmin, getFailedPayouts);
 router.post('/admin/retry-payout', verifyAdmin, retryPayout);
 router.get('/admin/waitlist', verifyAdmin, getWaitlist);

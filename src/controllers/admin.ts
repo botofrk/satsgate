@@ -93,3 +93,25 @@ export const getWaitlist = async (req: Request, res: Response, next: NextFunctio
     next(error);
   }
 };
+
+export const getMerchantsList = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const db = getDb();
+    const merchants = await db.all(
+      "SELECT api_key, ln_address, usdc_address, payout_mode, payout_threshold_sats, created_at FROM merchants ORDER BY created_at DESC"
+    );
+
+    // Mask api_key for privacy
+    const safeMerchants = merchants.map((m: any) => ({
+      ...m,
+      api_key_masked: m.api_key && m.api_key.length > 20
+        ? m.api_key.slice(0, 15) + '...' + m.api_key.slice(-4)
+        : 'aipp_merch_***'
+    }));
+
+    res.json({ status: 'ok', merchants: safeMerchants });
+  } catch (error) {
+    next(error);
+  }
+};
+

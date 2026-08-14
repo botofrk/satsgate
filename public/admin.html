@@ -382,7 +382,7 @@
       <div style="font-size:22px;">🛡️</div>
       <div>
         <strong style="font-size:13.5px; color:var(--fg); display:block; margin-bottom:2px;">Privacy-First &amp; Non-Custodial Architecture</strong>
-        <span style="font-size:12px; color:var(--fg-muted);">AIPP collects zero personal data, zero passwords, and zero tracking logs. All merchant payouts auto-forward directly to external Lightning and Base wallets.</span>
+        <span style="font-size:12px; color:var(--fg-muted);">AIPP collects zero personal identity data, zero passwords, and zero tracking logs. All merchant payouts auto-forward directly to external Lightning and Base wallets.</span>
       </div>
     </div>
 
@@ -399,6 +399,37 @@
       <div class="stat-card">
         <div class="label">Waitlist Applicants</div>
         <div class="val" id="stat-waitlist">—</div>
+      </div>
+    </div>
+
+    <!-- REGISTERED MERCHANTS SECTION -->
+    <div class="section-card">
+      <div class="section-header">
+        <div class="section-title">
+          <span>Registered Merchants</span>
+          <span class="badge-count" id="merchants-count-badge" style="background:var(--accent-light); color:var(--accent);">0</span>
+        </div>
+        <button class="btn-sm" onclick="loadMerchants()">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/></svg>
+          Refresh
+        </button>
+      </div>
+
+      <div style="overflow-x:auto;">
+        <table>
+          <thead>
+            <tr>
+              <th>Date Registered</th>
+              <th>Lightning Payout Wallet</th>
+              <th>Base USDC Wallet</th>
+              <th>Payout Mode</th>
+              <th>Masked API Key</th>
+            </tr>
+          </thead>
+          <tbody id="merchants-body">
+            <tr><td colspan="5" style="text-align:center; color:var(--fg-muted); padding:32px;">Loading registered merchants...</td></tr>
+          </tbody>
+        </table>
       </div>
     </div>
 
@@ -502,7 +533,7 @@ async function showDashboard() {
   document.getElementById('dashboard-view').classList.add('active');
   document.getElementById('logout-btn').style.display = 'inline-block';
   
-  await Promise.all([loadStats(), loadFailedPayouts(), loadWaitlist()]);
+  await Promise.all([loadStats(), loadMerchants(), loadFailedPayouts(), loadWaitlist()]);
 }
 
 async function fetchAdmin(endpoint, options = {}) {
@@ -539,6 +570,33 @@ async function loadStats() {
     document.getElementById('stat-waitlist').textContent = data.waitlistCount || 0;
     document.getElementById('waitlist-count-badge').textContent = data.waitlistCount || 0;
   } catch(e) {}
+}
+
+async function loadMerchants() {
+  const body = document.getElementById('merchants-body');
+  const badge = document.getElementById('merchants-count-badge');
+  try {
+    const data = await fetchAdmin('/merchants');
+    const merchants = data.merchants || [];
+    badge.textContent = merchants.length;
+
+    if (merchants.length === 0) {
+      body.innerHTML = `<tr><td colspan="5" style="text-align:center; color:var(--fg-muted); padding:32px;">No merchants registered yet.</td></tr>`;
+      return;
+    }
+
+    body.innerHTML = merchants.map(m => `
+      <tr>
+        <td style="color:var(--fg-muted); font-size:12px;">${new Date(m.created_at).toLocaleString()}</td>
+        <td style="font-family:'JetBrains Mono',monospace; font-size:12px; font-weight:700; color:var(--fg);">${m.ln_address || '—'}</td>
+        <td style="font-family:'JetBrains Mono',monospace; font-size:12px; color:var(--fg-muted);">${m.usdc_address || '—'}</td>
+        <td><span style="font-size:11px; font-weight:700; padding:2px 8px; border-radius:12px; background:var(--accent-light); color:var(--accent);">${m.payout_mode || 'instant'}</span></td>
+        <td style="font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--fg-subtle);">${m.api_key_masked}</td>
+      </tr>
+    `).join('');
+  } catch(e) {
+    body.innerHTML = `<tr><td colspan="5" style="color:var(--red); text-align:center; padding:24px;">Error loading merchants list.</td></tr>`;
+  }
 }
 
 async function loadFailedPayouts() {
