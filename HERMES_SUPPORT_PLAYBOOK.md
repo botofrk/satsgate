@@ -1,6 +1,6 @@
 # AIPP Support & Outreach Playbook for Hermes Agent (Autonomous AI Guardrails)
 *Version: 1.0.0 — Security & Response Guidelines*
-*Target Inboxes: support@aipp.dev | info@aipp.dev*
+*Target Inbox: info@aipp.dev*
 
 ---
 

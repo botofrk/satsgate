@@ -1,6 +1,6 @@
 import { Router } from 'express';
-import { registerMerchant, getMerchantStats, getMerchantTransactions, triggerManualPayout, getPayoutStatus, joinWaitlist } from '../controllers/merchant';
-import { createInvoice, checkInvoiceStatus, getReceipt } from '../controllers/invoice';
+import { registerMerchant, getMerchantStats, getMerchantTransactions, triggerManualPayout, getPayoutStatus, joinWaitlist, updateWalletSettings } from '../controllers/merchant';
+import { createInvoice, checkInvoiceStatus, getReceipt, streamInvoiceStatus } from '../controllers/invoice';
 import { handleLnbitsWebhook } from '../controllers/webhook';
 import { handleChat, createTicket } from '../controllers/chat';
 import { verifyAdmin, getAdminStats, getFailedPayouts, retryPayout, getWaitlist } from '../controllers/admin';
@@ -9,21 +9,36 @@ import { getPaidMcpManifest, getAippAgentManifest } from '../controllers/manifes
 
 const router = Router();
 
+// Middleware to prevent caching of sensitive merchant data
+import { Request, Response, NextFunction } from 'express';
+function disablePrivateCaching(req: Request, res: Response, next: NextFunction) {
+  res.setHeader('Cache-Control', 'private, no-store, max-age=0');
+  res.setHeader('Pragma', 'no-cache');
+  res.setHeader('Vary', 'Authorization, X-Api-Key, Cookie');
+  next();
+}
+
 // Merchant routes
 router.get('/paidmcp.json', getPaidMcpManifest);
 router.get('/aipp-agent.json', getAippAgentManifest);
 router.get('/.well-known/aipp-agent.json', getAippAgentManifest);
+
+router.use('/merchant', disablePrivateCaching);
 router.post('/merchant/register', registerMerchant);
 router.post('/merchant/waitlist', joinWaitlist);
 router.get('/merchant/stats', getMerchantStats);
 router.post('/merchant/payout', triggerManualPayout);
 router.get('/merchant/payout-status/:payment_hash', getPayoutStatus);
 router.get('/merchant/transactions', getMerchantTransactions);
+router.patch('/merchant/settings', updateWalletSettings);
+router.put('/merchant/settings', updateWalletSettings);
 
 // Invoice routes
 router.post('/invoice/create', createInvoice);
 router.get('/invoice/status', checkInvoiceStatus);
 router.get('/invoice/status/:hash', checkInvoiceStatus);
+router.get('/invoice/stream/:hash', streamInvoiceStatus);
+router.get('/invoice/stream', streamInvoiceStatus);
 router.get('/invoice/receipt/:hash', getReceipt);
 
 // Payment Links & Smart Price Tags

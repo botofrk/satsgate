@@ -1,4 +1,4 @@
-import { getDb } from '../config/database';
+import { getDb, acquireTransactionLock } from '../config/database';
 
 /**
  * Marks all pending invoices older than 1 hour as 'expired'.
@@ -56,8 +56,10 @@ export async function processPruning() {
       }
 
       // 4. Safe to prune. Delete all related data, then the merchant.
-      await db.run('BEGIN EXCLUSIVE TRANSACTION');
+      const release = await acquireTransactionLock();
       try {
+        await db.run('BEGIN EXCLUSIVE TRANSACTION');
+        await db.run('DELETE FROM payment_links WHERE api_key = ?', merchant.api_key);
         await db.run('DELETE FROM invoices WHERE api_key = ?', merchant.api_key);
         await db.run('DELETE FROM daily_spend WHERE api_key = ?', merchant.api_key);
         await db.run('DELETE FROM ledgers WHERE api_key = ?', merchant.api_key);
@@ -69,6 +71,8 @@ export async function processPruning() {
       } catch (err) {
         try { await db.run('ROLLBACK'); } catch (_) { /* already rolled back */ }
         console.error(`[Prune Worker] Failed to prune merchant ${merchant.ln_address}:`, err);
+      } finally {
+        release();
       }
     }
 

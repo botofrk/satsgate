@@ -1,4 +1,4 @@
-import { getDb } from '../config/database';
+import { getDb, acquireTransactionLock } from '../config/database';
 import { DAILY_LIMIT_USD } from '../config/env';
 import { AppError } from '../utils/error';
 
@@ -6,10 +6,10 @@ export async function checkLimit(apiKey: string, costUsd: number): Promise<void>
   const db = getDb();
   const todayUtc = new Date().toISOString().split('T')[0];
 
-  // Atomic upsert + check inside a transaction to prevent race conditions.
-  // Without this, two concurrent requests could both read 0 and both pass the limit check.
-  await db.run('BEGIN IMMEDIATE');
+  // Atomic upsert + check inside a mutex-locked transaction to prevent race conditions.
+  const release = await acquireTransactionLock();
   try {
+    await db.run('BEGIN IMMEDIATE');
     // Upsert the row first (so we always have a row to lock on)
     await db.run(
       'INSERT OR IGNORE INTO daily_spend (api_key, date, usd_amount, requests_count) VALUES (?, ?, 0, 0)',
@@ -33,8 +33,9 @@ export async function checkLimit(apiKey: string, costUsd: number): Promise<void>
 
     await db.run('COMMIT');
   } catch (err) {
-    // Safe rollback: ignore "no transaction active" error to avoid log spam
     try { await db.run('ROLLBACK'); } catch (_) { /* already committed or rolled back */ }
     throw err;
+  } finally {
+    release();
   }
 }

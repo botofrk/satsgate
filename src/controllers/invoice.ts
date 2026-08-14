@@ -7,6 +7,9 @@ import { AppError } from '../utils/error';
 import { isSafeCallbackUrl } from './webhook';
 import { LNBITS_INVOICE_KEY, LNBITS_URL, MAX_SINGLE_REQUEST_USD, USDC_ADDRESS, BASE_NETWORK_NAME } from '../config/env';
 import { getGatewayAddress, verifyUsdcPayment } from '../services/base';
+import { publishInvoiceUpdate, subscribeToInvoice } from '../services/events';
+
+import { generateInvoiceData, InvoiceDomainError } from '../services/invoiceService';
 
 function getAippKey(req: Request): string | null {
   const authHeader = req.headers.authorization;
@@ -23,12 +26,6 @@ export const createInvoice = async (req: Request, res: Response, next: NextFunct
       throw new AppError('Missing or invalid AIPP API key in headers', 401, 'UNAUTHORIZED');
     }
 
-    const db = getDb();
-    const merchant = await db.get('SELECT api_key, usdc_address, payout_mode FROM merchants WHERE api_key = ?', apiKey);
-    if (!merchant) {
-      throw new AppError('Invalid AIPP API key', 401, 'UNAUTHORIZED');
-    }
-
     let body: any = req.body;
     if (Buffer.isBuffer(req.body) && req.body.length > 0) {
       try {
@@ -38,259 +35,83 @@ export const createInvoice = async (req: Request, res: Response, next: NextFunct
       }
     }
 
-    // [I-06 FIX] Whitelist protocol field
     const rawProtocol = typeof body.protocol === 'string' ? body.protocol.toUpperCase() : 'DUAL';
-    if (!['L402', 'X402', 'DUAL'].includes(rawProtocol)) {
-      throw new AppError('protocol must be L402, X402 or DUAL', 400, 'INVALID_PROTOCOL');
-    }
-    const protocol = rawProtocol;
-
-    // SSRF protection: validate callback_url before storing
     const callback_url = body.callback_url || null;
+
     if (callback_url && !isSafeCallbackUrl(callback_url)) {
       throw new AppError('Invalid callback_url: private/internal addresses are not allowed', 400, 'INVALID_CALLBACK_URL');
     }
 
-    if (protocol === 'X402') {
-      if (!merchant.usdc_address) {
-        throw new AppError('Merchant has not configured a Base USDC payout address', 400, 'MERCHANT_NO_USDC_ADDRESS');
+    // Rate limits (check early, but service also validates limits)
+    // We defer the checkLimit to the service or do it here. 
+    // Actually, service validates amount. CheckLimit needs apiKey and amount. 
+    // The user requested rate limit to stay in the controller.
+    
+    // We need amount_usd for checkLimit
+    let amount_usd = body.amount_usd;
+    if (amount_usd === undefined && body.amount_sats !== undefined) {
+      amount_usd = (body.amount_sats / 100_000_000) * getBtcUsdRate();
+    }
+    if (amount_usd !== undefined && !isNaN(amount_usd)) {
+       await checkLimit(apiKey, amount_usd);
+    }
+
+    const idempotencyKey = (req.headers['idempotency-key'] as string) || (req.headers['x-idempotency-key'] as string) || null;
+    
+    // Validate idempotency key constraints
+    if (idempotencyKey) {
+      if (idempotencyKey.trim().length === 0 || idempotencyKey.length > 128) {
+        throw new AppError('Idempotency key must be between 1 and 128 characters', 400, 'INVALID_IDEMPOTENCY_KEY');
       }
-
-      let amount_usd = body.amount_usd;
-      if (amount_usd === undefined && body.amount_sats !== undefined) {
-        amount_usd = (body.amount_sats / 100_000_000) * getBtcUsdRate();
+      if (/[\x00-\x1F\x7F]/.test(idempotencyKey)) {
+        throw new AppError('Idempotency key contains invalid control characters', 400, 'INVALID_IDEMPOTENCY_KEY');
       }
+    }
 
-      if (typeof amount_usd !== 'number' || isNaN(amount_usd) || amount_usd < 0.01 || amount_usd > 100.0) {
-        throw new AppError('Transaction amount must be between 0.01 and 100.00 USD (or equivalent sats)', 400, 'INVALID_AMOUNT');
-      }
-
-      if (MAX_SINGLE_REQUEST_USD > 0 && amount_usd > MAX_SINGLE_REQUEST_USD) {
-        throw new AppError(`Single request exceeds max allowed ($${MAX_SINGLE_REQUEST_USD})`, 400, 'SINGLE_LIMIT_EXCEEDED');
-      }
-      await checkLimit(apiKey, amount_usd);
-
-      const paymentHash = 'x402_' + crypto.randomBytes(16).toString('hex');
-      const expiresAt = new Date(Date.now() + 3600 * 1000).toISOString();
-
-      await db.run(
-        'INSERT INTO invoices (payment_hash, api_key, amount_sats, commission_sats, forwarded_amount_sats, status, callback_url, protocol, usdc_amount, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
-        paymentHash,
-        apiKey,
-        0,
-        0,
-        0,
-        'pending',
-        callback_url,
-        'x402',
-        amount_usd,
-        new Date().toISOString()
-      );
-
-      const challengeObj = {
-        scheme: 'exact',
-        network: BASE_NETWORK_NAME,
-        payTo: getGatewayAddress(),
-        price: amount_usd.toFixed(2),
-        token: USDC_ADDRESS,
-        payment_hash: paymentHash
+    // Generate canonical request fingerprint
+    let idempotencyFingerprint = null;
+    if (idempotencyKey) {
+      const canonicalRequest = {
+        amount_usd: body.amount_usd !== undefined ? String(body.amount_usd) : null,
+        amount_sats: body.amount_sats !== undefined ? String(body.amount_sats) : null,
+        currency: 'USDC', // Default
+        protocol: rawProtocol,
+        memo: body.memo ?? null,
+        callbackUrl: callback_url ?? null,
       };
-      
-      const challengeBase64 = Buffer.from(JSON.stringify(challengeObj), 'utf8').toString('base64');
-      res.setHeader('PAYMENT-REQUIRED', challengeBase64);
-
-      return res.json({
-        payment_hash: paymentHash,
-        protocol: 'x402',
-        amount_usd,
-        pay_to: challengeObj.payTo,
-        network: challengeObj.network,
-        token: challengeObj.token,
-        status: 'pending',
-        expires_in: 3600
-      });
+      idempotencyFingerprint = crypto.createHash('sha256').update(JSON.stringify(canonicalRequest)).digest('hex');
     }
 
-    if (protocol === 'DUAL') {
-      if (!merchant.usdc_address) {
-        throw new AppError('Merchant has not configured a Base USDC payout address (required for DUAL protocol)', 400, 'MERCHANT_NO_USDC_ADDRESS');
-      }
-
-      let amount_usd = body.amount_usd;
-      let amount_sats = body.amount_sats;
-
-      if (amount_usd === undefined && amount_sats !== undefined) {
-        amount_usd = (amount_sats / 100_000_000) * getBtcUsdRate();
-      } else if (amount_usd !== undefined && amount_sats === undefined) {
-        amount_sats = Math.ceil((amount_usd / getBtcUsdRate()) * 100_000_000);
-      }
-
-      if (amount_usd === undefined || isNaN(amount_usd) || amount_usd < 0.01 || amount_usd > 100.0) {
-        throw new AppError('USD amount must be between 0.01 and 100.00 USD (or equivalent sats)', 400, 'INVALID_AMOUNT');
-      }
-      if (!Number.isInteger(amount_sats) || amount_sats < 1 || amount_sats > 1000000) {
-        throw new AppError('Sats amount must be an integer between 1 and 1,000,000 satoshis (or equivalent USD)', 400, 'INVALID_AMOUNT');
-      }
-
-      if (MAX_SINGLE_REQUEST_USD > 0 && amount_usd > MAX_SINGLE_REQUEST_USD) {
-        throw new AppError(`Single request exceeds max allowed ($${MAX_SINGLE_REQUEST_USD})`, 400, 'SINGLE_LIMIT_EXCEEDED');
-      }
-      await checkLimit(apiKey, amount_usd);
-
-      const commission = Math.max(5, Math.ceil(amount_sats * 0.01));
-      const forwarded = Math.max(1, amount_sats - commission);
-
-      let paymentHash = '';
-      let paymentRequest = '';
-
-      if (LNBITS_INVOICE_KEY) {
-        const response = await fetch(`${LNBITS_URL}/api/v1/payments`, {
-          method: 'POST',
-          headers: {
-            'X-Api-Key': LNBITS_INVOICE_KEY,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            out: false,
-            amount: amount_sats,
-            memo: `AIPP Dual Invoice`,
-          }),
-        });
-
-        if (!response.ok) {
-          throw new AppError(`LNBits returned status ${response.status}`, 502, 'LNBITS_ERROR');
-        }
-
-        const data = (await response.json()) as any;
-        if (!data?.payment_hash || !data?.payment_request) {
-          throw new AppError('Malformed response from LNBits', 502, 'LNBITS_ERROR');
-        }
-        paymentHash = data.payment_hash;
-        paymentRequest = data.payment_request;
-      } else {
-        paymentHash = 'demo_' + crypto.randomBytes(8).toString('hex');
-        paymentRequest = `lnbc${amount_sats}n1demo_invoice_generated_by_aipp_backend_for_testing_purposes`;
-      }
-
-      await db.run(
-        'INSERT INTO invoices (payment_hash, api_key, amount_sats, commission_sats, forwarded_amount_sats, status, callback_url, protocol, usdc_amount, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
-        paymentHash,
+    let invoiceData;
+    try {
+      invoiceData = await generateInvoiceData({
         apiKey,
-        amount_sats,
-        commission,
-        forwarded,
-        'pending',
-        callback_url,
-        'dual',
-        amount_usd,
-        new Date().toISOString()
-      );
-
-      const challengeObj = {
-        scheme: 'exact',
-        network: BASE_NETWORK_NAME,
-        payTo: getGatewayAddress(),
-        price: amount_usd.toFixed(2),
-        token: USDC_ADDRESS,
-        payment_hash: paymentHash
-      };
-      
-      const challengeBase64 = Buffer.from(JSON.stringify(challengeObj), 'utf8').toString('base64');
-      res.setHeader('PAYMENT-REQUIRED', challengeBase64);
-
-      return res.json({
-        payment_hash: paymentHash,
-        protocol: 'dual',
-        amount_sats,
-        amount_usd,
-        payment_request: paymentRequest,
-        pay_to: challengeObj.payTo,
-        network: challengeObj.network,
-        token: challengeObj.token,
-        status: 'pending',
-        expires_in: 3600
+        protocol: rawProtocol as any,
+        amountUsd: body.amount_usd, // Let generateInvoiceData handle string casting
+        amountSats: body.amount_sats,
+        callbackUrl: callback_url,
+        idempotencyKey: idempotencyKey ? idempotencyKey.trim() : null,
+        idempotencyFingerprint
       });
-    }
-
-    // Default L402 Flow
-    let amount_sats = body.amount_sats;
-
-    if (body.amount_usd !== undefined) {
-      if (typeof body.amount_usd !== 'number' || isNaN(body.amount_usd) || body.amount_usd <= 0) {
-        throw new AppError('amount_usd must be a positive number', 400, 'INVALID_AMOUNT');
+    } catch (err: any) {
+      if (err instanceof InvoiceDomainError) {
+        let statusCode = 400;
+        if (err.code === 'UNAUTHORIZED') statusCode = 401;
+        if (err.code === 'SINGLE_LIMIT_EXCEEDED') statusCode = 429;
+        if (err.code === 'LNBITS_ERROR' || err.code === 'DB_ERROR') statusCode = 502;
+        if (err.code === 'CONFLICT') statusCode = 409;
+        throw new AppError(err.message, statusCode, err.code);
       }
-      amount_sats = Math.ceil((body.amount_usd / getBtcUsdRate()) * 100_000_000);
+      throw err;
     }
 
-    // [I-03 FIX] Require integer amount_sats >= 1
-    if (!Number.isInteger(amount_sats) || amount_sats < 1 || amount_sats > 1000000) {
-      throw new AppError('Transaction amount must be an integer between 1 and 1,000,000 satoshis (or equivalent USD)', 400, 'INVALID_AMOUNT');
+    if (invoiceData.challengeBase64) {
+      res.setHeader('PAYMENT-REQUIRED', invoiceData.challengeBase64);
+      // Remove challengeBase64 from json output to keep backwards compatibility
+      delete invoiceData.challengeBase64;
     }
 
-    const costUsd = (amount_sats / 100_000_000) * getBtcUsdRate();
-    if (MAX_SINGLE_REQUEST_USD > 0 && costUsd > MAX_SINGLE_REQUEST_USD) {
-      throw new AppError(`Single request exceeds max allowed ($${MAX_SINGLE_REQUEST_USD})`, 400, 'SINGLE_LIMIT_EXCEEDED');
-    }
-    await checkLimit(apiKey, costUsd);
-
-    const commission = Math.max(5, Math.ceil(amount_sats * 0.01));
-    const forwarded = Math.max(1, amount_sats - commission);
-
-    let paymentHash = '';
-    let paymentRequest = '';
-
-    if (LNBITS_INVOICE_KEY) {
-      const response = await fetch(`${LNBITS_URL}/api/v1/payments`, {
-        method: 'POST',
-        headers: {
-          'X-Api-Key': LNBITS_INVOICE_KEY,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          out: false,
-          amount: amount_sats,
-          // [I-08 FIX] Use random short ID instead of api_key suffix in memo
-          memo: `AIPP Invoice`,
-        }),
-      });
-
-      if (!response.ok) {
-        throw new AppError(`LNBits returned status ${response.status}`, 502, 'LNBITS_ERROR');
-      }
-
-      // [I-04 FIX] Validate LNBits response before using
-      const data = (await response.json()) as any;
-      if (!data?.payment_hash || !data?.payment_request) {
-        throw new AppError('Malformed response from LNBits — missing payment_hash or payment_request', 502, 'LNBITS_ERROR');
-      }
-      paymentHash = data.payment_hash;
-      paymentRequest = data.payment_request;
-    } else {
-      paymentHash = 'demo_' + crypto.randomBytes(8).toString('hex');
-      paymentRequest = `lnbc${amount_sats}n1demo_invoice_generated_by_aipp_backend_for_testing_purposes`;
-    }
-
-    await db.run(
-      'INSERT INTO invoices (payment_hash, api_key, amount_sats, commission_sats, forwarded_amount_sats, status, callback_url, protocol, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
-      paymentHash,
-      apiKey,
-      amount_sats,
-      commission,
-      forwarded,
-      'pending',
-      callback_url,
-      'L402',
-      new Date().toISOString()
-    );
-
-    res.json({
-      payment_hash: paymentHash,
-      payment_request: paymentRequest,
-      amount_sats,
-      commission_sats: commission,
-      status: 'pending',
-      expires_in: 3600
-    });
+    res.json(invoiceData);
   } catch (error) {
     next(error);
   }
@@ -322,6 +143,14 @@ async function settleDemoInvoice(hash: string, preimage?: string): Promise<void>
       payout_status, preimage || null, hash
     );
     await db.run('COMMIT');
+
+    publishInvoiceUpdate(hash, {
+      paid: true,
+      status: 'settled',
+      preimage: preimage || '0000000000000000000000000000000000000000000000000000000000000000',
+      protocol: 'L402',
+      amount_sats: inv.forwarded_amount_sats
+    });
   } catch (e) {
     await db.run('ROLLBACK').catch(() => {});
     throw e;
@@ -378,47 +207,61 @@ export const checkInvoiceStatus = async (req: Request, res: Response, next: Next
 
       // 1. Try to verify via USDC on Base first if txHash is provided
       if (invoice.status === 'pending' && txHash && /^0x[a-fA-F0-9]{64}$/.test(txHash)) {
-        const isPaid = await verifyUsdcPayment(txHash, invoice.usdc_amount);
-        if (isPaid) {
-          const release = await acquireTransactionLock();
-          try {
-            await db.run('BEGIN EXCLUSIVE TRANSACTION');
-            const currentInvoice = await db.get('SELECT status, api_key, usdc_amount FROM invoices WHERE payment_hash = ?', hash);
-            if (currentInvoice.status === 'pending') {
-              await db.run(
-                "UPDATE invoices SET status = 'settled', preimage = ?, payout_status = 'pending_manual', protocol = 'x402' WHERE payment_hash = ?",
-                txHash,
-                hash
-              );
-
-              const merchant = await db.get('SELECT payout_mode, usdc_address FROM merchants WHERE api_key = ?', invoice.api_key);
-              if (merchant && merchant.payout_mode === 'instant') {
+        // [ANTI-REPLAY] Ensure this txHash has not already been used for another settled invoice
+        const alreadyUsed = await db.get("SELECT payment_hash FROM invoices WHERE preimage = ? AND status = 'settled'", txHash);
+        if (alreadyUsed && alreadyUsed.payment_hash !== hash) {
+          console.warn(`[x402 Anti-Replay] Transaction ${txHash} was already consumed by invoice ${alreadyUsed.payment_hash}`);
+        } else {
+          const isPaid = await verifyUsdcPayment(txHash, invoice.usdc_amount);
+          if (isPaid) {
+            const release = await acquireTransactionLock();
+            try {
+              await db.run('BEGIN EXCLUSIVE TRANSACTION');
+              const currentInvoice = await db.get('SELECT status, api_key, usdc_amount FROM invoices WHERE payment_hash = ?', hash);
+              if (currentInvoice.status === 'pending') {
                 await db.run(
-                  "UPDATE invoices SET payout_status = 'queued' WHERE payment_hash = ?",
+                  "UPDATE invoices SET status = 'settled', preimage = ?, payout_status = 'pending_manual', protocol = 'x402' WHERE payment_hash = ?",
+                  txHash,
                   hash
                 );
-                
-                const jobId = crypto.randomUUID();
-                await db.run(
-                  "INSERT INTO payout_queue (id, payment_hash, api_key, amount_sats, usdc_address, usdc_amount, protocol, status, next_retry_at, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, 'pending', ?, ?)",
-                  jobId,
-                  hash,
-                  invoice.api_key,
-                  0,
-                  merchant.usdc_address,
-                  invoice.usdc_amount,
-                  'x402',
-                  new Date().toISOString(),
-                  new Date().toISOString()
-                );
+
+                const merchant = await db.get('SELECT payout_mode, usdc_address FROM merchants WHERE api_key = ?', invoice.api_key);
+                if (merchant && merchant.payout_mode === 'instant') {
+                  await db.run(
+                    "UPDATE invoices SET payout_status = 'queued' WHERE payment_hash = ?",
+                    hash
+                  );
+                  
+                  const jobId = crypto.randomUUID();
+                  await db.run(
+                    "INSERT INTO payout_queue (id, payment_hash, api_key, amount_sats, usdc_address, usdc_amount, protocol, status, next_retry_at, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, 'pending', ?, ?)",
+                    jobId,
+                    hash,
+                    invoice.api_key,
+                    0,
+                    merchant.usdc_address,
+                    invoice.usdc_amount,
+                    'x402',
+                    new Date().toISOString(),
+                    new Date().toISOString()
+                  );
+                }
               }
+              await db.run('COMMIT');
+
+              publishInvoiceUpdate(hash, {
+                paid: true,
+                status: 'settled',
+                preimage: txHash,
+                protocol: 'x402',
+                usdc_amount: invoice.usdc_amount
+              });
+            } catch (innerErr) {
+              await db.run('ROLLBACK').catch(() => {});
+              throw innerErr;
+            } finally {
+              release();
             }
-            await db.run('COMMIT');
-          } catch (innerErr) {
-            await db.run('ROLLBACK').catch(() => {});
-            throw innerErr;
-          } finally {
-            release();
           }
         }
       }
@@ -436,7 +279,7 @@ export const checkInvoiceStatus = async (req: Request, res: Response, next: Next
           if (verifyRes.ok) {
             const verifyData = (await verifyRes.json()) as any;
             if (verifyData.paid) {
-              await settleDemoInvoice(hash);
+              await settleDemoInvoice(hash, verifyData.preimage);
               await db.run("UPDATE invoices SET protocol = 'L402', preimage = ? WHERE payment_hash = ?", verifyData.preimage, hash);
             }
           }
@@ -465,47 +308,61 @@ export const checkInvoiceStatus = async (req: Request, res: Response, next: Next
       }
 
       if (invoice.status === 'pending' && txHash && /^0x[a-fA-F0-9]{64}$/.test(txHash)) {
-        const isPaid = await verifyUsdcPayment(txHash, invoice.usdc_amount);
-        if (isPaid) {
-          const release = await acquireTransactionLock();
-          try {
-            await db.run('BEGIN EXCLUSIVE TRANSACTION');
-            const currentInvoice = await db.get('SELECT status, api_key, usdc_amount FROM invoices WHERE payment_hash = ?', hash);
-            if (currentInvoice.status === 'pending') {
-              await db.run(
-                "UPDATE invoices SET status = 'settled', preimage = ?, payout_status = 'pending_manual' WHERE payment_hash = ?",
-                txHash,
-                hash
-              );
-
-              const merchant = await db.get('SELECT payout_mode, usdc_address FROM merchants WHERE api_key = ?', invoice.api_key);
-              if (merchant && merchant.payout_mode === 'instant') {
+        // [ANTI-REPLAY] Ensure this txHash has not already been used for another settled invoice
+        const alreadyUsed = await db.get("SELECT payment_hash FROM invoices WHERE preimage = ? AND status = 'settled'", txHash);
+        if (alreadyUsed && alreadyUsed.payment_hash !== hash) {
+          console.warn(`[x402 Anti-Replay] Transaction ${txHash} was already consumed by invoice ${alreadyUsed.payment_hash}`);
+        } else {
+          const isPaid = await verifyUsdcPayment(txHash, invoice.usdc_amount);
+          if (isPaid) {
+            const release = await acquireTransactionLock();
+            try {
+              await db.run('BEGIN EXCLUSIVE TRANSACTION');
+              const currentInvoice = await db.get('SELECT status, api_key, usdc_amount FROM invoices WHERE payment_hash = ?', hash);
+              if (currentInvoice.status === 'pending') {
                 await db.run(
-                  "UPDATE invoices SET payout_status = 'queued' WHERE payment_hash = ?",
+                  "UPDATE invoices SET status = 'settled', preimage = ?, payout_status = 'pending_manual' WHERE payment_hash = ?",
+                  txHash,
                   hash
                 );
-                
-                const jobId = crypto.randomUUID();
-                await db.run(
-                  "INSERT INTO payout_queue (id, payment_hash, api_key, amount_sats, usdc_address, usdc_amount, protocol, status, next_retry_at, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, 'pending', ?, ?)",
-                  jobId,
-                  hash,
-                  invoice.api_key,
-                  0,
-                  merchant.usdc_address,
-                  invoice.usdc_amount,
-                  'x402',
-                  new Date().toISOString(),
-                  new Date().toISOString()
-                );
+
+                const merchant = await db.get('SELECT payout_mode, usdc_address FROM merchants WHERE api_key = ?', invoice.api_key);
+                if (merchant && merchant.payout_mode === 'instant') {
+                  await db.run(
+                    "UPDATE invoices SET payout_status = 'queued' WHERE payment_hash = ?",
+                    hash
+                  );
+                  
+                  const jobId = crypto.randomUUID();
+                  await db.run(
+                    "INSERT INTO payout_queue (id, payment_hash, api_key, amount_sats, usdc_address, usdc_amount, protocol, status, next_retry_at, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, 'pending', ?, ?)",
+                    jobId,
+                    hash,
+                    invoice.api_key,
+                    0,
+                    merchant.usdc_address,
+                    invoice.usdc_amount,
+                    'x402',
+                    new Date().toISOString(),
+                    new Date().toISOString()
+                  );
+                }
               }
+              await db.run('COMMIT');
+
+              publishInvoiceUpdate(hash, {
+                paid: true,
+                status: 'settled',
+                preimage: txHash,
+                protocol: 'x402',
+                usdc_amount: invoice.usdc_amount
+              });
+            } catch (innerErr) {
+              await db.run('ROLLBACK').catch(() => {});
+              throw innerErr;
+            } finally {
+              release();
             }
-            await db.run('COMMIT');
-          } catch (innerErr) {
-            await db.run('ROLLBACK').catch(() => {});
-            throw innerErr;
-          } finally {
-            release();
           }
         }
       }
@@ -592,6 +449,10 @@ export const getReceipt = async (req: Request, res: Response, next: NextFunction
       WHERE i.payment_hash = ?
     `, hash);
 
+    if (!invoice) {
+      throw new AppError('Invoice not found', 404, 'NOT_FOUND');
+    }
+
     if (invoice.status === 'pending' && LNBITS_INVOICE_KEY && !hash.startsWith('demo_')) {
       const verifyRes = await fetch(`${LNBITS_URL}/api/v1/payments/${hash}`, {
         headers: { 'X-Api-Key': LNBITS_INVOICE_KEY }
@@ -637,3 +498,95 @@ export const getReceipt = async (req: Request, res: Response, next: NextFunction
     next(error);
   }
 };
+
+/**
+ * Real-time SSE (Server-Sent Events) endpoint for checkout pages.
+ * Delivers 0 ms latency settlement notifications with zero database polling overhead.
+ */
+export const streamInvoiceStatus = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const hash = req.params.hash || (req.query.hash as string) || (req.query.payment_hash as string);
+    if (!hash || hash === 'undefined' || hash === 'null' || hash.trim() === '') {
+      return res.status(400).json({ error: 'Missing invoice hash', status: 'bad_request' });
+    }
+
+    // Set Server-Sent Events headers
+    res.writeHead(200, {
+      'Content-Type': 'text/event-stream',
+      'Cache-Control': 'no-cache, no-transform',
+      'Connection': 'keep-alive',
+      'X-Accel-Buffering': 'no',
+      'Access-Control-Allow-Origin': '*'
+    });
+
+    res.write(': connected\n\n');
+
+    const db = getDb();
+    const invoice = await db.get(
+      'SELECT payment_hash, status, preimage, protocol, amount_sats, usdc_amount FROM invoices WHERE payment_hash = ?',
+      hash
+    );
+
+    if (!invoice) {
+      res.write(`data: ${JSON.stringify({ paid: false, status: 'not_found', error: 'Invoice not found' })}\n\n`);
+      return res.end();
+    }
+
+    // If already settled, send event immediately and close stream
+    if (invoice.status === 'settled') {
+      res.write(`data: ${JSON.stringify({
+        paid: true,
+        status: 'settled',
+        preimage: invoice.preimage || null,
+        protocol: invoice.protocol,
+        amount_sats: invoice.amount_sats,
+        usdc_amount: invoice.usdc_amount
+      })}\n\n`);
+      return res.end();
+    }
+
+    // Subscribe to in-memory event bus
+    let isClosed = false;
+    const unsubscribe = subscribeToInvoice(hash, (eventData) => {
+      if (isClosed) return;
+      try {
+        res.write(`data: ${JSON.stringify(eventData)}\n\n`);
+        if (eventData.paid) {
+          isClosed = true;
+          clearInterval(heartbeat);
+          unsubscribe();
+          res.end();
+        }
+      } catch {
+        isClosed = true;
+        clearInterval(heartbeat);
+        unsubscribe();
+      }
+    });
+
+    // 15-second heartbeat ping to prevent connection timeout by reverse proxies / firewalls
+    const heartbeat = setInterval(() => {
+      if (isClosed) {
+        clearInterval(heartbeat);
+        return;
+      }
+      try {
+        res.write(': ping\n\n');
+      } catch {
+        isClosed = true;
+        clearInterval(heartbeat);
+        unsubscribe();
+      }
+    }, 15000);
+
+    req.on('close', () => {
+      isClosed = true;
+      clearInterval(heartbeat);
+      unsubscribe();
+    });
+
+  } catch (error) {
+    next(error);
+  }
+};
+

@@ -1,6 +1,6 @@
 import dotenv from 'dotenv';
 
-dotenv.config();
+dotenv.config({ override: true });
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Fail-fast validation for required environment variables in production

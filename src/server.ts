@@ -1,4 +1,4 @@
-import express, { Request, Response } from 'express';
+import express, { Request, Response, NextFunction } from 'express';
 import cors from 'cors';
 import rateLimit from 'express-rate-limit';
 import { PORT, LNBITS_INVOICE_KEY, LNBITS_ADMIN_KEY, LNBITS_WEBHOOK_SECRET, IS_PRODUCTION, FEE_PER_REQUEST_SATS, DAILY_LIMIT_USD } from './config/env';
@@ -65,10 +65,10 @@ app.use('/chat', strictLimiter);
 app.use('/ticket', rateLimit({ windowMs: 60 * 1000, max: 5, standardHeaders: true, legacyHeaders: false }));
 app.use('/admin', rateLimit({ windowMs: 60 * 1000, max: 20, standardHeaders: true, legacyHeaders: false }));
 
-// Invoice creation: 5 per IP per minute — free to try, must pay to unlock
+// Invoice creation: Temporarily increased to 100 for high-concurrency load testing
 const invoiceLimiter = rateLimit({
   windowMs: 60 * 1000,
-  max: 5,
+  max: 100,
   standardHeaders: true,
   legacyHeaders: false,
   message: { error: 'Too many invoice requests from this IP, please wait a minute.', code: 'RATE_LIMIT_EXCEEDED' }

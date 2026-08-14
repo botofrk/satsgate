@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <title>Zeus 1050 Sats Ödeme</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
+    body { background: #0f172a; color: white; display: flex; align-items: center; justify-content: center; min-height: 100vh; padding: 20px; }
+    .card { background: #1e293b; border: 1px solid #334155; border-radius: 20px; padding: 28px; text-align: center; max-width: 440px; width: 100%; box-shadow: 0 20px 40px rgba(0,0,0,0.5); }
+    h2 { font-size: 20px; font-weight: 700; margin-bottom: 6px; }
+    p { color: #94a3b8; font-size: 13px; margin-bottom: 18px; }
+    .qr-box { background: white; padding: 14px; border-radius: 16px; display: inline-block; margin-bottom: 18px; }
+    .qr-box img { display: block; width: 260px; height: 260px; }
+    .amount-badge { background: rgba(56, 189, 248, 0.15); border: 1px solid rgba(56, 189, 248, 0.3); color: #38bdf8; font-size: 16px; font-weight: 700; padding: 8px 16px; border-radius: 100px; display: inline-block; margin-bottom: 16px; }
+    .copy-btn { display: block; width: 100%; background: #2563eb; color: white; border: none; padding: 12px; border-radius: 10px; font-weight: 600; font-size: 14px; cursor: pointer; transition: 0.2s; }
+    .copy-btn:hover { background: #1d4ed8; }
+    .status { margin-top: 14px; font-size: 14px; color: #38bdf8; font-weight: 600; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div style="font-size: 13px; color: #f59e0b; font-weight: 700; margin-bottom: 6px;">⚡ BITCOIN LIGHTNING</div>
+    <h2>Zeus 1050 Sats eCash Ödeme</h2>
+    <p>Zeus uygulamanızı açıp aşağıdaki QR kodu okutun:</p>
+    
+    <div class="qr-box">
+      <img src="https://api.qrserver.com/v1/create-qr-code/?size=260x260&margin=1&data=lnbc10500n1p48ez2epp5c95uln2ndlpw9rv6w09x4v4c5qthclsndxzlx88pq97w0jxvhl0scqzyssp5zqfdx95zshuz93cm6lt3nqtsxrfjgsjz07wuc7r0mzuv6mvyse5q9q7sqqqqqqqqqqqqqqqqqqqsqqqqqysgqdp6u2d2zgz6v46hxgr9gdshx6pq23exzmnnvejhy6fq9qcnqdfsypekzarn9ymqz9gxqrrssrzjqwryaup9lh50kkranzgcdnn2fgvx390wgj5jd07rwr3vxeje0glcllmc3gc8hmsqfsqqqqlgqqqqqeqqjqcvgnfk0gjfgk02tmtey9e6jzuqlkr8s42w74upf00mlg8l7cutyr82r4c0e3yf3gm6c9u780zat580znd4lr6csx987njdm2vpcha7sph8l5lr" alt="Lightning QR Code" />
+    </div>
+
+    <div class="amount-badge">1050 Satoshis ($0.67 USD)</div>
+
+    <button class="copy-btn" onclick="navigator.clipboard.writeText('lnbc10500n1p48ez2epp5c95uln2ndlpw9rv6w09x4v4c5qthclsndxzlx88pq97w0jxvhl0scqzyssp5zqfdx95zshuz93cm6lt3nqtsxrfjgsjz07wuc7r0mzuv6mvyse5q9q7sqqqqqqqqqqqqqqqqqqqsqqqqqysgqdp6u2d2zgz6v46hxgr9gdshx6pq23exzmnnvejhy6fq9qcnqdfsypekzarn9ymqz9gxqrrssrzjqwryaup9lh50kkranzgcdnn2fgvx390wgj5jd07rwr3vxeje0glcllmc3gc8hmsqfsqqqqlgqqqqqeqqjqcvgnfk0gjfgk02tmtey9e6jzuqlkr8s42w74upf00mlg8l7cutyr82r4c0e3yf3gm6c9u780zat580znd4lr6csx987njdm2vpcha7sph8l5lr'); this.textContent='✓ Kopyalandı!'; setTimeout(()=>this.textContent='📋 Fatura Kodunu Kopyala', 2000)">📋 Fatura Kodunu Kopyala</button>
+
+    <div class="status" id="st">⏳ Zeus ödemesi bekleniyor...</div>
+  </div>
+
+  <script>
+    setInterval(async () => {
+      try {
+        const r = await fetch('https://lnbits.aipp.dev/api/v1/payments/c169cfcd536fc2e28d9a73ca6ab2b8a0177c7e136985f31ce1017ce7c8ccbfdf', {
+          headers: { 'X-Api-Key': '497af1e21bfc423993f70c7120c7b0f4' }
+        });
+        const d = await r.json();
+        if (d.paid) {
+          document.getElementById('st').innerHTML = '<span style="color:#4ade80; font-size:15px; font-weight:700;">🎉 ÖDEME ALINDI! Kasanıza Eklendi.</span>';
+        }
+      } catch(e){}
+    }, 1500);
+  </script>
+</body>
+</html>

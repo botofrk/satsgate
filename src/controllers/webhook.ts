@@ -5,6 +5,7 @@ import { LNBITS_WEBHOOK_SECRET, LNBITS_INVOICE_KEY, LNBITS_URL, MIN_PAYOUT_THRES
 import { AppError } from '../utils/error';
 import { processPayoutQueue } from '../jobs/payoutWorker';
 import { processWebhookQueue } from '../jobs/webhookWorker';
+import { publishInvoiceUpdate } from '../services/events';
 
 // Safe URLs for merchant callbacks — block SSRF targets
 // [W-05 FIX] Tests parsed hostname instead of raw URL string; extended blocklist
@@ -63,15 +64,16 @@ function verifyQuerySecret(querySecret: string | undefined): boolean {
 }
 
 // Queue webhook delivery to database for reliability
-async function queueWebhookDelivery(callbackUrl: string, payload: any): Promise<void> {
+export async function queueWebhookDelivery(callbackUrl: string, payload: any, apiKey?: string): Promise<void> {
   const db = getDb();
   const id = crypto.randomUUID();
   const now = new Date().toISOString();
   await db.run(
-    'INSERT INTO webhook_deliveries (id, callback_url, payload, status, attempts, next_retry_at, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)',
+    'INSERT INTO webhook_deliveries (id, callback_url, payload, api_key, status, attempts, next_retry_at, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
     id,
     callbackUrl,
     JSON.stringify(payload),
+    apiKey || null,
     'pending',
     0,
     now,
@@ -232,10 +234,11 @@ export const handleLnbitsWebhook = async (req: Request, res: Response, next: Nex
             payout_status: updatedInvoice.payout_status
           };
           await db.run(
-            'INSERT INTO webhook_deliveries (id, callback_url, payload, status, attempts, next_retry_at, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)',
+            'INSERT INTO webhook_deliveries (id, callback_url, payload, api_key, status, attempts, next_retry_at, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
             webhookId,
             invoice.callback_url,
             JSON.stringify(payload),
+            invoice.api_key,
             'pending',
             0,
             now,
@@ -245,6 +248,15 @@ export const handleLnbitsWebhook = async (req: Request, res: Response, next: Nex
       }
 
       await db.run('COMMIT');
+
+      // Real-time SSE Broadcast: Notify all connected checkout clients instantly (0 ms latency)
+      publishInvoiceUpdate(paymentHash, {
+        paid: true,
+        status: 'settled',
+        preimage: invoice.preimage || null,
+        protocol: targetProtocol,
+        amount_sats: invoice.amount_sats
+      });
 
     } catch (innerErr) {
       await db.run('ROLLBACK').catch(() => {});

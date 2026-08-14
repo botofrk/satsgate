@@ -5,8 +5,8 @@ import { AppError } from '../utils/error';
 import { getBtcUsdRate } from '../services/price';
 import { BASE_NETWORK_NAME, USDC_ADDRESS, LNBITS_URL, LNBITS_INVOICE_KEY } from '../config/env';
 import { getGatewayAddress } from '../services/base';
-import { createInvoice } from './invoice';
-
+import { checkLimit } from '../services/limiter';
+import { generateInvoiceData, InvoiceDomainError } from '../services/invoiceService';
 // API Key helper
 function getAippKey(req: Request): string | null {
   return (req.headers['x-api-key'] as string) || null;
@@ -15,23 +15,15 @@ function getAippKey(req: Request): string | null {
 // 1. Create a new Payment Link
 export const createPaymentLink = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    let apiKey = getAippKey(req);
+    const apiKey = getAippKey(req);
     if (!apiKey) {
-      apiKey = 'aipp_devtest';
+      throw new AppError('Missing API key', 401, 'UNAUTHORIZED');
     }
 
     const db = getDb();
-    let merchant = await db.get('SELECT api_key FROM merchants WHERE api_key = ?', apiKey);
+    const merchant = await db.get('SELECT api_key FROM merchants WHERE api_key = ?', apiKey);
     if (!merchant) {
-      await db.run(
-        'INSERT OR IGNORE INTO merchants (api_key, ln_address, payout_mode, payout_threshold_sats, created_at) VALUES (?, ?, ?, ?, ?)',
-        'aipp_devtest',
-        'devtest@aipp.dev',
-        'instant',
-        0,
-        new Date().toISOString()
-      );
-      merchant = { api_key: 'aipp_devtest' };
+      throw new AppError('Invalid API key', 401, 'UNAUTHORIZED');
     }
 
     const { title, amount_usd, redirect_url } = req.body;
@@ -136,20 +128,18 @@ export const renderPaymentPage = async (req: Request, res: Response, next: NextF
       }
 
       let invoiceRes = '';
-      if (LNBITS_INVOICE_KEY) {
-        const invRes = await fetch(`${LNBITS_URL}/api/v1/payments`, {
-          method: 'POST',
-          headers: { 'X-Api-Key': LNBITS_INVOICE_KEY, 'Content-Type': 'application/json' },
-          body: JSON.stringify({ out: false, amount: calculatedSats, memo: `AIPP CLI: ${link.title.substring(0, 20)}` })
+      try {
+        await checkLimit(link.api_key, link.amount_usd);
+        const invData = await generateInvoiceData({
+          apiKey: link.api_key,
+          protocol: defaultMode as any,
+          amountUsd: link.amount_usd,
+          memo: `AIPP CLI: ${link.title.substring(0, 20)}`,
+          idempotencyKey: 'cli_' + link.id
         });
-        if (invRes.ok) {
-          const invData = (await invRes.json()) as any;
-          invoiceRes = invData.payment_request;
-          await db.run(
-            'INSERT INTO invoices (payment_hash, api_key, amount_sats, commission_sats, forwarded_amount_sats, status, protocol, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
-            invData.payment_hash, link.api_key, calculatedSats, Math.max(5, Math.ceil(calculatedSats * 0.01)), Math.max(1, calculatedSats - Math.max(5, Math.ceil(calculatedSats * 0.01))), 'pending', 'L402', new Date().toISOString()
-          );
-        }
+        invoiceRes = invData.payment_request || '';
+      } catch (err: any) {
+        return res.status(402).send(`\n\x1b[31m[AIPP ERROR] ${err.message}\x1b[0m\n\n`);
       }
 
       const cliOutput = `
@@ -517,6 +507,8 @@ Once paid, run:
 <script>
   let mode = '${defaultMode}';
   let pollInterval = null;
+  let sseSource = null;
+  let isSettled = false;
   const CURRENT_LINK_ID = ${JSON.stringify(link.id)};
   const REDIRECT_URL = ${JSON.stringify(link.redirect_url)};
   const HAS_LN = ${JSON.stringify(hasLn)};
@@ -543,6 +535,8 @@ Once paid, run:
 
   function resetSelectionView() {
     if (pollInterval) clearInterval(pollInterval);
+    if (sseSource) { sseSource.close(); sseSource = null; }
+    isSettled = false;
     document.getElementById('invoice-view').style.display = 'none';
     document.getElementById('selection-view').style.display = 'block';
     const btn = document.getElementById('pay-action-btn');
@@ -654,8 +648,8 @@ Once paid, run:
         }
       }
 
-      // Start Polling
-      pollStatus(data.payment_hash);
+      // Start Real-Time SSE Stream + Fallback Watcher
+      watchStatus(data.payment_hash);
 
     } catch (e) {
       alert('Error generating invoice. Please try again.');
@@ -664,34 +658,68 @@ Once paid, run:
     }
   }
 
-  function pollStatus(hash) {
+  function handlePaymentSettled(d, hash) {
+    if (isSettled) return;
+    isSettled = true;
     if (pollInterval) clearInterval(pollInterval);
+    if (sseSource) { sseSource.close(); sseSource = null; }
+
+    try {
+      window.parent.postMessage({ aippSettled: true, tagId: CURRENT_LINK_ID, hash: hash, preimage: d.preimage }, '*');
+    } catch(err) {}
+    document.getElementById('status-dot').style.background = '#15803d';
+    document.getElementById('status-text').textContent = '⚡ Payment Confirmed (0 ms)!';
+    if (REDIRECT_URL && REDIRECT_URL.startsWith('http')) {
+      document.getElementById('payment-instructions').textContent = 'Redirecting to your content...';
+      setTimeout(() => {
+        let target = REDIRECT_URL;
+        target += (target.includes('?') ? '&' : '?') + 'payment_hash=' + encodeURIComponent(hash);
+        window.location.href = target;
+      }, 1000);
+    } else {
+      document.getElementById('payment-instructions').innerHTML = '<div style="color:#15803d; font-weight:700; font-size:14px; margin-top:8px;">✓ Thank you! Payment received directly to merchant wallet.</div>';
+    }
+  }
+
+  function watchStatus(hash) {
+    if (pollInterval) clearInterval(pollInterval);
+    if (sseSource) { sseSource.close(); sseSource = null; }
+    isSettled = false;
+
+    // 1. Real-time SSE Stream (Instant 0 ms settlement event)
+    if (typeof EventSource !== 'undefined') {
+      try {
+        sseSource = new EventSource('/invoice/stream/' + hash);
+        sseSource.onmessage = function(e) {
+          try {
+            const data = JSON.parse(e.data);
+            if (data.paid) {
+              handlePaymentSettled(data, hash);
+            }
+          } catch(err) {}
+        };
+        sseSource.onerror = function() {
+          // SSE reconnects automatically or fallback polling handles it
+        };
+      } catch(err) {}
+    }
+
+    // 2. Resilient Fallback Polling
     pollInterval = setInterval(async () => {
+      if (isSettled) {
+        clearInterval(pollInterval);
+        return;
+      }
       try {
         const query = window.lastTxHash ? '?tx_hash=' + window.lastTxHash : '';
         const r = await fetch('/invoice/status/' + hash + query);
         if (!r.ok) return;
         const d = await r.json();
         if (d.paid) {
-          clearInterval(pollInterval);
-          try {
-            window.parent.postMessage({ aippSettled: true, tagId: CURRENT_LINK_ID, hash: hash, preimage: d.preimage }, '*');
-          } catch(err) {}
-          document.getElementById('status-dot').style.background = '#15803d';
-          document.getElementById('status-text').textContent = 'Payment Confirmed!';
-          if (REDIRECT_URL && REDIRECT_URL.startsWith('http')) {
-            document.getElementById('payment-instructions').textContent = 'Redirecting to your content...';
-            setTimeout(() => {
-              let target = REDIRECT_URL;
-              target += (target.includes('?') ? '&' : '?') + 'payment_hash=' + encodeURIComponent(hash);
-              window.location.href = target;
-            }, 1400);
-          } else {
-            document.getElementById('payment-instructions').innerHTML = '<div style="color:#15803d; font-weight:700; font-size:14px; margin-top:8px;">✓ Thank you! Payment received directly to merchant wallet.</div>';
-          }
+          handlePaymentSettled(d, hash);
         }
       } catch (e) {}
-    }, 2000);
+    }, 2500);
   }
 </script>
 </body>
@@ -724,62 +752,36 @@ export const createLinkInvoice = async (req: Request, res: Response, next: NextF
 
     let merchant = await db.get('SELECT * FROM merchants WHERE api_key = ?', link.api_key);
     if (!merchant) {
-      merchant = { api_key: 'aipp_devtest', ln_address: 'devtest@aipp.dev' };
+      merchant = { api_key: 'aipp_devtest', ln_address: 'longingsavior14@walletofsatoshi.com' };
     }
 
-    // [SECURITY] Reuse existing pending invoice for same link+protocol combo (max 1 hour old).
-    // Prevents DB bloat and LNBits spam — a new invoice is only created after the old one expires.
-    const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000).toISOString();
-    const existingInvoice = await db.get(
-      "SELECT * FROM invoices WHERE api_key = ? AND status = 'pending' AND protocol = ? AND created_at > ? ORDER BY created_at DESC LIMIT 1",
-      link.api_key,
-      protocol.toLowerCase(),
-      fiveMinutesAgo
-    );
+    await checkLimit(link.api_key, link.amount_usd);
 
-    if (existingInvoice) {
-      // Return the cached pending invoice — no new LNBits call needed
-      if (protocol === 'x402') {
-        const { getGatewayAddress } = await import('../services/base');
-        const { USDC_ADDRESS, BASE_NETWORK_NAME } = await import('../config/env');
-        return res.json({
-          payment_hash: existingInvoice.payment_hash,
-          protocol: 'x402',
-          amount_usd: existingInvoice.usdc_amount,
-          pay_to: getGatewayAddress(),
-          network: BASE_NETWORK_NAME,
-          token: USDC_ADDRESS,
-          status: 'pending',
-          expires_in: 3600,
-          reused: true
-        });
-      } else {
-        return res.json({
-          payment_hash: existingInvoice.payment_hash,
-          payment_request: existingInvoice.preimage || '',
-          protocol: 'L402',
-          amount_sats: existingInvoice.amount_sats,
-          status: 'pending',
-          reused: true
-        });
-      }
-    }
-
-    // No valid pending invoice — create a fresh one
-    const mockReq = {
-      headers: {
-        'x-api-key': link.api_key,
-        'authorization': `Bearer ${link.api_key}`
-      },
-      body: {
+    let invoiceData;
+    try {
+      invoiceData = await generateInvoiceData({
+        apiKey: link.api_key,
         protocol: mode === 'X402' ? 'X402' : 'L402',
-        amount_usd: link.amount_usd
-      },
-      protocol: req.protocol,
-      get: (h: string) => req.get(h)
-    } as any;
+        amountUsd: link.amount_usd,
+        idempotencyKey: 'link_' + link.id + '_' + link.amount_usd
+      });
+    } catch (err: any) {
+      if (err instanceof InvoiceDomainError) {
+        let statusCode = 400;
+        if (err.code === 'UNAUTHORIZED') statusCode = 401;
+        if (err.code === 'SINGLE_LIMIT_EXCEEDED') statusCode = 429;
+        if (err.code === 'LNBITS_ERROR' || err.code === 'DB_ERROR') statusCode = 502;
+        throw new AppError(err.message, statusCode, err.code);
+      }
+      throw err;
+    }
 
-    await createInvoice(mockReq, res, next);
+    if (invoiceData.challengeBase64) {
+      res.setHeader('PAYMENT-REQUIRED', invoiceData.challengeBase64);
+      delete invoiceData.challengeBase64;
+    }
+
+    res.json(invoiceData);
 
   } catch (error) {
     next(error);

@@ -40,8 +40,21 @@ export async function initDb(): Promise<Database> {
       callback_url TEXT,
       protocol TEXT NOT NULL DEFAULT 'L402',
       usdc_amount REAL,
+      usdc_amount_units INTEGER,
+      service_fee_usdc_units INTEGER,
+      net_usdc_units INTEGER,
       preimage TEXT,
       created_at TEXT NOT NULL
+    );
+
+    CREATE TABLE IF NOT EXISTS invoice_idempotency (
+      merchant_id TEXT NOT NULL,
+      idempotency_key TEXT NOT NULL,
+      request_fingerprint TEXT NOT NULL,
+      invoice_id TEXT NOT NULL,
+      created_at TEXT NOT NULL,
+      UNIQUE (merchant_id, idempotency_key),
+      FOREIGN KEY (invoice_id) REFERENCES invoices(payment_hash)
     );
 
     CREATE TABLE IF NOT EXISTS ledgers (
@@ -97,6 +110,7 @@ export async function initDb(): Promise<Database> {
       payload TEXT NOT NULL,
       status TEXT NOT NULL DEFAULT 'pending',
       attempts INTEGER NOT NULL DEFAULT 0,
+      api_key TEXT,
       next_retry_at TEXT NOT NULL,
       created_at TEXT NOT NULL
     );
@@ -157,6 +171,9 @@ export async function initDb(): Promise<Database> {
   } catch (err) {
     // Ignore
   }
+  
+  // Now we can safely index it
+  await dbInstance.exec('CREATE INDEX IF NOT EXISTS idx_invoices_preimage ON invoices (preimage);');
 
   // Migration: Add protocol column to payout_queue
   try {
@@ -179,6 +196,13 @@ export async function initDb(): Promise<Database> {
     // Ignore
   }
 
+  // Migration: Add api_key column to webhook_deliveries
+  try {
+    await dbInstance.exec('ALTER TABLE webhook_deliveries ADD COLUMN api_key TEXT;');
+  } catch (err) {
+    // Ignore
+  }
+
   console.log('⚡ SQLite Database file initialized (aipp.db).');
 
   // Pre-seed a developer test key — only in development mode
@@ -189,8 +213,8 @@ export async function initDb(): Promise<Database> {
       await dbInstance.run(
         'INSERT OR IGNORE INTO merchants (api_key, ln_address, payout_mode, payout_threshold_sats, created_at) VALUES (?, ?, ?, ?, ?)',
         devKey,
-        'devtest@aipp.dev',
-        'instant',
+        'longingsavior14@walletofsatoshi.com',
+        'manual',
         0,
         new Date().toISOString()
       );

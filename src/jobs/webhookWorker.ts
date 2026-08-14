@@ -37,16 +37,30 @@ export async function processWebhookQueue() {
 
       if (!job) break;
 
-      // 2. Send the webhook outside the db transaction
+      // 2. Send the webhook with cryptographic HMAC-SHA256 signature outside the db transaction
       try {
-        const payload = JSON.parse(job.payload);
+        const rawPayload = typeof job.payload === 'string' ? job.payload : JSON.stringify(job.payload);
+        const timestamp = Math.floor(Date.now() / 1000).toString();
+        const signingSecret = job.api_key || 'aipp_default';
+
+        // Calculate HMAC-SHA256 signature over timestamp + '.' + rawPayload (Standardized format)
+        const signature = crypto
+          .createHmac('sha256', signingSecret)
+          .update(`${timestamp}.${rawPayload}`)
+          .digest('hex');
+
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 10000); // 10s timeout
 
         const res = await fetch(job.callback_url, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload),
+          headers: {
+            'Content-Type': 'application/json',
+            'User-Agent': 'AIPP-Webhook/1.0',
+            'X-AIPP-Timestamp': timestamp,
+            'X-AIPP-Signature': `t=${timestamp},v1=${signature}`
+          },
+          body: rawPayload,
           signal: controller.signal
         });
 

@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <title>AIPP ⚡ Zeus Cüzdan Test Sayfası</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
+    body { background: #0f172a; color: #f8fafc; display: flex; align-items: center; justify-content: center; min-height: 100vh; padding: 20px; }
+    .card { background: #1e293b; border: 1px solid #334155; border-radius: 20px; padding: 32px; max-width: 440px; width: 100%; text-align: center; box-shadow: 0 20px 40px rgba(0,0,0,0.5); }
+    .badge { display: inline-flex; align-items: center; gap: 6px; background: rgba(245, 158, 11, 0.15); color: #f59e0b; border: 1px solid rgba(245, 158, 11, 0.3); border-radius: 100px; padding: 6px 14px; font-size: 13px; font-weight: 600; margin-bottom: 20px; }
+    h1 { font-size: 22px; font-weight: 700; margin-bottom: 8px; }
+    p { color: #94a3b8; font-size: 14px; margin-bottom: 24px; }
+    .qr-container { background: #ffffff; padding: 16px; border-radius: 16px; display: inline-block; margin-bottom: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.2); }
+    .price-box { background: #0f172a; border-radius: 12px; padding: 12px; margin-bottom: 20px; display: flex; justify-content: space-around; }
+    .price-item span { display: block; font-size: 12px; color: #64748b; }
+    .price-item strong { font-size: 16px; color: #38bdf8; }
+    .btn { display: block; width: 100%; padding: 12px; background: #2563eb; color: white; border: none; border-radius: 10px; font-weight: 600; cursor: pointer; text-decoration: none; transition: 0.2s; }
+    .btn:hover { background: #1d4ed8; }
+    .status { margin-top: 16px; font-size: 14px; font-weight: 600; color: #38bdf8; display: flex; align-items: center; justify-content: center; gap: 8px; }
+    .spinner { width: 16px; height: 16px; border: 2px solid #38bdf8; border-top-color: transparent; border-radius: 50%; animation: spin 1s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .paid-alert { background: rgba(34, 197, 94, 0.15); border: 1px solid #22c55e; color: #4ade80; border-radius: 12px; padding: 16px; margin-top: 16px; display: none; }
+  </style>
+</head>
+<body>
+
+  <div class="card">
+    <div class="badge">⚡ Bitcoin Lightning Canlı Test</div>
+    <h1>Zeus ile Tara ve Öde</h1>
+    <p>Telefonunuzdaki Zeus uygulamasını açıp aşağıdaki QR kodu okutun.</p>
+
+    <div class="qr-container">
+      <canvas id="qr-canvas"></canvas>
+    </div>
+
+    <div class="price-box">
+      <div class="price-item">
+        <span>TUTAR (SATS)</span>
+        <strong>16 Sats</strong>
+      </div>
+      <div class="price-item">
+        <span>TUTAR (USD)</span>
+        <strong>$0.01 USD</strong>
+      </div>
+    </div>
+
+    <div class="status" id="status-box">
+      <div class="spinner"></div> Zeus ödemesi bekleniyor...
+    </div>
+
+    <div class="paid-alert" id="paid-box">
+      🎉 <strong>Ödeme Başarıyla Alındı!</strong><br>
+      <span style="font-size: 12px; color: #cbd5e1; margin-top: 4px; display: block;">Para LNBits kasanıza eklendi.</span>
+    </div>
+  </div>
+
+  <script>
+    const invoice = "lnbc160n1p48epqspp59mdx7l4t4ecgpqm35s9lt6rfg54uzcz8dyn3kyyteg2ys5nt2q8qcqzyssp5e0nyzqpkvu9nkx07tmpm6c2xh8pzrqptrz2c9edvywk7evex68ds9q7sqqqqqqqqqqqqqqqqqqqsqqqqqysgqdz0u2d2zgz6v46hxgzrcw785erpdcsyxctwdnztzgz5v4ehggxrjejx2mt9wd5jq2pyxqhrqvfq24f5g2gmqz9gxqrrssrzjqwryaup9lh50kkranzgcdnn2fgvx390wgj5jd07rwr3vxeje0glcllmc3gc8hmsqfsqqqqlgqqqqqeqqjqxyrnh8fgpnfmuq6z9nq9sw3me4u739h7s5sup6jl0yqe6cycv4tjtfqvs862yju5rcnqps8m6mvqq766p8tt3scfy7u2czenydlsavqqacnu49";
+    const paymentHash = "2eda6f7eabae70808371a40bf5e869452bc1604769271b108bca1448526b500e";
+
+    QRCode.toCanvas(document.getElementById('qr-canvas'), invoice.toUpperCase(), { width: 220, margin: 1 });
+
+    // Poll payment status
+    const pollInterval = setInterval(async () => {
+      try {
+        const res = await fetch(`https://lnbits.aipp.dev/api/v1/payments/${paymentHash}`, {
+          headers: { 'X-Api-Key': '497af1e21bfc423993f70c7120c7b0f4' }
+        });
+        const data = await res.json();
+        if (data.paid) {
+          clearInterval(pollInterval);
+          document.getElementById('status-box').style.display = 'none';
+          document.getElementById('paid-box').style.display = 'block';
+        }
+      } catch (e) {}
+    }, 1500);
+  </script>
+</body>
+</html>

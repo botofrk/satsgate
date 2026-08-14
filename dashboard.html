@@ -448,19 +448,34 @@ th { background: var(--sub-bg); font-size: 11px; font-weight: 700; text-transfor
         
         <div class="stat-card" style="display:flex; flex-direction:column; justify-content:space-between;">
           <div>
-            <div class="stat-label">Net Sent to Wallet</div>
-            <div class="stat-value" id="volume-net">0 sats</div>
-            <div class="stat-sub" id="payout-threshold-sub" style="display:flex; flex-direction:column; gap:4px; margin-top:8px;">
-              <div style="display:flex; justify-content:space-between; font-size:11px; color:var(--fg-muted);">
-                <span id="payout-mode-text">Settlement Threshold</span>
+            <div class="stat-label">Available To Send</div>
+            <div class="stat-value" id="volume-available">0 sats</div>
+          </div>
+          <div style="margin-top:12px;">
+            <div style="font-size:11px; color:var(--fg-muted); margin-bottom:12px; line-height:1.6;">
+              <div style="display:flex; justify-content:space-between; margin-bottom:4px;">
+                <span id="payout-mode-text" style="font-weight:700;">Manual Settlement</span>
                 <span id="threshold-progress-text" style="font-weight:700;">0 / 50 sats</span>
               </div>
-              <div style="width:100%; height:5px; background:var(--sub-bg); border-radius:3px; overflow:hidden;">
-                <div id="threshold-progress-bar" style="width:0%; height:100%; background:var(--accent); transition:width 0.3s;"></div>
+              <div id="threshold-progress-container" style="height:4px; background:var(--sub-bg); border-radius:2px; overflow:hidden; margin-bottom:8px; display:none;">
+                <div id="threshold-progress-bar" style="height:100%; width:0%; background:var(--accent); transition:width 0.3s;"></div>
+              </div>
+              <div style="display:flex; justify-content:space-between;">
+                <span>Total Net Earnings:</span>
+                <span id="volume-net" style="font-weight:600; color:var(--fg);">0 sats</span>
+              </div>
+              <div style="display:flex; justify-content:space-between;">
+                <span>Already Sent:</span>
+                <span id="volume-sent" style="font-weight:600; color:var(--fg);">0 sats</span>
+              </div>
+              <div style="display:flex; justify-content:space-between;">
+                <span>Last Sent:</span>
+                <span id="last-sent-text" style="font-weight:600; color:var(--fg);">Not yet</span>
               </div>
             </div>
+            
+            <button id="withdraw-btn" onclick="triggerWithdraw(this)" style="display:none; margin-top:8px; width:100%; padding:8px; background:var(--fg); color:#fff; border:none; border-radius:6px; font-weight:600; cursor:pointer;">Send to Wallet</button>
           </div>
-          <button id="withdraw-btn" class="btn-sm" style="background:var(--fg); color:#ffffff; border:none; margin-top:14px; cursor:pointer;" onclick="triggerWithdraw(this)">Send Eligible Settlements Now</button>
         </div>
         
         <div class="stat-card">
@@ -1015,13 +1030,40 @@ async function loadStats(silent = false) {
     });
     
     const txCount = txSuccess + txPending + txFailed;
-    const netSats = Math.max(0, volSats - comSats);
     
     document.getElementById('volume-ln-sats').textContent = `${volSats.toLocaleString()} sats`;
     document.getElementById('volume-base-usd').textContent = `$${volUsd.toFixed(2)} USDC`;
-    
     document.getElementById('volume-commission').textContent = `${comSats.toLocaleString()} sats`;
-    document.getElementById('volume-net').textContent = `${netSats.toLocaleString()} sats`;
+    
+    const available = d.availableToSettleSats || 0;
+    const net = d.netEarnedSats || 0;
+    const sent = d.settledToWalletSats || 0;
+    const threshold = d.settlementThresholdSats || 50;
+
+    document.getElementById('volume-available').textContent = `${available.toLocaleString()} sats`;
+    document.getElementById('volume-net').textContent = `${net.toLocaleString()} sats`;
+    document.getElementById('volume-sent').textContent = `${sent.toLocaleString()} sats`;
+    
+    const lastSentEl = document.getElementById('last-sent-text');
+    if (lastSentEl) {
+      if (d.lastSettlementAt) {
+        const dObj = new Date(d.lastSettlementAt);
+        const isToday = dObj.toDateString() === new Date().toDateString();
+        const timeStr = dObj.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+        const dateStr = isToday ? `Today, ${timeStr}` : `${dObj.toLocaleDateString()} ${timeStr}`;
+        lastSentEl.textContent = dateStr;
+        if (d.lastSettlementStatus === 'completed') {
+           lastSentEl.textContent = `✓ ${dateStr}`;
+           lastSentEl.style.color = 'var(--green)';
+        } else {
+           lastSentEl.textContent = `⏳ ${dateStr}`;
+           lastSentEl.style.color = 'var(--accent)';
+        }
+      } else {
+        lastSentEl.textContent = 'Not yet';
+        lastSentEl.style.color = 'var(--fg-muted)';
+      }
+    }
     
     document.getElementById('tx-count').textContent = txCount.toLocaleString();
     document.getElementById('tx-successful').textContent = txSuccess;
@@ -1029,28 +1071,40 @@ async function loadStats(silent = false) {
     document.getElementById('tx-failed').textContent = txFailed;
     
     // Payout Threshold logic
-    const pct = Math.min(100, Math.round((netSats / merchantThreshold) * 100));
+    const pct = Math.min(100, Math.round((available / threshold) * 100));
     const progBar = document.getElementById('threshold-progress-bar');
+    const progContainer = document.getElementById('threshold-progress-container');
     const progText = document.getElementById('threshold-progress-text');
+    
     if (progBar) {
       progBar.style.width = `${pct}%`;
       progBar.style.background = pct >= 100 ? 'var(--green)' : 'var(--accent)';
     }
-    if (progText) progText.textContent = `${netSats} / ${merchantThreshold} sats`;
     
     const wBtn = document.getElementById('withdraw-btn');
     const pMode = document.getElementById('payout-mode-text');
     if (wBtn) {
       if (merchantPayoutMode === 'manual') {
         wBtn.style.display = 'block';
-        wBtn.textContent = 'Send Eligible Settlements Now';
+        wBtn.textContent = `Send ${available.toLocaleString()} sats to Wallet`;
+        wBtn.disabled = available < 10;
+        wBtn.style.opacity = available < 10 ? '0.5' : '1';
         if (pMode) pMode.textContent = 'Manual Settlement';
+        if (progContainer) progContainer.style.display = 'none';
+        if (progText) progText.style.display = 'none';
       } else if (merchantPayoutMode === 'instant') {
         wBtn.style.display = 'none';
         if (pMode) pMode.textContent = 'Instant Settlement Enabled';
+        if (progContainer) progContainer.style.display = 'none';
+        if (progText) progText.style.display = 'none';
       } else {
         wBtn.style.display = 'none';
         if (pMode) pMode.textContent = 'Settlement Threshold';
+        if (progText) {
+          progText.textContent = `${available} / ${threshold} sats`;
+          progText.style.display = 'block';
+        }
+        if (progContainer) progContainer.style.display = 'block';
       }
     }
 

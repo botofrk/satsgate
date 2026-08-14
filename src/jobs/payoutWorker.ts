@@ -22,7 +22,7 @@ export async function processPayoutQueue() {
       try {
         await db.run('BEGIN IMMEDIATE TRANSACTION');
         job = await db.get(
-          "SELECT * FROM payout_queue WHERE status IN ('pending', 'failed') AND next_retry_at <= ? AND attempts < 5 LIMIT 1",
+          "SELECT * FROM payout_queue WHERE status IN ('pending', 'failed', 'failed_safe_to_retry') AND next_retry_at <= ? AND attempts < 5 LIMIT 1",
           now
         );
         if (job) {
@@ -144,14 +144,36 @@ export async function processPayoutQueue() {
         const delayMins = RETRY_DELAYS[Math.min(attempts - 1, RETRY_DELAYS.length - 1)];
         const nextRetry = new Date(Date.now() + delayMins * 60 * 1000).toISOString();
 
+        const errStr = err.message.toLowerCase();
+        const isUncertain = errStr.includes('timeout') || errStr.includes('network') || errStr.includes('econn') || errStr.includes('fetch');
+        const newStatus = isUncertain ? 'uncertain' : 'failed_safe_to_retry';
+
         await db.run(
-          "UPDATE payout_queue SET status = 'failed', attempts = ?, next_retry_at = ? WHERE id = ?",
+          "UPDATE payout_queue SET status = ?, attempts = ?, next_retry_at = ? WHERE id = ?",
+          newStatus,
           attempts,
           nextRetry,
           job.id
         );
 
-        if (attempts >= 5) {
+        if (isUncertain) {
+          console.error(`[Payout Worker] 🚨 CRITICAL: Job ${job.id} is in UNCERTAIN state! Manual reconciliation required.`);
+          const adminEmail = process.env.ADMIN_EMAIL || process.env.EMAIL_FROM || 'admin@aipp.dev';
+          const alertHtml = `
+            <h2>🚨 CRITICAL: Uncertain Payout</h2>
+            <p>A payout job has entered an <strong>uncertain</strong> state. It is unknown if the transaction succeeded on-chain/network.</p>
+            <ul>
+              <li><strong>Job ID:</strong> ${job.id}</li>
+              <li><strong>Payment Hash:</strong> ${job.payment_hash}</li>
+              <li><strong>Protocol:</strong> ${job.protocol}</li>
+              <li><strong>Amount:</strong> ${job.protocol === 'x402' ? job.usdc_amount + ' USDC' : job.amount_sats + ' sats'}</li>
+              <li><strong>Target:</strong> ${job.protocol === 'x402' ? job.usdc_address : job.ln_address}</li>
+              <li><strong>Error:</strong> ${err.message}</li>
+            </ul>
+            <p>Please manually verify the transaction and update the database accordingly.</p>
+          `;
+          sendEmail(adminEmail, '🚨 AIPP: UNCERTAIN PAYOUT ALARM', alertHtml).catch(e => console.error('[Payout Worker] Failed to send alarm email:', e));
+        } else if (attempts >= 5) {
           console.error(`[Payout Worker] 🚨 Job ${job.id} exhausted all retries and is permanently failed.`);
         }
       }
