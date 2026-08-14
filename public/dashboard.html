@@ -410,6 +410,12 @@ th { background: var(--sub-bg); font-size: 11px; font-weight: 700; text-transfor
         </button>
       </div>
 
+      <div id="rec-ln-actions" style="display:none; margin-bottom:16px;">
+        <button onclick="signWithWebLN()" style="width:100%; padding:12px; background:#f59e0b; color:#fff; border:none; border-radius:8px; font-size:14px; font-weight:600; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px;">
+          <span>⚡ Sign 1-Click with WebLN / Alby</span>
+        </button>
+      </div>
+
       <div id="rec-manual-sig">
         <label style="font-size:12px; font-weight:600; color:#475569; display:block; margin-bottom:6px;">Paste Wallet Signature</label>
         <textarea id="rec-sig-input" rows="3" placeholder="Paste signature (0x...)" style="width:100%; padding:10px; border-radius:8px; border:1px solid #cbd5e1; font-size:12px; font-family:monospace; margin-bottom:16px; box-sizing:border-box;"></textarea>
@@ -876,8 +882,10 @@ async function submitRecoveryRequest() {
     
     if (d1.address_type === 'evm') {
       document.getElementById('rec-evm-actions').style.display = 'block';
+      document.getElementById('rec-ln-actions').style.display = 'none';
     } else {
       document.getElementById('rec-evm-actions').style.display = 'none';
+      document.getElementById('rec-ln-actions').style.display = 'block';
     }
 
     document.getElementById('recovery-step-1').style.display = 'none';
@@ -887,6 +895,20 @@ async function submitRecoveryRequest() {
   } finally {
     btn.disabled = false;
     btn.innerText = 'Generate Challenge →';
+  }
+}
+
+async function signWithWebLN() {
+  if (!window.webln || !currentRecoveryChallenge) {
+    alert('WebLN / Alby extension not detected in browser. Please paste your signature manually below.');
+    return;
+  }
+  try {
+    await window.webln.enable();
+    const res = await window.webln.signMessage(currentRecoveryChallenge.nonce);
+    document.getElementById('rec-sig-input').value = res.signature;
+  } catch(e) {
+    alert('WebLN signature cancelled or failed.');
   }
 }
 
