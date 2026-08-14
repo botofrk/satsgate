@@ -507,6 +507,7 @@ th { background: var(--sub-bg); font-size: 11px; font-weight: 700; text-transfor
         </select>
         <span id="last-updated-text" style="font-size: 11px; color: var(--fg-muted); margin-right: 12px; min-width: 100px; text-align: right;">Updated just now</span>
         <button class="btn-sm btn-sm-primary" onclick="showPage('links')">+ Create Smart Tag</button>
+        <button class="btn-sm" onclick="logout()" style="background:#fef2f2; color:#dc2626; border-color:#fecaca; font-weight:700; margin-left:6px;">← Sign Out</button>
       </div>
     </div>
 
@@ -1052,14 +1053,36 @@ async function login() {
   }
 }
 
-function logout() {
+async function logout() {
   activeKey = '';
   localStorage.removeItem('aipp_api_key');
+  localStorage.removeItem('aipp_merchant_key');
+  localStorage.removeItem('aipp_session_token');
   sessionStorage.removeItem('aipp_api_key');
-  document.getElementById('app').classList.remove('visible');
-  document.getElementById('login-screen').style.display = 'flex';
-  document.getElementById('login-input').value = '';
+  sessionStorage.removeItem('aipp_merchant_key');
+  sessionStorage.removeItem('aipp_session_token');
+  sessionStorage.clear();
+
+  try {
+    await fetch('/auth/logout', { method: 'POST', credentials: 'include' });
+  } catch (e) {}
+
+  const appEl = document.getElementById('app');
+  if (appEl) {
+    appEl.classList.remove('visible');
+    appEl.style.display = 'none';
+  }
+
+  const loginScreen = document.getElementById('login-screen');
+  if (loginScreen) {
+    loginScreen.style.display = 'flex';
+  }
+
+  const loginInput = document.getElementById('login-input');
+  if (loginInput) loginInput.value = '';
+
   stopAutoRefresh();
+  window.scrollTo(0, 0);
 }
 
 async function showApp() {
