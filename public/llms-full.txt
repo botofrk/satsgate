@@ -1,0 +1,115 @@
+# AIPP Protocol Specification for Large Language Models & AI Agents (Full Spec)
+
+Welcome to the full AIPP protocol specification. This document contains full technical details, JSON schemas, header specifications, and code snippets for integrating AIPP into AI Agents (Claude, Gemini, OpenAI GPTs, LangChain, LlamaIndex, AutoGPT).
+
+---
+
+## 1. Overview & Architecture
+
+AIPP (aipp.dev) bridges traditional web monetization and autonomous AI agent workflows. It allows creators and developers to price any digital asset, API call, or link once ($0.01 to $100.00).
+
+When an AI Agent requests an AIPP URL (`https://aipp.dev/p/<TAG_ID>`), the server returns an HTTP `402 Payment Required` status or provides an Open Tag Manifest at `/manifest`.
+
+---
+
+## 2. HTTP 402 Challenge Format
+
+### Request
+```http
+GET /p/p_9c48c15180a1/manifest HTTP/1.1
+Host: aipp.dev
+Accept: application/json
+```
+
+### Response (402 Payment Required)
+```http
+HTTP/1.1 402 Payment Required
+Content-Type: application/json
+WWW-Authenticate: L402 invoice="lnbc10n1p...", macaroon="AgELbDQwMg..."
+
+{
+  "version": "1.0.0",
+  "tag_id": "p_9c48c15180a1",
+  "title": "Exclusive Financial Dataset",
+  "price": {
+    "amount_usd": 0.25,
+    "sats": 250
+  },
+  "rails": {
+    "lightning": {
+      "address": "merchant@walletofsatoshi.com",
+      "invoice": "lnbc10n1p..."
+    },
+    "base_usdc": {
+      "chain_id": 8453,
+      "contract": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+      "receiver": "0x71C7656EC7ab88b098defB751B7401B5f6d8976F"
+    }
+  },
+  "settlement_status_url": "https://aipp.dev/p/p_9c48c15180a1/status?invoice_id=..."
+}
+```
+
+---
+
+## 3. Python AI Agent Integration Example (LangChain / AutoGPT)
+
+```python
+import requests
+import time
+
+def call_aipp_protected_agent_tool(tag_url: str):
+    """
+    Automated Python function for AI Agents to fetch and settle AIPP protected content.
+    """
+    manifest_url = f"{tag_url}/manifest"
+    res = requests.get(manifest_url)
+    
+    if res.status_code == 402:
+        data = res.json()
+        invoice = data['rails']['lightning']['invoice']
+        status_url = data['settlement_status_url']
+        
+        print(f"[AIPP Agent] Payment required: ${data['price']['amount_usd']} ({data['price']['sats']} sats)")
+        print(f"[AIPP Agent] Pay Lightning invoice: {invoice}")
+        
+        # Poll for payment verification
+        for _ in range(30):
+            status_res = requests.get(status_url).json()
+            if status_res.get('settled'):
+                print("[AIPP Agent] Payment verified! Accessing destination content...")
+                return requests.get(status_res['unlocked_url']).text
+            time.sleep(2)
+            
+    return res.text
+```
+
+---
+
+## 4. Node.js Express Middleware Integration Example
+
+```typescript
+import express from 'express';
+import { aippMiddleware } from 'aipp-node';
+
+const app = express();
+
+// Protect any route with AIPP HTTP 402 Paywall
+app.get('/api/v1/generate-image', aippMiddleware({
+  apiKey: process.env.AIPP_API_KEY!,
+  amount_usd: 0.10,
+  title: 'AI Image Generation API Call'
+}), (req, res) => {
+  res.json({ success: true, image_url: 'https://cdn.example.com/result.png' });
+});
+
+app.listen(3000, () => console.log('AIPP Protected Server running on port 3000'));
+```
+
+---
+
+## 5. Contact & Support
+
+- Website: https://aipp.dev
+- Email: info@aipp.dev
+- Documentation: https://aipp.dev/docs.html

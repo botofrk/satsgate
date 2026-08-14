@@ -1,0 +1,69 @@
+# AIPP — One Price Tag for Humans and Agents
+
+> AIPP (aipp.dev) is a lightweight, zero-subscription protocol that turns any URL, file, AI prompt output, or API endpoint into a Smart Tag. It supports dual-rail micro-payments via Bitcoin Lightning Network (sats) and Base USDC ($), delivering instant settlement directly to merchant wallets with HTTP 402 challenge support for AI agents.
+
+## Key Features for AI Agents & Developers
+
+- **HTTP 402 Payment Challenge**: Standardized `402 Payment Required` headers containing payment invoice/challenge, enabling autonomous AI agents (Claude, Gemini, OpenAI, LangChain, AutoGPT) to parse price, settle payments, and consume capabilities programmatically.
+- **Dual-Rail Micro-Payments**:
+  - Bitcoin Lightning Network (sats) via Lightning Address (e.g., `user@walletofsatoshi.com`).
+  - Base Layer-2 Blockchain (USDC) via EVM wallet address (`0x...`).
+- **Open Tag Manifest**: Machine-readable JSON manifest at `https://aipp.dev/p/<TAG_ID>/manifest` detailing pricing, capabilities, schema, and settlement options.
+- **Zero Lock-in / Direct Payout**: Funds settle directly into merchant wallets without custodial lockup.
+
+## Developer SDKs & Quickstart
+
+### Node.js / TypeScript
+```bash
+npm install aipp-node
+```
+
+```typescript
+import { AippClient } from 'aipp-node';
+
+const aipp = new AippClient({ apiKey: 'aipp_merch_...' });
+
+// Create a Smart Tag
+const tag = await aipp.createLink({
+  title: 'AI Market Research Report PDF',
+  amount_usd: 0.50,
+  redirect_url: 'https://storage.example.com/report.pdf',
+  capability_type: 'link'
+});
+
+console.log('Smart Tag Checkout URL:', tag.url);
+console.log('Agent Manifest URL:', tag.manifest_url);
+```
+
+### Python
+```bash
+pip install aipp-python
+```
+
+```python
+from aipp import AippClient
+
+client = AippClient(api_key="aipp_merch_...")
+
+# Create a Smart Tag for API / Agent call
+tag = client.create_link(
+    title="Prompt Generation API",
+    amount_usd=0.05,
+    capability_type="api"
+)
+
+print("Smart Tag URL:", tag.url)
+```
+
+## API Endpoint References
+
+- `POST https://aipp.dev/merchant/register` — Register a merchant payout wallet (`ln_address`, `usdc_address`). Returns `api_key`.
+- `POST https://aipp.dev/merchant/links/create` — Create a new Smart Tag (`X-Api-Key` header required).
+- `GET https://aipp.dev/p/<TAG_ID>` — Human checkout & web paywall.
+- `GET https://aipp.dev/p/<TAG_ID>/manifest` — Machine-readable AI Agent manifest (JSON format with HTTP 402 challenge headers).
+- `GET https://aipp.dev/p/<TAG_ID>/status` — Poll settlement status of a tag invoice.
+
+## Links & Additional Context
+
+- [Full Developer Documentation](https://aipp.dev/docs.html)
+- [Comprehensive LLM Spec](https://aipp.dev/llms-full.txt)
