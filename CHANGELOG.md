@@ -1,5 +1,14 @@
 # Changelog
 
+## 2026-08-14 — Passkey Auth, Option 05 Branding & AI-Native Standards (llms.txt)
+
+- **Passkey & Biometric Auth**: Integrated WebAuthn / Passkey biometric login (fingerprint, FaceID, device PIN) with cryptographic key rotation.
+- **Session Security & Mobile Fix**: Persisted `session_token` and `merchant_key` in `localStorage` to fix third-party cookie blocking on Mobile Safari/iOS. Updated `logout()` to wipe all tokens, call backend `/auth/logout`, and reset UI state (`display: none`, `window.scrollTo(0,0)`). Added topbar `← Sign Out` button for iPad/tablet accessibility.
+- **Option 05 Branding**: Standardized Option 05 logo lockup (broken ring + slanted price tag) across all pages, assets, favicons, and Chrome Extension. Fixed SVG arc rendering using `stroke-dasharray` circles. Unified typography with Google Fonts `Plus Jakarta Sans:800` & `Inter`.
+- **Interactive Multitool & RYG Flow**: Transformed "One tag. Three useful tools." into 3 interactive responsive cards with Stripe/Linear-grade minimalist vector icons, spring hover animations, and Red-Yellow-Green (🔴🟡🟢) cable motion pulses.
+- **AI-Native Discovery (`llms.txt`)**: Created `public/llms.txt` and `public/llms-full.txt` featuring AI Assistant System Prompts, copy-paste cURL QuickStarts, and Troubleshooting veritabanı. Configured `public/robots.txt` (`User-agent: * Allow: /`) allowing all AI crawlers.
+- **Chrome Extension (v1.2.0)**: Updated popup branding, Google Fonts `Plus Jakarta Sans`, Option 05 PNG icons, and rebuilt `public/aipp-extension.zip` with explicit `download` attributes.
+
 ## 2026-08-13 — Open Tag 1.0
 
 - Made `/t/:id` the canonical human-and-agent Smart Tag URL using content negotiation.
