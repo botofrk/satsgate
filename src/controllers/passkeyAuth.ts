@@ -35,7 +35,7 @@ function clearSessionCookie(res: Response) {
 export function parseSessionCookie(req: Request): string | null {
   const cookies = req.headers.cookie;
   if (!cookies) return null;
-  const match = cookies.split(';').map(c => c.trim()).find(c => c.startsWith('aipp_session='));
+  const match = cookies.split(';').map((c: string) => c.trim()).find((c: string) => c.startsWith('aipp_session='));
   if (!match) return null;
   return match.substring('aipp_session='.length);
 }
