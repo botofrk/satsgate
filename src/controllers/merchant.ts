@@ -560,7 +560,7 @@ export const joinWaitlist = async (req: Request, res: Response, next: NextFuncti
 /**
  * POST /merchant/recovery/challenge
  * Step 1: Request a single-use cryptographic recovery challenge nonce.
- * Rate-limited and privacy-preserving.
+ * Rate-limited and privacy-preserving with ZERO user enumeration leaks.
  */
 export const requestRecoveryChallenge = async (req: Request, res: Response, next: NextFunction) => {
   try {
@@ -589,19 +589,11 @@ export const requestRecoveryChallenge = async (req: Request, res: Response, next
       ? await db.get('SELECT api_key, ln_address, usdc_address FROM merchants WHERE LOWER(usdc_address) = LOWER(?)', inputAddr)
       : await db.get('SELECT api_key, ln_address, usdc_address FROM merchants WHERE LOWER(ln_address) = LOWER(?)', inputAddr);
 
-    // Return generic response if merchant does not exist to prevent user enumeration
-    if (!merchant) {
-      return res.json({
-        status: 'ok',
-        message: 'If this wallet is registered, a single-use challenge has been generated.',
-        challenge_id: null
-      });
-    }
-
     const challengeId = 'ch_' + crypto.randomUUID();
     const nonce = 'aipp_nonce_' + crypto.randomBytes(16).toString('hex');
     const expiresAt = new Date(Date.now() + 5 * 60 * 1000).toISOString(); // 5 minutes TTL
 
+    // Store challenge in DB — marked as 'pending' for real merchants, 'dummy' for non-existent to prevent enumeration
     await db.run(
       'INSERT INTO recovery_challenges (id, address, address_type, nonce, expires_at, status, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)',
       challengeId,
@@ -609,17 +601,18 @@ export const requestRecoveryChallenge = async (req: Request, res: Response, next
       addressType,
       nonce,
       expiresAt,
-      'pending',
+      merchant ? 'pending' : 'dummy',
       new Date().toISOString()
     );
 
     const messageToSign = `Sign this message to rotate your AIPP Merchant Key:\n\nChallenge ID: ${challengeId}\nNonce: ${nonce}\nExpires: ${expiresAt}`;
 
+    // Return 100% IDENTICAL response structure whether merchant exists or not
     res.json({
       status: 'ok',
       challenge_id: challengeId,
       address_type: addressType,
-      nonce,
+      nonce: nonce,
       message_to_sign: messageToSign,
       expires_at: expiresAt
     });
@@ -662,7 +655,7 @@ export const verifyRecoveryChallenge = async (req: Request, res: Response, next:
       : await db.get('SELECT api_key, ln_address, usdc_address FROM merchants WHERE LOWER(ln_address) = LOWER(?)', challenge.address);
 
     if (!merchant) {
-      throw new AppError('Merchant record not found.', 404, 'NOT_FOUND');
+      throw new AppError('Recovery challenge not found, expired, or already used.', 400, 'CHALLENGE_NOT_FOUND');
     }
 
     // 1. Verify EVM Signature
@@ -686,7 +679,7 @@ export const verifyRecoveryChallenge = async (req: Request, res: Response, next:
         throw new AppError('Cryptographic signature does not match registered merchant wallet.', 401, 'SIGNATURE_MISMATCH');
       }
     } else {
-      // 2. Verify Lightning Address ownership
+      // 2. Verify Lightning Address ownership via LN signature or proof
       if (!signature && !preimage) {
         throw new AppError('Wallet ownership verification signature or LN proof is required.', 400, 'MISSING_PROOF');
       }
@@ -719,7 +712,7 @@ export const verifyRecoveryChallenge = async (req: Request, res: Response, next:
         throw new AppError('Recovery challenge has already been used or expired.', 400, 'CHALLENGE_ALREADY_USED');
       }
 
-      // Update ALL 7 related tables atomically
+      // Update ALL 8 related database tables atomically
       await db.run('UPDATE merchants SET api_key = ? WHERE api_key = ?', newApiKey, oldApiKey);
       await db.run('UPDATE invoices SET api_key = ? WHERE api_key = ?', newApiKey, oldApiKey);
       await db.run('UPDATE payment_links SET api_key = ? WHERE api_key = ?', newApiKey, oldApiKey);
@@ -727,6 +720,7 @@ export const verifyRecoveryChallenge = async (req: Request, res: Response, next:
       await db.run('UPDATE daily_spend SET api_key = ? WHERE api_key = ?', newApiKey, oldApiKey);
       await db.run('UPDATE webhook_deliveries SET api_key = ? WHERE api_key = ?', newApiKey, oldApiKey);
       await db.run('UPDATE ledgers SET api_key = ? WHERE api_key = ?', newApiKey, oldApiKey);
+      await db.run('UPDATE invoice_idempotency SET merchant_id = ? WHERE merchant_id = ?', newApiKey, oldApiKey);
 
       await db.run('COMMIT');
     } catch (innerErr) {
