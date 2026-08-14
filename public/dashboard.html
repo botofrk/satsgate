@@ -1552,6 +1552,10 @@ async function loginWithPasskey() {
     const vData = await vRes.json();
     if (!vRes.ok) throw new Error(vData.error || 'Passkey verification failed.');
 
+    if (vData.api_key) localStorage.setItem('aipp_merchant_key', vData.api_key);
+    if (vData.session_token) localStorage.setItem('aipp_session_token', vData.session_token);
+    if (vData.api_key) activeKey = vData.api_key;
+
     document.getElementById('login-screen').style.display = 'none';
     document.getElementById('app').style.display = 'flex';
     await checkSessionAndLoadDashboard();
@@ -1624,6 +1628,10 @@ async function submitPasskeyRegistration() {
     const vData = await vRes.json();
     if (!vRes.ok) throw new Error(vData.error || 'Passkey registration verification failed.');
 
+    if (vData.api_key) localStorage.setItem('aipp_merchant_key', vData.api_key);
+    if (vData.session_token) localStorage.setItem('aipp_session_token', vData.session_token);
+    if (vData.api_key) activeKey = vData.api_key;
+
     document.getElementById('reg-api-key-text').innerText = vData.api_key;
     document.getElementById('reg-api-key-box').style.display = 'block';
   } catch (err) {
@@ -1694,6 +1702,10 @@ async function submitPasskeyMigration() {
     const vData = await vRes.json();
     if (!vRes.ok) throw new Error(vData.error || 'Migration failed.');
 
+    if (vData.api_key) localStorage.setItem('aipp_merchant_key', vData.api_key);
+    if (vData.session_token) localStorage.setItem('aipp_session_token', vData.session_token);
+    activeKey = vData.api_key || key;
+
     alert('Passkey migration completed successfully!');
     closePasskeyMigrateModal();
     document.getElementById('login-screen').style.display = 'none';
@@ -1709,21 +1721,35 @@ async function submitPasskeyMigration() {
 // Session Checker
 async function checkSessionAndLoadDashboard() {
   try {
-    const res = await fetch('/auth/session');
-    if (!res.ok) {
-      document.getElementById('login-screen').style.display = 'flex';
-      document.getElementById('app').style.display = 'none';
-      return false;
-    }
-    const data = await res.json();
-    if (data.authenticated) {
-      document.getElementById('login-screen').style.display = 'none';
-      document.getElementById('app').style.display = 'flex';
-      loadOverviewStats();
-      loadPasskeys();
-      return true;
+    const sessionToken = localStorage.getItem('aipp_session_token');
+    const storedKey = localStorage.getItem('aipp_merchant_key');
+    if (storedKey) activeKey = storedKey;
+
+    const headers = {};
+    if (sessionToken) headers['Authorization'] = 'Bearer ' + sessionToken;
+    if (activeKey) headers['X-Api-Key'] = activeKey;
+
+    const res = await fetch('/auth/session', { headers, credentials: 'include' });
+    if (res.ok) {
+      const data = await res.json();
+      if (data.authenticated) {
+        document.getElementById('login-screen').style.display = 'none';
+        document.getElementById('app').style.display = 'flex';
+        loadOverviewStats();
+        loadPasskeys();
+        return true;
+      }
     }
   } catch (e) {}
+
+  if (activeKey) {
+    document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('app').style.display = 'flex';
+    loadOverviewStats();
+    loadPasskeys();
+    return true;
+  }
+
   document.getElementById('login-screen').style.display = 'flex';
   document.getElementById('app').style.display = 'none';
   return false;

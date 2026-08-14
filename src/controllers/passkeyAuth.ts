@@ -157,6 +157,7 @@ export const registerVerify = async (req: Request, res: Response, next: NextFunc
       status: 'ok',
       verified: true,
       api_key: apiKey,
+      session_token: session.sessionToken,
       message: 'Passkey registered successfully! Please copy and save your Merchant API Key for programmatic integrations.'
     });
   } catch (err) {
@@ -206,6 +207,8 @@ export const loginVerify = async (req: Request, res: Response, next: NextFunctio
     res.json({
       status: 'ok',
       verified: true,
+      api_key: result.api_key,
+      session_token: session.sessionToken,
       message: 'Passkey authentication successful.'
     });
   } catch (err) {
