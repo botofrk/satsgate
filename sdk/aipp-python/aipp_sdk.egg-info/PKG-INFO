@@ -1,8 +1,8 @@
 Metadata-Version: 2.4
 Name: aipp-sdk
-Version: 1.2.3
-Summary: Official Python SDK for AIPP - The Lightning Network Split-Payment Gateway
-Home-page: https://github.com/aippde/aipp-key
+Version: 1.3.1
+Summary: Official Python SDK for AIPP Smart Tag payments (L402 & x402)
+Home-page: https://github.com/botofrk/satsgate
 Author: AIPP
 Classifier: Programming Language :: Python :: 3
 Classifier: License :: OSI Approved :: MIT License

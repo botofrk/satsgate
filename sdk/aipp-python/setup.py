@@ -2,12 +2,12 @@ from setuptools import setup, find_packages
 
 setup(
     name="aipp-sdk",
-    version="1.3.0",
+    version="1.3.1",
     description="Official Python SDK for AIPP Smart Tag payments (L402 & x402)",
     long_description=open("README.md", "r", encoding="utf-8").read() if open("README.md", "r", encoding="utf-8") else "",
     long_description_content_type="text/markdown",
     author="AIPP",
-    url="https://github.com/aippde/aipp-key",
+    url="https://github.com/botofrk/satsgate",
     packages=find_packages(),
     install_requires=[
         "requests>=2.25.1",

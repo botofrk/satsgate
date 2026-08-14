@@ -1,6 +1,6 @@
 {
   "name": "aipp-sdk",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Official Node.js / TypeScript SDK for AIPP Smart Tag payments (L402 & x402)",
   "main": "dist/index.js",
   "module": "dist/index.mjs",
@@ -15,6 +15,7 @@
     "lightning",
     "payments",
     "l402",
+    "x402",
     "ai"
   ],
   "author": "AIPP",
@@ -27,6 +28,6 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/aippde/aipp-key.git"
+    "url": "https://github.com/botofrk/satsgate.git"
   }
 }
