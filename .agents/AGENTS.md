@@ -18,4 +18,4 @@ This rule contains critical connection details for the AIPP project. **Always re
 
 ## Project Architecture
 - The main website (`index.html`, `dashboard.html`) is served directly from the root path via Express static files.
-- When updating frontend files, copy them to the server `/home/hermes/aipp/aipp-key` AND into the running Docker container using `docker cp`.
+- When updating frontend or backend files, copy them to the server `/home/hermes/aipp/aipp-key` AND into the running Docker container using `docker cp /home/hermes/aipp/aipp-key/public/. aipp-key:/app/public/ && docker cp /home/hermes/aipp/aipp-key/src/. aipp-key:/app/src/`.
