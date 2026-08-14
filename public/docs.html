@@ -145,13 +145,39 @@ code { font-family: 'JetBrains Mono', monospace; }
 @media(max-width: 840px) {
   header { padding: 12px 16px; }
   .nav-links a:not(.nav-cta) { display: none; }
-  .nav-cta { padding: 7px 12px; font-size: 12px; }
-  .docs-layout { grid-template-columns: 1fr; gap: 24px; padding: 0 16px; margin: 20px auto; }
-  .docs-sidebar { display: none; }
-  .docs-title { font-size: 32px; }
-  .docs-sub { font-size: 14px; margin-bottom: 24px; }
-  .section-block { padding: 22px 16px; border-radius: 14px; margin-bottom: 20px; }
-  pre { font-size: 11.5px; padding: 14px 12px; }
+  .nav-cta { padding: 7px 14px; font-size: 12px; }
+  .docs-layout { grid-template-columns: 1fr; gap: 16px; padding: 0 14px; margin: 16px auto; }
+  .docs-sidebar {
+    position: static;
+    display: flex;
+    overflow-x: auto;
+    white-space: nowrap;
+    padding-bottom: 8px;
+    margin-bottom: 8px;
+    border-bottom: 1px solid var(--border);
+    -webkit-overflow-scrolling: touch;
+    gap: 6px;
+  }
+  .sidebar-section { margin-bottom: 0; display: inline-flex; align-items: center; gap: 6px; }
+  .sidebar-title { display: none; }
+  .sidebar-link {
+    display: inline-block;
+    font-size: 11.5px;
+    padding: 5px 11px;
+    background: var(--sub-bg);
+    border-radius: 20px;
+    color: var(--fg-muted);
+  }
+  .sidebar-link.active {
+    background: var(--fg);
+    color: #ffffff;
+    font-weight: 700;
+  }
+  .docs-title { font-size: 28px; }
+  .docs-sub { font-size: 13.5px; margin-bottom: 20px; }
+  .section-block { padding: 20px 14px; border-radius: 14px; margin-bottom: 16px; }
+  pre { font-size: 11px; padding: 12px 10px; border-radius: 8px; }
+  .diagram-grid { grid-template-columns: 1fr !important; gap: 12px !important; }
 }
 </style>
 </head>
@@ -167,7 +193,7 @@ code { font-family: 'JetBrains Mono', monospace; }
     <a href="/#tag-form">Create Tag</a>
     <a href="/#uses">Extension</a>
     <a href="/#uses">Applications</a>
-    <a href="/dashboard.html" class="nav-cta">Studio Console →</a>
+    <a href="/dashboard.html" class="nav-cta">My tags →</a>
   </div>
 </header>
 
@@ -223,7 +249,7 @@ code { font-family: 'JetBrains Mono', monospace; }
       
       <!-- Modern Visual Architecture Flow -->
       <div style="background:#181716; border:1px solid #292725; border-radius:14px; padding:28px; margin:20px 0; color:#fff;">
-        <div style="display:grid; grid-template-columns: 1fr auto 1fr; gap:16px; align-items:center; text-align:center;">
+        <div class="diagram-grid" style="display:grid; grid-template-columns: 1fr auto 1fr; gap:16px; align-items:center; text-align:center;">
           
           <div style="background:#242220; border:1px solid #383532; border-radius:10px; padding:16px;">
             <div style="font-size:11px; font-weight:700; color:#a3a099; text-transform:uppercase; letter-spacing:0.05em; margin-bottom:4px;">Buyer / AI Agent</div>
