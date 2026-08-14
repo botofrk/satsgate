@@ -714,14 +714,20 @@ th { background: var(--sub-bg); font-size: 11px; font-weight: 700; text-transfor
           <div style="font-family:'JetBrains Mono',monospace; font-weight:600; font-size:14px; letter-spacing:1px;" id="api-key-hidden-display">
             aipp_merch_••••••••••••••••
           </div>
-          <button class="btn-sm btn-sm-primary" onclick="copyFullKey(this)" style="display:inline-flex; align-items:center; gap:6px;">📋 Copy Key</button>
+          <button class="btn-sm btn-sm-primary" onclick="copyFullKey(this)" style="display:inline-flex; align-items:center; gap:7px; font-weight:600; cursor:pointer;">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+            <span>Copy Key</span>
+          </button>
         </div>
       </div>
 
       <div class="form-card">
         <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:12px;">
           <h3 style="font-family:'Instrument Serif', Georgia, serif; font-size:22px; margin:0;">SDK Integration</h3>
-          <button class="btn-sm btn-sm-primary" onclick="copySdkSnippet(this)" style="display:inline-flex; align-items:center; gap:6px; cursor:pointer;">📋 Kopyala</button>
+          <button class="btn-sm btn-sm-primary" onclick="copySdkSnippet(this)" style="display:inline-flex; align-items:center; gap:7px; font-weight:600; cursor:pointer;">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+            <span>Kopyala</span>
+          </button>
         </div>
         <p style="color:var(--fg-muted); font-size:14px; margin-bottom:20px;">Integrate Smart Price Tags directly inside your Express, Fastify, Next.js, or Python applications.</p>
         <pre id="sdk-code-snippet" style="background:#181716; color:#e6e2dc; padding:20px; border-radius:10px; font-family:'JetBrains Mono',monospace; font-size:13px; line-height:1.6; overflow-x:auto;">
@@ -855,20 +861,7 @@ function updateLastUpdated() {
   document.getElementById('last-updated-text').textContent = 'Updated ' + d.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit', second:'2-digit'});
 }
 
-function copyFullKey(btn) {
-  navigator.clipboard.writeText(activeKey).then(() => {
-    const hidden = document.getElementById('api-key-hidden-display');
-    const origText = hidden.textContent;
-    hidden.textContent = activeKey;
-    hidden.style.color = 'var(--accent)';
-    btn.textContent = 'Copied!';
-    setTimeout(() => {
-      hidden.textContent = 'aipp_merch_••••••••••••••••';
-      hidden.style.color = 'inherit';
-      btn.textContent = 'Copy Key';
-    }, 3000);
-  });
-}
+
 
 window.onload = () => {
   // Check localStorage first (remember me), then fallback to sessionStorage
@@ -1374,7 +1367,7 @@ function formatTxRow(tx) {
       ? `<a href="https://basescan.org/tx/${chainHash}" target="_blank" rel="noopener" style="color:var(--accent); text-decoration:none;">${chainHash.slice(0, 10)}... ↗</a>`
       : `<span>${escapeHtml(tx.payment_hash).slice(0, 10)}...</span>`;
   } else {
-    hashAction = `<span onclick="navigator.clipboard.writeText('${tx.payment_hash}'); alert('Copied Hash!')" style="cursor:pointer; color:var(--accent);" title="Click to copy hash">${tx.payment_hash.slice(0, 10)}... 📋</span>`;
+    hashAction = `<span onclick="copyWithFeedback(this, '${tx.payment_hash}', 'Copied Hash')" style="cursor:pointer; color:var(--accent);" title="Click to copy hash">${tx.payment_hash.slice(0, 10)}...</span>`;
   }
   
   const isUsd = tx.protocol === 'x402';
@@ -1459,8 +1452,7 @@ async function loadPaymentLinks() {
       </tr>
     `).join('');
     body.querySelectorAll('[data-copy-url]').forEach(btn => btn.addEventListener('click', () => {
-      navigator.clipboard.writeText(btn.dataset.copyUrl || '');
-      alert('Tag link copied!');
+      copyWithFeedback(btn, btn.dataset.copyUrl || '', 'Kopyalandı!');
     }));
   } catch(e) {}
 }
@@ -1494,24 +1486,26 @@ async function createPaymentLink(btn) {
   }
 }
 
+const CHECK_SVG = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>`;
+
+function copyWithFeedback(btn, textToCopy, successLabel = 'Kopyalandı!') {
+  navigator.clipboard.writeText(textToCopy).then(() => {
+    const orig = btn.innerHTML;
+    btn.innerHTML = `${CHECK_SVG} <span style="color:#10b981; font-weight:700;">${successLabel}</span>`;
+    setTimeout(() => { btn.innerHTML = orig; }, 2000);
+  });
+}
+
 function copyFullKey(btn) {
   const key = activeKey || localStorage.getItem('aipp_merchant_key') || localStorage.getItem('aipp_api_key');
   if (!key) { alert('No API key found.'); return; }
-  navigator.clipboard.writeText(key).then(() => {
-    const orig = btn.innerHTML;
-    btn.innerHTML = '✅ Kopyalandı!';
-    setTimeout(() => { btn.innerHTML = orig; }, 2000);
-  });
+  copyWithFeedback(btn, key, 'Kopyalandı!');
 }
 
 function copySdkSnippet(btn) {
   const snippet = document.getElementById('sdk-code-snippet');
   if (!snippet) return;
-  navigator.clipboard.writeText(snippet.innerText).then(() => {
-    const orig = btn.innerHTML;
-    btn.innerHTML = '✅ Kopyalandı!';
-    setTimeout(() => { btn.innerHTML = orig; }, 2000);
-  });
+  copyWithFeedback(btn, snippet.innerText, 'Kopyalandı!');
 }
 
 // WebAuthn Base64URL Helpers
