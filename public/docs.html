@@ -142,42 +142,102 @@ code { font-family: 'JetBrains Mono', monospace; }
 .badge-post { background: #e0f2fe; color: #0369a1; }
 .badge-get { background: var(--green-bg); color: var(--green); }
 
+html, body {
+  overflow-x: hidden;
+  width: 100%;
+}
+
 @media(max-width: 840px) {
   header { padding: 12px 16px; }
+  .logo span { display: none; }
   .nav-links a:not(.nav-cta) { display: none; }
   .nav-cta { padding: 7px 14px; font-size: 12px; }
-  .docs-layout { grid-template-columns: 1fr; gap: 16px; padding: 0 14px; margin: 16px auto; }
-  .docs-sidebar {
-    position: static;
-    display: flex;
-    overflow-x: auto;
-    white-space: nowrap;
-    padding-bottom: 8px;
-    margin-bottom: 8px;
-    border-bottom: 1px solid var(--border);
-    -webkit-overflow-scrolling: touch;
-    gap: 6px;
+  .docs-layout {
+    display: block !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    padding: 0 14px !important;
+    margin: 12px auto !important;
+    box-sizing: border-box !important;
   }
-  .sidebar-section { margin-bottom: 0; display: inline-flex; align-items: center; gap: 6px; }
-  .sidebar-title { display: none; }
+  .docs-sidebar {
+    position: sticky !important;
+    top: 55px !important;
+    z-index: 40 !important;
+    display: flex !important;
+    flex-direction: row !important;
+    flex-wrap: nowrap !important;
+    overflow-x: auto !important;
+    white-space: nowrap !important;
+    padding: 8px 4px !important;
+    margin: 0 -14px 16px -14px !important;
+    padding-left: 14px !important;
+    padding-right: 14px !important;
+    background: rgba(250, 248, 245, 0.95) !important;
+    backdrop-filter: blur(10px) !important;
+    border-bottom: 1px solid var(--border) !important;
+    -webkit-overflow-scrolling: touch !important;
+    gap: 6px !important;
+  }
+  .docs-sidebar::-webkit-scrollbar { display: none; }
+  .sidebar-section {
+    display: inline-flex !important;
+    flex-direction: row !important;
+    gap: 6px !important;
+    margin-bottom: 0 !important;
+  }
+  .sidebar-title { display: none !important; }
   .sidebar-link {
-    display: inline-block;
-    font-size: 11.5px;
-    padding: 5px 11px;
-    background: var(--sub-bg);
-    border-radius: 20px;
-    color: var(--fg-muted);
+    display: inline-block !important;
+    font-size: 11.5px !important;
+    padding: 6px 12px !important;
+    background: var(--card-bg) !important;
+    border: 1px solid var(--border) !important;
+    border-radius: 20px !important;
+    color: var(--fg-muted) !important;
+    white-space: nowrap !important;
   }
   .sidebar-link.active {
-    background: var(--fg);
-    color: #ffffff;
-    font-weight: 700;
+    background: var(--fg) !important;
+    color: #ffffff !important;
+    border-color: var(--fg) !important;
+    font-weight: 700 !important;
   }
-  .docs-title { font-size: 28px; }
-  .docs-sub { font-size: 13.5px; margin-bottom: 20px; }
-  .section-block { padding: 20px 14px; border-radius: 14px; margin-bottom: 16px; }
-  pre { font-size: 11px; padding: 12px 10px; border-radius: 8px; }
-  .diagram-grid { grid-template-columns: 1fr !important; gap: 12px !important; }
+  .docs-content {
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+  }
+  .docs-title { font-size: 26px !important; }
+  .docs-sub { font-size: 13px !important; margin-bottom: 20px !important; }
+  .section-block {
+    padding: 18px 14px !important;
+    border-radius: 12px !important;
+    margin-bottom: 16px !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+    overflow-x: hidden !important;
+  }
+  .section-block h2 { font-size: 22px !important; }
+  .section-block p { font-size: 13px !important; }
+  pre {
+    font-size: 11px !important;
+    padding: 12px 10px !important;
+    border-radius: 8px !important;
+    max-width: 100% !important;
+    overflow-x: auto !important;
+    white-space: pre !important;
+    word-break: normal !important;
+    -webkit-overflow-scrolling: touch !important;
+  }
+  .diagram-grid {
+    grid-template-columns: 1fr !important;
+    gap: 12px !important;
+  }
+  .diagram-wrapper {
+    padding: 16px !important;
+    border-radius: 12px !important;
+  }
 }
 </style>
 </head>
