@@ -377,8 +377,46 @@ th { background: var(--sub-bg); font-size: 11px; font-weight: 700; text-transfor
 
     <p class="login-hint">
       New to AIPP? <a onclick="createInstantAccount()">Create a merchant key →</a>
-      &nbsp;·&nbsp; <a onclick="recoverKey()">Forgot key?</a>
+      &nbsp;·&nbsp; <a onclick="openRecoveryModal()">Forgot key?</a>
     </p>
+  </div>
+</div>
+
+<!-- ── RECOVERY MODAL OVERLAY ── -->
+<div id="recovery-modal" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,0.6); backdrop-filter:blur(6px); z-index:9999; align-items:center; justify-content:center;">
+  <div style="background:#ffffff; width:90%; max-width:480px; border-radius:16px; padding:32px; box-shadow:0 24px 48px rgba(0,0,0,0.2); border:1px solid #e2e8f0; position:relative; font-family:'Inter', sans-serif;">
+    <button onclick="closeRecoveryModal()" style="position:absolute; top:20px; right:20px; border:none; background:none; font-size:20px; cursor:pointer; color:#64748b;">✕</button>
+    <div style="text-align:center; margin-bottom:24px;">
+      <div style="width:48px; height:48px; background:#eff6ff; color:#2563eb; border-radius:12px; display:inline-flex; align-items:center; justify-content:center; font-size:24px; margin-bottom:12px;">🔐</div>
+      <h3 style="font-size:20px; font-weight:700; color:#0f172a; margin:0 0 6px 0;">Cryptographic Key Recovery</h3>
+      <p style="font-size:13px; color:#64748b; margin:0;">Zero-custody wallet ownership verification & instant key rotation</p>
+    </div>
+
+    <div id="recovery-step-1">
+      <label style="font-size:12px; font-weight:600; color:#475569; display:block; margin-bottom:6px;">Registered Wallet Address</label>
+      <input type="text" id="rec-address-input" placeholder="you@wallet.com or 0x..." style="width:100%; padding:12px; border-radius:8px; border:1px solid #cbd5e1; font-size:14px; margin-bottom:16px; outline:none; box-sizing:border-box;">
+      <button onclick="submitRecoveryRequest()" id="rec-btn-step1" style="width:100%; padding:12px; background:#0f172a; color:#fff; border:none; border-radius:8px; font-size:14px; font-weight:600; cursor:pointer;">Generate Challenge →</button>
+    </div>
+
+    <div id="recovery-step-2" style="display:none;">
+      <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:14px; margin-bottom:16px; font-size:12px; color:#334155;">
+        <div style="font-weight:700; color:#0f172a; margin-bottom:4px;">Cryptographic Challenge Issued</div>
+        <div id="rec-challenge-info" style="font-family:monospace; word-break:break-all; font-size:11px; color:#475569; max-height:100px; overflow-y:auto; background:#ffffff; padding:8px; border-radius:6px; border:1px solid #cbd5e1; user-select:all;"></div>
+      </div>
+
+      <div id="rec-evm-actions" style="display:none; margin-bottom:16px;">
+        <button onclick="signWithMetaMask()" style="width:100%; padding:12px; background:#2563eb; color:#fff; border:none; border-radius:8px; font-size:14px; font-weight:600; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px;">
+          <span>🦊 Sign 1-Click with MetaMask / Web3</span>
+        </button>
+      </div>
+
+      <div id="rec-manual-sig">
+        <label style="font-size:12px; font-weight:600; color:#475569; display:block; margin-bottom:6px;">Paste Wallet Signature</label>
+        <textarea id="rec-sig-input" rows="3" placeholder="Paste signature (0x...)" style="width:100%; padding:10px; border-radius:8px; border:1px solid #cbd5e1; font-size:12px; font-family:monospace; margin-bottom:16px; box-sizing:border-box;"></textarea>
+      </div>
+
+      <button onclick="verifyAndRotateKey()" id="rec-btn-step2" style="width:100%; padding:12px; background:#10b981; color:#fff; border:none; border-radius:8px; font-size:14px; font-weight:600; cursor:pointer;">Verify & Rotate Key ✨</button>
+    </div>
   </div>
 </div>
 
@@ -794,63 +832,111 @@ window.onload = () => {
   }
 };
 
-async function recoverKey() {
-  const addr = prompt('Enter your registered Lightning Address or Base USDC Address (0x...):');
-  if (!addr || !addr.trim()) return;
+let currentRecoveryChallenge = null;
+
+function openRecoveryModal() {
+  currentRecoveryChallenge = null;
+  document.getElementById('rec-address-input').value = '';
+  document.getElementById('rec-sig-input').value = '';
+  document.getElementById('recovery-step-1').style.display = 'block';
+  document.getElementById('recovery-step-2').style.display = 'none';
+  document.getElementById('recovery-modal').style.display = 'flex';
+}
+
+function closeRecoveryModal() {
+  document.getElementById('recovery-modal').style.display = 'none';
+}
+
+async function submitRecoveryRequest() {
+  const addr = document.getElementById('rec-address-input').value.trim();
+  if (!addr) {
+    alert('Please enter a valid wallet address or Lightning address.');
+    return;
+  }
+  const btn = document.getElementById('rec-btn-step1');
+  btn.disabled = true;
+  btn.innerText = 'Generating Challenge...';
 
   try {
-    // Step 1: Request recovery challenge
     const r1 = await fetch(`${AIPP_API}/merchant/recovery/challenge`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ address: addr.trim() })
+      body: JSON.stringify({ address: addr })
     });
     const d1 = await r1.json();
     if (!r1.ok || !d1.challenge_id) {
-      alert(d1.error || 'If this address is registered, a challenge has been generated. Please check your wallet.');
+      alert(d1.error || 'If this address is registered, a challenge was generated. Check wallet.');
+      btn.disabled = false;
+      btn.innerText = 'Generate Challenge →';
       return;
     }
 
-    // Step 2: Signature / Proof verification
-    let signature = null;
-
+    currentRecoveryChallenge = d1;
+    document.getElementById('rec-challenge-info').innerText = d1.message_to_sign;
+    
     if (d1.address_type === 'evm') {
-      if (window.ethereum) {
-        try {
-          const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
-          signature = await window.ethereum.request({
-            method: 'personal_sign',
-            params: [d1.message_to_sign, accounts[0]]
-          });
-        } catch {
-          alert('Wallet signature cancelled.');
-          return;
-        }
-      } else {
-        signature = prompt(`Please sign this message with your EVM wallet and paste the signature:\n\n${d1.message_to_sign}`);
-        if (!signature) return;
-      }
+      document.getElementById('rec-evm-actions').style.display = 'block';
     } else {
-      signature = prompt(`Cryptographic Recovery Challenge Issued!\n\nTo verify wallet ownership and rotate your key, paste your wallet verification signature:\n\n${d1.message_to_sign}`);
-      if (!signature) return;
+      document.getElementById('rec-evm-actions').style.display = 'none';
     }
 
-    // Step 3: Verify and rotate key
+    document.getElementById('recovery-step-1').style.display = 'none';
+    document.getElementById('recovery-step-2').style.display = 'block';
+  } catch(e) {
+    alert(e.message || 'Challenge request failed.');
+  } finally {
+    btn.disabled = false;
+    btn.innerText = 'Generate Challenge →';
+  }
+}
+
+async function signWithMetaMask() {
+  if (!window.ethereum || !currentRecoveryChallenge) {
+    alert('MetaMask or Web3 wallet extension not detected in browser. Please paste signature manually below.');
+    return;
+  }
+  try {
+    const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+    const sig = await window.ethereum.request({
+      method: 'personal_sign',
+      params: [currentRecoveryChallenge.message_to_sign, accounts[0]]
+    });
+    document.getElementById('rec-sig-input').value = sig;
+  } catch(e) {
+    alert('Signature cancelled or failed.');
+  }
+}
+
+async function verifyAndRotateKey() {
+  const sig = document.getElementById('rec-sig-input').value.trim();
+  if (!sig) {
+    alert('Please enter or generate a wallet signature.');
+    return;
+  }
+  const btn = document.getElementById('rec-btn-step2');
+  btn.disabled = true;
+  btn.innerText = 'Verifying & Rotating...';
+
+  try {
     const r2 = await fetch(`${AIPP_API}/merchant/recovery/verify`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ challenge_id: d1.challenge_id, signature: signature.trim() })
+      body: JSON.stringify({ challenge_id: currentRecoveryChallenge.challenge_id, signature: sig })
     });
     const d2 = await r2.json();
     if (r2.ok && d2.new_api_key) {
+      closeRecoveryModal();
       document.getElementById('login-input').value = d2.new_api_key;
       document.getElementById('remember-me').checked = true;
-      alert(`\u2705 Key Rotated Successfully!\n\nYour old key has been permanently revoked.\nYour NEW merchant key has been filled in for you. Click "Enter Studio Console" to sign in.`);
+      alert(`\u2705 Key Rotated Successfully!\n\nYour old key has been permanently revoked.\nYour NEW merchant key has been auto-filled into login field. Click "Enter Studio Console" to sign in.`);
     } else {
       alert(d2.error || 'Cryptographic verification failed. Check signature and try again.');
     }
   } catch(e) {
-    alert(e.message || 'Recovery failed. Please try again.');
+    alert(e.message || 'Verification failed.');
+  } finally {
+    btn.disabled = false;
+    btn.innerText = 'Verify & Rotate Key ✨';
   }
 }
 
