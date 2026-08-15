@@ -796,8 +796,13 @@ Once paid, run:
 export const createLinkInvoice = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { linkId } = req.params;
-    const { mode, checkout_id } = req.body; // 'L402' or 'X402'
-    const protocol = mode === 'X402' ? 'x402' : 'L402';
+    // Accept both `mode` (legacy checkout field) and `protocol` (agent-facing docs field).
+    // Values: 'L402' | 'X402' | 'DUAL' (case-insensitive).
+    const { mode, protocol: protocolField, checkout_id } = req.body;
+    const requested = String(mode || protocolField || 'L402').toUpperCase();
+    const effectiveMode: 'L402' | 'X402' | 'DUAL' =
+      ['L402', 'X402', 'DUAL'].includes(requested) ? (requested as 'L402' | 'X402' | 'DUAL') : 'L402';
+    const protocol = effectiveMode === 'X402' ? 'x402' : effectiveMode === 'DUAL' ? 'dual' : 'L402';
 
     const db = getDb();
     let link = await db.get('SELECT * FROM payment_links WHERE id = ?', linkId);
@@ -828,14 +833,14 @@ export const createLinkInvoice = async (req: Request, res: Response, next: NextF
     try {
       invoiceData = await generateInvoiceData({
         apiKey: link.api_key,
-        protocol: mode === 'X402' ? 'X402' : 'L402',
+        protocol: effectiveMode,
         amountUsd: link.amount_usd,
         tagId: link.id,
         idempotencyKey: typeof checkout_id === 'string' && /^[a-zA-Z0-9._-]{8,128}$/.test(checkout_id)
           ? `link_${link.id}_${checkout_id}`
           : undefined,
         idempotencyFingerprint: typeof checkout_id === 'string'
-          ? crypto.createHash('sha256').update(`${link.id}:${link.amount_usd}:${mode}`).digest('hex')
+          ? crypto.createHash('sha256').update(`${link.id}:${link.amount_usd}:${effectiveMode}`).digest('hex')
           : undefined
       });
     } catch (err: any) {

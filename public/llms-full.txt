@@ -51,7 +51,7 @@ curl -X POST https://aipp.dev/merchant/register \
 AIPP (aipp.dev) bridges traditional web monetization and autonomous AI agent workflows. It allows creators and developers to price any digital asset, API call, or link once ($0.01 to $100.00).
 
 - **Automated Settlement & Forwarding**: AIPP does not maintain merchant balances. Payments are automatically forwarded to the merchant's configured wallet.
-- **Smart Tag Routing**: When an AI Agent requests a Smart Tag URL (`https://aipp.dev/t/<TAG_ID>`), the server returns an HTTP `402 Payment Required` status or provides an Open Tag Manifest at `/manifest`.
+- **Smart Tag Routing**: When an AI Agent requests a Smart Tag URL (`https://aipp.dev/t/<TAG_ID>`), the server returns an HTTP `402 Payment Required` status or provides a machine-readable Smart Tag manifest at `/manifest`.
 
 ---
 
@@ -116,7 +116,7 @@ Host: aipp.dev
 ```http
 HTTP/1.1 402 Payment Required
 Content-Type: application/json
-WWW-Authenticate: L402 invoice="lnbc10n1p...", macaroon="AgELbDQwMg..."
+WWW-Authenticate: L402 invoice="lnbc_sample_aipp_demo", macaroon="ag_sample_aipp_demo"
 Link: <https://aipp.dev/t/demo/manifest>; rel="describedby"; type="application/json"
 
 {
@@ -129,18 +129,37 @@ Link: <https://aipp.dev/t/demo/manifest>; rel="describedby"; type="application/j
     "currency": "USD"
   },
   "manifest_url": "https://aipp.dev/t/demo/manifest",
-  "create_payment_url": "https://aipp.dev/t/demo/invoice"
+  "create_payment_url": "https://aipp.dev/t/demo/invoice",
+  "challenge_note": "The WWW-Authenticate invoice is a sample for discovery. Create a payable invoice via create_payment_url: POST { \"mode\": \"L402\" } (or { \"mode\": \"X402\" } for USDC).",
+  "payment_instructions": {
+    "lightning": "POST invoice to create_payment_url with { mode: \"L402\" } or { protocol: \"L402\" }",
+    "base_usdc": "POST invoice to create_payment_url with { mode: \"X402\" } or { protocol: \"x402\" }, then transfer USDC to pay_to on Base (Chain ID 8453)."
+  }
 }
 ```
 
+### Creating a Payable Invoice (no API key needed for public/demo tags)
+```bash
+# Lightning (L402) — real BOLT11 payment_request + payment_hash
+curl -X POST https://aipp.dev/t/demo/invoice \
+  -H "Content-Type: application/json" \
+  -d '{"mode":"L402"}'
+
+# Base USDC (x402) — pay_to / network / token / payment_hash
+curl -X POST https://aipp.dev/t/demo/invoice \
+  -H "Content-Type: application/json" \
+  -d '{"mode":"X402"}'
+```
+The field is `mode` (`"L402" | "X402" | "DUAL"`); the alias `protocol` is also accepted.
+
 ---
 
-## 5. Python AI Agent Integration Example (`aipp-python`)
+## 5. Python AI Agent Integration Example (`aipp-sdk`)
 
 ```python
 import requests
 import time
-from aipp import AippClient
+from aipp import Aipp
 
 def call_aipp_protected_agent_tool(tag_url: str):
     """
@@ -155,7 +174,7 @@ def call_aipp_protected_agent_tool(tag_url: str):
         create_payment_url = data['interfaces']['create_payment']
         
         # Request payment invoice from AIPP
-        inv_res = requests.post(create_payment_url, json={"protocol": "L402"}).json()
+        inv_res = requests.post(create_payment_url, json={"mode": "L402"}).json()
         invoice = inv_res['payment_request']
         payment_hash = inv_res['payment_hash']
         
@@ -171,14 +190,14 @@ def call_aipp_protected_agent_tool(tag_url: str):
 
 ---
 
-## 6. Node.js Express Integration Example (`aipp-node`)
+## 6. Node.js Express Integration Example (`aipp-sdk`)
 
 ```typescript
 import express from 'express';
-import { AippClient, aippMiddleware } from 'aipp-node';
+import { Aipp, aippMiddleware } from 'aipp-sdk';
 
 const app = express();
-const aipp = new AippClient({ apiKey: process.env.AIPP_API_KEY! });
+const aipp = new Aipp({ apiKey: process.env.AIPP_API_KEY });
 
 // Protect any route with AIPP HTTP 402 Smart Tag
 app.get('/api/v1/generate-image', aippMiddleware({
@@ -210,7 +229,7 @@ app.listen(3000, () => console.log('AIPP Protected Server running on port 3000')
 
 ### Error: "402 Payment Required - Unsettled Invoice"
 - **Cause**: Content or destination URL accessed prior to verified settlement on Lightning Network or Base USDC.
-- **Solution**: Poll `https://aipp.dev/t/<TAG_ID>/status?payment_hash=...` until `status: "settled"` before accessing protected destination content.
+- **Solution**: Poll `GET https://aipp.dev/invoice/status/<PAYMENT_HASH>` until `status: "settled"` (or `paid: true`), then call `GET https://aipp.dev/t/<TAG_ID>/unlock/<PAYMENT_HASH>` to unlock the protected destination content.
 
 ---
 

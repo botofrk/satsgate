@@ -5,9 +5,12 @@ import { handleLnbitsWebhook } from '../controllers/webhook';
 import { handleChat, createTicket } from '../controllers/chat';
 import { verifyAdmin, getAdminStats, getFailedPayouts, retryPayout, getWaitlist, getMerchantsList } from '../controllers/admin';
 import { premiumArticle, getPricing } from '../controllers/demo';
-import { getPaidMcpManifest, getAippAgentManifest } from '../controllers/manifest';
+import { getPaidMcpManifest, getAippAgentManifest, getOpenTagSpec } from '../controllers/manifest';
 
 const router = Router();
+
+// Protocol spec (referenced by every Smart Tag manifest "spec" field)
+router.get('/spec/open-tag/1.0', getOpenTagSpec);
 
 // Middleware to prevent caching of sensitive merchant data
 import { Request, Response, NextFunction } from 'express';

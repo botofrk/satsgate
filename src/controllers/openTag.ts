@@ -75,6 +75,10 @@ function manifestFor(req: Request, tag: any) {
       proof_scope: 'exact-tag',
       replay_policy: 'one-proof-one-invoice'
     },
+    address_semantics: {
+      receiver: 'Merchant settlement destination (where AIPP forwards funds after fee).',
+      pay_to: 'Payment destination for this transaction (AIPP gateway). See spec /spec/open-tag/1.0.'
+    },
     created_at: tag.created_at
   };
 }
@@ -130,9 +134,10 @@ export const getOpenTagContent = async (req: Request, res: Response, next: NextF
       price: { amount_usd: Number(tag.amount_usd).toFixed(2), currency: 'USD' },
       manifest_url: `${base}/t/${tag.id}/manifest`,
       create_payment_url: `${base}/t/${tag.id}/invoice`,
+      challenge_note: 'The WWW-Authenticate invoice is a sample for discovery. Create a payable invoice via create_payment_url: POST { "mode": "L402" } (or { "mode": "X402" } for USDC).',
       payment_instructions: {
-        lightning: 'POST invoice to create_payment_url with { protocol: "L402" }',
-        base_usdc: 'POST invoice to create_payment_url with { protocol: "x402" }, then transfer USDC on Base (Chain ID 8453).'
+        lightning: 'POST invoice to create_payment_url with { mode: "L402" } or { protocol: "L402" }',
+        base_usdc: 'POST invoice to create_payment_url with { mode: "X402" } or { protocol: "x402" }, then transfer USDC to pay_to on Base (Chain ID 8453).'
       }
     });
   } catch (error) { next(error); }

@@ -38,6 +38,7 @@ export interface InvoiceResult {
   pay_to?: string;
   network?: string;
   token?: string;
+  receiver?: string;
   status: string;
   expires_in: number;
   challengeBase64?: string;
@@ -112,7 +113,7 @@ export async function generateInvoiceData(options: GenerateInvoiceOptions): Prom
 
   // Minimum invoice amount check
   const percentageFee = (grossUnits + 99n) / 100n; // 1% rounded up
-  const minimumBaseFeeUnits = 50000n; // 0.05 USDC minimum fee
+  const minimumBaseFeeUnits = 1000n; // $0.001 USDC minimum fee — keeps the disclosed 1% policy and allows $0.01 micro-tags on x402
   const feeUnits = percentageFee > minimumBaseFeeUnits ? percentageFee : minimumBaseFeeUnits;
   const netUnits = grossUnits - feeUnits;
   
@@ -204,7 +205,7 @@ export async function generateInvoiceData(options: GenerateInvoiceOptions): Prom
         if (!existingInv) {
           throw new InvoiceDomainError('Invoice linked to idempotency key not found', 'DB_ERROR');
         }
-        return formatResponse(existingInv, existingInv.usdc_amount, options.protocol);
+        return formatResponse(existingInv, existingInv.usdc_amount, options.protocol, merchant.usdc_address);
       }
       
     }
@@ -255,7 +256,7 @@ export async function generateInvoiceData(options: GenerateInvoiceOptions): Prom
     amount_usd,
     protocol: protocolLower
     ,tag_id: options.tagId || undefined
-  }, amount_usd, options.protocol);
+  }, amount_usd, options.protocol, merchant.usdc_address);
 }
 
 // Helpers
@@ -275,7 +276,7 @@ async function insertInvoice(db: any, paymentHash: string, apiKey: string, amoun
   );
 }
 
-function formatResponse(dbRecord: any, amountUsd: number, originalProtocol: string): InvoiceResult {
+function formatResponse(dbRecord: any, amountUsd: number, originalProtocol: string, receiver?: string): InvoiceResult {
   const isX402 = originalProtocol === 'X402';
   const isDual = originalProtocol === 'DUAL';
   const isL402 = originalProtocol === 'L402';
@@ -321,6 +322,7 @@ function formatResponse(dbRecord: any, amountUsd: number, originalProtocol: stri
     result.pay_to = challengeObj.payTo;
     result.network = challengeObj.network;
     result.token = challengeObj.token;
+    if (receiver) result.receiver = receiver;
   }
 
   return result;

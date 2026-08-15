@@ -23,6 +23,17 @@ https://aipp.dev/t/demo
 
 This endpoint uses the real production Smart Tag pipeline ($0.01 test price). Agents may inspect the manifest and HTTP 402 challenge without paying.
 
+To create a payable invoice from a Smart Tag (no API key required for the demo tag):
+
+```bash
+# Lightning (L402) — returns a real BOLT11 payment_request
+curl -X POST https://aipp.dev/t/demo/invoice -H "Content-Type: application/json" -d '{"mode":"L402"}'
+# Base USDC (x402) — returns pay_to / network / token / payment_hash
+curl -X POST https://aipp.dev/t/demo/invoice -H "Content-Type: application/json" -d '{"mode":"X402"}'
+```
+
+The field is `mode` (`"L402" | "X402" | "DUAL"`); the alias `protocol` is also accepted.
+
 ## Quick Start (Minimal Implementation)
 
 To wrap any URL or API endpoint into a paid Smart Tag via cURL:
@@ -55,13 +66,13 @@ curl -X POST https://aipp.dev/merchant/register \
 
 ### Node.js / TypeScript
 ```bash
-npm install aipp-node
+npm install aipp-sdk
 ```
 
 ```typescript
-import { AippClient } from 'aipp-node';
+import { Aipp } from 'aipp-sdk';
 
-const aipp = new AippClient({ apiKey: 'aipp_merch_...' });
+const aipp = new Aipp({ apiKey: 'aipp_merch_...' });
 
 const tag = await aipp.createLink({
   title: 'AI Market Research Report PDF',
@@ -76,13 +87,13 @@ console.log('Agent Manifest URL:', tag.manifest_url);
 
 ### Python
 ```bash
-pip install aipp-python
+pip install aipp-sdk
 ```
 
 ```python
-from aipp import AippClient
+from aipp import Aipp
 
-client = AippClient(api_key="aipp_merch_...")
+client = Aipp(api_key="aipp_merch_...")
 
 tag = client.create_link(
     title="Prompt Generation API",
@@ -100,7 +111,7 @@ print("Smart Tag URL:", tag.url)
 - `GET https://aipp.dev/t/<TAG_ID>` — Human checkout & web paywall.
 - `GET https://aipp.dev/t/<TAG_ID>/manifest` — Machine-readable AI Agent manifest (JSON format with HTTP 402 challenge headers).
 - `GET https://aipp.dev/t/<TAG_ID>/content` — Protected content / HTTP 402 challenge endpoint.
-- `GET https://aipp.dev/t/<TAG_ID>/status` — Poll settlement status of a tag invoice.
+- `GET https://aipp.dev/invoice/status/<PAYMENT_HASH>` — Poll settlement status of an invoice (also `GET https://aipp.dev/t/<TAG_ID>/unlock/<PAYMENT_HASH>` to unlock).
 
 ## Links & Additional Context
 

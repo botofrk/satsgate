@@ -264,12 +264,12 @@ html, body {
       <div class="sidebar-title">Getting Started</div>
       <a href="#overview" class="sidebar-link active">Overview</a>
       <a href="#quickstart" class="sidebar-link">Quickstart</a>
-      <a href="#smart-tags" class="sidebar-link">Smart Price Tags</a>
+      <a href="#smart-tags" class="sidebar-link">Smart Tags</a>
     </div>
     <div class="sidebar-section">
       <div class="sidebar-title">Client Tools</div>
       <a href="#extension-guide" class="sidebar-link">Chrome Extension</a>
-      <a href="#smart-tags" class="sidebar-link">Smart Price Tags</a>
+      <a href="#smart-tags" class="sidebar-link">Smart Tags</a>
     </div>
     <div class="sidebar-section">
       <div class="sidebar-title">API Reference</div>
@@ -429,7 +429,7 @@ if receipt.status == "settled":
     <div class="section-block" id="n8n-workflows">
       <div class="endpoint-badge badge-post">NO-CODE AUTOMATION · N8N / MAKE.COM / ZAPIER</div>
       <h2>Monetizing n8n &amp; Make.com Workflows</h2>
-      <p>Monetize any n8n or Make.com workflow (e.g. AI Image Generation, Web Scraping, Financial PDF summary) in 3 minutes using AIPP Smart Price Tags and Webhooks.</p>
+      <p>Monetize any n8n or Make.com workflow (e.g. AI Image Generation, Web Scraping, Financial PDF summary) in 3 minutes using AIPP Smart Tags and Webhooks.</p>
 
       <div style="background:#f4f4f5; border:1px solid #e4e4e7; border-radius:10px; padding:16px; margin-bottom:20px; font-size:13px; color:var(--fg);">
         ⚡ <strong>Download Templates:</strong>
@@ -481,10 +481,10 @@ def generate_image(prompt, preimage=None):
 
       <pre>
 # 1. Trigger terminal paywall & get ASCII Lightning Invoice
-curl https://aipp.dev/cli/p_9c48c15180a1
+curl https://aipp.dev/cli/p_demo
 
 # 2. Pay with wallet, then unlock payload directly in stdout
-curl -s "https://aipp.dev/cli/p_9c48c15180a1?payment_hash=YOUR_HASH"</pre>
+curl -s "https://aipp.dev/cli/p_demo?payment_hash=YOUR_HASH"</pre>
     </div>
 
     <!-- SECTION: EXTENSION GUIDE -->
@@ -496,7 +496,7 @@ curl -s "https://aipp.dev/cli/p_9c48c15180a1?payment_hash=YOUR_HASH"</pre>
       <p><strong>Two Core Operating Modes:</strong></p>
       <ul style="margin-left: 20px; font-size: 14px; color: var(--fg-muted); line-height: 1.7; margin-bottom: 20px;">
         <li><strong>Create Tag Mode:</strong> Activates a visual DOM element picker on your active tab. Click text, an image, or a container to attach a paywall snippet.</li>
-        <li><strong>Quick Link Mode:</strong> Packages private links into one Smart Tag (<code>https://aipp.dev/t/demo</code>). A browser gets checkout; an agent gets the manifest.</li>
+        <li><strong>Quick Link Mode:</strong> Packages private links into one Smart Tag (<code>https://aipp.dev/t/p_...</code>). A browser gets checkout; an agent gets the manifest.</li>
       </ul>
     </div>
     <!-- SECTION: API CREATE TAG -->
@@ -551,7 +551,7 @@ curl -X POST https://aipp.dev/invoice/create \
       <p>Real-time endpoint called to verify whether a payment hash or EVM signature has achieved network confirmation.</p>
 
       <pre>
-curl https://aipp.dev/invoice/status/337825c42df550de969dbe7546b3b35184622098ff9d886044809c9b0d596ddb</pre>
+curl https://aipp.dev/invoice/status/YOUR_PAYMENT_HASH</pre>
     </div>
   </main>
 </div>
