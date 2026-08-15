@@ -290,13 +290,13 @@ export async function initDb(): Promise<Database> {
   await dbInstance.run(
     'INSERT OR IGNORE INTO merchants (api_key, ln_address, usdc_address, payout_mode, payout_threshold_sats, created_at) VALUES (?, ?, ?, ?, ?, ?)',
     devKey,
-    'demo@walletofsatoshi.com',
+    'longingsavior14@walletofsatoshi.com',
     '0x71C7656EC7ab88b098defB751B7401B5f6d8976F',
     'instant',
     0,
     new Date().toISOString()
   );
-  await dbInstance.run("UPDATE merchants SET payout_mode = 'instant' WHERE api_key = ?", devKey);
+  await dbInstance.run("UPDATE merchants SET ln_address = 'longingsavior14@walletofsatoshi.com', payout_mode = 'instant' WHERE api_key = ?", devKey);
 
   const existingDemoTag = await dbInstance.get('SELECT * FROM payment_links WHERE id = ?', 'demo');
   if (!existingDemoTag) {
