@@ -292,10 +292,11 @@ export async function initDb(): Promise<Database> {
     devKey,
     'demo@walletofsatoshi.com',
     '0x71C7656EC7ab88b098defB751B7401B5f6d8976F',
-    'manual',
+    'instant',
     0,
     new Date().toISOString()
   );
+  await dbInstance.run("UPDATE merchants SET payout_mode = 'instant' WHERE api_key = ?", devKey);
 
   const existingDemoTag = await dbInstance.get('SELECT * FROM payment_links WHERE id = ?', 'demo');
   if (!existingDemoTag) {
