@@ -112,11 +112,19 @@ export const handleLnbitsWebhook = async (req: Request, res: Response, next: Nex
       throw new AppError('Webhook secret not configured on server', 500, 'SERVER_MISCONFIGURED');
     }
 
-    // [HIGH-3 FIX] Wrap JSON.parse in try-catch
+    // Robust body parsing handling Object, Buffer, and String
     let body: any = {};
-    if (req.body && req.body.length > 0) {
+    if (typeof req.body === 'object' && req.body !== null && !Buffer.isBuffer(req.body)) {
+      body = req.body;
+    } else if (Buffer.isBuffer(req.body) && req.body.length > 0) {
       try {
         body = JSON.parse(req.body.toString('utf8'));
+      } catch {
+        throw new AppError('Invalid JSON body in webhook request', 400, 'INVALID_JSON');
+      }
+    } else if (typeof req.body === 'string' && req.body.length > 0) {
+      try {
+        body = JSON.parse(req.body);
       } catch {
         throw new AppError('Invalid JSON body in webhook request', 400, 'INVALID_JSON');
       }
