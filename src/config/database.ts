@@ -285,34 +285,34 @@ export async function initDb(): Promise<Database> {
 
   console.log('⚡ SQLite Database file initialized (aipp.db).');
 
-  // Pre-seed a developer test key — only in development mode
-  if (!IS_PRODUCTION) {
-    const devKey = 'aipp_devtest';
-    const existingDevKey = await dbInstance.get('SELECT * FROM merchants WHERE api_key = ?', devKey);
-    if (!existingDevKey) {
-      await dbInstance.run(
-        'INSERT OR IGNORE INTO merchants (api_key, ln_address, payout_mode, payout_threshold_sats, created_at) VALUES (?, ?, ?, ?, ?)',
-        devKey,
-        'longingsavior14@walletofsatoshi.com',
-        'manual',
-        0,
-        new Date().toISOString()
-      );
+  // Seed permanent demo merchant and Smart Tag ('demo') for autonomous agent testing
+  const devKey = 'aipp_devtest';
+  await dbInstance.run(
+    'INSERT OR IGNORE INTO merchants (api_key, ln_address, usdc_address, payout_mode, payout_threshold_sats, created_at) VALUES (?, ?, ?, ?, ?, ?)',
+    devKey,
+    'demo@walletofsatoshi.com',
+    '0x71C7656EC7ab88b098defB751B7401B5f6d8976F',
+    'manual',
+    0,
+    new Date().toISOString()
+  );
 
-      // Add mock transaction
-      const mockHash = 'demo_mock_payout_' + crypto.randomBytes(8).toString('hex');
-      await dbInstance.run(
-        'INSERT INTO invoices (payment_hash, api_key, amount_sats, commission_sats, forwarded_amount_sats, status, payout_status, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
-        mockHash,
-        devKey,
-        1000,
-        10,
-        990,
-        'settled',
-        'forwarded',
-        new Date().toISOString()
-      );
-    }
+  const existingDemoTag = await dbInstance.get('SELECT * FROM payment_links WHERE id = ?', 'demo');
+  if (!existingDemoTag) {
+    await dbInstance.run(
+      `INSERT INTO payment_links (id, api_key, title, amount_usd, redirect_url, capability_type, description, input_schema, output_schema, created_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      'demo',
+      devKey,
+      'AIPP Agent Autonomous Test',
+      0.01,
+      'https://aipp.dev/t/demo/content',
+      'api',
+      'Test AIPP autonomous HTTP 402 payment flow ($0.01 test tag).',
+      JSON.stringify({ type: 'object', properties: { query: { type: 'string', description: 'Optional test input' } } }),
+      JSON.stringify({ type: 'object', properties: { success: { type: 'boolean' }, message: { type: 'string' } } }),
+      new Date().toISOString()
+    );
   }
 
   return dbInstance;
@@ -334,11 +334,6 @@ export async function closeDb(): Promise<void> {
 
 let currentTransactionPromise: Promise<void> = Promise.resolve();
 
-/**
- * Acquires a global transaction lock to prevent concurrent database transactions 
- * from interleaving and causing SQLITE_ERROR: cannot start a transaction within a transaction.
- * Returns a release function that must be called in a finally block.
- */
 export function acquireTransactionLock(): Promise<() => void> {
   let release: () => void;
   const nextPromise = new Promise<void>(resolve => {

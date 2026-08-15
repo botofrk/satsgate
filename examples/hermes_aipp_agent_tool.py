@@ -15,7 +15,7 @@ import sys
 from typing import Dict, Any, Optional
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'sdk', 'aipp-python')))
-from aipp import Aipp
+from aipp import AippClient
 
 class HermesAippTool:
     """
@@ -29,7 +29,7 @@ class HermesAippTool:
         if not self.api_key:
             raise ValueError("AIPP_API_KEY is required")
         self.base_url = (base_url or os.environ.get("AIPP_BASE_URL") or "https://aipp.dev").rstrip("/")
-        self.client = Aipp(api_key=self.api_key, base_url=self.base_url)
+        self.client = AippClient(api_key=self.api_key, base_url=self.base_url)
 
     def get_hermes_function_definitions(self) -> list:
         """

@@ -30,8 +30,25 @@ async function loadTag(linkId: string) {
 function manifestFor(req: Request, tag: any) {
   const base = origin(req);
   const methods = [] as any[];
-  if (tag.ln_address) methods.push({ protocol: 'L402', network: 'bitcoin-lightning' });
-  if (tag.usdc_address) methods.push({ protocol: 'x402', network: 'base', asset: 'USDC' });
+  if (tag.ln_address) {
+    methods.push({
+      protocol: 'L402',
+      network: 'bitcoin-lightning',
+      fee_policy: '1% + 5 sats customer-side fee',
+      address: tag.ln_address
+    });
+  }
+  if (tag.usdc_address) {
+    methods.push({
+      protocol: 'x402',
+      network: 'base',
+      chain_id: 8453,
+      asset: 'USDC',
+      contract: '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913',
+      receiver: tag.usdc_address,
+      fee_policy: '1% merchant platform fee'
+    });
+  }
 
   return {
     spec: 'https://aipp.dev/spec/open-tag/1.0',
@@ -41,13 +58,14 @@ function manifestFor(req: Request, tag: any) {
     capability_type: tag.capability_type || 'link',
     name: tag.title,
     description: tag.description || undefined,
-    price: { amount: Number(tag.amount_usd).toFixed(2), currency: 'USD' },
+    price: { amount_usd: Number(tag.amount_usd).toFixed(2), currency: 'USD' },
     accepts: methods,
     input_schema: parseSchema(tag.input_schema),
     output_schema: parseSchema(tag.output_schema),
     interfaces: {
       human: `${base}/t/${tag.id}`,
       manifest: `${base}/t/${tag.id}/manifest`,
+      content: `${base}/t/${tag.id}/content`,
       create_payment: `${base}/t/${tag.id}/invoice`,
       verify_and_unlock: `${base}/t/${tag.id}/unlock/{payment_hash}`,
       receipt: `${base}/t/${tag.id}/receipt/{payment_hash}`
@@ -63,6 +81,7 @@ function manifestFor(req: Request, tag: any) {
 
 export const getOpenTag = async (req: Request, res: Response, next: NextFunction) => {
   const accept = req.accepts(['html', 'json']);
+  res.setHeader('Link', `<${origin(req)}/t/${req.params.linkId}/manifest>; rel="describedby"; type="application/json"`);
   if (accept === 'json' || req.query.format === 'json') return getOpenTagManifest(req, res, next);
   return renderPaymentPage(req, res, next);
 };
@@ -74,6 +93,48 @@ export const getOpenTagManifest = async (req: Request, res: Response, next: Next
     res.setHeader('Vary', 'Accept');
     res.setHeader('Link', `<${origin(req)}/t/${tag.id}>; rel="alternate"; type="text/html"`);
     res.json(manifestFor(req, tag));
+  } catch (error) { next(error); }
+};
+
+export const getOpenTagContent = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const tag = await loadTag(req.params.linkId);
+    const hash = (req.query.payment_hash as string) || (req.headers['x-payment-hash'] as string);
+    if (hash) {
+      const db = getDb();
+      const row = await db.get(
+        'SELECT payment_hash, status, preimage FROM invoices WHERE payment_hash = ? AND tag_id = ?',
+        hash,
+        tag.id
+      );
+      if (row && row.status === 'settled') {
+        return res.json({
+          success: true,
+          tag_id: tag.id,
+          title: tag.title,
+          message: 'AIPP autonomous payment completed.',
+          content: tag.redirect_url ? { type: 'redirect', url: tag.redirect_url } : { type: 'data' }
+        });
+      }
+    }
+
+    // Return 402 Payment Required with HTTP 402 challenge details
+    const base = origin(req);
+    res.setHeader('WWW-Authenticate', `L402 invoice="lnbc_sample_aipp_${tag.id}", macaroon="ag_sample_aipp_${tag.id}"`);
+    res.setHeader('Link', `<${base}/t/${tag.id}/manifest>; rel="describedby"; type="application/json"`);
+    return res.status(402).json({
+      error: 'Payment Required',
+      status: 402,
+      tag_id: tag.id,
+      title: tag.title,
+      price: { amount_usd: Number(tag.amount_usd).toFixed(2), currency: 'USD' },
+      manifest_url: `${base}/t/${tag.id}/manifest`,
+      create_payment_url: `${base}/t/${tag.id}/invoice`,
+      payment_instructions: {
+        lightning: 'POST invoice to create_payment_url with { protocol: "L402" }',
+        base_usdc: 'POST invoice to create_payment_url with { protocol: "x402" }, then transfer USDC on Base (Chain ID 8453).'
+      }
+    });
   } catch (error) { next(error); }
 };
 
