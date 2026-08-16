@@ -45,9 +45,35 @@ function renderFooter(): string {
   </footer>`;
 }
 
+function renderPersonaCta(scenario: Scenario): string {
+  if (['apis-developers', 'automation', 'ai-agents'].includes(scenario.category)) {
+    return `
+    <div style="background:#111; color:#fff; border-radius:20px; padding:36px; text-align:center; margin-bottom:60px;">
+      <h2 style="font-family:Georgia, serif; font-size:26px; font-weight:500; margin:0 0 10px 0;">Implement ${scenario.title} with AIPP</h2>
+      <p style="font-size:14px; color:#a1a1aa; max-width:500px; margin:0 auto 20px;">Read the developer documentation or generate your API key to gate requests behind Lightning and Base USDC payments.</p>
+      <div style="display:flex; gap:12px; justify-content:center; flex-wrap:wrap;">
+        <a href="/docs.html" style="display:inline-block; background:#f59e0b; color:#111; font-weight:800; font-size:14px; padding:12px 28px; border-radius:10px; text-decoration:none;">View Developer Docs →</a>
+        <a href="/dashboard.html" style="display:inline-block; background:#27272a; color:#fff; font-weight:700; font-size:14px; padding:12px 24px; border-radius:10px; text-decoration:none;">Open Studio Console</a>
+      </div>
+    </div>`;
+  } else if (['content-digital-goods', 'creators-independent-work'].includes(scenario.category)) {
+    return `
+    <div style="background:#111; color:#fff; border-radius:20px; padding:36px; text-align:center; margin-bottom:60px;">
+      <h2 style="font-family:Georgia, serif; font-size:26px; font-weight:500; margin:0 0 10px 0;">Start Monetizing ${scenario.title}</h2>
+      <p style="font-size:14px; color:#a1a1aa; max-width:500px; margin:0 auto 20px;">Create a Smart Tag payment link to accept supported Lightning and Base USDC payments for your digital content.</p>
+      <a href="/dashboard.html" style="display:inline-block; background:#f59e0b; color:#111; font-weight:800; font-size:14px; padding:12px 28px; border-radius:10px; text-decoration:none;">Create Payment Link →</a>
+    </div>`;
+  } else {
+    return `
+    <div style="background:#111; color:#fff; border-radius:20px; padding:36px; text-align:center; margin-bottom:60px;">
+      <h2 style="font-family:Georgia, serif; font-size:26px; font-weight:500; margin:0 0 10px 0;">Gate ${scenario.title} Queries with AIPP</h2>
+      <p style="font-size:14px; color:#a1a1aa; max-width:500px; margin:0 auto 20px;">Require payment verification before executing data queries or research synthesis.</p>
+      <a href="/dashboard.html" style="display:inline-block; background:#f59e0b; color:#111; font-weight:800; font-size:14px; padding:12px 28px; border-radius:10px; text-decoration:none;">Open Studio Console →</a>
+    </div>`;
+  }
+}
+
 export function renderUseCasesIndex(req: Request, res: Response): void {
-  const categoryKeys = Object.keys(CATEGORIES) as Array<keyof typeof CATEGORIES>;
-  
   let cardsHtml = '';
   SCENARIOS.forEach(s => {
     cardsHtml += `
@@ -78,10 +104,10 @@ export function renderUseCasesIndex(req: Request, res: Response): void {
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>AIPP Use Cases & Solutions — Real Problem Guides</title>
-  <meta name="description" content="Explore real-world technical problems and see how AIPP provides instant pay-per-use monetization for APIs, n8n workflows, AI agents, and digital goods.">
+  <title>AIPP Use Cases &amp; Solutions — Real Problem Guides</title>
+  <meta name="description" content="Explore real-world technical guides showing how creators, developers, and AI engineers use AIPP for pay-per-use monetization.">
   <link rel="canonical" href="https://aipp.dev/use-cases">
-  <meta property="og:title" content="AIPP Use Cases & Solutions">
+  <meta property="og:title" content="AIPP Use Cases &amp; Solutions">
   <meta property="og:description" content="Documented real-world solutions for monetizing APIs, AI agents, automations, and digital files.">
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://aipp.dev/use-cases">
@@ -110,7 +136,7 @@ export function renderUseCasesIndex(req: Request, res: Response): void {
     <section class="hero">
       <span style="font-size:11px; font-weight:800; text-transform:uppercase; letter-spacing:0.08em; color:#b45309; background:#fffbeb; padding:4px 12px; border-radius:20px; border:1px solid #fde68a;">Real Problems · Genuine Solutions</span>
       <h1>AIPP Use Cases</h1>
-      <p>Explore technical guides showing how creators, developers, and AI engineers use AIPP to solve monetisation friction with instant micropayments.</p>
+      <p>What can you use AIPP for? Explore guides showing how creators, developers, and AI engineers solve monetisation friction with pay-per-use payments.</p>
     </section>
 
     <div class="grid">
@@ -120,7 +146,7 @@ export function renderUseCasesIndex(req: Request, res: Response): void {
     <!-- Onboarding CTA -->
     <div style="background:#111; color:#fff; border-radius:20px; padding:40px 32px; text-align:center; margin-bottom:60px;">
       <h2 style="font-family:Georgia, serif; font-size:28px; font-weight:500; margin:0 0 10px 0;">Ready to price your file, link, or API?</h2>
-      <p style="font-size:14px; color:#a1a1aa; max-width:500px; margin:0 auto 24px; line-height:1.5;">Turn any URL or endpoint into a Smart Tag in 10 seconds. Works instantly for humans and AI agents.</p>
+      <p style="font-size:14px; color:#a1a1aa; max-width:540px; margin:0 auto 24px; line-height:1.5;">Turn a URL or endpoint into an AIPP Smart Tag. Compatible with human web browsers and AI agents.</p>
       <a href="/dashboard.html" style="display:inline-block; background:#f59e0b; color:#111; font-weight:800; font-size:14px; padding:12px 28px; border-radius:10px; text-decoration:none;">Create Smart Tag →</a>
     </div>
   </div>
@@ -316,7 +342,7 @@ export function renderUseCaseDetail(req: Request, res: Response): void {
       • <strong>No Merchant Spending Balance:</strong> AIPP does not maintain a spendable merchant balance or require manual withdrawal steps.
     </div>
 
-    <!-- Limitations -->
+    <!-- Requirements & Limitations -->
     <h2 class="section-title">Requirements &amp; Limitations</h2>
     <ul style="font-size:13.5px; color:#403d39; padding-left:20px; margin-bottom:32px;">
       ${scenario.limitations.map(l => `<li style="margin-bottom:6px;">${l}</li>`).join('')}
@@ -335,12 +361,8 @@ export function renderUseCaseDetail(req: Request, res: Response): void {
       ${relatedHtml}
     </div>` : ''}
 
-    <!-- CTA -->
-    <div style="background:#111; color:#fff; border-radius:20px; padding:36px; text-align:center; margin-bottom:60px;">
-      <h2 style="font-family:Georgia, serif; font-size:26px; font-weight:500; margin:0 0 10px 0;">Implement ${scenario.title} in 10 Seconds</h2>
-      <p style="font-size:14px; color:#a1a1aa; max-width:480px; margin:0 auto 20px;">Generate your free merchant API key or Smart Tag and start accepting Lightning &amp; Base USDC payments.</p>
-      <a href="/dashboard.html" style="display:inline-block; background:#f59e0b; color:#111; font-weight:800; font-size:14px; padding:12px 28px; border-radius:10px; text-decoration:none;">Open Studio Console →</a>
-    </div>
+    <!-- Persona-Specific CTA -->
+    ${renderPersonaCta(scenario)}
   </div>
   ${renderFooter()}
 </body>
