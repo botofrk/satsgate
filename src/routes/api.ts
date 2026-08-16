@@ -123,6 +123,8 @@ router.post('/lnbits-webhook', handleLnbitsWebhook);
 import { renderUseCasesIndex, renderUseCaseDetail, renderSitemapXml } from '../controllers/useCases';
 router.get('/use-cases', renderUseCasesIndex);
 router.get('/use-cases/', renderUseCasesIndex);
+router.get('/use%20cases', (req, res) => res.redirect(301, '/use-cases'));
+router.get('/use cases', (req, res) => res.redirect(301, '/use-cases'));
 router.get('/use-cases/:slug', renderUseCaseDetail);
 router.get('/sitemap.xml', renderSitemapXml);
 
