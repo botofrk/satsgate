@@ -20,7 +20,7 @@
     button,input{font:inherit}a{color:inherit}.shell{width:min(1080px,calc(100% - 32px));margin:auto}
     
     /* Navigation */
-    nav{height:68px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--line)}.brand{display:flex;gap:10px;align-items:center;text-decoration:none;font-family:'Plus Jakarta Sans',sans-serif;font-weight:850;font-size:24px;letter-spacing:-0.04em}.mark{width:32px;height:32px;display:block}.navlinks{display:flex;align-items:center;gap:20px;font-size:13px;color:var(--muted)}.navlinks a{text-decoration:none;transition:color .2s}.navlinks a:hover{color:var(--ink)}.studio{padding:9px 16px;border-radius:10px;background:var(--ink);color:white!important;font-weight:750;transition:all .2s ease}.studio:hover{background:#282624;transform:translateY(-1px)}
+    nav{height:68px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--line)}.brand{display:flex;gap:10px;align-items:center;text-decoration:none;font-family:'Plus Jakarta Sans',sans-serif;font-weight:850;font-size:24px;letter-spacing:-0.04em}.mark{width:32px;height:32px;display:block}.navlinks{display:flex;align-items:center;gap:20px;font-size:13px;color:var(--muted)}.navlinks a{text-decoration:none;transition:color .2s}.navlinks a:hover{color:var(--ink)}.navlinks a.ext-link{font-weight:700;color:#b45309;display:inline-flex;align-items:center;gap:5px}.studio{padding:9px 16px;border-radius:10px;background:var(--ink);color:white!important;font-weight:750;transition:all .2s ease}.studio:hover{background:#282624;transform:translateY(-1px)}
     
     /* Hero */
     main{padding:48px 0 12px}.hero{text-align:center;max-width:840px;margin:0 auto 24px}.eyebrow{display:inline-flex;align-items:center;gap:7px;padding:6px 14px;border:1px solid #ead274;background:#fffbdf;color:#625000;border-radius:999px;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.06em}.hero h1{font-family:Georgia,"Times New Roman",serif;font-size:clamp(42px,6.2vw,72px);font-weight:500;line-height:1.02;letter-spacing:-.045em;margin:22px 0 16px;color:#181716}.hero h1 em{color:#9a7600;font-weight:500;font-style:italic}.hero p.lede{font-size:19px;line-height:1.55;color:#423e3a;max-width:720px;margin:0 auto 10px;font-weight:600}.hero p.sub{font-size:15.5px;line-height:1.6;color:var(--muted);max-width:680px;margin:auto}.tiny-proof{display:flex;justify-content:center;gap:20px;flex-wrap:wrap;margin-top:22px;font-size:12.5px;font-weight:700;color:#4e4945}.tiny-proof span:before{content:"✓";color:var(--green);margin-right:6px}
@@ -55,7 +55,8 @@
     /* Footer */
     footer{border-top:1px solid var(--line);padding:28px 0 38px}.foot{display:flex;justify-content:space-between;align-items:center;gap:20px;color:var(--muted);font-size:12.5px}.footlinks{display:flex;gap:18px}.footlinks a{text-decoration:none;transition:color .2s}.footlinks a:hover{color:var(--ink)}
 
-    @media(max-width:920px){.navlinks>a:not(.studio){display:none}.features-grid,.steps-grid{grid-template-columns:1fr 1fr}.included-grid{grid-template-columns:repeat(3,1fr)}.preview-body{grid-template-columns:1fr}.sidebar{display:none}.price-box{grid-template-columns:1fr;gap:24px}.final-cta{flex-direction:column;align-items:flex-start;padding:30px 22px}.final-cta .btn-primary{width:100%;justify-content:center}}
+    @media(max-width:920px){.navlinks>a:not(.studio){display:none!important}.features-grid,.steps-grid{grid-template-columns:1fr 1fr}.included-grid{grid-template-columns:repeat(3,1fr)}.preview-body{grid-template-columns:1fr}.sidebar{display:none}.price-box{grid-template-columns:1fr;gap:24px}.final-cta{flex-direction:column;align-items:flex-start;padding:30px 22px}.final-cta .btn-primary{width:100%;justify-content:center}}
+    @media(max-width:480px){.studio{padding:8px 12px;font-size:12px}}
     @media(max-width:680px){main{padding-top:32px}.features-grid,.steps-grid,.included-grid{grid-template-columns:1fr}.mini-grid{grid-template-columns:1fr}.foot{flex-direction:column;text-align:center;gap:12px}}
   </style>
 </head>
@@ -67,7 +68,7 @@
     <div class="navlinks">
       <a href="/use-cases">Use Cases</a>
       <a href="/store">Store</a>
-      <a href="/aipp-extension.zip" download="aipp-extension.zip" style="font-weight:700; color:#b45309; display:inline-flex; align-items:center; gap:5px;">
+      <a href="/aipp-extension.zip" download="aipp-extension.zip" class="ext-link">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#b45309" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
         Chrome Extension
       </a>
@@ -277,6 +278,7 @@
       <span>© 2026 aipp · Open Protocol for Human + Agent Commerce</span>
       <div class="footlinks">
         <a href="/use-cases">Use Cases</a>
+        <a href="/store">Store</a>
         <a href="/docs.html">Docs</a>
         <a href="/legal.html">Legal</a>
         <a href="mailto:info@aipp.dev">Contact</a>
