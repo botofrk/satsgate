@@ -413,6 +413,12 @@ export function renderSitemapXml(req: Request, res: Response): void {
     <lastmod>${now}</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>${baseUrl}/store/freelance-designer-client-os</loc>
+    <lastmod>${now}</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
   </url>`;
 
   SCENARIOS.forEach(s => {

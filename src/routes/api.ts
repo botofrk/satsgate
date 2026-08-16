@@ -126,6 +126,13 @@ router.get('/use-cases/', renderUseCasesIndex);
 router.get('/use%20cases', (req, res) => res.redirect(301, '/use-cases'));
 router.get('/use cases', (req, res) => res.redirect(301, '/use-cases'));
 router.get('/use-cases/:slug', renderUseCaseDetail);
+
+// Store routes
+import path from 'path';
+router.get(['/store/freelance-designer-client-os', '/store/freelance-designer-client-os/'], (req, res) => {
+  res.sendFile(path.join(__dirname, '../../public/store/freelance-designer-client-os.html'));
+});
+
 router.get('/sitemap.xml', renderSitemapXml);
 
 export default router;
