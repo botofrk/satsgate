@@ -19,7 +19,13 @@ function renderHeader(): string {
   return `
   <nav style="max-width:1100px; margin:0 auto; padding:20px 24px; display:flex; align-items:center; justify-content:space-between;">
     <a href="/" style="display:flex; align-items:center; gap:8px; text-decoration:none; color:#181716; font-weight:850; font-size:20px;">
-      <img src="/assets/aipp-mark.svg" alt="AIPP" style="height:28px;">
+      <svg width="28" height="28" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="20" cy="20" r="14" stroke="#0F0F11" stroke-width="3.8" stroke-dasharray="67 21" stroke-linecap="round" transform="rotate(-65 20 20)"/>
+        <g transform="rotate(-38 20 20)">
+          <path d="M 15 13.5 L 20 7.5 L 25 13.5 L 25 27 C 25 29 23.5 30.5 21.5 30.5 L 18.5 30.5 C 16.5 30.5 15 29 15 27 Z" fill="#F59E0B"/>
+          <circle cx="20" cy="13" r="2.2" fill="#FAF9F6"/>
+        </g>
+      </svg>
       <span>ai<span style="color:#f59e0b;">pp</span></span>
     </a>
     <div style="display:flex; gap:20px; align-items:center; font-size:13px; font-weight:600;">
