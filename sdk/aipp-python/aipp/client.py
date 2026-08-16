@@ -57,7 +57,7 @@ class Aipp:
         return ChargeStatus(**data)
 
     def payout(self):
-        """Triggers a manual withdrawal of your merchant balance"""
+        """Triggers an on-demand payout sweep to your configured payout wallet"""
         from .models import PayoutResponse
         data = self._request("POST", "/merchant/payout")
         return PayoutResponse(**data)

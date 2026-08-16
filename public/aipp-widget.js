@@ -35,7 +35,7 @@
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#806300" stroke-width="2.5"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
             </div>
             <h3 style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size: 17px; font-weight: 800; color: #1a1918; margin-bottom: 6px;">Protected by AIPP Smart Price Tag</h3>
-            <p style="font-size: 13px; color: #6b6964; margin-bottom: 16px; max-width: 320px;">Unlock this exclusive article instantly for <strong>${customPrice}</strong> via Bitcoin Lightning or Base USDC.</p>
+            <p style="font-size: 13px; color: #6b6964; margin-bottom: 16px; max-width: 320px;">Unlock this exclusive article for <strong>${customPrice}</strong> via Bitcoin Lightning or Base USDC.</p>
             <iframe src="https://aipp.dev/embed/${tagId}" style="width: 100%; max-width: 360px; height: 380px; border: none; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.08);" title="AIPP Checkout"></iframe>
           </div>
         </div>

@@ -1,6 +1,6 @@
 # 📓 Monetizing Obsidian Notes & Vaults with AIPP Protocol
 
-This guide enables **Obsidian (Obsidian.md / Publish)** creators, researchers, and PKM builders to sell notes, templates, and digital vaults with zero Gumroad fees and instant Bitcoin Lightning / Base USDC settlements.
+This guide enables **Obsidian (Obsidian.md / Publish)** creators, researchers, and PKM builders to sell notes, templates, and digital vaults with pay-per-item Bitcoin Lightning and Base USDC payment verification.
 
 ---
 
@@ -27,5 +27,5 @@ Paste the following HTML snippet into any Obsidian Markdown file:
 
 ## 💎 Why AIPP for Obsidian?
 - **Automated Settlement:** Funds settle to your configured wallet with no manual withdrawal step.
-- **1% Protocol Fee:** Gumroad takes 10% + 30¢. AIPP takes only 1%.
+- **Disclosed Protocol Fee:** AIPP charges a 1% + 5 sats fee for Lightning and 1% for Base USDC.
 - **Global Micro-Payments:** Sell $0.25 flash notes to thousands of readers worldwide.
