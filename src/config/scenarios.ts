@@ -1193,16 +1193,7 @@ curl -X POST https://aipp.dev/merchant/links/create \
     seo_title: 'Sell a Digital Product - No Storefront Required with AIPP',
     seo_description: 'Sell PDFs, Notion templates, code scripts, and AI prompt packs with instant Lightning and Base USDC payment gates.',
     related_scenarios: ['digital-download', 'get-paid-before-delivery', 'content-paywall']
-  }
-];
-
-export function getScenarioBySlug(slug: string): Scenario | undefined {
-  return SCENARIOS.find(s => s.slug === slug);
-}
-
-export function getScenariosByCategory(category: ScenarioCategory): Scenario[] {
-  return SCENARIOS.filter(s => s.category === category);,
-
+  },
   {
     slug: 'get-paid-before-compute',
     title: 'Get Paid Before Compute',
@@ -1274,6 +1265,7 @@ app.post('/api/compute-job', l402Paywall({
     related_scenarios: ['paid-ai-image-generation', 'paid-web-scraping', 'paid-transcription', 'paid-report-generation', 'paid-data-api', 'pay-per-api-call', 'get-paid-before-delivery']
   }
 ];
+
 export function getScenarioBySlug(slug: string): Scenario | undefined {
   return SCENARIOS.find(s => s.slug === slug);
 }
