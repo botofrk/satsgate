@@ -3,7 +3,8 @@ export type ScenarioCategory =
   | 'ai-agents' 
   | 'automation' 
   | 'data-research' 
-  | 'content-digital-goods';
+  | 'content-digital-goods'
+  | 'creators-independent-work';
 
 export type TruthLevel = 'VERIFIED' | 'SUPPORTED' | 'EXAMPLE';
 
@@ -73,6 +74,11 @@ export const CATEGORIES: Record<ScenarioCategory, { label: string; icon: string;
     label: 'Content & Digital Goods',
     icon: '📦',
     description: 'Sell digital files, Obsidian notes, Notion templates, and premium web articles.'
+  },
+  'creators-independent-work': {
+    label: 'Creators & Independent Work',
+    icon: '🎨',
+    description: 'Gate human-created digital deliverables, small one-time online jobs, and digital assets behind instant micro-payments.'
   }
 };
 
@@ -135,8 +141,8 @@ app.post('/api/v1/translate', l402Paywall({
     ],
     faq: [
       {
-        question: 'How fast is payment verification?',
-        answer: 'Settlement verification occurs in under 100 milliseconds via local preimage cryptography or instant node check.'
+        question: 'How is payment verified?',
+        answer: 'Settlement verification occurs via local preimage cryptography or instant node check.'
       },
       {
         question: 'How are merchant funds settled?',
@@ -345,7 +351,7 @@ async def run_security_audit(name: str, arguments: dict):
     payment_flow: [
       { step: '01', title: 'Open Smart Tag', description: 'Customer clicks your AIPP link (e.g. aipp.dev/t/p_abc123).' },
       { step: '02', title: 'Instant Pay', description: 'Scans QR code or uses WebLN/USDC to pay.' },
-      { step: '03', title: 'Proof Checked', description: 'AIPP verifies payment in <100ms.' },
+      { step: '03', title: 'Proof Checked', description: 'AIPP verifies the payment proof before allowing the protected action to continue.' },
       { step: '04', title: 'File Unlocked', description: 'Browser automatically opens or downloads the target digital asset.' }
     ],
     supported_rails: ['lightning', 'usdc'],
@@ -391,7 +397,7 @@ curl -X POST https://aipp.dev/merchant/links/create \
     ],
     seo_title: 'Digital File Download - Sell Files for $0.05 with AIPP',
     seo_description: 'Sell PDFs, Notion templates, code scripts, and digital assets with instant Lightning or Base USDC micropayments.',
-    related_scenarios: ['content-paywall', 'paid-report-generation', 'pay-per-api-call']
+    related_scenarios: ['content-paywall', 'sell-digital-product', 'paid-report-generation']
   },
 
   {
@@ -407,7 +413,7 @@ curl -X POST https://aipp.dev/merchant/links/create \
     payment_flow: [
       { step: '01', title: 'Visit Page', description: 'Reader visits article or research URL; intro is visible, body is blurred.' },
       { step: '02', title: 'Paywall Card', description: 'AIPP widget presents $0.25 QR code / WebLN button.' },
-      { step: '03', title: 'Instant Verification', description: 'Payment settles in <100ms.' },
+      { step: '03', title: 'Instant Verification', description: 'Payment settles and proof is verified before content unlocks.' },
       { step: '04', title: 'Content Unlocked', description: 'Blur filter removed and full article renders.' }
     ],
     supported_rails: ['lightning', 'usdc'],
@@ -450,7 +456,7 @@ curl -X POST https://aipp.dev/merchant/links/create \
     ],
     seo_title: 'Content & Article Paywall - Micropayment Paywall with AIPP',
     seo_description: 'Monetize individual articles, whitepapers, reports, and research posts with low-friction Lightning and Base USDC micropayments.',
-    related_scenarios: ['digital-download', 'paid-report-generation', 'pay-per-api-call']
+    related_scenarios: ['digital-download', 'sell-digital-product', 'paid-report-generation']
   },
 
   {
@@ -495,7 +501,7 @@ def run_research():
     example_code_lang: 'python',
     what_aipp_does: [
       'Ensures every research query is paid before resource execution',
-      'Provides fast preimage verification',
+      'Verifies payment preimages before allowing protected access',
       'Auto-forwards net earnings to merchant wallet'
     ],
     what_aipp_does_not_do: [
@@ -575,10 +581,6 @@ def run_research():
     seo_description: 'Monetize serverless tasks, event triggers, and background jobs per webhook execution with AIPP.',
     related_scenarios: ['paid-n8n-workflow', 'pay-per-api-call', 'ai-agent-execution']
   },
-
-  /* -------------------------------------------------------------------------- */
-  /* PHASE 2 NEW EXPANSION SCENARIOS (7 DISTINCT REAL USE CASES)               */
-  /* -------------------------------------------------------------------------- */
 
   {
     slug: 'paid-ai-image-generation',
@@ -983,7 +985,7 @@ def run_agent_task():
     example_code_lang: 'typescript',
     what_aipp_does: [
       'Gates RAG queries and knowledge base lookups behind verified micropayments',
-      'Verifies payment preimages in under 100 milliseconds',
+      'Verifies payment preimages before allowing protected access',
       'Auto-forwards net proceeds to developer wallet'
     ],
     what_aipp_does_not_do: [
@@ -1000,6 +1002,200 @@ def run_agent_task():
     seo_title: 'Paid Document & RAG Query - Monetize RAG Systems with AIPP',
     seo_description: 'Charge per query on private document collections, RAG pipelines, and Vector DBs with Lightning and Base USDC.',
     related_scenarios: ['ai-research-agent', 'usage-based-ai-agent', 'paid-data-api']
+  },
+
+  /* -------------------------------------------------------------------------- */
+  /* PHASE 3 NEW EXPANSION SCENARIOS (CREATORS & INDEPENDENT DIGITAL WORK)     */
+  /* -------------------------------------------------------------------------- */
+
+  {
+    slug: 'get-paid-before-delivery',
+    title: 'Get Paid Before Digital Delivery',
+    short_description: 'Require verified Lightning or Base USDC payment before releasing custom digital deliverables to clients.',
+    category: 'creators-independent-work',
+    category_label: 'Creators & Independent Work',
+    problem: 'Freelancers, independent designers, and custom script writers produce valuable custom digital deliverables (custom code scripts, vector designs, data research files), but delivering files before payment exposes creators to unpaid work or delayed client invoices.',
+    target_user: 'Freelance developers, independent designers, custom researchers, and technical contractors.',
+    real_world_example: 'A developer completes a custom Python data extraction script for a client. The developer uploads the script to an unlisted storage URL and sends an AIPP Smart Tag link for $50. Once the client pays via USDC or Lightning, the file automatically unlocks.',
+    how_aipp_solves_it: 'AIPP provides a payment gate link. Your client views the job title and price, pays using supported Lightning or Base USDC wallets, and AIPP verifies the payment proof before redirecting to the deliverable download URL.',
+    payment_flow: [
+      { step: '01', title: 'Send Payment Link', description: 'Creator sends AIPP Smart Tag URL (e.g. aipp.dev/t/p_job123) to client.' },
+      { step: '02', title: 'Client Reviews Job', description: 'Client sees job title, deliverable description, and USD price.' },
+      { step: '03', title: 'Instant Settlement', description: 'Client pays with Lightning QR code or Base USDC.' },
+      { step: '04', title: 'Deliverable Unlocked', description: 'AIPP verifies payment proof and unlocks the download link.' }
+    ],
+    supported_rails: ['lightning', 'usdc'],
+    supported_protocols: ['l402', 'x402'],
+    truth_level: 'SUPPORTED',
+    truth_badge_text: 'Supported by AIPP architecture',
+    evidence: 'Supported directly by AIPP Smart Tag redirect gating and instant settlement proof verification.',
+    requirements: [
+      'Target digital deliverable hosted on an unlisted/secure storage URL (S3, Drive, Dropbox)',
+      'Lightning Address or Base USDC wallet'
+    ],
+    limitations: [
+      'AIPP does NOT provide escrow, arbitrate work quality disputes, or guarantee delivery',
+      'Client must pay using supported Lightning or Base USDC payment rails'
+    ],
+    example_request: 'GET /t/p_job123 HTTP/1.1\nHost: aipp.dev',
+    example_response: 'HTTP/1.1 200 OK\n<!-- AIPP Web Checkout with Deliverable Unlock Gate -->',
+    example_code: `// Create a "Pay Before Delivery" Smart Tag via cURL
+curl -X POST https://aipp.dev/merchant/links/create \
+  -H "X-Api-Key: aipp_merch_your_key_here" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "title": "Custom Scraping Script Deliverable",
+    "amount_usd": 25.00,
+    "redirect_url": "https://storage.example.com/final_script.zip",
+    "capability_type": "link"
+  }'`,
+    example_code_lang: 'bash',
+    what_aipp_does: [
+      'Creates a clean payment gate URL for custom digital deliverables',
+      'Verifies Lightning or Base USDC payment settlement before releasing the download link',
+      'Auto-forwards net proceeds directly to your merchant wallet address'
+    ],
+    what_aipp_does_not_do: [
+      'Does not provide escrow services or arbitrate client disputes regarding work quality',
+      'Does not guarantee contract completion or find freelance clients',
+      'Does not accept credit cards, PayPal, or bank wire transfers'
+    ],
+    faq: [
+      {
+        question: 'Is AIPP an escrow service?',
+        answer: 'No. AIPP is a payment verification gate, not an escrow agent. It verifies payment settlement before unlocking access to your file URL.'
+      },
+      {
+        question: 'What payment methods can my client use?',
+        answer: 'If your client can pay with Lightning (Bitcoin) or Base USDC, AIPP provides an instant payment gate for your digital deliverable.'
+      }
+    ],
+    seo_title: 'Get Paid Before Digital Delivery - Pay-to-Unlock Gate with AIPP',
+    seo_description: 'Protect custom freelancer deliverables, code scripts, and design assets behind verified Lightning and Base USDC payments.',
+    related_scenarios: ['sell-digital-service', 'sell-digital-product', 'paid-report-generation']
+  },
+
+  {
+    slug: 'sell-digital-service',
+    title: 'Sell a Small Digital Service',
+    short_description: 'Charge one-time fees for small online jobs, document processing, script runs, or data conversions.',
+    category: 'creators-independent-work',
+    category_label: 'Creators & Independent Work',
+    problem: 'Independent operators selling small online services ($0.50 to $5.00 for file conversion, dataset cleaning, script execution, or custom document processing) lose revenue to monthly SaaS subscription costs or high credit card minimum fees that make low-ticket jobs unviable.',
+    target_user: 'Independent service providers, technical freelancers, tool operators, and digital micro-entrepreneurs.',
+    real_world_example: 'A developer builds a small web utility that converts raw PDF invoices into clean CSV tables for $1.00 per file job without requiring account creation or subscription sign-ups.',
+    how_aipp_solves_it: 'Protect your service endpoint with an AIPP Smart Tag or 402 challenge. The customer pays once for the specific job being performed. AIPP verifies payment and your server runs the service logic.',
+    payment_flow: [
+      { step: '01', title: 'Submit Job Request', description: 'Customer uploads file or enters job parameters.' },
+      { step: '02', title: 'One-Time Payment Card', description: 'AIPP presents $1.00 checkout card (Lightning or USDC).' },
+      { step: '03', title: 'Instant Settlement', description: 'Customer pays via WebLN, mobile wallet, or USDC.' },
+      { step: '04', title: 'Job Result Delivered', description: 'AIPP verifies payment proof and server executes job.' }
+    ],
+    supported_rails: ['lightning', 'usdc'],
+    supported_protocols: ['l402', 'x402'],
+    truth_level: 'SUPPORTED',
+    truth_badge_text: 'Supported by AIPP architecture',
+    evidence: 'Supported directly by AIPP Smart Tag payment verification and L402 402 challenge handling.',
+    requirements: [
+      'Web service handler or serverless function',
+      'AIPP API Key or Smart Tag'
+    ],
+    limitations: [
+      'AIPP provides payment verification; merchant hosts and executes the digital service',
+      'Customers must pay using supported Lightning or Base USDC rails'
+    ],
+    example_request: 'POST /api/convert-pdf HTTP/1.1\n\n{"file_id": "pdf_987"}',
+    example_response: 'HTTP/1.1 402 Payment Required\nWWW-Authenticate: L402 invoice="lnbc10m1..."',
+    example_code: `app.post('/api/convert-pdf', l402Paywall({
+  client: aipp,
+  amountUsd: 1.00
+}), async (req, res) => {
+  const csvData = await convertPdfToCsv(req.body.file_id);
+  res.json({ result: csvData });
+});`,
+    example_code_lang: 'typescript',
+    what_aipp_does: [
+      'Enables one-time micropayments for single digital jobs without subscription friction',
+      'Verifies settlement proof instantly before service execution',
+      'Auto-forwards net earnings to your specified wallet'
+    ],
+    what_aipp_does_not_do: [
+      'Does not execute the digital service logic or host your application',
+      'Does not find clients or market your service',
+      'Does not provide bank card acquiring or fiat payment processing'
+    ],
+    faq: [
+      {
+        question: 'Do customers need to subscribe to use my service?',
+        answer: 'No subscription required. Customers pay once for the job that actually runs.'
+      }
+    ],
+    seo_title: 'Sell a Small Digital Service - Pay per Job with AIPP',
+    seo_description: 'Charge one-time micropayments for file conversion, script runs, and small online jobs with Lightning and Base USDC.',
+    related_scenarios: ['get-paid-before-delivery', 'pay-per-api-call', 'paid-n8n-workflow']
+  },
+
+  {
+    slug: 'sell-digital-product',
+    title: 'Sell a Digital Product',
+    short_description: 'Sell downloadable guides, templates, code packages, and AI prompt packs without building an e-commerce storefront.',
+    category: 'creators-independent-work',
+    category_label: 'Creators & Independent Work',
+    problem: 'Creators selling digital products (PDF guides, Notion templates, code packages, design assets, AI prompt packs) lose 10% to 30% of revenue to marketplace fees (Gumroad, Etsy, LemonSqueezy) and spend hours setting up complex e-commerce storefronts.',
+    target_user: 'Digital creators, template authors, designers, technical writers, and AI prompt engineers.',
+    real_world_example: 'A creator sells a curated Notion productivity template or AI prompt library for $2.00. Using an AIPP Smart Tag link, the creator keeps 99% of earnings with 1% protocol fee.',
+    how_aipp_solves_it: 'Generate an AIPP Smart Tag URL pointing to your deliverable download link. Share the URL on social media, blogs, or newsletters. Buyers pay with Lightning or USDC and immediately unlock the product.',
+    payment_flow: [
+      { step: '01', title: 'Click Product Link', description: 'Buyer clicks your AIPP Smart Tag link.' },
+      { step: '02', title: 'Pay Checkout', description: 'Buyer scans Lightning QR code or pays with Base USDC.' },
+      { step: '03', title: 'Settlement Verified', description: 'AIPP verifies payment proof.' },
+      { step: '04', title: 'Product Unlocked', description: 'Browser automatically redirects to the target download URL.' }
+    ],
+    supported_rails: ['lightning', 'usdc'],
+    supported_protocols: ['l402', 'x402'],
+    truth_level: 'SUPPORTED',
+    truth_badge_text: 'Supported by AIPP architecture',
+    evidence: 'Supported directly by Smart Tag link unlock gating and instant payment verification.',
+    requirements: [
+      'Digital product file hosted on external URL (S3, Drive, Dropbox, Notion link)',
+      'Lightning Address or Base USDC wallet'
+    ],
+    limitations: [
+      'External file hosting is required for deliverable asset hosting',
+      'Does not provide shopping carts, multi-item checkout, or automated tax calculation'
+    ],
+    example_request: 'GET /t/p_notion123 HTTP/1.1\nHost: aipp.dev',
+    example_response: 'HTTP/1.1 200 OK\n<!-- AIPP Checkout Page for Notion Template -->',
+    example_code: `// Create a Digital Product Smart Tag via cURL
+curl -X POST https://aipp.dev/merchant/links/create \
+  -H "X-Api-Key: aipp_merch_your_key_here" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "title": "AI Prompt Engineering Pack & Templates",
+    "amount_usd": 2.00,
+    "redirect_url": "https://notion.so/my-template-duplicate-link",
+    "capability_type": "link"
+  }'`,
+    example_code_lang: 'bash',
+    what_aipp_does: [
+      'Provides instant pay-to-unlock link gating for digital products',
+      'Supports human web checkout and AI agent manifest discovery',
+      'Auto-forwards net proceeds to your payout wallet'
+    ],
+    what_aipp_does_not_do: [
+      'Does not provide shopping carts, product catalog management, or tax handling',
+      'Does not host heavy deliverable file binaries directly',
+      'Does not accept credit card or bank payments'
+    ],
+    faq: [
+      {
+        question: 'Can I sell AI prompt packs and Notion templates with this?',
+        answer: 'Yes. AI prompt packs, Notion templates, code packages, and PDF guides can be sold directly using Smart Tag links.'
+      }
+    ],
+    seo_title: 'Sell a Digital Product - No Storefront Required with AIPP',
+    seo_description: 'Sell PDFs, Notion templates, code scripts, and AI prompt packs with instant Lightning and Base USDC payment gates.',
+    related_scenarios: ['digital-download', 'get-paid-before-delivery', 'content-paywall']
   }
 ];
 
