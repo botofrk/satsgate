@@ -1201,5 +1201,83 @@ export function getScenarioBySlug(slug: string): Scenario | undefined {
 }
 
 export function getScenariosByCategory(category: ScenarioCategory): Scenario[] {
+  return SCENARIOS.filter(s => s.category === category);,
+
+  {
+    slug: 'get-paid-before-compute',
+    title: 'Get Paid Before Compute',
+    short_description: 'Require payment before triggering expensive AI models, APIs, GPU inference, or compute jobs.',
+    category: 'apis-developers',
+    category_label: 'APIs & Developers',
+    problem: 'Executing digital actions (LLM tokens, GPU inference, third-party API calls, proxy scraping, data processing) creates immediate provider expense. In conventional billing models, providers fund compute execution first and attempt to bill customers later, taking on financial risk.',
+    target_user: 'AI developers, API providers, cloud engineers, serverless architects, and automation operators.',
+    real_world_example: 'For example, an AI generation API or automated research tool could require payment before invoking GPU inference or third-party paid APIs, ensuring compute costs are funded before execution.',
+    how_aipp_solves_it: 'AIPP gates your compute handler with an HTTP 402 challenge header or Smart Tag. When a client requests execution, AIPP returns a payment requirement. Once the Lightning or USDC payment is verified, your backend executes the compute job.',
+    payment_flow: [
+      { step: '01', title: 'Compute Request', description: 'Client submits parameters for a resource-intensive job.' },
+      { step: '02', title: '402 Invoice', description: 'Server issues HTTP 402 challenge with upfront job price.' },
+      { step: '03', title: 'Payment Settlement', description: 'Client settles invoice via Lightning or Base USDC.' },
+      { step: '04', title: 'Compute Execution', description: 'Server verifies payment proof and executes the compute work.' }
+    ],
+    supported_rails: ['lightning', 'usdc'],
+    supported_protocols: ['l402', 'x402'],
+    truth_level: 'SUPPORTED',
+    truth_badge_text: 'Supported by AIPP architecture',
+    evidence: 'Supported directly by AIPP 402 challenge header generation and preimage verification middleware.',
+    requirements: [
+      'Backend server or serverless function executing compute jobs',
+      'Known upfront price for the discrete compute action',
+      'AIPP API Key'
+    ],
+    limitations: [
+      'AIPP requires a known price before execution; it does NOT perform dynamic post-execution token metering or variable bill-back',
+      'Merchant defines the price and hosts the compute infrastructure',
+      'Not appropriate for continuous or unpredictable stream consumption'
+    ],
+    example_request: 'POST /api/compute-job HTTP/1.1\n\n{"action": "process_dataset"}',
+    example_response: 'HTTP/1.1 402 Payment Required\nWWW-Authenticate: L402 invoice="lnbc500u1..."',
+    example_code: `import { Aipp, l402Paywall } from 'aipp-sdk';
+
+// Require upfront payment before executing expensive compute
+app.post('/api/compute-job', l402Paywall({
+  client: aipp,
+  amountUsd: 0.10
+}), async (req, res) => {
+  const result = await executeExpensiveCompute(req.body);
+  res.json({ result });
+});`,
+    example_code_lang: 'typescript',
+    what_aipp_does: [
+      'Exposes a payment requirement before expensive execution starts',
+      'Verifies Lightning or Base USDC payment settlement proof',
+      'Allows the protected application to execute after successful verification',
+      'Auto-forwards net earnings to merchant wallet'
+    ],
+    what_aipp_does_not_do: [
+      'Does not provide LLMs, GPU hardware, proxies, or compute resources',
+      'Does not calculate underlying cloud costs or meter tokens after execution',
+      'Does not automatically determine what an action should cost (merchant defines price)',
+      'Does not perform dynamic post-execution variable bill-back'
+    ],
+    faq: [
+      {
+        question: 'How is this different from Get Paid Before Delivery?',
+        answer: 'Get Paid Before Delivery protects an existing file or asset. Get Paid Before Compute gates the resource invocation itself so providers do not fund execution costs upfront.'
+      },
+      {
+        question: 'Does AIPP track token usage during execution?',
+        answer: 'No. AIPP requires a known price set by the merchant before execution starts. It does not perform dynamic post-execution token metering.'
+      }
+    ],
+    seo_title: 'Get Paid Before Compute - Gate Expensive Work with AIPP',
+    seo_description: 'Require payment before triggering GPU models, AI tasks, scraping, or API calls with Lightning and Base USDC.',
+    related_scenarios: ['paid-ai-image-generation', 'paid-web-scraping', 'paid-transcription', 'paid-report-generation', 'paid-data-api', 'pay-per-api-call', 'get-paid-before-delivery']
+  }
+];
+export function getScenarioBySlug(slug: string): Scenario | undefined {
+  return SCENARIOS.find(s => s.slug === slug);
+}
+
+export function getScenariosByCategory(category: ScenarioCategory): Scenario[] {
   return SCENARIOS.filter(s => s.category === category);
 }
