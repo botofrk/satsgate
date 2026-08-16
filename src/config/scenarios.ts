@@ -143,7 +143,7 @@ app.post('/api/v1/translate', l402Paywall({
         answer: 'Funds settle to your configured wallet. In hosted Lightning flows, funds pass through AIPP before net proceeds are automatically forwarded. Base USDC transfers settle on-chain to your EVM address.'
       }
     ],
-    seo_title: 'Pay per API Call — Instant API Monetization with AIPP',
+    seo_title: 'Pay per API Call - Instant API Monetization with AIPP',
     seo_description: 'Monetize HTTP API endpoints per request with Lightning or Base USDC HTTP 402 challenge headers. No monthly subscriptions required.',
     related_scenarios: ['ai-agent-execution', 'paid-mcp-tool', 'webhook-triggered-service']
   },
@@ -208,7 +208,7 @@ app.post('/api/v1/translate', l402Paywall({
         answer: 'You can copy the ready-to-import JSON blueprint directly from the AIPP open-source repository (examples/n8n_aipp_monetization_workflow.json).'
       }
     ],
-    seo_title: 'Paid n8n Workflow — Monetize n8n Automations with AIPP',
+    seo_title: 'Paid n8n Workflow - Monetize n8n Automations with AIPP',
     seo_description: 'Monetize n8n automation workflows per execution with Lightning and Base USDC payment challenges.',
     related_scenarios: ['pay-per-api-call', 'webhook-triggered-service', 'ai-research-agent']
   },
@@ -268,7 +268,7 @@ print("Agent Tool Output:", result)`,
         answer: 'No. AI agents can execute micro-payments autonomously up to a user-configured budget limit.'
       }
     ],
-    seo_title: 'AI Agent Execution — Autonomous Agent Micropayments with AIPP',
+    seo_title: 'AI Agent Execution - Autonomous Agent Micropayments with AIPP',
     seo_description: 'Allow autonomous AI agents to discover, negotiate, and pay for services programmatically with HTTP 402 and L402/x402.',
     related_scenarios: ['paid-mcp-tool', 'pay-per-api-call', 'ai-research-agent']
   },
@@ -327,7 +327,7 @@ async def run_security_audit(name: str, arguments: dict):
         answer: 'Yes, any MCP client capable of handling L402 402 challenges can pay and execute tools seamlessly.'
       }
     ],
-    seo_title: 'Paid MCP Tool — Monetize Model Context Protocol Servers with AIPP',
+    seo_title: 'Paid MCP Tool - Monetize Model Context Protocol Servers with AIPP',
     seo_description: 'Charge per tool invocation on Model Context Protocol (MCP) servers for Cursor, Claude Desktop, and AI agents.',
     related_scenarios: ['ai-agent-execution', 'pay-per-api-call', 'ai-research-agent']
   },
@@ -389,7 +389,7 @@ curl -X POST https://aipp.dev/merchant/links/create \\
         answer: 'No. Buyers simply scan the QR code with any Bitcoin Lightning wallet or pay with Base USDC. No password or registration needed.'
       }
     ],
-    seo_title: 'Digital File Download — Sell Files for $0.05 with AIPP',
+    seo_title: 'Digital File Download - Sell Files for $0.05 with AIPP',
     seo_description: 'Sell PDFs, Notion templates, code scripts, and digital assets with instant Lightning or Base USDC micropayments.',
     related_scenarios: ['content-paywall', 'pay-per-api-call', 'paid-n8n-workflow']
   },
@@ -448,7 +448,7 @@ curl -X POST https://aipp.dev/merchant/links/create \\
         answer: 'Yes. You can paste the script tag and container div directly into custom HTML blocks on WordPress, Ghost, or Webflow.'
       }
     ],
-    seo_title: 'Content & Article Paywall — Micropayment Paywall with AIPP',
+    seo_title: 'Content & Article Paywall - Micropayment Paywall with AIPP',
     seo_description: 'Monetize individual articles, reports, and blog posts with low-friction Lightning and Base USDC micropayments.',
     related_scenarios: ['digital-download', 'pay-per-api-call', 'ai-agent-execution']
   },
@@ -508,7 +508,7 @@ def run_research():
         answer: 'Yes. Autonomous agents can parse the 402 header, pay, and consume the research payload programmatically.'
       }
     ],
-    seo_title: 'AI Research Agent — Monetize Data Synthesis with AIPP',
+    seo_title: 'AI Research Agent - Monetize Data Synthesis with AIPP',
     seo_description: 'Monetize deep AI research tasks, market synthesis, and web intelligence per query with L402 micropayments.',
     related_scenarios: ['ai-agent-execution', 'paid-mcp-tool', 'pay-per-api-call']
   },
@@ -571,7 +571,7 @@ def run_research():
         answer: 'AIPP verifies payment settlement independently of your internal job status.'
       }
     ],
-    seo_title: 'Webhook-Triggered Service — Monetize Webhook Events with AIPP',
+    seo_title: 'Webhook-Triggered Service - Monetize Webhook Events with AIPP',
     seo_description: 'Monetize serverless tasks, event triggers, and background jobs per webhook execution with AIPP.',
     related_scenarios: ['paid-n8n-workflow', 'pay-per-api-call', 'ai-agent-execution']
   }
