@@ -20,10 +20,9 @@ function renderHeader(): string {
   <style>
     .uc-nav-right{display:flex;align-items:center;gap:12px;}
     .uc-navlinks{display:flex;gap:20px;align-items:center;font-size:13px;font-weight:600;}
-    .uc-menu-toggle{display:none;background:none;border:1px solid #e5ded4;border-radius:8px;width:38px;height:38px;padding:0;cursor:pointer;flex-direction:column;align-items:center;justify-content:center;gap:4.5px;}
-    .uc-menu-toggle span{display:block;width:18px;height:2px;background:#181716;border-radius:2px;}
+    .uc-menu-toggle{display:none;background:#faf7f1;border:1.5px solid #e5ded4;border-radius:10px;width:40px;height:40px;padding:0;cursor:pointer;align-items:center;justify-content:center;}
     @media(max-width:920px){
-      .uc-menu-toggle{display:flex;}
+      .uc-menu-toggle{display:inline-flex;}
       .uc-navlinks{display:none;position:absolute;top:68px;left:0;right:0;background:#faf9f6;border:1px solid #e5ded4;border-radius:16px;padding:20px;flex-direction:column;align-items:flex-start;gap:12px;box-shadow:0 12px 32px rgba(38,29,22,.12);z-index:99;}
       .uc-navlinks.open{display:flex;}
       .uc-navlinks a{width:100%;padding:10px 0;font-size:14.5px;font-weight:600;color:#181716;border-bottom:1px solid #f0e8dc;}
@@ -50,9 +49,15 @@ function renderHeader(): string {
         <a href="/dashboard.html" style="background:#111; color:#fff!important; padding:8px 16px; border-radius:9px; text-decoration:none; text-align:center;">Studio Console →</a>
       </div>
       <button class="uc-menu-toggle" id="uc-menu-toggle" aria-label="Toggle Navigation Menu" aria-expanded="false">
-        <span></span>
-        <span></span>
-        <span></span>
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#181716" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="uc-icon-burger">
+          <line x1="4" y1="7" x2="20" y2="7"/>
+          <line x1="4" y1="12" x2="20" y2="12"/>
+          <line x1="4" y1="17" x2="20" y2="17"/>
+        </svg>
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#181716" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="uc-icon-close" style="display:none;">
+          <line x1="18" y1="6" x2="6" y2="18"/>
+          <line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
       </button>
     </div>
   </nav>
@@ -65,11 +70,20 @@ function renderHeader(): string {
         e.stopPropagation();
         var open = menu.classList.toggle('open');
         btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+        var burger = btn.querySelector('.uc-icon-burger');
+        var close = btn.querySelector('.uc-icon-close');
+        if(burger && close){
+          burger.style.display = open ? 'none' : 'block';
+          close.style.display = open ? 'block' : 'none';
+        }
       });
       document.addEventListener('click', function(e){
         if(menu.classList.contains('open') && !menu.contains(e.target) && !btn.contains(e.target)){
           menu.classList.remove('open');
           btn.setAttribute('aria-expanded', 'false');
+          var burger = btn.querySelector('.uc-icon-burger');
+          var close = btn.querySelector('.uc-icon-close');
+          if(burger && close){ burger.style.display = 'block'; close.style.display = 'none'; }
         }
       });
     })();

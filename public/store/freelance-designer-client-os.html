@@ -22,7 +22,7 @@
     /* Shared Navigation */
     nav{height:68px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--line);position:relative}.brand{display:flex;gap:10px;align-items:center;text-decoration:none;font-family:'Plus Jakarta Sans',sans-serif;font-weight:850;font-size:24px;letter-spacing:-0.04em}.mark{width:32px;height:32px;display:block}.nav-right{display:flex;align-items:center;gap:12px}.navlinks{display:flex;align-items:center;gap:20px;font-size:13px;color:var(--muted)}.navlinks a{text-decoration:none;transition:color .2s}.navlinks a:hover{color:var(--ink)}.navlinks a.ext-link{font-weight:700;color:#b45309;display:inline-flex;align-items:center;gap:5px}.studio{padding:9px 16px;border-radius:10px;background:var(--ink);color:white!important;font-weight:750;transition:all .2s ease;white-space:nowrap}.studio:hover{background:#282624;transform:translateY(-1px)}
     
-    .menu-toggle{display:none;background:none;border:1px solid var(--line);border-radius:8px;width:38px;height:38px;padding:0;cursor:pointer;flex-direction:column;align-items:center;justify-content:center;gap:4.5px;transition:all .2s ease}.menu-toggle span{display:block;width:18px;height:2px;background:var(--ink);border-radius:2px;transition:all .2s ease}.menu-toggle:hover{border-color:#b45309}
+    .menu-toggle{display:none;background:#faf7f1;border:1.5px solid var(--line);border-radius:10px;width:40px;height:40px;padding:0;cursor:pointer;align-items:center;justify-content:center;transition:all .2s ease}.menu-toggle:hover{background:#fff;border-color:#b45309}
 
     /* Hero */
     main{padding:48px 0 12px}.hero{text-align:center;max-width:840px;margin:0 auto 24px}.eyebrow{display:inline-flex;align-items:center;gap:7px;padding:6px 14px;border:1px solid #ead274;background:#fffbdf;color:#625000;border-radius:999px;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.06em}.hero h1{font-family:Georgia,"Times New Roman",serif;font-size:clamp(42px,6.2vw,72px);font-weight:500;line-height:1.02;letter-spacing:-.045em;margin:22px 0 16px;color:#181716}.hero h1 em{color:#9a7600;font-weight:500;font-style:italic}.hero p.lede{font-size:19px;line-height:1.55;color:#423e3a;max-width:720px;margin:0 auto 10px;font-weight:600}.hero p.sub{font-size:15.5px;line-height:1.6;color:var(--muted);max-width:680px;margin:auto}.tiny-proof{display:flex;justify-content:center;gap:20px;flex-wrap:wrap;margin-top:22px;font-size:12.5px;font-weight:700;color:#4e4945}.tiny-proof span:before{content:"✓";color:var(--green);margin-right:6px}
@@ -58,7 +58,7 @@
     footer{border-top:1px solid var(--line);padding:28px 0 38px}.foot{display:flex;justify-content:space-between;align-items:center;gap:20px;color:var(--muted);font-size:12.5px}.footlinks{display:flex;gap:18px}.footlinks a{text-decoration:none;transition:color .2s}.footlinks a:hover{color:var(--ink)}
 
     @media(max-width:920px){
-      .menu-toggle{display:flex}
+      .menu-toggle{display:inline-flex!important}
       .navlinks{display:none;position:absolute;top:68px;left:0;right:0;background:var(--paper);border:1px solid var(--line);border-radius:16px;padding:20px;flex-direction:column;align-items:flex-start;gap:12px;box-shadow:0 12px 32px rgba(38,29,22,.12);z-index:99;opacity:0;transform:translateY(-8px);transition:opacity .2s ease,transform .2s ease}
       .navlinks.open{display:flex;opacity:1;transform:translateY(0)}
       .navlinks a{width:100%;padding:10px 0;font-size:14.5px;font-weight:600;color:var(--ink);border-bottom:1px solid #f0e8dc}
@@ -92,9 +92,15 @@
       </div>
 
       <button class="menu-toggle" id="menu-toggle" aria-label="Toggle Navigation Menu" aria-expanded="false" aria-controls="nav-menu">
-        <span></span>
-        <span></span>
-        <span></span>
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#181716" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="icon-burger">
+          <line x1="4" y1="7" x2="20" y2="7"/>
+          <line x1="4" y1="12" x2="20" y2="12"/>
+          <line x1="4" y1="17" x2="20" y2="17"/>
+        </svg>
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#181716" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="icon-close" style="display:none;">
+          <line x1="18" y1="6" x2="6" y2="18"/>
+          <line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
       </button>
     </div>
   </nav>
@@ -320,6 +326,12 @@
       var open = show !== undefined ? show : !menu.classList.contains('open');
       menu.classList.toggle('open', open);
       toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+      var burger = toggle.querySelector('.icon-burger');
+      var close = toggle.querySelector('.icon-close');
+      if(burger && close){
+        burger.style.display = open ? 'none' : 'block';
+        close.style.display = open ? 'block' : 'none';
+      }
     }
 
     toggle.addEventListener('click', function(e){
