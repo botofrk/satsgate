@@ -19,9 +19,11 @@
     *{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:var(--paper);color:var(--ink);font-family:'Inter',ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;-webkit-font-smoothing:antialiased}
     button,input{font:inherit}a{color:inherit}.shell{width:min(1080px,calc(100% - 32px));margin:auto}
     
-    /* Navigation */
-    nav{height:68px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--line)}.brand{display:flex;gap:10px;align-items:center;text-decoration:none;font-family:'Plus Jakarta Sans',sans-serif;font-weight:850;font-size:24px;letter-spacing:-0.04em}.mark{width:32px;height:32px;display:block}.navlinks{display:flex;align-items:center;gap:20px;font-size:13px;color:var(--muted)}.navlinks a{text-decoration:none;transition:color .2s}.navlinks a:hover{color:var(--ink)}.navlinks a.ext-link{font-weight:700;color:#b45309;display:inline-flex;align-items:center;gap:5px}.studio{padding:9px 16px;border-radius:10px;background:var(--ink);color:white!important;font-weight:750;transition:all .2s ease}.studio:hover{background:#282624;transform:translateY(-1px)}
+    /* Shared Navigation */
+    nav{height:68px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--line);position:relative}.brand{display:flex;gap:10px;align-items:center;text-decoration:none;font-family:'Plus Jakarta Sans',sans-serif;font-weight:850;font-size:24px;letter-spacing:-0.04em}.mark{width:32px;height:32px;display:block}.nav-right{display:flex;align-items:center;gap:12px}.navlinks{display:flex;align-items:center;gap:20px;font-size:13px;color:var(--muted)}.navlinks a{text-decoration:none;transition:color .2s}.navlinks a:hover{color:var(--ink)}.navlinks a.ext-link{font-weight:700;color:#b45309;display:inline-flex;align-items:center;gap:5px}.studio{padding:9px 16px;border-radius:10px;background:var(--ink);color:white!important;font-weight:750;transition:all .2s ease;white-space:nowrap}.studio:hover{background:#282624;transform:translateY(-1px)}
     
+    .menu-toggle{display:none;background:none;border:1px solid var(--line);border-radius:8px;width:38px;height:38px;padding:0;cursor:pointer;flex-direction:column;align-items:center;justify-content:center;gap:4.5px;transition:all .2s ease}.menu-toggle span{display:block;width:18px;height:2px;background:var(--ink);border-radius:2px;transition:all .2s ease}.menu-toggle:hover{border-color:#b45309}
+
     /* Hero */
     main{padding:48px 0 12px}.hero{text-align:center;max-width:840px;margin:0 auto 24px}.eyebrow{display:inline-flex;align-items:center;gap:7px;padding:6px 14px;border:1px solid #ead274;background:#fffbdf;color:#625000;border-radius:999px;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.06em}.hero h1{font-family:Georgia,"Times New Roman",serif;font-size:clamp(42px,6.2vw,72px);font-weight:500;line-height:1.02;letter-spacing:-.045em;margin:22px 0 16px;color:#181716}.hero h1 em{color:#9a7600;font-weight:500;font-style:italic}.hero p.lede{font-size:19px;line-height:1.55;color:#423e3a;max-width:720px;margin:0 auto 10px;font-weight:600}.hero p.sub{font-size:15.5px;line-height:1.6;color:var(--muted);max-width:680px;margin:auto}.tiny-proof{display:flex;justify-content:center;gap:20px;flex-wrap:wrap;margin-top:22px;font-size:12.5px;font-weight:700;color:#4e4945}.tiny-proof span:before{content:"✓";color:var(--green);margin-right:6px}
     
@@ -55,8 +57,19 @@
     /* Footer */
     footer{border-top:1px solid var(--line);padding:28px 0 38px}.foot{display:flex;justify-content:space-between;align-items:center;gap:20px;color:var(--muted);font-size:12.5px}.footlinks{display:flex;gap:18px}.footlinks a{text-decoration:none;transition:color .2s}.footlinks a:hover{color:var(--ink)}
 
-    @media(max-width:920px){.navlinks>a:not(.studio){display:none!important}.features-grid,.steps-grid{grid-template-columns:1fr 1fr}.included-grid{grid-template-columns:repeat(3,1fr)}.preview-body{grid-template-columns:1fr}.sidebar{display:none}.price-box{grid-template-columns:1fr;gap:24px}.final-cta{flex-direction:column;align-items:flex-start;padding:30px 22px}.final-cta .btn-primary{width:100%;justify-content:center}}
-    @media(max-width:480px){.studio{padding:8px 12px;font-size:12px}}
+    @media(max-width:920px){
+      .menu-toggle{display:flex}
+      .navlinks{display:none;position:absolute;top:68px;left:0;right:0;background:var(--paper);border:1px solid var(--line);border-radius:16px;padding:20px;flex-direction:column;align-items:flex-start;gap:12px;box-shadow:0 12px 32px rgba(38,29,22,.12);z-index:99;opacity:0;transform:translateY(-8px);transition:opacity .2s ease,transform .2s ease}
+      .navlinks.open{display:flex;opacity:1;transform:translateY(0)}
+      .navlinks a{width:100%;padding:10px 0;font-size:14.5px;font-weight:600;color:var(--ink);border-bottom:1px solid #f0e8dc}
+      .navlinks a:last-child{border-bottom:0}
+      .navlinks a:hover{color:#b45309}
+      .navlinks a.studio{margin-top:6px;text-align:center;justify-content:center;display:flex}
+      .features-grid,.steps-grid{grid-template-columns:1fr 1fr}.included-grid{grid-template-columns:repeat(3,1fr)}.preview-body{grid-template-columns:1fr}.sidebar{display:none}.price-box{grid-template-columns:1fr;gap:24px}.final-cta{flex-direction:column;align-items:flex-start;padding:30px 22px}.final-cta .btn-primary{width:100%;justify-content:center}
+    }
+    @media(max-width:480px){
+      .studio{padding:8px 12px;font-size:12px}
+    }
     @media(max-width:680px){main{padding-top:32px}.features-grid,.steps-grid,.included-grid{grid-template-columns:1fr}.mini-grid{grid-template-columns:1fr}.foot{flex-direction:column;text-align:center;gap:12px}}
   </style>
 </head>
@@ -65,15 +78,24 @@
   <!-- Shared AIPP Navigation -->
   <nav>
     <a class="brand" href="/"><svg class="mark" width="28" height="28" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><circle cx="20" cy="20" r="14" stroke="#0F0F11" stroke-width="3.8" stroke-dasharray="67 21" stroke-linecap="round" transform="rotate(-65 20 20)"/><g transform="rotate(-38 20 20)"><path d="M 15 13.5 L 20 7.5 L 25 13.5 L 25 27 C 25 29 23.5 30.5 21.5 30.5 L 18.5 30.5 C 16.5 30.5 15 29 15 27 Z" fill="#F59E0B"/><circle cx="20" cy="13" r="2.2" fill="#FAF9F6"/></g></svg> <span>ai<span style="color:#f59e0b;">pp</span></span></a>
-    <div class="navlinks">
-      <a href="/use-cases">Use Cases</a>
-      <a href="/store">Store</a>
-      <a href="/aipp-extension.zip" download="aipp-extension.zip" class="ext-link">
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#b45309" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
-        Chrome Extension
-      </a>
-      <a href="/docs.html">For developers</a>
-      <a class="studio" href="/dashboard.html">Studio Console →</a>
+    
+    <div class="nav-right">
+      <div class="navlinks" id="nav-menu">
+        <a href="/use-cases">Use Cases</a>
+        <a href="/store">Store</a>
+        <a href="/aipp-extension.zip" download="aipp-extension.zip" class="ext-link">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#b45309" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
+          Chrome Extension
+        </a>
+        <a href="/docs.html">For developers</a>
+        <a class="studio" href="/dashboard.html">Studio Console →</a>
+      </div>
+
+      <button class="menu-toggle" id="menu-toggle" aria-label="Toggle Navigation Menu" aria-expanded="false" aria-controls="nav-menu">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
     </div>
   </nav>
 
@@ -287,5 +309,44 @@
     </div>
   </footer>
 </div>
+
+<script>
+  (function(){
+    var toggle = document.getElementById('menu-toggle');
+    var menu = document.getElementById('nav-menu');
+    if(!toggle || !menu) return;
+    
+    function toggleMenu(show){
+      var open = show !== undefined ? show : !menu.classList.contains('open');
+      menu.classList.toggle('open', open);
+      toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+    }
+
+    toggle.addEventListener('click', function(e){
+      e.stopPropagation();
+      toggleMenu();
+    });
+
+    document.addEventListener('click', function(e){
+      if(menu.classList.contains('open') && !menu.contains(e.target) && !toggle.contains(e.target)){
+        toggleMenu(false);
+      }
+    });
+
+    document.addEventListener('keydown', function(e){
+      if(e.key === 'Escape' && menu.classList.contains('open')){
+        toggleMenu(false);
+        toggle.focus();
+      }
+    });
+
+    var links = menu.querySelectorAll('a');
+    for(var i=0; i<links.length; i++){
+      links[i].addEventListener('click', function(){
+        toggleMenu(false);
+      });
+    }
+  })();
+</script>
 </body>
 </html>

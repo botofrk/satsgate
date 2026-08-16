@@ -17,7 +17,20 @@ function renderTruthBadge(truthLevel: TruthLevel, text: string): string {
 
 function renderHeader(): string {
   return `
-  <nav style="max-width:1100px; margin:0 auto; padding:20px 24px; display:flex; align-items:center; justify-content:space-between;">
+  <style>
+    .uc-nav-right{display:flex;align-items:center;gap:12px;}
+    .uc-navlinks{display:flex;gap:20px;align-items:center;font-size:13px;font-weight:600;}
+    .uc-menu-toggle{display:none;background:none;border:1px solid #e5ded4;border-radius:8px;width:38px;height:38px;padding:0;cursor:pointer;flex-direction:column;align-items:center;justify-content:center;gap:4.5px;}
+    .uc-menu-toggle span{display:block;width:18px;height:2px;background:#181716;border-radius:2px;}
+    @media(max-width:920px){
+      .uc-menu-toggle{display:flex;}
+      .uc-navlinks{display:none;position:absolute;top:68px;left:0;right:0;background:#faf9f6;border:1px solid #e5ded4;border-radius:16px;padding:20px;flex-direction:column;align-items:flex-start;gap:12px;box-shadow:0 12px 32px rgba(38,29,22,.12);z-index:99;}
+      .uc-navlinks.open{display:flex;}
+      .uc-navlinks a{width:100%;padding:10px 0;font-size:14.5px;font-weight:600;color:#181716;border-bottom:1px solid #f0e8dc;}
+      .uc-navlinks a:last-child{border-bottom:0;}
+    }
+  </style>
+  <nav style="max-width:1100px; margin:0 auto; padding:20px 24px; display:flex; align-items:center; justify-content:space-between; position:relative;">
     <a href="/" style="display:flex; align-items:center; gap:8px; text-decoration:none; color:#181716; font-weight:850; font-size:20px;">
       <svg width="28" height="28" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
         <circle cx="20" cy="20" r="14" stroke="#0F0F11" stroke-width="3.8" stroke-dasharray="67 21" stroke-linecap="round" transform="rotate(-65 20 20)"/>
@@ -28,13 +41,39 @@ function renderHeader(): string {
       </svg>
       <span>ai<span style="color:#f59e0b;">pp</span></span>
     </a>
-    <div style="display:flex; gap:20px; align-items:center; font-size:13px; font-weight:600;">
-      <a href="/use-cases" style="color:#f59e0b; text-decoration:none;">Use Cases</a>
-      <a href="/store" style="color:#6f6a65; text-decoration:none;">Store</a>
-      <a href="/docs.html" style="color:#6f6a65; text-decoration:none;">Developers</a>
-      <a href="/dashboard.html" style="background:#111; color:#fff; padding:8px 16px; border-radius:9px; text-decoration:none;">Studio Console →</a>
+    <div class="uc-nav-right">
+      <div class="uc-navlinks" id="uc-nav-menu">
+        <a href="/use-cases" style="color:#f59e0b; text-decoration:none;">Use Cases</a>
+        <a href="/store" style="color:#6f6a65; text-decoration:none;">Store</a>
+        <a href="/aipp-extension.zip" download="aipp-extension.zip" style="color:#b45309; text-decoration:none; font-weight:700;">Chrome Extension</a>
+        <a href="/docs.html" style="color:#6f6a65; text-decoration:none;">Developers</a>
+        <a href="/dashboard.html" style="background:#111; color:#fff!important; padding:8px 16px; border-radius:9px; text-decoration:none; text-align:center;">Studio Console →</a>
+      </div>
+      <button class="uc-menu-toggle" id="uc-menu-toggle" aria-label="Toggle Navigation Menu" aria-expanded="false">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
     </div>
-  </nav>`;
+  </nav>
+  <script>
+    (function(){
+      var btn = document.getElementById('uc-menu-toggle');
+      var menu = document.getElementById('uc-nav-menu');
+      if(!btn || !menu) return;
+      btn.addEventListener('click', function(e){
+        e.stopPropagation();
+        var open = menu.classList.toggle('open');
+        btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+      });
+      document.addEventListener('click', function(e){
+        if(menu.classList.contains('open') && !menu.contains(e.target) && !btn.contains(e.target)){
+          menu.classList.remove('open');
+          btn.setAttribute('aria-expanded', 'false');
+        }
+      });
+    })();
+  </script>`;
 }
 
 function renderFooter(): string {
