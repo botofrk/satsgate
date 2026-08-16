@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Store — Digital Templates & Tools | AIPP</title>
+  <meta name="description" content="Useful digital products, Notion templates and software tools sold directly with AIPP. Pay once, own the result.">
+  <link rel="icon" href="/favicon.ico">
+  <link rel="canonical" href="https://aipp.dev/store">
+  <meta property="og:title" content="Store — Digital Templates & Tools | AIPP">
+  <meta property="og:description" content="Useful digital products and Notion templates sold directly with AIPP. Pay once, own the result.">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://aipp.dev/store">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@700;800&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root{--ink:#0f0f11;--muted:#625f5a;--paper:#faf9f6;--card:#fffdf9;--line:#e5ded4;--accent:#ffc700;--gold:#b45309;--green:#16784a;--blue:#2563eb;--shadow:0 12px 36px rgba(38,29,22,.06)}
+    *{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:var(--paper);color:var(--ink);font-family:'Inter',ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;-webkit-font-smoothing:antialiased}
+    button,input{font:inherit}a{color:inherit}.shell{width:min(1080px,calc(100% - 32px));margin:auto}
+    
+    /* Shared Navigation */
+    nav{height:68px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--line)}.brand{display:flex;gap:10px;align-items:center;text-decoration:none;font-family:'Plus Jakarta Sans',sans-serif;font-weight:850;font-size:24px;letter-spacing:-0.04em}.mark{width:32px;height:32px;display:block}.navlinks{display:flex;align-items:center;gap:20px;font-size:13px;color:var(--muted)}.navlinks a{text-decoration:none;transition:color .2s}.navlinks a:hover{color:var(--ink)}.navlinks a.active{color:var(--ink);font-weight:700}.studio{padding:9px 16px;border-radius:10px;background:var(--ink);color:white!important;font-weight:750;transition:all .2s ease}.studio:hover{background:#282624;transform:translateY(-1px)}
+    
+    /* Hero */
+    main{padding:48px 0 60px}.hero{text-align:center;max-width:760px;margin:0 auto 48px}.eyebrow{display:inline-flex;align-items:center;gap:7px;padding:6px 14px;border:1px solid #ead274;background:#fffbdf;color:#625000;border-radius:999px;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.06em}.hero h1{font-family:Georgia,"Times New Roman",serif;font-size:clamp(40px,5.8vw,64px);font-weight:500;line-height:1.05;letter-spacing:-.04em;margin:20px 0 16px;color:#181716}.hero p{font-size:17.5px;line-height:1.6;color:var(--muted);max-width:620px;margin:auto}
+
+    /* Product Grid */
+    .catalog-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:24px;margin-top:24px}.product-card{background:#fff;border:1.5px solid var(--line);border-radius:20px;overflow:hidden;transition:all .25s ease;display:flex;flex-direction:column;box-shadow:0 4px 18px rgba(38,29,22,.03)}.product-card:hover{border-color:#d4c8b8;box-shadow:0 12px 32px rgba(38,29,22,.08);transform:translateY(-2px)}
+    
+    /* Card Mockup Header */
+    .card-preview{background:#faf7f1;border-bottom:1px solid #e8ded2;padding:16px;min-height:180px;display:flex;flex-direction:column;justify-content:center}.preview-mini-window{background:#fff;border:1px solid #e8ded2;border-radius:12px;padding:14px;box-shadow:0 4px 14px rgba(0,0,0,.03)}.mini-head{display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #f0e8dc;padding-bottom:8px;margin-bottom:10px;font-size:11px;color:#6f6a65;font-weight:600}.mini-dots{display:flex;gap:4px}.mini-dots i{width:6px;height:6px;border-radius:50%;background:#d6cfc4;display:block}.mini-stats{display:grid;grid-template-columns:1fr 1fr;gap:8px}.mini-stat-box{background:#faf7f1;border:1px solid #e8ded2;border-radius:8px;padding:8px}.mini-stat-box small{font-size:9px;color:#7a7268;text-transform:uppercase;font-weight:750;display:block}.mini-stat-box b{font-size:14px;color:#181716;display:block;margin-top:2px}
+
+    /* Card Content */
+    .card-body{padding:24px;display:flex;flex-direction:column;flex:1}.card-badge{align-self:flex-start;padding:4px 10px;border-radius:999px;background:#f5efe3;border:1px solid #e2d7c5;font-size:10.5px;font-weight:800;color:#b45309;text-transform:uppercase;letter-spacing:.05em}.card-title{font-family:Georgia,serif;font-size:24px;font-weight:500;margin:12px 0 8px;color:#181716;line-height:1.2}.card-desc{font-size:14px;color:var(--muted);line-height:1.55;margin:0 0 20px;flex:1}.card-foot{display:flex;align-items:center;justify-content:space-between;border-top:1px solid #f0e8dc;padding-top:16px;margin-top:auto}.card-price{font-family:Georgia,serif;font-size:28px;font-weight:500;color:#181716;letter-spacing:-.03em}.card-price small{font-family:'Inter',sans-serif;font-size:13px;color:var(--muted);font-weight:600}.btn-card{background:#111;color:#fff;padding:10px 18px;border-radius:10px;font-size:13.5px;font-weight:800;text-decoration:none;transition:all .2s ease;display:inline-flex;align-items:center;gap:4px}.btn-card:hover{background:#2b2826;transform:translateY(-1px)}
+
+    /* Footer */
+    footer{border-top:1px solid var(--line);padding:28px 0 38px}.foot{display:flex;justify-content:space-between;align-items:center;gap:20px;color:var(--muted);font-size:12.5px}.footlinks{display:flex;gap:18px}.footlinks a{text-decoration:none;transition:color .2s}.footlinks a:hover{color:var(--ink)}
+
+    @media(max-width:920px){.navlinks>a:not(.studio){display:none}.catalog-grid{grid-template-columns:1fr}}
+    @media(max-width:680px){main{padding-top:32px}.foot{flex-direction:column;text-align:center;gap:12px}}
+  </style>
+</head>
+<body>
+<div class="shell">
+  <!-- Shared AIPP Navigation -->
+  <nav>
+    <a class="brand" href="/"><svg class="mark" width="28" height="28" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><circle cx="20" cy="20" r="14" stroke="#0F0F11" stroke-width="3.8" stroke-dasharray="67 21" stroke-linecap="round" transform="rotate(-65 20 20)"/><g transform="rotate(-38 20 20)"><path d="M 15 13.5 L 20 7.5 L 25 13.5 L 25 27 C 25 29 23.5 30.5 21.5 30.5 L 18.5 30.5 C 16.5 30.5 15 29 15 27 Z" fill="#F59E0B"/><circle cx="20" cy="13" r="2.2" fill="#FAF9F6"/></g></svg> <span>ai<span style="color:#f59e0b;">pp</span></span></a>
+    <div class="navlinks">
+      <a href="/use-cases">Use Cases</a>
+      <a href="/store" class="active">Store</a>
+      <a href="/aipp-extension.zip" download="aipp-extension.zip" style="font-weight:700; color:#b45309; display:inline-flex; align-items:center; gap:5px;">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#b45309" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
+        Chrome Extension
+      </a>
+      <a href="/docs.html">For developers</a>
+      <a class="studio" href="/dashboard.html">Studio Console →</a>
+    </div>
+  </nav>
+
+  <main>
+    <!-- Hero -->
+    <section class="hero">
+      <span class="eyebrow">● AIPP STORE</span>
+      <h1>Useful digital products.<br>Pay once. Own the result.</h1>
+      <p>Templates and digital tools sold directly with AIPP.</p>
+    </section>
+
+    <!-- Product Catalog Grid -->
+    <div class="catalog-grid">
+      <article class="product-card">
+        <div class="card-preview">
+          <div class="preview-mini-window">
+            <div class="mini-head">
+              <div class="mini-dots"><i></i><i></i><i></i></div>
+              <span>Freelance Designer Client OS</span>
+            </div>
+            <div class="mini-stats">
+              <div class="mini-stat-box">
+                <small>Waiting feedback</small>
+                <b>3 Projects</b>
+              </div>
+              <div class="mini-stat-box">
+                <small>Unpaid Invoices</small>
+                <b>$1,240</b>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card-body">
+          <span class="card-badge">Notion Template</span>
+          <h2 class="card-title">Freelance Designer Client OS</h2>
+          <p class="card-desc">A focused Notion workspace for freelance designers to track clients, projects, feedback, invoices and deadlines.</p>
+          
+          <div class="card-foot">
+            <div class="card-price">$5 <small>USD</small></div>
+            <a class="btn-card" href="/store/freelance-designer-client-os">View template →</a>
+          </div>
+        </div>
+      </article>
+    </div>
+  </main>
+
+  <!-- Shared AIPP Footer -->
+  <footer>
+    <div class="foot">
+      <span>© 2026 aipp · Open Protocol for Human + Agent Commerce</span>
+      <div class="footlinks">
+        <a href="/use-cases">Use Cases</a>
+        <a href="/store">Store</a>
+        <a href="/docs.html">Docs</a>
+        <a href="/legal.html">Legal</a>
+        <a href="mailto:info@aipp.dev">Contact</a>
+        <a href="/dashboard.html">Studio</a>
+      </div>
+    </div>
+  </footer>
+</div>
+</body>
+</html>

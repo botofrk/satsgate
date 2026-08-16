@@ -129,8 +129,17 @@ router.get('/use-cases/:slug', renderUseCaseDetail);
 
 // Store routes
 import path from 'path';
-router.get(['/store/freelance-designer-client-os', '/store/freelance-designer-client-os/'], (req, res) => {
-  res.sendFile(path.join(__dirname, '../../public/store/freelance-designer-client-os.html'));
+router.get('/store', (req, res) => {
+  res.sendFile(path.resolve(__dirname, '../../public/store/index.html'));
+});
+router.get('/store/', (req, res) => {
+  res.sendFile(path.resolve(__dirname, '../../public/store/index.html'));
+});
+router.get('/store/freelance-designer-client-os', (req, res) => {
+  res.sendFile(path.resolve(__dirname, '../../public/store/freelance-designer-client-os.html'));
+});
+router.get('/store/freelance-designer-client-os/', (req, res) => {
+  res.sendFile(path.resolve(__dirname, '../../public/store/freelance-designer-client-os.html'));
 });
 
 router.get('/sitemap.xml', renderSitemapXml);

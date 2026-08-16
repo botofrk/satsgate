@@ -30,6 +30,7 @@ function renderHeader(): string {
     </a>
     <div style="display:flex; gap:20px; align-items:center; font-size:13px; font-weight:600;">
       <a href="/use-cases" style="color:#f59e0b; text-decoration:none;">Use Cases</a>
+      <a href="/store" style="color:#6f6a65; text-decoration:none;">Store</a>
       <a href="/docs.html" style="color:#6f6a65; text-decoration:none;">Developers</a>
       <a href="/dashboard.html" style="background:#111; color:#fff; padding:8px 16px; border-radius:9px; text-decoration:none;">Studio Console →</a>
     </div>
@@ -43,6 +44,7 @@ function renderFooter(): string {
       <div>© 2026 aipp · Open Protocol for Human + Agent Commerce</div>
       <div style="display:flex; gap:16px;">
         <a href="/use-cases" style="color:inherit; text-decoration:none;">Use Cases</a>
+        <a href="/store" style="color:inherit; text-decoration:none;">Store</a>
         <a href="/docs.html" style="color:inherit; text-decoration:none;">Docs</a>
         <a href="/legal.html" style="color:inherit; text-decoration:none;">Legal</a>
         <a href="mailto:info@aipp.dev" style="color:inherit; text-decoration:none;">Contact</a>
@@ -410,6 +412,12 @@ export function renderSitemapXml(req: Request, res: Response): void {
   </url>
   <url>
     <loc>${baseUrl}/use-cases</loc>
+    <lastmod>${now}</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>${baseUrl}/store</loc>
     <lastmod>${now}</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.9</priority>
