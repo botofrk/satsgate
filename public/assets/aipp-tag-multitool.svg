@@ -27,7 +27,7 @@
   <rect x="365" y="106" width="8" height="132" rx="4" fill="#ffc700"/>
   <circle cx="407" cy="148" r="21" fill="#fffbdf"/><text x="407" y="155" text-anchor="middle" font-size="22" fill="#705800">●</text>
   <text x="440" y="147" font-size="17" font-weight="800" fill="#181716">Tag your website</text>
-  <text x="405" y="185" font-size="13" fill="#6f6a65">Mint and place a visual checkout</text>
+  <text x="405" y="185" font-size="13" fill="#6f6a65">Create and place a visual checkout</text>
   <text x="405" y="206" font-size="13" fill="#6f6a65">with the extension.</text>
 
   <rect x="678" y="132" width="270" height="132" rx="22" fill="#fffdf9" stroke="#dfd6cb" stroke-width="2"/>

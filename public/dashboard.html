@@ -1460,7 +1460,7 @@ async function loadPaymentLinks() {
     const links = await r.json();
     const body = document.getElementById('links-body');
     if (!links || !links.length) {
-      body.innerHTML = `<tr><td colspan="4" style="text-align:center; color:var(--fg-muted); padding:32px;">No tags created yet. Fill the form above to mint your first tag.</td></tr>`;
+      body.innerHTML = `<tr><td colspan="4" style="text-align:center; color:var(--fg-muted); padding:32px;">No tags created yet. Fill the form above to create your first tag.</td></tr>`;
       return;
     }
     body.innerHTML = links.map(l => `
@@ -1489,7 +1489,7 @@ async function createPaymentLink(btn) {
     return;
   }
   btn.disabled = true;
-  btn.textContent = 'Minting...';
+  btn.textContent = 'Creating...';
   try {
     const r = await fetch(`${AIPP_API}/merchant/links/create`, {
       method: 'POST',
@@ -1505,7 +1505,7 @@ async function createPaymentLink(btn) {
     alert(e.message || 'Tag could not be created.');
   } finally {
     btn.disabled = false;
-    btn.textContent = 'Mint Tag URL →';
+    btn.textContent = 'Create Tag URL →';
   }
 }
 
