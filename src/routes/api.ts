@@ -119,4 +119,11 @@ router.post('/ticket', createTicket);
 // Webhook route
 router.post('/lnbits-webhook', handleLnbitsWebhook);
 
+// Scenario Distribution Engine & Sitemap routes
+import { renderUseCasesIndex, renderUseCaseDetail, renderSitemapXml } from '../controllers/useCases';
+router.get('/use-cases', renderUseCasesIndex);
+router.get('/use-cases/', renderUseCasesIndex);
+router.get('/use-cases/:slug', renderUseCaseDetail);
+router.get('/sitemap.xml', renderSitemapXml);
+
 export default router;
