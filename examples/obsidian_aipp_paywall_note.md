@@ -26,6 +26,6 @@ Paste the following HTML snippet into any Obsidian Markdown file:
 ---
 
 ## 💎 Why AIPP for Obsidian?
-- **0% Custody:** Payments go directly to your personal wallet.
+- **Automated Settlement:** Funds settle to your configured wallet with no manual withdrawal step.
 - **1% Protocol Fee:** Gumroad takes 10% + 30¢. AIPP takes only 1%.
 - **Global Micro-Payments:** Sell $0.25 flash notes to thousands of readers worldwide.

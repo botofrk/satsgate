@@ -68,7 +68,7 @@ export class Aipp {
   }
 
   /**
-   * Triggers a manual withdrawal of your merchant balance
+   * Triggers payout processing for accumulated merchant earnings
    */
   async payout(): Promise<import('./types').PayoutResponse> {
     return this.request<import('./types').PayoutResponse>('/merchant/payout', {

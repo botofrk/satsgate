@@ -15,7 +15,7 @@
     },
     {
       "parameters": {
-        "content": "### 🛡️ 2. ZERO-CUSTODY VERIFICATION\n\nWhen a user or AI agent calls your webhook with a `payment_hash`, this node queries `https://aipp.dev/invoice/status/:hash`.\nIf settled, the workflow executes; otherwise it returns HTTP 402 with your payment link.",
+        "content": "### 🛡️ 2. AUTOMATED SETTLEMENT VERIFICATION\n\nWhen a user or AI agent calls your webhook with a `payment_hash`, this node queries `https://aipp.dev/invoice/status/:hash`.\nIf settled, the workflow executes; otherwise it returns HTTP 402 with your payment link.",
         "height": 200,
         "width": 380,
         "color": 6
