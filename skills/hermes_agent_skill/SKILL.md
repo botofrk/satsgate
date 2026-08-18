@@ -1,7 +1,8 @@
 ---
 name: aipp-smart-tags
-description: Create AIPP Smart Tag payment challenges and verify Lightning or Base USDC settlement before releasing paid agent output.
+description: Bitcoin Lightning and Base USDC payments for agents.
 ---
+
 
 # AIPP Smart Tags for Hermes
 

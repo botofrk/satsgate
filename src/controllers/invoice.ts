@@ -10,6 +10,14 @@ import { getGatewayAddress, verifyUsdcPayment } from '../services/base';
 import { publishInvoiceUpdate, subscribeToInvoice } from '../services/events';
 
 import { generateInvoiceData, InvoiceDomainError } from '../services/invoiceService';
+import { enqueueMerchantPayoutIfEligible } from '../services/payoutService';
+
+function getLnbitsKey(): string {
+  return process.env.LNBITS_INVOICE_KEY || LNBITS_INVOICE_KEY;
+}
+function getLnbitsUrl(): string {
+  return process.env.LNBITS_URL || LNBITS_URL || 'https://demo.lnbits.com';
+}
 
 function getAippKey(req: Request): string | null {
   const authHeader = req.headers.authorization;
@@ -142,6 +150,11 @@ async function settleDemoInvoice(hash: string, preimage?: string): Promise<void>
       "UPDATE invoices SET status = 'settled', payout_status = ?, preimage = ? WHERE payment_hash = ?",
       payout_status, preimage || null, hash
     );
+
+    if (payoutMode !== 'manual') {
+      await enqueueMerchantPayoutIfEligible(db, inv.api_key);
+    }
+
     await db.run('COMMIT');
 
     publishInvoiceUpdate(hash, {
@@ -154,6 +167,110 @@ async function settleDemoInvoice(hash: string, preimage?: string): Promise<void>
   } catch (e) {
     await db.run('ROLLBACK').catch(() => {});
     throw e;
+  } finally {
+    release();
+  }
+}
+
+// [TASK 4] Canonical Proof Header & Query Parser with backwards compatibility fallback
+export function extractTxHashProof(req: Request): string | null {
+  // 1. Standard modern headers
+  const sigHeader = (req.headers['payment-signature'] || req.headers['x-payment-signature']) as string | undefined;
+  if (sigHeader && typeof sigHeader === 'string' && /^0x[a-fA-F0-9]{64}$/.test(sigHeader.trim())) {
+    return sigHeader.trim();
+  }
+
+  // 2. Authorization header fallback (x402 or Bearer)
+  const authHeader = req.headers.authorization;
+  if (authHeader) {
+    if (authHeader.toLowerCase().startsWith('x402 ')) {
+      const token = authHeader.substring(5).trim();
+      if (/^0x[a-fA-F0-9]{64}$/.test(token)) return token;
+    } else if (authHeader.toLowerCase().startsWith('bearer ')) {
+      const token = authHeader.substring(7).trim();
+      if (/^0x[a-fA-F0-9]{64}$/.test(token)) return token;
+    }
+  }
+
+  // 3. Query parameter fallback
+  const queryTxHash = req.query.tx_hash as string | undefined;
+  if (queryTxHash && typeof queryTxHash === 'string' && /^0x[a-fA-F0-9]{64}$/.test(queryTxHash.trim())) {
+    return queryTxHash.trim();
+  }
+
+  return null;
+}
+
+// [TASK 5] Deduplicated internal x402 settlement function
+async function settleUsdcInvoice(
+  hash: string,
+  txHash: string,
+  usdcAmount: number,
+  apiKey: string
+): Promise<boolean> {
+  const db = getDb();
+
+  // 1. Anti-Replay: Ensure this txHash has not already been used for another settled invoice
+  const alreadyUsed = await db.get("SELECT payment_hash FROM invoices WHERE preimage = ? AND status = 'settled'", txHash);
+  if (alreadyUsed && alreadyUsed.payment_hash !== hash) {
+    console.warn(`[x402 Anti-Replay] Transaction ${txHash} was already consumed by invoice ${alreadyUsed.payment_hash}`);
+    return false;
+  }
+
+  // 2. On-chain verification
+  const isPaid = await verifyUsdcPayment(txHash, usdcAmount);
+  if (!isPaid) {
+    return false;
+  }
+
+  // 3. Atomic Database State Transition
+  const release = await acquireTransactionLock();
+  try {
+    await db.run('BEGIN EXCLUSIVE TRANSACTION');
+    const currentInvoice = await db.get('SELECT status, api_key, usdc_amount FROM invoices WHERE payment_hash = ?', hash);
+    if (currentInvoice && currentInvoice.status === 'pending') {
+      await db.run(
+        "UPDATE invoices SET status = 'settled', preimage = ?, payout_status = 'pending_manual', protocol = 'x402' WHERE payment_hash = ?",
+        txHash,
+        hash
+      );
+
+      const merchant = await db.get('SELECT payout_mode, usdc_address FROM merchants WHERE api_key = ?', apiKey);
+      if (merchant && merchant.payout_mode === 'instant') {
+        await db.run(
+          "UPDATE invoices SET payout_status = 'queued' WHERE payment_hash = ?",
+          hash
+        );
+
+        const jobId = crypto.randomUUID();
+        await db.run(
+          "INSERT INTO payout_queue (id, payment_hash, api_key, amount_sats, usdc_address, usdc_amount, protocol, status, next_retry_at, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, 'pending', ?, ?)",
+          jobId,
+          hash,
+          apiKey,
+          0,
+          merchant.usdc_address,
+          usdcAmount,
+          'x402',
+          new Date().toISOString(),
+          new Date().toISOString()
+        );
+      }
+    }
+    await db.run('COMMIT');
+
+    publishInvoiceUpdate(hash, {
+      paid: true,
+      status: 'settled',
+      preimage: txHash,
+      protocol: 'x402',
+      usdc_amount: usdcAmount
+    });
+
+    return true;
+  } catch (innerErr) {
+    await db.run('ROLLBACK').catch(() => {});
+    throw innerErr;
   } finally {
     release();
   }
@@ -176,79 +293,13 @@ export const checkInvoiceStatus = async (req: Request, res: Response, next: Next
       return res.json({ paid: false, status: 'pending', error: 'Invoice not found or pending settlement' });
     }
 
-    const queryTxHash = req.query.tx_hash as string;
+    const txHash = extractTxHashProof(req);
 
     // Handle DUAL Protocol Verification
     if (invoice.protocol === 'dual') {
-      let txHash = (req.query.tx_hash || req.headers['payment-signature'] || req.headers['x-payment-signature']) as string;
-      if (!txHash) {
-        const authHeader = req.headers.authorization;
-        if (authHeader && authHeader.toLowerCase().startsWith('x402 ')) {
-          txHash = authHeader.substring(5).trim();
-        } else if (authHeader && authHeader.toLowerCase().startsWith('bearer ')) {
-          txHash = authHeader.substring(7).trim();
-        }
-      }
-
-      // 1. Try to verify via USDC on Base first if txHash is provided
-      if (invoice.status === 'pending' && txHash && /^0x[a-fA-F0-9]{64}$/.test(txHash)) {
-        // [ANTI-REPLAY] Ensure this txHash has not already been used for another settled invoice
-        const alreadyUsed = await db.get("SELECT payment_hash FROM invoices WHERE preimage = ? AND status = 'settled'", txHash);
-        if (alreadyUsed && alreadyUsed.payment_hash !== hash) {
-          console.warn(`[x402 Anti-Replay] Transaction ${txHash} was already consumed by invoice ${alreadyUsed.payment_hash}`);
-        } else {
-          const isPaid = await verifyUsdcPayment(txHash, invoice.usdc_amount);
-          if (isPaid) {
-            const release = await acquireTransactionLock();
-            try {
-              await db.run('BEGIN EXCLUSIVE TRANSACTION');
-              const currentInvoice = await db.get('SELECT status, api_key, usdc_amount FROM invoices WHERE payment_hash = ?', hash);
-              if (currentInvoice.status === 'pending') {
-                await db.run(
-                  "UPDATE invoices SET status = 'settled', preimage = ?, payout_status = 'pending_manual', protocol = 'x402' WHERE payment_hash = ?",
-                  txHash,
-                  hash
-                );
-
-                const merchant = await db.get('SELECT payout_mode, usdc_address FROM merchants WHERE api_key = ?', invoice.api_key);
-                if (merchant && merchant.payout_mode === 'instant') {
-                  await db.run(
-                    "UPDATE invoices SET payout_status = 'queued' WHERE payment_hash = ?",
-                    hash
-                  );
-                  
-                  const jobId = crypto.randomUUID();
-                  await db.run(
-                    "INSERT INTO payout_queue (id, payment_hash, api_key, amount_sats, usdc_address, usdc_amount, protocol, status, next_retry_at, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, 'pending', ?, ?)",
-                    jobId,
-                    hash,
-                    invoice.api_key,
-                    0,
-                    merchant.usdc_address,
-                    invoice.usdc_amount,
-                    'x402',
-                    new Date().toISOString(),
-                    new Date().toISOString()
-                  );
-                }
-              }
-              await db.run('COMMIT');
-
-              publishInvoiceUpdate(hash, {
-                paid: true,
-                status: 'settled',
-                preimage: txHash,
-                protocol: 'x402',
-                usdc_amount: invoice.usdc_amount
-              });
-            } catch (innerErr) {
-              await db.run('ROLLBACK').catch(() => {});
-              throw innerErr;
-            } finally {
-              release();
-            }
-          }
-        }
+      // 1. Try to verify via USDC on Base first if proof txHash is supplied
+      if (invoice.status === 'pending' && txHash && invoice.usdc_amount) {
+        await settleUsdcInvoice(hash, txHash, invoice.usdc_amount, invoice.api_key);
       }
 
       // 2. Try to verify via Lightning (L402) if still pending
@@ -257,9 +308,9 @@ export const checkInvoiceStatus = async (req: Request, res: Response, next: Next
         if (hash.startsWith('demo_')) {
           await settleDemoInvoice(hash);
           await db.run("UPDATE invoices SET protocol = 'L402', preimage = '0000000000000000000000000000000000000000000000000000000000000000' WHERE payment_hash = ?", hash);
-        } else if (LNBITS_INVOICE_KEY) {
-          const verifyRes = await fetch(`${LNBITS_URL}/api/v1/payments/${hash}`, {
-            headers: { 'X-Api-Key': LNBITS_INVOICE_KEY }
+        } else if (getLnbitsKey()) {
+          const verifyRes = await fetch(`${getLnbitsUrl()}/api/v1/payments/${hash}`, {
+            headers: { 'X-Api-Key': getLnbitsKey() }
           });
           if (verifyRes.ok) {
             const verifyData = (await verifyRes.json()) as any;
@@ -282,74 +333,8 @@ export const checkInvoiceStatus = async (req: Request, res: Response, next: Next
 
     // Handle x402 Protocol Verification
     if (invoice.protocol === 'x402') {
-      let txHash = (req.query.tx_hash || req.headers['payment-signature'] || req.headers['x-payment-signature']) as string;
-      if (!txHash) {
-        const authHeader = req.headers.authorization;
-        if (authHeader && authHeader.toLowerCase().startsWith('x402 ')) {
-          txHash = authHeader.substring(5).trim();
-        } else if (authHeader && authHeader.toLowerCase().startsWith('bearer ')) {
-          txHash = authHeader.substring(7).trim();
-        }
-      }
-
-      if (invoice.status === 'pending' && txHash && /^0x[a-fA-F0-9]{64}$/.test(txHash)) {
-        // [ANTI-REPLAY] Ensure this txHash has not already been used for another settled invoice
-        const alreadyUsed = await db.get("SELECT payment_hash FROM invoices WHERE preimage = ? AND status = 'settled'", txHash);
-        if (alreadyUsed && alreadyUsed.payment_hash !== hash) {
-          console.warn(`[x402 Anti-Replay] Transaction ${txHash} was already consumed by invoice ${alreadyUsed.payment_hash}`);
-        } else {
-          const isPaid = await verifyUsdcPayment(txHash, invoice.usdc_amount);
-          if (isPaid) {
-            const release = await acquireTransactionLock();
-            try {
-              await db.run('BEGIN EXCLUSIVE TRANSACTION');
-              const currentInvoice = await db.get('SELECT status, api_key, usdc_amount FROM invoices WHERE payment_hash = ?', hash);
-              if (currentInvoice.status === 'pending') {
-                await db.run(
-                  "UPDATE invoices SET status = 'settled', preimage = ?, payout_status = 'pending_manual' WHERE payment_hash = ?",
-                  txHash,
-                  hash
-                );
-
-                const merchant = await db.get('SELECT payout_mode, usdc_address FROM merchants WHERE api_key = ?', invoice.api_key);
-                if (merchant && merchant.payout_mode === 'instant') {
-                  await db.run(
-                    "UPDATE invoices SET payout_status = 'queued' WHERE payment_hash = ?",
-                    hash
-                  );
-                  
-                  const jobId = crypto.randomUUID();
-                  await db.run(
-                    "INSERT INTO payout_queue (id, payment_hash, api_key, amount_sats, usdc_address, usdc_amount, protocol, status, next_retry_at, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, 'pending', ?, ?)",
-                    jobId,
-                    hash,
-                    invoice.api_key,
-                    0,
-                    merchant.usdc_address,
-                    invoice.usdc_amount,
-                    'x402',
-                    new Date().toISOString(),
-                    new Date().toISOString()
-                  );
-                }
-              }
-              await db.run('COMMIT');
-
-              publishInvoiceUpdate(hash, {
-                paid: true,
-                status: 'settled',
-                preimage: txHash,
-                protocol: 'x402',
-                usdc_amount: invoice.usdc_amount
-              });
-            } catch (innerErr) {
-              await db.run('ROLLBACK').catch(() => {});
-              throw innerErr;
-            } finally {
-              release();
-            }
-          }
-        }
+      if (invoice.status === 'pending' && txHash && invoice.usdc_amount) {
+        await settleUsdcInvoice(hash, txHash, invoice.usdc_amount, invoice.api_key);
       }
 
       const updatedInvoice = await db.get('SELECT status, preimage FROM invoices WHERE payment_hash = ?', hash);
@@ -359,6 +344,7 @@ export const checkInvoiceStatus = async (req: Request, res: Response, next: Next
         preimage: updatedInvoice.preimage || null
       });
     }
+
 
     // Default L402 Status Check
     // [K-04 FIX] Use direct function call instead of loopback HTTP with secret-in-URL
@@ -372,9 +358,9 @@ export const checkInvoiceStatus = async (req: Request, res: Response, next: Next
       });
     }
 
-    if (invoice.status === 'pending' && !hash.startsWith('demo_') && LNBITS_INVOICE_KEY) {
-      const verifyRes = await fetch(`${LNBITS_URL}/api/v1/payments/${hash}`, {
-        headers: { 'X-Api-Key': LNBITS_INVOICE_KEY }
+    if (invoice.status === 'pending' && !hash.startsWith('demo_') && getLnbitsKey()) {
+      const verifyRes = await fetch(`${getLnbitsUrl()}/api/v1/payments/${hash}`, {
+        headers: { 'X-Api-Key': getLnbitsKey() }
       });
       if (verifyRes.ok) {
         const verifyData = (await verifyRes.json()) as any;

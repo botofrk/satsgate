@@ -14,14 +14,17 @@ Canonical URL: `GET /t/:tag_id`
 | `Accept: application/json` | Open Tag manifest |
 | `GET /t/:tag_id/manifest` | Open Tag manifest |
 | `POST /t/:tag_id/invoice` | Tag-bound payment challenge |
-| `GET /t/:tag_id/unlock/:payment_hash` | Verify exact-tag proof and fulfill |
+| `POST /t/:tag_id/access-token` | Exchange a settled invoice plus its non-public claim secret for a resource-scoped token |
+| `GET /t/:tag_id/content` | Fulfill with `Authorization: Bearer <access_token>` |
 | `GET /t/:tag_id/receipt/:payment_hash` | Portable technical receipt |
 
 ## Security contract
 
-Every Smart Tag invoice stores `tag_id`. Unlock and receipt endpoints require
-both the invoice hash and the matching tag ID. A payment proof for one tag must
-never unlock another tag, including another tag from the same merchant.
+Every Smart Tag invoice stores `tag_id`. The invoice hash is only an invoice
+lookup identifier and never authorizes content. Access-token exchange requires
+the invoice's non-public claim secret after settlement, and fulfillment requires
+the resulting resource-scoped bearer token. A payment for one tag must never
+unlock another tag, including another tag from the same merchant.
 
 Checkout creation remains idempotent. Base transaction hashes retain their
 one-invoice anti-replay rule. Production should set `AIPP_RECEIPT_SECRET` to a

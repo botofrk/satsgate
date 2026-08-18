@@ -72,3 +72,29 @@ class MarketplaceManifest(BaseModel):
     chains: list
     tools: list
     tags: list
+
+class AccessTokenResponse(BaseModel):
+    access_token: str
+    token_type: str = "Bearer"
+    expires_at: str
+
+class OpenTagContentResponse(BaseModel):
+    success: bool
+    tag_id: str
+    title: str
+    message: str
+    content: dict
+
+class UsdcPaymentResult(BaseModel):
+    stage: str
+    payment_hash: str
+    tx_hash: Optional[str] = None
+    paid: bool = False
+    status: str = "pending"
+    preimage: Optional[str] = None
+    access_token: Optional[str] = None
+    token_type: Optional[str] = None
+    expires_at: Optional[str] = None
+    content: Optional[dict] = None
+    error: Optional[str] = None
+

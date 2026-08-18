@@ -483,8 +483,13 @@ def generate_image(prompt, preimage=None):
 # 1. Trigger terminal paywall & get ASCII Lightning Invoice
 curl https://aipp.dev/cli/p_demo
 
-# 2. Pay with wallet, then unlock payload directly in stdout
-curl -s "https://aipp.dev/cli/p_demo?payment_hash=YOUR_HASH"</pre>
+# 2. Pay, then exchange PAYMENT_HASH + ACCESS_CLAIM_SECRET for an access token
+curl -s -X POST https://aipp.dev/t/p_demo/access-token \
+  -H "Content-Type: application/json" \
+  -d '{"payment_hash":"PAYMENT_HASH","access_claim_secret":"ACCESS_CLAIM_SECRET"}'
+
+# 3. Deliver the payload without putting credentials in the URL
+curl -s -H "Authorization: Bearer ACCESS_TOKEN" https://aipp.dev/cli/p_demo</pre>
     </div>
 
     <!-- SECTION: EXTENSION GUIDE -->
@@ -525,7 +530,7 @@ curl -H "Accept: text/html" https://aipp.dev/t/p_YOUR_TAG
 # Stable description for an agent, MCP tool or workflow
 curl -H "Accept: application/json" https://aipp.dev/t/p_YOUR_TAG
 # or GET /t/p_YOUR_TAG/manifest</pre>
-      <p>After payment, call <code>/t/:tag/unlock/:payment_hash</code>. A proof is accepted only when it belongs to that exact tag. The portable receipt is available at <code>/t/:tag/receipt/:payment_hash</code>.</p>
+      <p>After settlement, exchange the invoice's private claim at <code>POST /t/:tag/access-token</code>, then call <code>GET /t/:tag/content</code> with <code>Authorization: Bearer &lt;access_token&gt;</code>. Payment hashes identify invoices but never authorize content.</p>
     </div>
 
     <!-- SECTION: API CREATE INVOICE -->

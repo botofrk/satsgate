@@ -1,7 +1,7 @@
 import crypto from 'crypto';
-import { getDb } from '../config/database';
+import { getDb, acquireTransactionLock } from '../config/database';
 import { getBtcUsdRate } from './price';
-import { LNBITS_INVOICE_KEY, LNBITS_URL, LNBITS_WEBHOOK_SECRET, MAX_SINGLE_REQUEST_USD, USDC_ADDRESS, BASE_NETWORK_NAME } from '../config/env';
+import { LNBITS_INVOICE_KEY, LNBITS_URL, LNBITS_WEBHOOK_SECRET, MAX_SINGLE_REQUEST_USD, USDC_ADDRESS, BASE_NETWORK_NAME, API_BASE_URL } from '../config/env';
 import { getGatewayAddress } from './base';
 import { ethers } from 'ethers';
 import { calculateLightningFeeSats } from './fees';
@@ -133,28 +133,51 @@ export async function generateInvoiceData(options: GenerateInvoiceOptions): Prom
 
   const protocolLower = options.protocol.toLowerCase();
 
-  // 4. Idempotency Check & Transaction
+  // 4. Payment generation and persistence
   let paymentHash = '';
   let paymentRequest = '';
   let finalCommissionSats = 0;
   let finalForwardedSats = 0;
 
-  if (options.protocol === 'X402') {
-    paymentHash = 'x402_' + crypto.randomBytes(16).toString('hex');
-  } else {
-    // LNBITS
-    // Public prices are merchant-net prices. Add the disclosed AIPP fee on top.
+  // Public prices are merchant-net prices. Add the disclosed AIPP fee on top.
+  // This is a pure calculation and intentionally remains outside the lock.
+  if (options.protocol !== 'X402') {
     const merchantPriceSats = amount_sats!;
     finalCommissionSats = calculateLightningFeeSats(merchantPriceSats);
     finalForwardedSats = merchantPriceSats;
     amount_sats = merchantPriceSats + finalCommissionSats;
-    
-    if (LNBITS_INVOICE_KEY) {
-      const webhookUrl = process.env.API_BASE_URL
-        ? `${process.env.API_BASE_URL}/lnbits-webhook?secret=${LNBITS_WEBHOOK_SECRET}`
-        : `https://api.aipp.dev/lnbits-webhook?secret=${LNBITS_WEBHOOK_SECRET}`;
+  }
 
-      // Need to run this outside transaction to avoid blocking DB during HTTP request
+  // The shared lock starts before idempotency lookup and payment generation.
+  // This prevents duplicate external invoices and overlapping transactions on
+  // the singleton SQLite connection.
+  const release = await acquireTransactionLock();
+  let transactionStarted = false;
+  try {
+    if (options.idempotencyKey && options.idempotencyFingerprint) {
+      const existingIdem = await db.get(
+        'SELECT request_fingerprint, invoice_id FROM invoice_idempotency WHERE merchant_id = ? AND idempotency_key = ?',
+        merchant.api_key, options.idempotencyKey
+      );
+
+      if (existingIdem) {
+        if (existingIdem.request_fingerprint !== options.idempotencyFingerprint) {
+          throw new InvoiceDomainError('Idempotency key already used with different request parameters', 'CONFLICT');
+        }
+
+        const existingInv = await db.get('SELECT * FROM invoices WHERE payment_hash = ?', existingIdem.invoice_id);
+        if (!existingInv) {
+          throw new InvoiceDomainError('Invoice linked to idempotency key not found', 'DB_ERROR');
+        }
+        return formatResponse(existingInv, existingInv.usdc_amount, options.protocol, merchant.usdc_address);
+      }
+    }
+
+    if (options.protocol === 'X402') {
+      paymentHash = 'x402_' + crypto.randomBytes(16).toString('hex');
+    } else if (LNBITS_INVOICE_KEY) {
+      const webhookUrl = `${API_BASE_URL}/lnbits-webhook?secret=${LNBITS_WEBHOOK_SECRET}`;
+
       const response = await fetch(`${LNBITS_URL}/api/v1/payments`, {
         method: 'POST',
         headers: { 'X-Api-Key': LNBITS_INVOICE_KEY, 'Content-Type': 'application/json' },
@@ -180,36 +203,10 @@ export async function generateInvoiceData(options: GenerateInvoiceOptions): Prom
       paymentHash = 'demo_' + crypto.randomBytes(8).toString('hex');
       paymentRequest = `lnbc${amount_sats}n1demo_invoice_generated_by_aipp_backend_for_testing_purposes`;
     }
-  }
 
-  // Perform DB insertion atomically with idempotency
-  try {
     await db.run('BEGIN EXCLUSIVE TRANSACTION');
-    
-    if (options.idempotencyKey && options.idempotencyFingerprint) {
-      // Check existing
-      const existingIdem = await db.get(
-        'SELECT request_fingerprint, invoice_id FROM invoice_idempotency WHERE merchant_id = ? AND idempotency_key = ?',
-        merchant.api_key, options.idempotencyKey
-      );
-      
-      if (existingIdem) {
-        if (existingIdem.request_fingerprint !== options.idempotencyFingerprint) {
-          await db.run('ROLLBACK');
-          throw new InvoiceDomainError('Idempotency key already used with different request parameters', 'CONFLICT');
-        }
-        
-        // Return existing invoice
-        const existingInv = await db.get('SELECT * FROM invoices WHERE payment_hash = ?', existingIdem.invoice_id);
-        await db.run('ROLLBACK'); // Rollback the write lock since we just read
-        if (!existingInv) {
-          throw new InvoiceDomainError('Invoice linked to idempotency key not found', 'DB_ERROR');
-        }
-        return formatResponse(existingInv, existingInv.usdc_amount, options.protocol, merchant.usdc_address);
-      }
-      
-    }
-    
+    transactionStarted = true;
+
     // Insert actual invoice
     await db.run(
       `INSERT INTO invoices (
@@ -231,21 +228,26 @@ export async function generateInvoiceData(options: GenerateInvoiceOptions): Prom
       options.tagId || null,
       new Date().toISOString()
     );
-    
+
     if (options.idempotencyKey && options.idempotencyFingerprint) {
-      // Reserve it
       await db.run(
         'INSERT INTO invoice_idempotency (merchant_id, idempotency_key, request_fingerprint, invoice_id, created_at) VALUES (?, ?, ?, ?, ?)',
         merchant.api_key, options.idempotencyKey, options.idempotencyFingerprint, paymentHash, new Date().toISOString()
       );
     }
-    
+
     await db.run('COMMIT');
+    transactionStarted = false;
   } catch (err: any) {
-    await db.run('ROLLBACK').catch(() => {});
+    if (transactionStarted) {
+      await db.run('ROLLBACK').catch(() => {});
+      transactionStarted = false;
+    }
     if (err instanceof InvoiceDomainError) throw err;
     console.error('[InvoiceService] DB Insert failed:', err);
     throw new InvoiceDomainError('Invoice generated but failed to save in database', 'DB_ERROR');
+  } finally {
+    release();
   }
   return formatResponse({
     payment_hash: paymentHash,

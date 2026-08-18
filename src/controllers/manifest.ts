@@ -62,10 +62,10 @@ export const getOpenTagSpec = async (req: Request, res: Response) => {
         manifest: 'GET /t/:id/manifest — this object',
         content: 'GET /t/:id/content — HTTP 402 challenge or unlocked content',
         create_payment: 'POST /t/:id/invoice — body { mode: "L402" } | { mode: "X402" } | { mode: "DUAL" } (alias: protocol)',
-        verify_and_unlock: 'GET /t/:id/unlock/:payment_hash',
+        issue_access_token: 'POST /t/:id/access-token with payment_hash and access_claim_secret',
         receipt: 'GET /t/:id/receipt/:payment_hash'
       },
-      payment_binding: { resource: '/t/:id', proof_scope: 'exact-tag', replay_policy: 'one-proof-one-invoice' }
+      payment_binding: { resource: '/t/:id', authorization: 'Bearer access_token', token_lifetime: '7 days', replay_policy: 'reusable until expiry; rotated on reissue' }
     },
     address_semantics: {
       'manifest.accepts[].receiver': 'Merchant settlement destination — where AIPP forwards the merchant amount after the platform fee.',
@@ -76,9 +76,10 @@ export const getOpenTagSpec = async (req: Request, res: Response) => {
       '1. GET /t/:id (Accept: application/json) or GET /t/:id/manifest → manifest',
       '2. POST /t/:id/invoice {"mode":"L402"} → BOLT11 payment_request; {"mode":"X402"} → pay_to / network / token / payment_hash; {"mode":"DUAL"} → both rails',
       '3. Pay — Lightning: pay the BOLT11 invoice; USDC: transfer the price to pay_to on Base (chain_id 8453, token contract)',
-      '4. Verify — GET /t/:id/content?payment_hash=... or GET /invoice/status/:hash → paid / settled',
-      '5. Unlock — GET /t/:id/unlock/:payment_hash → protected resource / fulfillment',
-      '6. Receipt — GET /t/:id/receipt/:payment_hash → signed portable receipt'
+      '4. Verify — GET /invoice/status/:hash → paid / settled',
+      '5. Exchange — POST /t/:id/access-token with payment_hash and access_claim_secret',
+      '6. Unlock — GET /t/:id/content with Authorization: Bearer <access_token>',
+      '7. Receipt — GET /t/:id/receipt/:payment_hash → signed portable receipt'
     ],
     http_status: {
       '402': 'Payment Required — challenge response; read WWW-Authenticate and the JSON body',
@@ -113,7 +114,7 @@ export const getAippAgentManifest = async (req: Request, res: Response) => {
       paidmcp: `${baseUrl}/paidmcp.json`,
       open_tag: `${baseUrl}/t/{tag_id}`,
       open_tag_manifest: `${baseUrl}/t/{tag_id}/manifest`,
-      open_tag_unlock: `${baseUrl}/t/{tag_id}/unlock/{payment_hash}`,
+      open_tag_access_token: `${baseUrl}/t/{tag_id}/access-token`,
       open_tag_receipt: `${baseUrl}/t/{tag_id}/receipt/{payment_hash}`
     },
     protocols: {

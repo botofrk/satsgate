@@ -193,4 +193,63 @@ describe('Dual-Rail (L402 + X402) Integration Tests', () => {
     expect(res.body.preimage).toBe(txHash);
     expect(verifySpy).toHaveBeenCalledWith(txHash, 1.30);
   });
+
+  it('Anti-Replay: should reject reusing an already settled txHash for a different invoice', async () => {
+    const db = getDb();
+    const invoice1 = 'inv_replay_1_' + crypto.randomBytes(4).toString('hex');
+    const invoice2 = 'inv_replay_2_' + crypto.randomBytes(4).toString('hex');
+    const reusedTxHash = '0x' + crypto.randomBytes(32).toString('hex');
+
+    // Settle invoice 1 with reusedTxHash
+    await db.run(
+      "INSERT INTO invoices (payment_hash, api_key, amount_sats, commission_sats, forwarded_amount_sats, status, protocol, usdc_amount, preimage, created_at) VALUES (?, ?, ?, ?, ?, 'settled', 'x402', 1.00, ?, ?)",
+      invoice1, "dual_test_merchant_key", 1000, 10, 990, reusedTxHash, new Date().toISOString()
+    );
+
+    // Insert invoice 2 as pending
+    await db.run(
+      "INSERT INTO invoices (payment_hash, api_key, amount_sats, commission_sats, forwarded_amount_sats, status, protocol, usdc_amount, created_at) VALUES (?, ?, ?, ?, ?, 'pending', 'x402', 1.00, ?)",
+      invoice2, "dual_test_merchant_key", 1000, 10, 990, new Date().toISOString()
+    );
+
+    const baseService = await import('../src/services/base');
+    const verifySpy = vi.spyOn(baseService, 'verifyUsdcPayment').mockResolvedValue(true);
+
+    // Attempt to settle invoice2 with reusedTxHash via Payment-Signature header
+    const res = await request(app)
+      .get(`/invoice/status/${invoice2}`)
+      .set('Payment-Signature', reusedTxHash);
+
+    expect(res.status).toBe(200);
+    expect(res.body.paid).toBe(false);
+    expect(res.body.status).toBe('pending');
+
+    // Verify invoice2 remained pending in DB
+    const checkDb = await db.get("SELECT status FROM invoices WHERE payment_hash = ?", invoice2);
+    expect(checkDb.status).toBe('pending');
+  });
+
+  it('Header Proof: should successfully settle invoice using Payment-Signature header', async () => {
+    const db = getDb();
+    const paymentHash = 'header_proof_' + crypto.randomBytes(4).toString('hex');
+    const txHash = '0x' + crypto.randomBytes(32).toString('hex');
+
+    await db.run(
+      "INSERT INTO invoices (payment_hash, api_key, amount_sats, commission_sats, forwarded_amount_sats, status, protocol, usdc_amount, created_at) VALUES (?, ?, ?, ?, ?, 'pending', 'x402', 0.50, ?)",
+      paymentHash, "dual_test_merchant_key", 500, 5, 495, new Date().toISOString()
+    );
+
+    const baseService = await import('../src/services/base');
+    vi.spyOn(baseService, 'verifyUsdcPayment').mockResolvedValue(true);
+
+    const res = await request(app)
+      .get(`/invoice/status/${paymentHash}`)
+      .set('Payment-Signature', txHash);
+
+    expect(res.status).toBe(200);
+    expect(res.body.paid).toBe(true);
+    expect(res.body.status).toBe('settled');
+    expect(res.body.preimage).toBe(txHash);
+  });
 });
+

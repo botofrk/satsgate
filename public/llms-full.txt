@@ -41,7 +41,7 @@ curl -X POST https://aipp.dev/merchant/links/create \
 ```bash
 curl -X POST https://aipp.dev/merchant/register \
   -H "Content-Type: application/json" \
-  -d '{"ln_address": "your_name@walletofsatoshi.com", "usdc_address": "0x71C7656EC7ab88b098defB751B7401B5f6d8976F"}'
+  -d '{"ln_address": "your_name@walletofsatoshi.com", "usdc_address": "0x00b18f645a3e40802809ff59cb9AAB2225703eeE"}'
 ```
 
 ---
@@ -91,7 +91,7 @@ Accept: application/json
       "chain_id": 8453,
       "asset": "USDC",
       "contract": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
-      "receiver": "0x71C7656EC7ab88b098defB751B7401B5f6d8976F",
+      "receiver": "0x00b18f645a3e40802809ff59cb9AAB2225703eeE",
       "fee_policy": "1% merchant platform fee"
     }
   ],
@@ -100,7 +100,7 @@ Accept: application/json
     "manifest": "https://aipp.dev/t/demo/manifest",
     "content": "https://aipp.dev/t/demo/content",
     "create_payment": "https://aipp.dev/t/demo/invoice",
-    "verify_and_unlock": "https://aipp.dev/t/demo/unlock/{payment_hash}",
+    "issue_access_token": "https://aipp.dev/t/demo/access-token",
     "receipt": "https://aipp.dev/t/demo/receipt/{payment_hash}"
   }
 }
@@ -177,13 +177,17 @@ def call_aipp_protected_agent_tool(tag_url: str):
         inv_res = requests.post(create_payment_url, json={"mode": "L402"}).json()
         invoice = inv_res['payment_request']
         payment_hash = inv_res['payment_hash']
+        access_claim_secret = inv_res['access_claim_secret']
         
         print(f"[AIPP Agent] Pay Lightning invoice: {invoice}")
-        print(f"[AIPP Agent] Check status at: {data['interfaces']['content']}?payment_hash={payment_hash}")
+        print(f"[AIPP Agent] Check status at: /invoice/status/{payment_hash}")
         
-        # After payment, verify and unlock
-        unlock_url = data['interfaces']['verify_and_unlock'].replace('{payment_hash}', payment_hash)
-        return unlock_url
+        # After settlement, exchange the private claim and use the token in a header.
+        token = requests.post(data['interfaces']['issue_access_token'], json={
+            "payment_hash": payment_hash,
+            "access_claim_secret": access_claim_secret,
+        }).json()['access_token']
+        return requests.get(data['interfaces']['content'], headers={"Authorization": f"Bearer {token}"}).json()
 
     return res.text
 ```
@@ -229,7 +233,7 @@ app.listen(3000, () => console.log('AIPP Protected Server running on port 3000')
 
 ### Error: "402 Payment Required - Unsettled Invoice"
 - **Cause**: Content or destination URL accessed prior to verified settlement on Lightning Network or Base USDC.
-- **Solution**: Poll `GET https://aipp.dev/invoice/status/<PAYMENT_HASH>` until `status: "settled"` (or `paid: true`), then call `GET https://aipp.dev/t/<TAG_ID>/unlock/<PAYMENT_HASH>` to unlock the protected destination content.
+- **Solution**: Poll `GET https://aipp.dev/invoice/status/<PAYMENT_HASH>` until settled, exchange the private invoice claim at `POST /t/<TAG_ID>/access-token`, then call `GET /t/<TAG_ID>/content` with the returned Bearer token.
 
 ---
 

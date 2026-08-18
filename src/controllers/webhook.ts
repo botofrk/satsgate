@@ -6,6 +6,7 @@ import { AppError } from '../utils/error';
 import { processPayoutQueue } from '../jobs/payoutWorker';
 import { processWebhookQueue } from '../jobs/webhookWorker';
 import { publishInvoiceUpdate } from '../services/events';
+import { enqueueMerchantPayoutIfEligible } from '../services/payoutService';
 
 // Safe URLs for merchant callbacks — block SSRF targets
 // [W-05 FIX] Tests parsed hostname instead of raw URL string; extended blocklist
@@ -193,40 +194,7 @@ export const handleLnbitsWebhook = async (req: Request, res: Response, next: Nex
           targetProtocol,
           paymentHash
         );
-        
-        const accumRecord = await db.get(
-          "SELECT SUM(forwarded_amount_sats) as total FROM invoices WHERE api_key = ? AND status = 'settled' AND payout_status = 'pending_threshold'",
-          invoice.api_key
-        );
-        
-        // [W-06 FIX] Use ?? (nullish coalescing) instead of || for SUM result
-        const accumTotalForwarded = accumRecord?.total ?? 0;
-        
-        const effectiveThreshold = payoutMode === 'instant' 
-          ? 1
-          : Math.max(MIN_PAYOUT_THRESHOLD_SATS, merchant.payout_threshold_sats || 0);
-
-        if (accumTotalForwarded >= effectiveThreshold) {
-          await db.run(
-            "UPDATE invoices SET payout_status = 'queued' WHERE api_key = ? AND status = 'settled' AND payout_status = 'pending_threshold'",
-            invoice.api_key
-          );
-
-          const jobId = crypto.randomUUID();
-          await db.run(
-            "INSERT INTO payout_queue (id, payment_hash, api_key, amount_sats, ln_address, status, next_retry_at, created_at) VALUES (?, ?, ?, ?, ?, 'pending', ?, ?)",
-            jobId,
-            `batch_${crypto.randomBytes(8).toString('hex')}`, // [K-11 FIX] Random suffix, not predictable
-            invoice.api_key,
-            accumTotalForwarded,
-            merchant.ln_address,
-            new Date().toISOString(),
-            new Date().toISOString()
-          );
-          console.log(`[Webhook] Threshold met (${effectiveThreshold})! Job ${jobId} queued for ${accumTotalForwarded} sats.`);
-        } else {
-          console.log(`[Webhook] Payment accumulated. Total: ${accumTotalForwarded} sats. Waiting to reach ${effectiveThreshold} sats.`);
-        }
+        await enqueueMerchantPayoutIfEligible(db, invoice.api_key);
       }
 
       // Queue merchant webhook callback atomically within the transaction

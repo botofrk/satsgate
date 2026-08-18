@@ -13,6 +13,7 @@ const REQUIRED_IN_PROD = [
   'LNBITS_ADMIN_KEY',
   'LNBITS_WEBHOOK_SECRET',
   'ADMIN_SECRET',
+  'AIPP_ACCESS_SECRET',
 ] as const;
 
 if (IS_PROD) {
@@ -33,6 +34,7 @@ export const LNBITS_ADMIN_KEY = process.env.LNBITS_ADMIN_KEY || '';
 export const ADMIN_SECRET = process.env.ADMIN_SECRET || '';
 
 export const LNBITS_WEBHOOK_SECRET = process.env.LNBITS_WEBHOOK_SECRET || '';
+export const AIPP_ACCESS_SECRET = process.env.AIPP_ACCESS_SECRET || (IS_PROD ? '' : 'aipp-development-access-secret');
 export const DEEPSEEK_API_KEY = process.env.DEEPSEEK_API_KEY || '';
 export const RESEND_API_KEY = process.env.RESEND_API_KEY || '';
 
@@ -71,7 +73,14 @@ export const MAX_SINGLE_REQUEST_USD = safeInt(process.env.MAX_SINGLE_REQUEST_USD
 export const MIN_TOPUP_SATS = safeInt(process.env.MIN_TOPUP_SATS, 50);
 export const MIN_PAYOUT_THRESHOLD_SATS = safeInt(process.env.MIN_PAYOUT_THRESHOLD_SATS, 50);
 export const MAX_MERCHANTS = safeInt(process.env.MAX_MERCHANTS, 100);
+export const CONTENT_ACCESS_TOKEN_TTL_SECONDS = Math.min(
+  safeInt(process.env.CONTENT_ACCESS_TOKEN_TTL_SECONDS, 7 * 24 * 60 * 60),
+  30 * 24 * 60 * 60
+);
 
 // WebAuthn Relying Party (RP) configuration
 export const RP_ID = process.env.RP_ID || (IS_PRODUCTION ? 'aipp.dev' : 'localhost');
 export const EXPECTED_ORIGIN = process.env.EXPECTED_ORIGIN || (IS_PRODUCTION ? 'https://aipp.dev' : 'http://localhost:3000');
+export const API_BASE_URL = (process.env.API_BASE_URL && !process.env.API_BASE_URL.includes('api.aipp.dev'))
+  ? process.env.API_BASE_URL.replace(/\/+$/, '')
+  : EXPECTED_ORIGIN;

@@ -273,7 +273,10 @@ export async function initDb(): Promise<Database> {
     'ALTER TABLE payment_links ADD COLUMN description TEXT;',
     'ALTER TABLE payment_links ADD COLUMN input_schema TEXT;',
     'ALTER TABLE payment_links ADD COLUMN output_schema TEXT;',
-    'ALTER TABLE invoices ADD COLUMN tag_id TEXT;'
+    'ALTER TABLE invoices ADD COLUMN tag_id TEXT;',
+    'ALTER TABLE invoices ADD COLUMN access_claim_secret_hash TEXT;',
+    'ALTER TABLE invoices ADD COLUMN access_token_hash TEXT;',
+    'ALTER TABLE invoices ADD COLUMN access_token_expires_at TEXT;'
   ]) {
     try {
       await dbInstance.exec(migration);
@@ -282,6 +285,7 @@ export async function initDb(): Promise<Database> {
     }
   }
   await dbInstance.exec('CREATE INDEX IF NOT EXISTS idx_invoices_tag_id ON invoices (tag_id, status);');
+  await dbInstance.exec('CREATE UNIQUE INDEX IF NOT EXISTS idx_invoices_access_token_hash ON invoices (access_token_hash) WHERE access_token_hash IS NOT NULL;');
 
   console.log('⚡ SQLite Database file initialized (aipp.db).');
 
@@ -291,12 +295,12 @@ export async function initDb(): Promise<Database> {
     'INSERT OR IGNORE INTO merchants (api_key, ln_address, usdc_address, payout_mode, payout_threshold_sats, created_at) VALUES (?, ?, ?, ?, ?, ?)',
     devKey,
     'longingsavior14@walletofsatoshi.com',
-    '0x71C7656EC7ab88b098defB751B7401B5f6d8976F',
+    '0x00b18f645a3e40802809ff59cb9AAB2225703eeE',
     'instant',
     0,
     new Date().toISOString()
   );
-  await dbInstance.run("UPDATE merchants SET ln_address = 'longingsavior14@walletofsatoshi.com', payout_mode = 'instant' WHERE api_key = ?", devKey);
+  await dbInstance.run("UPDATE merchants SET ln_address = 'longingsavior14@walletofsatoshi.com', usdc_address = '0x00b18f645a3e40802809ff59cb9AAB2225703eeE', payout_mode = 'instant' WHERE api_key = ?", devKey);
 
   const existingDemoTag = await dbInstance.get('SELECT * FROM payment_links WHERE id = ?', 'demo');
   if (!existingDemoTag) {

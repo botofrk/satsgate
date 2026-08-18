@@ -1,12 +1,13 @@
 import { Request, Response, NextFunction } from 'express';
 import crypto from 'crypto';
-import { getDb } from '../config/database';
+import { getDb, acquireTransactionLock } from '../config/database';
 import { AppError } from '../utils/error';
 import { getBtcUsdRate } from '../services/price';
 import { BASE_NETWORK_NAME, USDC_ADDRESS, LNBITS_URL, LNBITS_INVOICE_KEY, IS_PRODUCTION } from '../config/env';
 import { getGatewayAddress } from '../services/base';
 import { checkLimit } from '../services/limiter';
 import { generateInvoiceData, InvoiceDomainError } from '../services/invoiceService';
+import { bearerToken, deriveAccessClaimSecret, hashAccessCredential } from '../services/contentAccess';
 // API Key helper
 function getAippKey(req: Request): string | null {
   const headerKey = (req.headers['x-api-key'] as string) || (req.headers['authorization'] as string);
@@ -167,17 +168,19 @@ export const renderPaymentPage = async (req: Request, res: Response, next: NextF
     const userAgent = (req.headers['user-agent'] || '').toLowerCase();
     const isCli = userAgent.includes('curl') || userAgent.includes('wget') || req.path.startsWith('/cli');
     if (isCli) {
-      const preimageOrHash = (req.query.preimage || req.query.payment_hash || '') as string;
-      if (preimageOrHash) {
+      const token = bearerToken(req);
+      if (token) {
         const verify = await db.get(
-          'SELECT status, preimage FROM invoices WHERE tag_id = ? AND (payment_hash = ? OR preimage = ?)',
-          link.id,
-          preimageOrHash,
-          preimageOrHash
+          `SELECT status FROM invoices WHERE tag_id = ? AND access_token_hash = ? AND access_token_expires_at > ?`,
+          link.id, hashAccessCredential(token), new Date().toISOString()
         );
         if (verify && verify.status === 'settled') {
-          return res.send(`\n\x1b[32m[AIPP PROTOCOL] PAYMENT VERIFIED & UNLOCKED\x1b[0m\nTarget URL / Payload: ${link.redirect_url}\nPreimage: ${verify.preimage}\n\n`);
+          res.setHeader('Cache-Control', 'private, no-store');
+          return res.send(`\n\x1b[32m[AIPP PROTOCOL] PAYMENT VERIFIED & UNLOCKED\x1b[0m\nTarget URL / Payload: ${link.redirect_url}\n\n`);
         }
+      }
+      if (req.query.payment_hash || req.query.preimage) {
+        return res.status(410).send('\n[AIPP ERROR] Payment hash and preimage authorization have been removed. Use a Bearer access token.\n\n');
       }
 
       let invoiceRes = '';
@@ -208,8 +211,8 @@ Status:  \x1b[31mHTTP 402 PAYMENT REQUIRED\x1b[0m
 ${invoiceRes || 'Visit https://aipp.dev/pay/' + link.id}
 
 Scan with Phoenix / Wallet of Satoshi, or pay via CLI.
-Once paid, run:
-  \x1b[36mcurl -s "https://aipp.dev/cli/${link.id}?payment_hash=<PAYMENT_HASH>"\x1b[0m
+  Once paid, exchange the invoice claim at /t/${link.id}/access-token, then run:
+  \x1b[36mcurl -s -H "Authorization: Bearer <ACCESS_TOKEN>" "https://aipp.dev/cli/${link.id}"\x1b[0m
 \x1b[33m======================================================================\x1b[0m
 \n`;
       return res.status(402).send(cliOutput);
@@ -499,8 +502,9 @@ Once paid, run:
   <div class="specimen-checkout-card">
     <div class="security-badge">
       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
-      Non-Custodial Checkout
+      Direct Wallet Checkout
     </div>
+
 
     <h1>${link.title}</h1>
 
@@ -553,8 +557,9 @@ Once paid, run:
   </div>
 
   <footer>
-    Powered by <a href="https://aipp.dev" target="_blank">aipp</a> · Decentralized Non-Custodial Software
+    Powered by <a href="https://aipp.dev" target="_blank">aipp</a> · Short-Lived Transit Payment Rail
   </footer>
+
 </div>
 
 <script>
@@ -562,6 +567,8 @@ Once paid, run:
   let pollInterval = null;
   let sseSource = null;
   let isSettled = false;
+  let accessExchangePending = false;
+  let currentAccessClaimSecret = null;
   const CURRENT_LINK_ID = ${JSON.stringify(link.id)};
   const REDIRECT_URL = ${JSON.stringify(link.redirect_url)};
   const HAS_LN = ${JSON.stringify(hasLn)};
@@ -615,6 +622,7 @@ Once paid, run:
       });
       if (!res.ok) throw new Error('Invoice generation failed');
       const data = await res.json();
+      currentAccessClaimSecret = data.access_claim_secret;
 
       document.getElementById('selection-view').style.display = 'none';
       document.getElementById('invoice-view').style.display = 'block';
@@ -718,24 +726,35 @@ Once paid, run:
     }
   }
 
-  function handlePaymentSettled(d, hash) {
-    if (isSettled) return;
-    isSettled = true;
+  async function handlePaymentSettled(d, hash) {
+    if (isSettled || accessExchangePending) return;
+    accessExchangePending = true;
     if (pollInterval) clearInterval(pollInterval);
     if (sseSource) { sseSource.close(); sseSource = null; }
-    sessionStorage.removeItem('aipp_checkout_' + CURRENT_LINK_ID);
-
     try {
-      window.parent.postMessage({ aippSettled: true, tagId: CURRENT_LINK_ID, hash: hash, preimage: d.preimage }, '*');
-    } catch(err) {}
+      const tokenRes = await fetch('/t/' + CURRENT_LINK_ID + '/access-token', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ payment_hash: hash, access_claim_secret: currentAccessClaimSecret })
+      });
+      if (!tokenRes.ok) throw new Error('Secure content access could not be issued');
+      const tokenData = await tokenRes.json();
+      sessionStorage.setItem('aipp_access_' + CURRENT_LINK_ID, JSON.stringify(tokenData));
+      sessionStorage.removeItem('aipp_checkout_' + CURRENT_LINK_ID);
+      currentAccessClaimSecret = null;
+      isSettled = true;
+      accessExchangePending = false;
+    } catch (err) {
+      accessExchangePending = false;
+      document.getElementById('payment-instructions').textContent = 'Payment confirmed, but secure content access could not be issued. Please retry.';
+      return;
+    }
     document.getElementById('status-dot').style.background = '#15803d';
     document.getElementById('status-text').textContent = '⚡ Payment Confirmed (0 ms)!';
     if (REDIRECT_URL && REDIRECT_URL.startsWith('http')) {
       document.getElementById('payment-instructions').textContent = 'Redirecting to your content...';
       setTimeout(() => {
-        let target = REDIRECT_URL;
-        target += (target.includes('?') ? '&' : '?') + 'payment_hash=' + encodeURIComponent(hash);
-        window.location.href = target;
+        window.location.href = REDIRECT_URL;
       }, 1000);
     } else {
       document.getElementById('payment-instructions').innerHTML = '<div style="color:#15803d; font-weight:700; font-size:14px; margin-top:8px;">✓ Thank you! Payment confirmed; merchant payout is processing automatically.</div>';
@@ -843,6 +862,17 @@ export const createLinkInvoice = async (req: Request, res: Response, next: NextF
           ? crypto.createHash('sha256').update(`${link.id}:${link.amount_usd}:${effectiveMode}`).digest('hex')
           : undefined
       });
+      const accessClaimSecret = deriveAccessClaimSecret(invoiceData.payment_hash, link.id);
+      const releaseAccessWrite = await acquireTransactionLock();
+      try {
+        await db.run(
+          'UPDATE invoices SET access_claim_secret_hash = ? WHERE payment_hash = ? AND tag_id = ?',
+          hashAccessCredential(accessClaimSecret), invoiceData.payment_hash, link.id
+        );
+      } finally {
+        releaseAccessWrite();
+      }
+      (invoiceData as any).access_claim_secret = accessClaimSecret;
     } catch (err: any) {
       if (err instanceof InvoiceDomainError) {
         let statusCode = 400;

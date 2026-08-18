@@ -87,3 +87,80 @@ export interface MarketplaceManifest {
   tools: MarketplaceTool[];
   tags: string[];
 }
+
+export interface AccessTokenResponse {
+  access_token: string;
+  token_type: 'Bearer';
+  expires_at: string;
+}
+
+export interface OpenTagContentResponse {
+  success: boolean;
+  tag_id: string;
+  title: string;
+  message: string;
+  content: {
+    type: 'redirect' | 'data';
+    url?: string;
+    [key: string]: unknown;
+  };
+}
+
+export type UsdcPaymentStage = 
+  | 'CREATED'
+  | 'PAYMENT_SENT_PROOF_PENDING'
+  | 'PROOF_SUBMITTED'
+  | 'SETTLED'
+  | 'AUTHORIZED'
+  | 'COMPLETED';
+
+export interface PayAndSettleUsdcOptions {
+  /** The AIPP payment hash to settle (e.g. x402_...) */
+  paymentHash: string;
+  /** The expected USD amount to pay (e.g. 0.01) */
+  amountUsd: number;
+  /** The recipient Gateway address on Base */
+  payTo: string;
+  /** Optional Smart Tag ID if settling a Smart Tag */
+  tagId?: string;
+  /** Optional access claim secret returned upon tag invoice creation */
+  accessClaimSecret?: string;
+  /** Custom on-chain transaction dispatcher callback returning txHash */
+  sendUsdcTransaction?: (details: {
+    to: string;
+    amountUnits: bigint;
+    amountUsd: number;
+    tokenContract: string;
+    chainId: number;
+  }) => Promise<string>;
+  /** Ethers.js or Web3-compatible signer with sendTransaction */
+  signer?: {
+    sendTransaction: (tx: { to: string; data: string; [key: string]: any }) => Promise<{ hash?: string } | string>;
+    [key: string]: any;
+  };
+  /** If already paid on-chain, provide existing txHash to resume proof submission/settlement without re-paying */
+  existingTxHash?: string;
+  /** Target token contract address (default: 0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913) */
+  tokenContract?: string;
+  /** If true, automatically fetches the protected content after obtaining access token */
+  fetchContent?: boolean;
+  /** Polling interval in ms (default: 1500ms) */
+  pollIntervalMs?: number;
+  /** Timeout in ms (default: 60000ms) */
+  timeoutMs?: number;
+}
+
+export interface PayAndSettleUsdcResult {
+  stage: UsdcPaymentStage;
+  paymentHash: string;
+  txHash?: string;
+  paid: boolean;
+  status: 'pending' | 'settled';
+  preimage?: string | null;
+  accessToken?: string;
+  tokenType?: string;
+  expiresAt?: string;
+  content?: OpenTagContentResponse;
+  error?: string;
+}
+

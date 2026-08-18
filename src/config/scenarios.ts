@@ -545,17 +545,17 @@ def run_research():
       'AIPP API Key'
     ],
     limitations: [
-      'Webhook sender must include payment hash / preimage proof in header or payload',
+      'Webhook sender must first obtain a resource-scoped AIPP access token',
       'Funds auto-forward to merchant wallet according to threshold settings'
     ],
-    example_request: 'POST /webhooks/process-task HTTP/1.1\nX-Payment-Hash: 86ed668e63216969809d...',
+    example_request: 'POST /webhooks/process-task HTTP/1.1\nAuthorization: Bearer <AIPP_ACCESS_TOKEN>',
     example_response: 'HTTP/1.1 200 OK\n\n{"status": "queued", "task_id": "task_123"}',
     example_code: `export async function handleWebhook(req, res) {
-  const hash = req.headers['x-payment-hash'];
-  const verify = await fetch(\`https://aipp.dev/invoice/status/\${hash}\`);
-  const data = await verify.json();
+  const verify = await fetch('https://aipp.dev/t/<TAG_ID>/content', {
+    headers: { Authorization: req.headers.authorization }
+  });
 
-  if (data.status !== 'settled') {
+  if (!verify.ok) {
     return res.status(402).json({ error: 'Payment required for webhook event' });
   }
   // Dispatch background job...

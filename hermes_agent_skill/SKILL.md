@@ -1,7 +1,8 @@
 ---
 name: aipp-micropayments
-description: Autonomous Bitcoin Lightning (L402) and Base USDC (x402) micro-payment tool for Nous Research Hermes Agent. Enables Hermes to monetize tool execution, pay external APIs, and generate EU AI Act Art. 26 verifiable receipts.
+description: Bitcoin Lightning and Base USDC payments for agents.
 ---
+
 
 # AIPP Micro-Payment Skill for Hermes Agent
 

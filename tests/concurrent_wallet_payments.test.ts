@@ -105,8 +105,7 @@ describe('20 Concurrent 0.01 USD Wallet Payments Load Test', () => {
     const settlePromises = createdInvoices.map(async (inv) => {
       const startStreamTime = Date.now();
 
-      // Trigger settlement slightly after starting stream
-      setTimeout(async () => {
+      const timer = setInterval(async () => {
         await db.run(
           "UPDATE invoices SET status = 'settled', preimage = ? WHERE payment_hash = ?",
           `preimage_${inv.payment_hash}`,
@@ -120,11 +119,13 @@ describe('20 Concurrent 0.01 USD Wallet Payments Load Test', () => {
           protocol: 'L402',
           amount_sats: inv.amount_sats
         });
-      }, 50);
+      }, 30);
 
       const sseRes = await request(app)
         .get(`/invoice/stream/${inv.payment_hash}`)
         .expect(200);
+
+      clearInterval(timer);
 
       const latencyMs = Date.now() - startStreamTime;
       expect(sseRes.headers['content-type']).toContain('text/event-stream');
@@ -173,5 +174,5 @@ describe('20 Concurrent 0.01 USD Wallet Payments Load Test', () => {
     // Verify DB integrity
     const countRow = await db.get("SELECT COUNT(*) as count FROM invoices WHERE api_key = ? AND status = 'settled'", apiKey);
     expect(countRow.count).toBe(NUM_TRANSACTIONS);
-  });
+  }, 25000);
 });

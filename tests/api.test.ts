@@ -1,5 +1,6 @@
 process.env.NODE_ENV = 'test';
 process.env.LNBITS_WEBHOOK_SECRET = 'test_webhook_secret_key_123456';
+process.env.AIPP_ACCESS_SECRET = 'test_access_secret_key_1234567890';
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import request from 'supertest';
 import { app } from '../src/server';
@@ -100,7 +101,7 @@ describe('API Integration Tests via Supertest', () => {
     expect(res.body.endpoints).toHaveProperty('create_invoice');
   });
 
-  it('serves one Open Tag as HTML or JSON and binds its payment proof', async () => {
+  it('requires a scoped access token and never accepts payment_hash as content authorization', async () => {
     const created = await request(app)
       .post('/merchant/links/create')
       .set('X-Api-Key', 'aipp_testkey')
@@ -125,19 +126,92 @@ describe('API Integration Tests via Supertest', () => {
       .send({ mode: 'L402', checkout_id: 'open-tag-test-001' });
     expect(invoice.status).toBe(200);
     expect(invoice.body).toHaveProperty('tag_id', created.body.id);
+    expect(invoice.body).toHaveProperty('access_claim_secret');
 
     const db = getDb();
+
+    const pendingClaim = await request(app)
+      .post(`/t/${created.body.id}/access-token`)
+      .send({ payment_hash: invoice.body.payment_hash, access_claim_secret: invoice.body.access_claim_secret });
+    expect(pendingClaim.status).toBe(402);
+
     await db.run("UPDATE invoices SET status = 'settled' WHERE payment_hash = ?", invoice.body.payment_hash);
 
-    const unlocked = await request(app)
+    const legacyUnlock = await request(app)
       .get(`/t/${created.body.id}/unlock/${invoice.body.payment_hash}`);
-    expect(unlocked.status).toBe(200);
-    expect(unlocked.body).toHaveProperty('unlocked', true);
-    expect(unlocked.body.fulfillment).toHaveProperty('url', 'https://example.com/result');
+    expect(legacyUnlock.status).toBe(410);
 
+    const hashOnly = await request(app)
+      .get(`/t/${created.body.id}/content?payment_hash=${invoice.body.payment_hash}`);
+    expect(hashOnly.status).toBe(410);
+
+    const hashHeader = await request(app)
+      .get(`/t/${created.body.id}/content`)
+      .set('X-Payment-Hash', invoice.body.payment_hash);
+    expect(hashHeader.status).toBe(410);
+
+    const cliHashOnly = await request(app)
+      .get(`/cli/${created.body.id}?payment_hash=${invoice.body.payment_hash}`);
+    expect(cliHashOnly.status).toBe(410);
+
+    const wrongClaim = await request(app)
+      .post(`/t/${created.body.id}/access-token`)
+      .send({ payment_hash: invoice.body.payment_hash, access_claim_secret: 'wrong-secret' });
+    expect(wrongClaim.status).toBe(401);
+
+    const tokenResponse = await request(app)
+      .post(`/t/${created.body.id}/access-token`)
+      .send({ payment_hash: invoice.body.payment_hash, access_claim_secret: invoice.body.access_claim_secret });
+    expect(tokenResponse.status).toBe(200);
+    expect(tokenResponse.body).toHaveProperty('access_token');
+
+    const stored = await db.get(
+      'SELECT access_claim_secret_hash, access_token_hash, access_token_expires_at FROM invoices WHERE payment_hash = ?',
+      invoice.body.payment_hash
+    );
+    expect(stored.access_claim_secret_hash).not.toBe(invoice.body.access_claim_secret);
+    expect(stored.access_token_hash).not.toBe(tokenResponse.body.access_token);
+    expect(new Date(stored.access_token_expires_at).getTime()).toBeGreaterThan(Date.now());
+
+    for (let attempt = 0; attempt < 2; attempt++) {
+      const content = await request(app)
+        .get(`/t/${created.body.id}/content`)
+        .set('Authorization', `Bearer ${tokenResponse.body.access_token}`);
+      expect(content.status).toBe(200);
+      expect(content.body.content).toEqual({ type: 'redirect', url: 'https://example.com/result' });
+    }
+
+    const otherTag = await request(app)
+      .post('/merchant/links/create')
+      .set('X-Api-Key', 'aipp_testkey')
+      .send({ title: 'Other Report', amount_usd: 0.50, redirect_url: 'https://example.com/other' });
     const wrongTag = await request(app)
-      .get(`/t/p_wrong/unlock/${invoice.body.payment_hash}`);
-    expect(wrongTag.status).toBe(404);
+      .get(`/t/${otherTag.body.id}/content`)
+      .set('Authorization', `Bearer ${tokenResponse.body.access_token}`);
+    expect(wrongTag.status).toBe(402);
+
+    const rotated = await request(app)
+      .post(`/t/${created.body.id}/access-token`)
+      .send({ payment_hash: invoice.body.payment_hash, access_claim_secret: invoice.body.access_claim_secret });
+    expect(rotated.status).toBe(200);
+    expect(rotated.body.access_token).not.toBe(tokenResponse.body.access_token);
+
+    const oldToken = await request(app)
+      .get(`/t/${created.body.id}/content`)
+      .set('Authorization', `Bearer ${tokenResponse.body.access_token}`);
+    expect(oldToken.status).toBe(402);
+
+    await db.run(
+      'UPDATE invoices SET access_token_expires_at = ? WHERE payment_hash = ?',
+      new Date(Date.now() - 1000).toISOString(), invoice.body.payment_hash
+    );
+    const expired = await request(app)
+      .get(`/t/${created.body.id}/content`)
+      .set('Authorization', `Bearer ${rotated.body.access_token}`);
+    expect(expired.status).toBe(402);
+
+    expect(htmlRes.text).not.toContain('postMessage(');
+    expect(htmlRes.text).not.toContain("payment_hash=' + encodeURIComponent");
   });
 
   it('should return agent-friendly 402 challenge on GET /premium-article-1 without auth', async () => {

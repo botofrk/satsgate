@@ -1,8 +1,9 @@
 import { Request, Response, NextFunction } from 'express';
 import crypto from 'crypto';
-import { getDb } from '../config/database';
+import { getDb, acquireTransactionLock } from '../config/database';
 import { AppError } from '../utils/error';
 import { renderPaymentPage } from './payLink';
+import { accessTokenExpiry, bearerToken, createAccessToken, credentialsMatch, hashAccessCredential } from '../services/contentAccess';
 
 function origin(req: Request): string {
   return `${req.protocol}://${req.get('host')}`;
@@ -67,13 +68,15 @@ function manifestFor(req: Request, tag: any) {
       manifest: `${base}/t/${tag.id}/manifest`,
       content: `${base}/t/${tag.id}/content`,
       create_payment: `${base}/t/${tag.id}/invoice`,
-      verify_and_unlock: `${base}/t/${tag.id}/unlock/{payment_hash}`,
+      issue_access_token: `${base}/t/${tag.id}/access-token`,
       receipt: `${base}/t/${tag.id}/receipt/{payment_hash}`
     },
     payment_binding: {
       resource: `/t/${tag.id}`,
       proof_scope: 'exact-tag',
-      replay_policy: 'one-proof-one-invoice'
+      authorization: 'Bearer access_token',
+      token_lifetime: '7 days',
+      replay_policy: 'reusable-until-expiry; rotated-on-reissue'
     },
     address_semantics: {
       receiver: 'Merchant settlement destination (where AIPP forwards funds after fee).',
@@ -103,23 +106,33 @@ export const getOpenTagManifest = async (req: Request, res: Response, next: Next
 export const getOpenTagContent = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const tag = await loadTag(req.params.linkId);
-    const hash = (req.query.payment_hash as string) || (req.headers['x-payment-hash'] as string);
-    if (hash) {
+    const token = bearerToken(req);
+    if (token) {
       const db = getDb();
       const row = await db.get(
-        'SELECT payment_hash, status, preimage FROM invoices WHERE payment_hash = ? AND tag_id = ?',
-        hash,
-        tag.id
+        `SELECT i.status, p.redirect_url
+         FROM invoices i JOIN payment_links p ON p.id = i.tag_id
+         WHERE i.access_token_hash = ? AND i.tag_id = ? AND i.access_token_expires_at > ?`,
+        hashAccessCredential(token), tag.id, new Date().toISOString()
       );
       if (row && row.status === 'settled') {
+        res.setHeader('Cache-Control', 'private, no-store');
         return res.json({
           success: true,
           tag_id: tag.id,
           title: tag.title,
           message: 'AIPP autonomous payment completed.',
-          content: tag.redirect_url ? { type: 'redirect', url: tag.redirect_url } : { type: 'data' }
+          content: row.redirect_url ? { type: 'redirect', url: row.redirect_url } : { type: 'data' }
         });
       }
+    }
+
+    if (req.query.payment_hash || req.headers['x-payment-hash']) {
+      return res.status(410).json({
+        error: 'Payment hash authorization has been removed',
+        code: 'PAYMENT_HASH_AUTHORIZATION_REMOVED',
+        tag_id: tag.id
+      });
     }
 
     // Return 402 Payment Required with HTTP 402 challenge details
@@ -143,28 +156,50 @@ export const getOpenTagContent = async (req: Request, res: Response, next: NextF
   } catch (error) { next(error); }
 };
 
-export const unlockOpenTag = async (req: Request, res: Response, next: NextFunction) => {
+export const issueOpenTagAccessToken = async (req: Request, res: Response, next: NextFunction) => {
   try {
+    const paymentHash = typeof req.body?.payment_hash === 'string' ? req.body.payment_hash : '';
+    const claimSecret = typeof req.body?.access_claim_secret === 'string' ? req.body.access_claim_secret : '';
+    if (!paymentHash || !claimSecret) {
+      throw new AppError('Payment hash and access claim secret are required', 400, 'MISSING_ACCESS_CLAIM');
+    }
+
     const db = getDb();
-    const row = await db.get(`
-      SELECT i.payment_hash, i.status, i.protocol, i.preimage, i.tag_id,
-             p.id, p.title, p.redirect_url
-      FROM invoices i
-      JOIN payment_links p ON p.id = i.tag_id
-      WHERE i.payment_hash = ? AND i.tag_id = ?
-    `, req.params.hash, req.params.linkId);
-    if (!row) throw new AppError('Payment proof does not belong to this Smart Tag', 404, 'PROOF_NOT_BOUND');
-    if (row.status !== 'settled') {
-      return res.status(402).json({ error: 'Payment Required', paid: false, tag_id: req.params.linkId });
+    const invoice = await db.get(
+      'SELECT status, access_claim_secret_hash FROM invoices WHERE payment_hash = ? AND tag_id = ?',
+      paymentHash, req.params.linkId
+    );
+    if (!invoice) throw new AppError('Invoice is not bound to this Smart Tag', 404, 'PROOF_NOT_BOUND');
+    if (invoice.status !== 'settled') throw new AppError('Payment is not settled', 402, 'NOT_SETTLED');
+    if (!invoice.access_claim_secret_hash) {
+      throw new AppError('This invoice predates secure content access; create a new checkout', 410, 'LEGACY_INVOICE_REQUIRES_NEW_CHECKOUT');
+    }
+    if (!credentialsMatch(invoice.access_claim_secret_hash, claimSecret)) {
+      throw new AppError('Invalid access claim', 401, 'INVALID_ACCESS_CLAIM');
+    }
+
+    const accessToken = createAccessToken();
+    const expiresAt = accessTokenExpiry();
+    const releaseAccessWrite = await acquireTransactionLock();
+    try {
+      await db.run(
+        'UPDATE invoices SET access_token_hash = ?, access_token_expires_at = ? WHERE payment_hash = ? AND tag_id = ?',
+        hashAccessCredential(accessToken), expiresAt, paymentHash, req.params.linkId
+      );
+    } finally {
+      releaseAccessWrite();
     }
     res.setHeader('Cache-Control', 'private, no-store');
-    res.json({
-      unlocked: true,
-      tag_id: row.id,
-      title: row.title,
-      protocol: row.protocol,
-      fulfillment: row.redirect_url ? { type: 'redirect', url: row.redirect_url } : { type: 'receipt' },
-      receipt_url: `${origin(req)}/t/${row.id}/receipt/${row.payment_hash}`
+    res.json({ access_token: accessToken, token_type: 'Bearer', expires_at: expiresAt });
+  } catch (error) { next(error); }
+};
+
+export const unlockOpenTag = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    return res.status(410).json({
+      error: 'Payment hash authorization has been removed',
+      code: 'PAYMENT_HASH_AUTHORIZATION_REMOVED',
+      access_token_url: `${origin(req)}/t/${req.params.linkId}/access-token`
     });
   } catch (error) { next(error); }
 };

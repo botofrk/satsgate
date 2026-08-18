@@ -2,9 +2,19 @@
 .env
 .env*
 *.env
+!.env.example
 core_env
 .vscode/
 .idea/
+**/node_modules/
+**/*.db
+**/*.db-wal
+**/*.db-shm
+data/
+coverage/
+*.log
+*.zip
+.uploads/
 
 # PM2
 .pm2/

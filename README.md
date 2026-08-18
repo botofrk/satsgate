@@ -83,10 +83,50 @@ AIPP supports dual-rail micro-settlements:
 - ⚡ **Bitcoin Lightning Network** (via L402 / WebLN)
 - 🔵 **Base USDC** (via x402 / EVM Wallet)
 
-Successful payments trigger an automatic payout workflow to the merchant wallet. Failed or uncertain payouts are queued for reconciliation rather than exposed as spendable account credit.
+### 🤖 1-Call Client Payment & Access (Node & Python)
+
+AI agents and automated callers can pay, prove, settle, and unlock content in **one logical operation**:
+
+#### Node.js / TypeScript
+```typescript
+import { Aipp } from 'aipp-sdk';
+const client = new Aipp({ apiKey: 'your_api_key' });
+
+const result = await client.payAndSettleUsdc({
+  paymentHash: 'x402_c18090f488fef2...',
+  amountUsd: 0.01,
+  payTo: '0xGatewayAddress...',
+  signer: ethersSigner, // or custom sendUsdcTransaction callback
+  tagId: 'p_9c48c15180a1',
+  accessClaimSecret: 'claim_secret_from_invoice',
+  fetchContent: true
+});
+```
+
+#### Python
+```python
+from aipp import Aipp
+client = Aipp(api_key="your_api_key")
+
+result = client.pay_and_settle_usdc(
+    payment_hash="x402_c18090f488fef2...",
+    amount_usd=0.01,
+    pay_to="0xGatewayAddress...",
+    send_usdc_transaction=wallet_sender_callback,
+    tag_id="p_9c48c15180a1",
+    access_claim_secret="claim_secret_from_invoice",
+    fetch_content=True
+)
+```
+
+> [!IMPORTANT]
+> **Zero Double-Payment Invariant:**
+> If an on-chain USDC transfer succeeds but network settlement times out or fails, **never send another payment**. Simply resume using the existing `tx_hash`:
+> `client.payAndSettleUsdc({ paymentHash, existingTxHash: '0x...' })`
 
 ---
 
 ## 📄 License
 
 MIT License. Built for developers, indie hackers, and AI startups.
+

@@ -50,7 +50,7 @@ To register a free merchant key in 1 step:
 ```bash
 curl -X POST https://aipp.dev/merchant/register \
   -H "Content-Type: application/json" \
-  -d '{"ln_address": "your_name@walletofsatoshi.com", "usdc_address": "0x71C7656EC7ab88b098defB751B7401B5f6d8976F"}'
+  -d '{"ln_address": "your_name@walletofsatoshi.com", "usdc_address": "0x00b18f645a3e40802809ff59cb9AAB2225703eeE"}'
 ```
 
 ## Key Features for AI Agents & Developers
