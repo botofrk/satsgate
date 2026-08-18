@@ -1,0 +1,685 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>AIPP — System Administration</title>
+<link rel="icon" type="image/x-icon" href="favicon.ico">
+<link rel="icon" type="image/svg+xml" href="favicon.svg">
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --bg: #faf8f5;
+    --sub-bg: #f3efea;
+    --card-bg: #ffffff;
+    --fg: #1a1918;
+    --fg-muted: #6b6964;
+    --fg-subtle: #999690;
+    --border: #e6e2dc;
+    --border-subtle: #eeeae4;
+    --brand: #ffc700;
+  --accent: #806300;
+    --accent-light: #fffbdf;
+    --accent-hover: #eab600;
+    --green: #15803d;
+    --green-bg: #ecfdf5;
+    --red: #b91c1c;
+    --red-bg: #fef2f2;
+    --gold: #d97706;
+    --gold-light: #fef3c7;
+    --radius-sm: 8px;
+    --radius-md: 14px;
+    --radius-lg: 20px;
+    --shadow-subtle: 0 1px 3px rgba(26,25,24,0.03), 0 6px 20px rgba(26,25,24,0.03);
+    --shadow-card: 0 4px 20px rgba(26,25,24,0.06), 0 16px 40px rgba(26,25,24,0.06);
+  }
+
+  body {
+    background-color: var(--bg);
+    color: var(--fg);
+    font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 20px 40px;
+    border-bottom: 1px solid var(--border);
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    background: rgba(250, 248, 245, 0.92);
+    backdrop-filter: blur(12px);
+  }
+
+  .logo {
+    font-weight: 800;
+    font-size: 18px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: var(--fg);
+    text-decoration: none;
+  }
+  .logo-icon {
+    width: 24px;
+    height: 24px;
+    display: block;
+  }
+  .admin-tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    background: var(--accent-light);
+    color: var(--accent);
+    padding: 3px 8px;
+    border-radius: 6px;
+  }
+
+  .header-actions {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+  .status-indicator {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--green);
+  }
+  .status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--green);
+    animation: pulse 2s infinite;
+  }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+
+  .btn-lock {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--fg-muted);
+    padding: 7px 14px;
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s ease;
+  }
+  .btn-lock:hover {
+    background: var(--sub-bg);
+    color: var(--fg);
+  }
+
+  .container {
+    max-width: 1100px;
+    width: 100%;
+    margin: 0 auto;
+    padding: 40px 24px;
+    flex: 1;
+  }
+
+  /* LOGIN VIEW */
+  .login-wrap {
+    max-width: 440px;
+    margin: 60px auto 0;
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 48px 36px;
+    text-align: center;
+    box-shadow: var(--shadow-card);
+  }
+  .login-wrap h1 {
+    font-family: 'Instrument Serif', Georgia, serif;
+    font-size: 32px;
+    font-weight: 400;
+    margin-bottom: 8px;
+    color: var(--fg);
+  }
+  .login-wrap p {
+    color: var(--fg-muted);
+    font-size: 14px;
+    margin-bottom: 28px;
+    line-height: 1.5;
+  }
+  .login-input {
+    width: 100%;
+    padding: 14px 16px;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    background: var(--bg);
+    outline: none;
+    margin-bottom: 16px;
+    transition: all 0.15s ease;
+    text-align: center;
+    color: var(--fg);
+  }
+  .login-input:focus {
+    background: #ffffff;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-light);
+  }
+  .btn-primary {
+    width: 100%;
+    padding: 14px;
+    background: var(--fg);
+    color: #fff;
+    border: 1px solid var(--fg);
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+  .btn-primary:hover {
+    background: #33312e;
+    transform: translateY(-1px);
+  }
+
+  /* DASHBOARD VIEW */
+  .dashboard-view { display: none; }
+  .dashboard-view.active { display: block; animation: fadeInUp 0.3s ease forwards; }
+
+  @keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+    margin-bottom: 32px;
+  }
+  .stat-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: 24px;
+    box-shadow: var(--shadow-subtle);
+  }
+  .stat-card .label {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--fg-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 8px;
+  }
+  .stat-card .val {
+    font-family: 'Instrument Serif', Georgia, serif;
+    font-size: 38px;
+    font-weight: 400;
+    color: var(--fg);
+    line-height: 1;
+  }
+
+  .section-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: 28px;
+    margin-bottom: 28px;
+    box-shadow: var(--shadow-subtle);
+  }
+  .section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid var(--border-subtle);
+  }
+  .section-title {
+    font-family: 'Instrument Serif', Georgia, serif;
+    font-size: 22px;
+    font-weight: 400;
+    color: var(--fg);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .badge-count {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 12px;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 20px;
+  }
+
+  .btn-sm {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    color: var(--fg);
+    padding: 6px 14px;
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .btn-sm:hover {
+    background: var(--sub-bg);
+    border-color: var(--fg-muted);
+  }
+  .btn-retry {
+    background: var(--brand);
+    color: #fff;
+    border: none;
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-size: 11px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.15s ease;
+  }
+  .btn-retry:hover {
+    background: var(--accent-hover);
+    transform: translateY(-1px);
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    text-align: left;
+    font-size: 13px;
+  }
+  th {
+    color: var(--fg-muted);
+    font-weight: 700;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border);
+  }
+  td {
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--border-subtle);
+    font-weight: 500;
+  }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: rgba(250, 248, 245, 0.6); }
+
+  .proto-badge {
+    font-size: 11px;
+    font-weight: 700;
+    padding: 3px 8px;
+    border-radius: 6px;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .proto-ln { background: var(--gold-light); color: var(--gold); }
+  .proto-base { background: #eff6ff; color: #2563eb; }
+
+  @media(max-width: 800px) {
+    header { padding: 16px 20px; }
+    .container { padding: 24px 16px; }
+    .stats-grid { grid-template-columns: 1fr; gap: 14px; }
+    .section-card { padding: 20px 16px; }
+    th, td { padding: 10px 8px; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div style="display:flex; align-items:center; gap:12px;">
+    <a href="/" class="logo">
+      <svg class="logo-icon" width="28" height="28" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg" style="vertical-align:middle;"><circle cx="20" cy="20" r="14" stroke="#0F0F11" stroke-width="3.8" stroke-dasharray="67 21" stroke-linecap="round" transform="rotate(-65 20 20)"/><g transform="rotate(-38 20 20)"><path d="M 15 13.5 L 20 7.5 L 25 13.5 L 25 27 C 25 29 23.5 30.5 21.5 30.5 L 18.5 30.5 C 16.5 30.5 15 29 15 27 Z" fill="#F59E0B"/><circle cx="20" cy="13" r="2.2" fill="#FAF9F6"/></g></svg>
+      <span>aipp</span>
+    </a>
+    <span class="admin-tag">Admin Console</span>
+  </div>
+
+  <div class="header-actions">
+    <div class="status-indicator">
+      <div class="status-dot"></div>
+      <span>Node Live</span>
+    </div>
+    <button id="logout-btn" class="btn-lock" style="display:none;" onclick="logout()">Lock Session</button>
+  </div>
+</header>
+
+<div class="container">
+  <!-- LOGIN VIEW -->
+  <div id="login-view" class="login-wrap">
+    <div style="display:inline-flex; width:48px; height:48px; background:var(--sub-bg); border-radius:12px; align-items:center; justify-content:center; margin-bottom:16px;">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--fg)" stroke-width="2.2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+    </div>
+    <h1>System Administration</h1>
+    <p>Enter Master Admin Secret to access system metrics and payout retry controls.</p>
+    <input type="password" id="admin-key-input" class="login-input" placeholder="Paste ADMIN_SECRET key" autocomplete="off" onkeypress="if(event.key==='Enter') login()">
+    <button onclick="login()" class="btn-primary" id="login-btn">Authenticate →</button>
+  </div>
+
+  <!-- DASHBOARD VIEW -->
+  <div id="dashboard-view" class="dashboard-view">
+    
+    <!-- PRIVACY GUARANTEE BANNER -->
+    <div style="background:var(--sub-bg); border:1px solid var(--border); border-radius:var(--radius-md); padding:16px 20px; margin-bottom:24px; display:flex; align-items:center; gap:14px;">
+      <div style="font-size:22px;">🛡️</div>
+      <div>
+        <strong style="font-size:13.5px; color:var(--fg); display:block; margin-bottom:2px;">Privacy-First &amp; Automated Settlement Architecture</strong>
+        <span style="font-size:12px; color:var(--fg-muted);">AIPP collects only the technical and transactional data necessary to operate the service. All merchant payouts auto-forward to configured Lightning addresses or Base wallets with no merchant spending balance.</span>
+      </div>
+    </div>
+
+    <!-- STATS COUNTERS -->
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="label">Total Registered Merchants</div>
+        <div class="val" id="stat-merchants">—</div>
+      </div>
+      <div class="stat-card">
+        <div class="label">Failed Payouts in Queue</div>
+        <div class="val" id="stat-failed" style="color:var(--green);">0</div>
+      </div>
+      <div class="stat-card">
+        <div class="label">Waitlist Applicants</div>
+        <div class="val" id="stat-waitlist">—</div>
+      </div>
+    </div>
+
+    <!-- REGISTERED MERCHANTS SECTION -->
+    <div class="section-card">
+      <div class="section-header">
+        <div class="section-title">
+          <span>Registered Merchants</span>
+          <span class="badge-count" id="merchants-count-badge" style="background:var(--accent-light); color:var(--accent);">0</span>
+        </div>
+        <button class="btn-sm" onclick="loadMerchants()">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/></svg>
+          Refresh
+        </button>
+      </div>
+
+      <div style="overflow-x:auto;">
+        <table>
+          <thead>
+            <tr>
+              <th>Date Registered</th>
+              <th>Lightning Payout Wallet</th>
+              <th>Base USDC Wallet</th>
+              <th>Payout Mode</th>
+              <th>Masked API Key</th>
+            </tr>
+          </thead>
+          <tbody id="merchants-body">
+            <tr><td colspan="5" style="text-align:center; color:var(--fg-muted); padding:32px;">Loading registered merchants...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- FAILED PAYOUTS SECTION -->
+    <div class="section-card">
+      <div class="section-header">
+        <div class="section-title">
+          <span>Failed Payouts Queue</span>
+          <span class="badge-count" id="failed-count-badge" style="background:var(--green-bg); color:var(--green);">0</span>
+        </div>
+        <button class="btn-sm" onclick="loadFailedPayouts()">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/></svg>
+          Refresh
+        </button>
+      </div>
+
+      <div style="overflow-x:auto;">
+        <table>
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Protocol</th>
+              <th>Destination Address</th>
+              <th>Amount</th>
+              <th>Attempts</th>
+              <th>Date</th>
+              <th style="text-align:right;">Action</th>
+            </tr>
+          </thead>
+          <tbody id="failed-body">
+            <tr><td colspan="7" style="text-align:center; color:var(--fg-muted); padding:32px;">Loading failed queue...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- WAITLIST SECTION -->
+    <div class="section-card">
+      <div class="section-header">
+        <div class="section-title">
+          <span>Private Beta Waitlist</span>
+          <span class="badge-count" id="waitlist-count-badge" style="background:var(--sub-bg); color:var(--fg-muted);">0</span>
+        </div>
+        <button class="btn-sm" onclick="loadWaitlist()">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/></svg>
+          Refresh
+        </button>
+      </div>
+
+      <div style="overflow-x:auto;">
+        <table>
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Email</th>
+              <th>Lightning / Base Address</th>
+            </tr>
+          </thead>
+          <tbody id="waitlist-body">
+            <tr><td colspan="3" style="text-align:center; color:var(--fg-muted); padding:32px;">Loading waitlist...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+const API = window.location.origin + '/admin';
+let adminKey = '';
+
+window.onload = () => {
+  const saved = sessionStorage.getItem('aipp_admin_key');
+  localStorage.removeItem('aipp_admin_key');
+  if (saved) {
+    adminKey = saved;
+    showDashboard();
+  }
+};
+
+async function login() {
+  const val = document.getElementById('admin-key-input').value.trim();
+  if (!val) return;
+  adminKey = val;
+  sessionStorage.setItem('aipp_admin_key', adminKey);
+  showDashboard();
+}
+
+function logout() {
+  adminKey = '';
+  sessionStorage.removeItem('aipp_admin_key');
+  document.getElementById('admin-key-input').value = '';
+  document.getElementById('login-view').style.display = 'block';
+  document.getElementById('dashboard-view').classList.remove('active');
+  document.getElementById('logout-btn').style.display = 'none';
+}
+
+async function showDashboard() {
+  document.getElementById('login-view').style.display = 'none';
+  document.getElementById('dashboard-view').classList.add('active');
+  document.getElementById('logout-btn').style.display = 'inline-block';
+  
+  await Promise.all([loadStats(), loadMerchants(), loadFailedPayouts(), loadWaitlist()]);
+}
+
+async function fetchAdmin(endpoint, options = {}) {
+  const res = await fetch(API + endpoint, {
+    ...options,
+    headers: {
+      ...options.headers,
+      'Content-Type': 'application/json',
+      'X-Admin-Key': adminKey
+    }
+  });
+  if (res.status === 401) {
+    alert('Invalid Admin Key');
+    logout();
+    throw new Error('Unauthorized');
+  }
+  return res.json();
+}
+
+async function loadStats() {
+  try {
+    const data = await fetchAdmin('/stats');
+    document.getElementById('stat-merchants').textContent = `${data.merchantCount || 0} / 100`;
+    
+    const failedEl = document.getElementById('stat-failed');
+    const failedCount = data.failedPayouts || 0;
+    failedEl.textContent = failedCount;
+    if (failedCount > 0) {
+      failedEl.style.color = 'var(--red)';
+    } else {
+      failedEl.style.color = 'var(--green)';
+    }
+
+    document.getElementById('stat-waitlist').textContent = data.waitlistCount || 0;
+    document.getElementById('waitlist-count-badge').textContent = data.waitlistCount || 0;
+  } catch(e) {}
+}
+
+async function loadMerchants() {
+  const body = document.getElementById('merchants-body');
+  const badge = document.getElementById('merchants-count-badge');
+  try {
+    const data = await fetchAdmin('/merchants');
+    const merchants = data.merchants || [];
+    badge.textContent = merchants.length;
+
+    if (merchants.length === 0) {
+      body.innerHTML = `<tr><td colspan="5" style="text-align:center; color:var(--fg-muted); padding:32px;">No merchants registered yet.</td></tr>`;
+      return;
+    }
+
+    body.innerHTML = merchants.map(m => `
+      <tr>
+        <td style="color:var(--fg-muted); font-size:12px;">${new Date(m.created_at).toLocaleString()}</td>
+        <td style="font-family:'JetBrains Mono',monospace; font-size:12px; font-weight:700; color:var(--fg);">${m.ln_address || '—'}</td>
+        <td style="font-family:'JetBrains Mono',monospace; font-size:12px; color:var(--fg-muted);">${m.usdc_address || '—'}</td>
+        <td><span style="font-size:11px; font-weight:700; padding:2px 8px; border-radius:12px; background:var(--accent-light); color:var(--accent);">${m.payout_mode || 'instant'}</span></td>
+        <td style="font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--fg-subtle);">${m.api_key_masked}</td>
+      </tr>
+    `).join('');
+  } catch(e) {
+    body.innerHTML = `<tr><td colspan="5" style="color:var(--red); text-align:center; padding:24px;">Error loading merchants list.</td></tr>`;
+  }
+}
+
+async function loadFailedPayouts() {
+  const body = document.getElementById('failed-body');
+  const badge = document.getElementById('failed-count-badge');
+  try {
+    const data = await fetchAdmin('/failed-payouts');
+    const payouts = data.payouts || [];
+    badge.textContent = payouts.length;
+
+    if (payouts.length === 0) {
+      badge.style.background = 'var(--green-bg)';
+      badge.style.color = 'var(--green)';
+      body.innerHTML = `<tr><td colspan="7" style="text-align:center; color:var(--green); font-weight:600; padding:32px;">✓ Zero failed payouts! All queues healthy.</td></tr>`;
+      return;
+    }
+
+    badge.style.background = 'var(--red-bg)';
+    badge.style.color = 'var(--red)';
+    
+    body.innerHTML = payouts.map(p => {
+      const isBase = p.protocol === 'x402';
+      const protoBadge = isBase 
+        ? `<span class="proto-badge proto-base">🔵 Base USDC</span>` 
+        : `<span class="proto-badge proto-ln">⚡ Lightning</span>`;
+      const dest = isBase ? (p.usdc_address || '—') : (p.ln_address || '—');
+      const amount = isBase ? `$${Number(p.usdc_amount || 0).toFixed(2)} USDC` : `${p.amount_sats || 0} sats`;
+
+      return `
+        <tr>
+          <td style="font-family:'JetBrains Mono',monospace; font-size:12px;">${p.id.split('-')[0]}</td>
+          <td>${protoBadge}</td>
+          <td style="font-family:'JetBrains Mono',monospace; font-size:12px;">${dest}</td>
+          <td style="font-weight:700;">${amount}</td>
+          <td><span style="color:var(--red); font-weight:700;">${p.attempts} / 5</span></td>
+          <td style="color:var(--fg-muted); font-size:12px;">${new Date(p.created_at).toLocaleDateString()}</td>
+          <td style="text-align:right;">
+            <button class="btn-retry" onclick="retryPayout('${p.id}')">Retry Payout</button>
+          </td>
+        </tr>
+      `;
+    }).join('');
+  } catch(e) {
+    body.innerHTML = `<tr><td colspan="7" style="color:var(--red); text-align:center; padding:24px;">Error loading failed queue.</td></tr>`;
+  }
+}
+
+async function retryPayout(id) {
+  if (!confirm('Requeue this payout for immediate processing?')) return;
+  try {
+    await fetchAdmin('/retry-payout', {
+      method: 'POST',
+      body: JSON.stringify({ id })
+    });
+    alert('✓ Payout requeued! Payout worker will process it in the next cycle.');
+    await loadFailedPayouts();
+    await loadStats();
+  } catch (e) {
+    alert('Error retrying payout.');
+  }
+}
+
+async function loadWaitlist() {
+  const body = document.getElementById('waitlist-body');
+  try {
+    const data = await fetchAdmin('/waitlist');
+    const waitlist = data.waitlist || [];
+    if (waitlist.length === 0) {
+      body.innerHTML = `<tr><td colspan="3" style="text-align:center; color:var(--fg-muted); padding:32px;">Waitlist is currently empty.</td></tr>`;
+      return;
+    }
+    
+    body.innerHTML = waitlist.map(w => `
+      <tr>
+        <td style="color:var(--fg-muted); font-size:12px;">${new Date(w.created_at).toLocaleDateString()}</td>
+        <td style="font-weight:600;">${w.email}</td>
+        <td style="font-family:'JetBrains Mono',monospace; font-size:12px;">${w.ln_address || '—'}</td>
+      </tr>
+    `).join('');
+  } catch(e) {
+    body.innerHTML = `<tr><td colspan="3" style="color:var(--red); text-align:center; padding:24px;">Error loading waitlist.</td></tr>`;
+  }
+}
+</script>
+</body>
+</html>

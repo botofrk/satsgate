@@ -1,0 +1,1275 @@
+export type ScenarioCategory = 
+  | 'apis-developers' 
+  | 'ai-agents' 
+  | 'automation' 
+  | 'data-research' 
+  | 'content-digital-goods'
+  | 'creators-independent-work';
+
+export type TruthLevel = 'VERIFIED' | 'SUPPORTED' | 'EXAMPLE';
+
+export interface PaymentFlowStep {
+  step: string;
+  title: string;
+  description: string;
+}
+
+export interface ScenarioFaq {
+  question: string;
+  answer: string;
+}
+
+export interface Scenario {
+  slug: string;
+  title: string;
+  short_description: string;
+  category: ScenarioCategory;
+  category_label: string;
+  problem: string;
+  target_user: string;
+  real_world_example: string;
+  how_aipp_solves_it: string;
+  payment_flow: PaymentFlowStep[];
+  supported_rails: Array<'lightning' | 'usdc'>;
+  supported_protocols: Array<'l402' | 'x402'>;
+  truth_level: TruthLevel;
+  truth_badge_text: 'Tested with AIPP' | 'Supported by AIPP architecture' | 'Example implementation';
+  evidence: string;
+  requirements: string[];
+  limitations: string[];
+  example_request: string;
+  example_response: string;
+  example_code: string;
+  example_code_lang: string;
+  what_aipp_does: string[];
+  what_aipp_does_not_do: string[];
+  faq: ScenarioFaq[];
+  seo_title: string;
+  seo_description: string;
+  related_scenarios: string[];
+}
+
+export const CATEGORIES: Record<ScenarioCategory, { label: string; icon: string; description: string }> = {
+  'apis-developers': {
+    label: 'APIs & Developers',
+    icon: '⚡',
+    description: 'Monetize HTTP REST endpoints, serverless functions, and microservices per request.'
+  },
+  'ai-agents': {
+    label: 'AI & Agents',
+    icon: '🤖',
+    description: 'Enable autonomous AI agents, LLM tool pipelines, image models, and speech tools to accept pay-per-use payments.'
+  },
+  'automation': {
+    label: 'Automation',
+    icon: '🔄',
+    description: 'Gate n8n, Make, or custom webhook workflow executions behind payment verification.'
+  },
+  'data-research': {
+    label: 'Data & Research',
+    icon: '🔍',
+    description: 'Sell specialized market data, web search queries, and AI research reports on demand.'
+  },
+  'content-digital-goods': {
+    label: 'Content & Digital Goods',
+    icon: '📦',
+    description: 'Sell digital files, Obsidian notes, Notion templates, and premium web articles.'
+  },
+  'creators-independent-work': {
+    label: 'Creators & Independent Work',
+    icon: '🎨',
+    description: 'Gate human-created digital deliverables, small one-time online jobs, and digital assets behind pay-per-use payments.'
+  }
+};
+
+export const SCENARIOS: Scenario[] = [
+  {
+    slug: 'pay-per-api-call',
+    title: 'Pay per API Call',
+    short_description: 'Charge per HTTP request using L402 or Base USDC HTTP 402 challenge headers.',
+    category: 'apis-developers',
+    category_label: 'APIs & Developers',
+    problem: 'Developers building high-value APIs or serverless functions are forced into monthly subscription billing or manual API key provisioning. Buyers who only need 5 requests per month cannot justify a monthly plan, leading to churn and friction.',
+    target_user: 'Backend developers, API providers, SaaS engineers, and microservice operators.',
+    real_world_example: 'For example, an API developer could configure an endpoint to charge $0.02 per request instead of requiring a recurring monthly subscription.',
+    how_aipp_solves_it: 'AIPP acts as an HTTP 402 gateway layer. When an unauthenticated request arrives without a valid payment proof header, your API responds with HTTP 402 Payment Required containing an invoice. Once paid via Lightning or USDC, the client retries with the payment proof and your API handler executes.',
+    payment_flow: [
+      { step: '01', title: 'HTTP Request', description: 'Client or script sends GET/POST request to your API endpoint.' },
+      { step: '02', title: 'HTTP 402 Challenge', description: 'API responds HTTP 402 with invoice header (Lightning bolt11 or Base USDC).' },
+      { step: '03', title: 'Payment Settlement', description: 'Client wallet pays Lightning invoice or Base USDC transfer.' },
+      { step: '04', title: 'Proof Check & Unlock', description: 'Client retries request with payment receipt; API verifies proof and executes.' }
+    ],
+    supported_rails: ['lightning', 'usdc'],
+    supported_protocols: ['l402', 'x402'],
+    truth_level: 'VERIFIED',
+    truth_badge_text: 'Tested with AIPP',
+    evidence: 'Tested with Express/FastAPI Node & Python middleware in production, verified with test suite.',
+    requirements: [
+      'Node.js or Python backend server (or serverless function handler)',
+      'AIPP API Key (registered via /merchant/register)',
+      'HTTP client capable of reading 402 headers'
+    ],
+    limitations: [
+      'Requires client to handle 402 response headers or use AIPP SDK client',
+      'In hosted Lightning flows, payments route through AIPP gateway before net proceeds are automatically forwarded'
+    ],
+    example_request: 'GET /api/v1/translate?text=Hello HTTP/1.1\nHost: api.example.com',
+    example_response: 'HTTP/1.1 402 Payment Required\nWWW-Authenticate: L402 invoice="lnbc200n1...", macaroon="..."\nX-AIPP-Paywall: https://aipp.dev/t/p_demo123',
+    example_code: `import { Aipp, l402Paywall } from 'aipp-sdk';
+import express from 'express';
+
+const app = express();
+const aipp = new Aipp({ apiKey: process.env.AIPP_API_KEY });
+
+// Protect API route with $0.02 paywall example
+app.post('/api/v1/translate', l402Paywall({
+  client: aipp,
+  amountUsd: 0.02
+}), (req, res) => {
+  res.json({ translation: "Bonjour le monde", status: "success" });
+});`,
+    example_code_lang: 'typescript',
+    what_aipp_does: [
+      'Generates Lightning (L402) and Base USDC (x402) invoice headers on demand',
+      'Verifies settlement proof before executing protected handler',
+      'Automatically forwards net merchant earnings to your configured wallet address'
+    ],
+    what_aipp_does_not_do: [
+      'Does not host your API server logic or business application code',
+      'Does not hold a user-controlled spendable merchant balance',
+      'Does not enforce monthly recurring subscription logic'
+    ],
+    faq: [
+      {
+        question: 'How is payment verified?',
+        answer: 'Settlement verification occurs via local preimage cryptography or node status check.'
+      },
+      {
+        question: 'How are merchant funds settled?',
+        answer: 'Funds settle to your configured wallet. In hosted Lightning flows, funds pass through AIPP before net proceeds are automatically forwarded. Base USDC transfers settle on-chain to your EVM address.'
+      }
+    ],
+    seo_title: 'Pay per API Call - API Monetization with AIPP',
+    seo_description: 'Monetize HTTP API endpoints per request with Lightning or Base USDC HTTP 402 challenge headers. No monthly subscriptions required.',
+    related_scenarios: ['ai-agent-execution', 'paid-mcp-tool', 'paid-data-api']
+  },
+
+  {
+    slug: 'paid-n8n-workflow',
+    title: 'Paid n8n Workflow',
+    short_description: 'Gate n8n automation executions behind Lightning or USDC payment verification.',
+    category: 'automation',
+    category_label: 'Automation',
+    problem: 'n8n workflow creators and automation agencies want to charge users per workflow execution (e.g. per report, lead enrichment, or data processing job), but embedding complex checkout flows inside webhook triggers requires custom DB tables and manual logic.',
+    target_user: 'Automation engineers, n8n agency builders, no-code creators, and workflow developers.',
+    real_world_example: 'For example, an n8n workflow for lead enrichment or PDF report creation can process input data after an HTTP 402 payment is verified.',
+    how_aipp_solves_it: 'AIPP provides an n8n monetization workflow pattern. Your n8n webhook trigger receives an incoming payload, queries AIPP to check payment status (/invoice/status/:hash), and if unpaid, returns an HTTP 402 response with your Smart Tag link. When settled, execution proceeds.',
+    payment_flow: [
+      { step: '01', title: 'Webhook Triggered', description: 'User or script posts data to n8n Webhook node.' },
+      { step: '02', title: 'Payment Check', description: 'n8n HTTP Request node queries AIPP invoice status.' },
+      { step: '03', title: 'HTTP 402 Challenge', description: 'If unpaid, n8n responds HTTP 402 with AIPP checkout link.' },
+      { step: '04', title: 'Workflow Executes', description: 'Once payment status = settled, n8n runs automation and returns result.' }
+    ],
+    supported_rails: ['lightning', 'usdc'],
+    supported_protocols: ['l402', 'x402'],
+    truth_level: 'VERIFIED',
+    truth_badge_text: 'Tested with AIPP',
+    evidence: 'Verified with official blueprint in repo: examples/n8n_aipp_monetization_workflow.json.',
+    requirements: [
+      'Self-hosted or cloud n8n instance',
+      'AIPP Smart Tag or API Key',
+      'n8n HTTP Request node'
+    ],
+    limitations: [
+      'AIPP does not host or execute n8n engine itself; it provides the payment verification layer',
+      'n8n workflow must use the HTTP Response node to return 402 headers'
+    ],
+    example_request: 'POST /webhook/enrich-lead HTTP/1.1\nContent-Type: application/json\n\n{"domain": "example.com"}',
+    example_response: 'HTTP/1.1 402 Payment Required\nContent-Type: application/json\n\n{"error": "Payment required", "paywall_url": "https://aipp.dev/t/p_n8n123"}',
+    example_code: `{
+  "nodes": [
+    {
+      "name": "Check AIPP Settlement",
+      "type": "n8n-nodes-base.httpRequest",
+      "parameters": {
+        "url": "=https://aipp.dev/invoice/status/{{ $json.payment_hash }}",
+        "method": "GET"
+      }
+    }
+  ]
+}`,
+    example_code_lang: 'json',
+    what_aipp_does: [
+      'Provides machine-readable invoice verification endpoint for n8n nodes',
+      'Generates payment pages for human workflow triggers',
+      'Auto-forwards net merchant proceeds to your specified wallet'
+    ],
+    what_aipp_does_not_do: [
+      'Does not host your n8n server or store your n8n workflow credentials',
+      'Does not require maintaining a manual withdrawal balance'
+    ],
+    faq: [
+      {
+        question: 'Where do I get the n8n workflow template?',
+        answer: 'You can copy the ready-to-import JSON blueprint directly from the AIPP open-source repository (examples/n8n_aipp_monetization_workflow.json).'
+      }
+    ],
+    seo_title: 'Paid n8n Workflow - Monetize n8n Automations with AIPP',
+    seo_description: 'Monetize n8n automation workflows, lead enrichment, and AI tasks per execution with Lightning and Base USDC payment challenges.',
+    related_scenarios: ['pay-per-api-call', 'webhook-triggered-service', 'paid-report-generation']
+  },
+
+  {
+    slug: 'ai-agent-execution',
+    title: 'AI Agent Execution',
+    short_description: 'Enable autonomous AI agents and LLM tools to pay for services programmatically.',
+    category: 'ai-agents',
+    category_label: 'AI & Agents',
+    problem: 'Autonomous AI agents need to access paid tools, APIs, and data sources, but traditional paywalls require credit cards, human CAPTCHAs, and web forms that AI agents cannot complete.',
+    target_user: 'AI developers, agentic framework authors, LLM tool creators, and autonomous software engineers.',
+    real_world_example: 'For example, an autonomous coding agent encountering a paid documentation endpoint can parse the HTTP 402 header, pay a 22 sat invoice via Lightning, and resume execution without human intervention.',
+    how_aipp_solves_it: 'AIPP Smart Tags serve dual representations: a web checkout for humans and a machine-readable JSON manifest (/t/:id/manifest) for AI agents. When an AI agent hits a 402 challenge, it parses the manifest, executes the payment, and submits the receipt.',
+    payment_flow: [
+      { step: '01', title: 'Agent Request', description: 'AI Agent calls service URL or API tool.' },
+      { step: '02', title: '402 + Manifest', description: 'AIPP returns HTTP 402 with link to machine manifest /t/:id/manifest.' },
+      { step: '03', title: 'Agent Payment', description: 'Agent wallet pays Lightning invoice or Base USDC transfer.' },
+      { step: '04', title: 'Task Execution', description: 'Agent presents preimage/tx hash proof; service executes after verification.' }
+    ],
+    supported_rails: ['lightning', 'usdc'],
+    supported_protocols: ['l402', 'x402'],
+    truth_level: 'VERIFIED',
+    truth_badge_text: 'Tested with AIPP',
+    evidence: 'Validated with autonomous agent audit against live https://aipp.dev/t/demo (0 human interventions).',
+    requirements: [
+      'AI agent with Lightning wallet / LNURL capability or Base USDC wallet key',
+      'Target endpoint protected with AIPP Smart Tag or SDK'
+    ],
+    limitations: [
+      'Agent must support HTTP 402 response handling or use AIPP Python/TypeScript SDK',
+      'In hosted Lightning flows, payments pass through AIPP gateway before automatic forwarding'
+    ],
+    example_request: 'GET /t/demo/manifest HTTP/1.1\nAccept: application/json',
+    example_response: '{\n  "version": "1.0",\n  "title": "AIPP Live Agent Demo",\n  "amount_usd": 0.01,\n  "supported_rails": ["lightning", "usdc"],\n  "pricing": { "sats": 22 }\n}',
+    example_code: `from aipp import AippClient
+
+client = AippClient(api_key="aipp_merch_...")
+result = client.call_paid_agent_tool(
+    url="https://aipp.dev/t/demo",
+    max_budget_usd=0.05
+)
+print("Agent Tool Output:", result)`,
+    example_code_lang: 'python',
+    what_aipp_does: [
+      'Provides machine-readable manifests for agent discovery',
+      'Supports dual human + agent flow on Smart Tag URLs',
+      'Verifies autonomous payment proofs before service execution'
+    ],
+    what_aipp_does_not_do: [
+      'Does not act as a central agent registry or store agent private keys',
+      'Does not mandate a single wallet vendor'
+    ],
+    faq: [
+      {
+        question: 'Does the agent need human approval to pay?',
+        answer: 'No. AI agents can execute payments programmatically up to a user-configured budget limit.'
+      }
+    ],
+    seo_title: 'AI Agent Execution - Autonomous Agent Micropayments with AIPP',
+    seo_description: 'Allow autonomous AI agents to discover, negotiate, and pay for services programmatically with HTTP 402 and L402/x402.',
+    related_scenarios: ['paid-mcp-tool', 'usage-based-ai-agent', 'paid-document-query']
+  },
+
+  {
+    slug: 'paid-mcp-tool',
+    title: 'Paid MCP Tool & MCP Server',
+    short_description: 'Monetize Model Context Protocol (MCP) tool calls and MCP servers in Cursor, Anthropic Claude Desktop, and LLMs.',
+    category: 'ai-agents',
+    category_label: 'AI & Agents',
+    problem: 'Developers creating custom Model Context Protocol (MCP) tools and servers for Claude Desktop, Cursor, or AI sidecars need a way to charge for tool execution or server invocations (e.g. database lookups, code analysis, image generation).',
+    target_user: 'MCP server developers, Cursor extension creators, Claude Desktop tool authors, and AI engineers.',
+    real_world_example: 'For example, an MCP server offering code security audits or context lookups could set a price of $0.10 per tool invocation using the L402 protocol.',
+    how_aipp_solves_it: 'When an LLM invokes an MCP tool or server method, the server returns an L402 payment challenge. The agent client executes the payment via Lightning/USDC, attaches the proof to the tool call arguments, and the tool returns the payload.',
+    payment_flow: [
+      { step: '01', title: 'MCP Tool Call', description: 'LLM client invokes tool via MCP protocol.' },
+      { step: '02', title: '402 Payment Challenge', description: 'MCP server returns payment requirement details.' },
+      { step: '03', title: 'Payment Settlement', description: 'Client pays Lightning invoice or USDC.' },
+      { step: '04', title: 'Tool Result Returned', description: 'MCP tool executes and returns context to the LLM.' }
+    ],
+    supported_rails: ['lightning', 'usdc'],
+    supported_protocols: ['l402', 'x402'],
+    truth_level: 'VERIFIED',
+    truth_badge_text: 'Tested with AIPP',
+    evidence: 'Verified via Python MCP tool handler in repo: skills/hermes_agent_skill/tool.py & examples/hermes_aipp_agent_tool.py.',
+    requirements: [
+      'MCP Server (Node.js or Python)',
+      'AIPP API Key or Smart Tag',
+      'LLM client with L402/MCP payment handler'
+    ],
+    limitations: [
+      'The client MCP host must support 402 challenge negotiation or tool retry',
+      'AIPP provides payment verification; developer hosts the MCP server'
+    ],
+    example_request: '{"jsonrpc": "2.0", "method": "tools/call", "params": {"name": "run_security_audit", "arguments": {"repo": "user/app"}}}',
+    example_response: '{"jsonrpc": "2.0", "error": {"code": 402, "message": "Payment Required", "data": {"l402": "lnbc220n1..."}}}',
+    example_code: `@app.call_tool()
+async def run_security_audit(name: str, arguments: dict):
+    payment_hash = arguments.get("payment_hash")
+    if not is_settled(payment_hash):
+        return {"error": "L402 Payment Required", "invoice": create_invoice(amount_usd=0.10)}
+    return {"audit_results": "Zero critical vulnerabilities found."}`,
+    example_code_lang: 'python',
+    what_aipp_does: [
+      'Enables pay-per-use monetization for MCP tool servers',
+      'Verifies preimages and transaction proofs before tool execution',
+      'Auto-forwards net earnings to merchant wallet'
+    ],
+    what_aipp_does_not_do: [
+      'Does not host the MCP server process',
+      'Does not modify Anthropic or Cursor protocol core'
+    ],
+    faq: [
+      {
+        question: 'Does this work with both individual MCP tools and full MCP servers?',
+        answer: 'Yes. You can monetise single tool methods or protect an entire MCP server endpoint with AIPP L402 challenges.'
+      }
+    ],
+    seo_title: 'Paid MCP Tool & Server - Monetize Model Context Protocol with AIPP',
+    seo_description: 'Charge per tool invocation or server method on Model Context Protocol (MCP) servers for Cursor, Claude Desktop, and AI agents.',
+    related_scenarios: ['ai-agent-execution', 'pay-per-api-call', 'usage-based-ai-agent']
+  },
+
+  {
+    slug: 'digital-download',
+    title: 'Digital File Download',
+    short_description: 'Sell digital files, Notion templates, and Obsidian notes with micro-payments.',
+    category: 'content-digital-goods',
+    category_label: 'Content & Digital Goods',
+    problem: 'With payment processors that charge a fixed transaction fee (such as $0.30 per charge), selling small digital assets for $0.25 to $3.00 can lose a significant percentage of their total value to fixed transaction thresholds.',
+    target_user: 'Digital creators, template authors, designers, technical writers, and indie hackers.',
+    real_world_example: 'For example, selling a $0.50 cheatsheet PDF with a fixed $0.30 transaction fee consumes 60% of the sale price. Pay-per-use digital payment rails eliminate fixed transaction thresholds.',
+    how_aipp_solves_it: 'Create an AIPP Smart Tag with your target file redirect URL. Anyone opening the link sees a checkout page. Upon paying with supported Lightning or Base USDC wallets, they are redirected to the unlocked file download.',
+    payment_flow: [
+      { step: '01', title: 'Open Smart Tag', description: 'Customer clicks your AIPP link (e.g. aipp.dev/t/p_abc123).' },
+      { step: '02', title: 'Pay Invoice', description: 'Scans QR code or uses WebLN/USDC to pay.' },
+      { step: '03', title: 'Proof Checked', description: 'AIPP verifies the payment proof before allowing access.' },
+      { step: '04', title: 'File Unlocked', description: 'Browser redirects to or opens the target digital asset.' }
+    ],
+    supported_rails: ['lightning', 'usdc'],
+    supported_protocols: ['l402', 'x402'],
+    truth_level: 'VERIFIED',
+    truth_badge_text: 'Tested with AIPP',
+    evidence: 'Verified via live Smart Tag redirect flow and examples/obsidian_aipp_paywall_note.md.',
+    requirements: [
+      'Target digital file URL (Google Drive, Dropbox, S3, or private server link)',
+      'Lightning Address or Base USDC wallet'
+    ],
+    limitations: [
+      'Redirect URL should be kept unlisted or dynamic for high-security files',
+      'In hosted Lightning flows, funds pass through AIPP gateway before automatic forwarding'
+    ],
+    example_request: 'GET /t/p_abc123 HTTP/1.1\nHost: aipp.dev',
+    example_response: 'HTTP/1.1 200 OK\nContent-Type: text/html\n\n<!-- AIPP Web Checkout Page with QR & Payment Verification -->',
+    example_code: `// Create a Digital Download Smart Tag via cURL
+curl -X POST https://aipp.dev/merchant/links/create \
+  -H "X-Api-Key: aipp_merch_your_key_here" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "title": "React Performance Cheatsheet PDF",
+    "amount_usd": 0.50,
+    "redirect_url": "https://downloads.example.com/cheatsheet.pdf",
+    "capability_type": "link"
+  }'`,
+    example_code_lang: 'bash',
+    what_aipp_does: [
+      'Creates Smart Tag URLs for digital goods',
+      'Handles web checkout for humans and manifest negotiation for agents',
+      'Forwards net earnings automatically to your configured wallet'
+    ],
+    what_aipp_does_not_do: [
+      'Does not host heavy DRM digital rights management servers',
+      'Does not store customer credit card numbers'
+    ],
+    faq: [
+      {
+        question: 'Do buyers need an account to buy a file?',
+        answer: 'No. Buyers simply scan the QR code with a supported Bitcoin Lightning wallet or pay with Base USDC. No password or registration needed.'
+      }
+    ],
+    seo_title: 'Digital File Download - Sell Files with AIPP',
+    seo_description: 'Sell PDFs, Notion templates, code scripts, and digital assets with instant Lightning or Base USDC micropayments.',
+    related_scenarios: ['content-paywall', 'sell-digital-product', 'paid-report-generation']
+  },
+
+  {
+    slug: 'content-paywall',
+    title: 'Content & Article Paywall',
+    short_description: 'Gate premium blog posts, whitepapers, research articles, or media pages behind small payments.',
+    category: 'content-digital-goods',
+    category_label: 'Content & Digital Goods',
+    problem: 'Publishers, whitepaper authors, and newsletter writers are trapped behind strict all-or-nothing monthly paywalls. Casual readers wanting to read a single research document, whitepaper, or guide bounce rather than subscribing.',
+    target_user: 'Independent journalists, newsletter publishers, research analysts, and website owners.',
+    real_world_example: 'For example, a researcher publishing a market breakdown can allow readers to pay $0.25 to unlock the individual article without forcing a monthly subscription.',
+    how_aipp_solves_it: 'Embed the lightweight AIPP drop-in widget script (public/aipp-widget.js). The widget blurs the protected section of the page and overlays a payment card. Upon payment verification, the content reveals.',
+    payment_flow: [
+      { step: '01', title: 'Visit Page', description: 'Reader visits article or research URL; intro is visible, body is blurred.' },
+      { step: '02', title: 'Paywall Card', description: 'AIPP widget presents payment QR code / WebLN button.' },
+      { step: '03', title: 'Verification', description: 'Payment settles and proof is verified before content unlocks.' },
+      { step: '04', title: 'Content Unlocked', description: 'Blur filter removed and full article renders.' }
+    ],
+    supported_rails: ['lightning', 'usdc'],
+    supported_protocols: ['l402', 'x402'],
+    truth_level: 'VERIFIED',
+    truth_badge_text: 'Tested with AIPP',
+    evidence: 'Verified via public/paywall.js and live demo page public/paywall-demo.html.',
+    requirements: [
+      'HTML website or CMS (WordPress, Ghost, Webflow, custom)',
+      'AIPP widget script inclusion'
+    ],
+    limitations: [
+      'Client-side JS paywalls can be bypassed by inspecting element unless combined with server-side L402 gating',
+      'Funds settle to configured wallet with automated forwarding'
+    ],
+    example_request: 'GET /article/market-breakdown HTTP/1.1',
+    example_response: 'HTTP/1.1 200 OK\n<!-- HTML content with aipp-paywall container -->',
+    example_code: `<!-- Include AIPP Paywall Widget in HTML -->
+<link rel="stylesheet" href="https://aipp.dev/paywall.css">
+<script src="https://aipp.dev/aipp-widget.js"></script>
+
+<div class="aipp-paywall" data-tag="p_demo123" data-amount="0.25">
+  <p>This is the premium unlocked report content...</p>
+</div>`,
+    example_code_lang: 'html',
+    what_aipp_does: [
+      'Provides standalone CSS and JS paywall overlay components',
+      'Supports WebLN browser wallet payments',
+      'Auto-forwards net earnings to your payout address'
+    ],
+    what_aipp_does_not_do: [
+      'Does not require readers to create passwords or accounts',
+      'Does not store user browsing history'
+    ],
+    faq: [
+      {
+        question: 'Can I use this on WordPress or Ghost?',
+        answer: 'Yes. You can paste the script tag and container div directly into custom HTML blocks on WordPress, Ghost, or Webflow.'
+      }
+    ],
+    seo_title: 'Content & Article Paywall - Micropayment Paywall with AIPP',
+    seo_description: 'Monetize individual articles, whitepapers, reports, and research posts with low-friction Lightning and Base USDC micropayments.',
+    related_scenarios: ['digital-download', 'sell-digital-product', 'paid-report-generation']
+  },
+
+  {
+    slug: 'ai-research-agent',
+    title: 'AI Research Agent',
+    short_description: 'Monetize specialized market research, company intelligence, and automated deep data synthesis.',
+    category: 'data-research',
+    category_label: 'Data & Research',
+    problem: 'AI research pipelines incur token and API costs per search query (web scraping, vector DB retrieval, LLM summarization). Operating these tools publicly without payment verification leads to API budget exhaustion.',
+    target_user: 'Data scientists, AI researchers, financial intelligence providers, and web scraping engineers.',
+    real_world_example: 'For example, an AI research service could charge $0.20 per complex query to cover source retrieval and synthesis costs.',
+    how_aipp_solves_it: 'Gate your research pipeline endpoint with an AIPP L402 header or Smart Tag. The user or requesting AI agent pays per research task before execution runs.',
+    payment_flow: [
+      { step: '01', title: 'Research Query', description: 'Client submits query (e.g. "Analyze Q3 earnings for AAPL").' },
+      { step: '02', title: 'Payment Required', description: 'Endpoint issues 402 challenge for query price.' },
+      { step: '03', title: 'Payment Executed', description: 'Client wallet settles Lightning or USDC payment.' },
+      { step: '04', title: 'Deep Research Run', description: 'Pipeline executes web synthesis and returns full research report.' }
+    ],
+    supported_rails: ['lightning', 'usdc'],
+    supported_protocols: ['l402', 'x402'],
+    truth_level: 'SUPPORTED',
+    truth_badge_text: 'Supported by AIPP architecture',
+    evidence: 'Supported directly by existing HTTP 402 challenge layer and Python SDK verification.',
+    requirements: [
+      'AI Research pipeline backend (LangChain, LlamaIndex, or custom script)',
+      'AIPP SDK or API key'
+    ],
+    limitations: [
+      'Merchant operates the research models and data scraping nodes',
+      'In hosted Lightning flows, funds pass through AIPP gateway before net proceeds forward'
+    ],
+    example_request: 'POST /api/research HTTP/1.1\n\n{"query": "Competitor pricing analysis"}',
+    example_response: 'HTTP/1.1 402 Payment Required\nWWW-Authenticate: L402 invoice="..."',
+    example_code: `from aipp import l402_decorator
+
+@app.route("/api/research", methods=["POST"])
+@l402_decorator(amount_usd=0.20)
+def run_research():
+    query = request.json.get("query")
+    report = execute_deep_research(query)
+    return jsonify({"report": report})`,
+    example_code_lang: 'python',
+    what_aipp_does: [
+      'Ensures research queries are paid before resource execution',
+      'Verifies payment preimages before allowing protected access',
+      'Auto-forwards net earnings to merchant wallet'
+    ],
+    what_aipp_does_not_do: [
+      'Does not execute the AI model or web scraping tasks',
+      'Does not maintain a spendable merchant balance'
+    ],
+    faq: [
+      {
+        question: 'Can autonomous agents trigger this research tool?',
+        answer: 'Yes. Autonomous agents can parse the 402 header, pay, and consume the research payload programmatically.'
+      }
+    ],
+    seo_title: 'AI Research Agent - Monetize Data Synthesis with AIPP',
+    seo_description: 'Monetize deep AI research tasks, market synthesis, and web intelligence per query with L402 micropayments.',
+    related_scenarios: ['ai-agent-execution', 'paid-mcp-tool', 'paid-document-query']
+  },
+
+  {
+    slug: 'webhook-triggered-service',
+    title: 'Webhook-Triggered Service',
+    short_description: 'Charge per incoming webhook event or serverless task trigger.',
+    category: 'automation',
+    category_label: 'Automation',
+    problem: 'Serverless developers and background job workers want to charge third parties per incoming webhook event (e.g. per notification, data transformation, or alert), but lack a zero-overhead payment verification mechanism.',
+    target_user: 'Serverless developers, AWS Lambda / Vercel engineers, and event-driven architects.',
+    real_world_example: 'For example, a microservice could process incoming video transcodes or image optimizations for $0.05 per webhook event.',
+    how_aipp_solves_it: 'Before executing heavy background jobs, the webhook receiver verifies payment status against AIPP. Unpaid requests are rejected with HTTP 402; paid events trigger background execution.',
+    payment_flow: [
+      { step: '01', title: 'Webhook Post', description: 'Sender posts event payload with payment receipt.' },
+      { step: '02', title: 'Status Query', description: 'Receiver checks AIPP GET /invoice/status/:hash.' },
+      { step: '03', title: 'Verification', description: 'AIPP confirms invoice status = settled.' },
+      { step: '04', title: 'Job Dispatched', description: 'Serverless worker executes background event.' }
+    ],
+    supported_rails: ['lightning', 'usdc'],
+    supported_protocols: ['l402', 'x402'],
+    truth_level: 'SUPPORTED',
+    truth_badge_text: 'Supported by AIPP architecture',
+    evidence: 'Supported directly by AIPP /invoice/status/:hash verification endpoint and webhook worker.',
+    requirements: [
+      'Webhook listener server or serverless endpoint',
+      'AIPP API Key'
+    ],
+    limitations: [
+      'Webhook sender must first obtain a resource-scoped AIPP access token',
+      'Funds auto-forward to merchant wallet according to threshold settings'
+    ],
+    example_request: 'POST /webhooks/process-task HTTP/1.1\nAuthorization: Bearer <AIPP_ACCESS_TOKEN>',
+    example_response: 'HTTP/1.1 200 OK\n\n{"status": "queued", "task_id": "task_123"}',
+    example_code: `export async function handleWebhook(req, res) {
+  const verify = await fetch('https://aipp.dev/t/<TAG_ID>/content', {
+    headers: { Authorization: req.headers.authorization }
+  });
+
+  if (!verify.ok) {
+    return res.status(402).json({ error: 'Payment required for webhook event' });
+  }
+  // Dispatch background job...
+  return res.json({ status: 'success' });
+}`,
+    example_code_lang: 'typescript',
+    what_aipp_does: [
+      'Provides REST invoice status verification for event handlers',
+      'Supports automated payout forwarding',
+      'Maintains audit trail of payment hashes'
+    ],
+    what_aipp_does_not_do: [
+      'Does not queue or retry third-party business webhook jobs',
+      'Does not store private application payloads'
+    ],
+    faq: [
+      {
+        question: 'What happens if a webhook event fails?',
+        answer: 'AIPP verifies payment settlement independently of your internal job status.'
+      }
+    ],
+    seo_title: 'Webhook-Triggered Service - Monetize Webhook Events with AIPP',
+    seo_description: 'Monetize serverless tasks, event triggers, and background jobs per webhook execution with AIPP.',
+    related_scenarios: ['paid-n8n-workflow', 'pay-per-api-call', 'ai-agent-execution']
+  },
+
+  {
+    slug: 'paid-ai-image-generation',
+    title: 'Paid AI Image Generation',
+    short_description: 'Require payment before triggering GPU-intensive AI image generation models.',
+    category: 'ai-agents',
+    category_label: 'AI & Agents',
+    problem: 'AI image generation models (Flux, Stable Diffusion, DALL-E) incur per-generation GPU compute and API fees. Offering image generation without payment verification leads to server exhaustion or forcing users into monthly subscriptions.',
+    target_user: 'AI app developers, Stable Diffusion API wrappers, graphic tool builders, and bot creators.',
+    real_world_example: 'For example, an AI avatar generator could charge $0.05 per generated image, triggering the GPU pipeline only after payment is verified.',
+    how_aipp_solves_it: 'AIPP gates your image generation endpoint with an L402/x402 402 challenge. The client pays the prompt price upfront, receives a payment receipt, and resubmits the prompt. Your server verifies the receipt and invokes the model.',
+    payment_flow: [
+      { step: '01', title: 'Submit Prompt', description: 'User or AI agent posts prompt to /api/generate-image.' },
+      { step: '02', title: '402 Invoice', description: 'Server returns HTTP 402 with Lightning or USDC invoice.' },
+      { step: '03', title: 'Payment Settlement', description: 'Client pays invoice via wallet.' },
+      { step: '04', title: 'GPU Model Runs', description: 'Server verifies payment preimage and executes image generation pipeline.' }
+    ],
+    supported_rails: ['lightning', 'usdc'],
+    supported_protocols: ['l402', 'x402'],
+    truth_level: 'SUPPORTED',
+    truth_badge_text: 'Supported by AIPP architecture',
+    evidence: 'Supported directly by AIPP Express/FastAPI 402 middleware gating and preimage verification.',
+    requirements: [
+      'Image generation backend server (Replicate, ComfyUI, OpenAI DALL-E API, or local GPU node)',
+      'AIPP API Key'
+    ],
+    limitations: [
+      'AIPP verifies payment; merchant operates the AI image model and hosting',
+      'Funds auto-forward to merchant wallet according to payout threshold'
+    ],
+    example_request: 'POST /api/generate-image HTTP/1.1\n\n{"prompt": "Futuristic cyberpunk city at sunset"}',
+    example_response: 'HTTP/1.1 402 Payment Required\nWWW-Authenticate: L402 invoice="lnbc500u1..."',
+    example_code: `import { Aipp, l402Paywall } from 'aipp-sdk';
+
+app.post('/api/generate-image', l402Paywall({
+  client: aipp,
+  amountUsd: 0.05
+}), async (req, res) => {
+  const imageBytes = await runFluxModel(req.body.prompt);
+  res.json({ image_url: imageBytes });
+});`,
+    example_code_lang: 'typescript',
+    what_aipp_does: [
+      'Gates GPU-intensive image generation endpoints behind verified payments',
+      'Issues machine-readable L402 and x402 challenge headers',
+      'Auto-forwards net earnings to merchant wallet'
+    ],
+    what_aipp_does_not_do: [
+      'Does not generate images or host AI model weights',
+      'Does not provide GPU hardware, Flux, DALL-E, or Stable Diffusion pipelines',
+      'Does not store generated image assets'
+    ],
+    faq: [
+      {
+        question: 'Can users pay with WebLN browser wallets?',
+        answer: 'Yes. Users with WebLN-compatible browser wallets or mobile Lightning wallets can complete payment directly.'
+      }
+    ],
+    seo_title: 'Paid AI Image Generation - Monetize Image APIs with AIPP',
+    seo_description: 'Charge per generated AI image with Lightning and Base USDC payment challenges before running GPU models.',
+    related_scenarios: ['pay-per-api-call', 'ai-agent-execution', 'paid-transcription']
+  },
+
+  {
+    slug: 'paid-transcription',
+    title: 'Paid Audio & Video Transcription',
+    short_description: 'Charge per audio or video file transcription job without subscriptions.',
+    category: 'ai-agents',
+    category_label: 'AI & Agents',
+    problem: 'Speech-to-text processing (Whisper, Deepgram, AssemblyAI) consumes per-minute compute and API credits. Creators wanting to sell audio transcription services face high billing friction when forcing users into subscription tiers.',
+    target_user: 'Podcast tool creators, transcription developers, video editors, and AI audio engineers.',
+    real_world_example: 'For example, an audio-to-text service could charge $0.10 per audio file job, verifying payment before transcription starts.',
+    how_aipp_solves_it: 'Wrap your transcription route with AIPP payment verification. The user uploads the audio metadata or file URL, receives an HTTP 402 challenge, pays, and receives the transcript once processed.',
+    payment_flow: [
+      { step: '01', title: 'Upload Audio', description: 'Client submits audio URL or file metadata.' },
+      { step: '02', title: '402 Challenge', description: 'API returns HTTP 402 with invoice for transcription cost.' },
+      { step: '03', title: 'Payment Settlement', description: 'Client pays via Lightning or Base USDC.' },
+      { step: '04', title: 'Transcript Returned', description: 'API verifies payment proof, executes speech model, and returns text.' }
+    ],
+    supported_rails: ['lightning', 'usdc'],
+    supported_protocols: ['l402', 'x402'],
+    truth_level: 'SUPPORTED',
+    truth_badge_text: 'Supported by AIPP architecture',
+    evidence: 'Supported directly by AIPP HTTP 402 challenge header layer and Python/JS SDKs.',
+    requirements: [
+      'Transcription server or speech API integration (Whisper, Deepgram, etc.)',
+      'AIPP API Key'
+    ],
+    limitations: [
+      'Merchant operates or integrates the speech-to-text engine',
+      'Funds auto-forward to merchant wallet according to payout threshold'
+    ],
+    example_request: 'POST /api/transcribe HTTP/1.1\n\n{"audio_url": "https://example.com/podcast.mp3"}',
+    example_response: 'HTTP/1.1 402 Payment Required\nWWW-Authenticate: L402 invoice="lnbc1m1..."',
+    example_code: `@app.route("/api/transcribe", methods=["POST"])
+@l402_decorator(amount_usd=0.10)
+def transcribe_audio():
+    audio_url = request.json.get("audio_url")
+    text = run_whisper(audio_url)
+    return jsonify({"transcript": text})`,
+    example_code_lang: 'python',
+    what_aipp_does: [
+      'Gates audio and video transcription tasks behind verified micropayments',
+      'Supports WebLN browser pay and AI agent automatic settlement',
+      'Auto-forwards net earnings to merchant wallet'
+    ],
+    what_aipp_does_not_do: [
+      'Does not transcribe audio or host speech models',
+      'Does not provide speech-to-text API infrastructure',
+      'Does not store uploaded audio files'
+    ],
+    faq: [
+      {
+        question: 'Can I charge dynamic rates per minute of audio?',
+        answer: 'Yes. Your server calculates the required amount based on audio length and requests the corresponding invoice amount from AIPP.'
+      }
+    ],
+    seo_title: 'Paid Audio & Video Transcription - Monetize Speech APIs with AIPP',
+    seo_description: 'Charge per transcription job with instant Lightning and Base USDC micropayment verification.',
+    related_scenarios: ['paid-ai-image-generation', 'pay-per-api-call', 'paid-report-generation']
+  },
+
+  {
+    slug: 'paid-web-scraping',
+    title: 'Paid Web Scraping & Data Extraction',
+    short_description: 'Monetize URL extraction, page rendering, and web scraping APIs per request.',
+    category: 'data-research',
+    category_label: 'Data & Research',
+    problem: 'Scraping web pages, running headless browsers, and rotating residential proxies incur real per-request proxy and compute costs. Developers offering scraping APIs need to charge per extracted URL without incurring subscription overhead.',
+    target_user: 'Web scrapers, proxy service providers, data extraction engineers, and competitive intelligence developers.',
+    real_world_example: 'For example, a developer hosting a headless browser scraping API could charge $0.01 per extracted HTML payload, allowing scrapers or AI agents to pay per URL.',
+    how_aipp_solves_it: 'AIPP handles the 402 challenge negotiation. When a client requests a scraped page URL, your server returns HTTP 402. Upon payment verification, your headless browser executes the page parse and returns data.',
+    payment_flow: [
+      { step: '01', title: 'Scrape Request', description: 'Client submits target URL to scrape.' },
+      { step: '02', title: '402 Challenge', description: 'API returns HTTP 402 invoice header.' },
+      { step: '03', title: 'Payment Settlement', description: 'Client pays via Lightning or Base USDC.' },
+      { step: '04', title: 'Parsed Data Delivered', description: 'Server verifies receipt, executes scraper, and returns JSON/Markdown.' }
+    ],
+    supported_rails: ['lightning', 'usdc'],
+    supported_protocols: ['l402', 'x402'],
+    truth_level: 'SUPPORTED',
+    truth_badge_text: 'Supported by AIPP architecture',
+    evidence: 'Supported directly by AIPP 402 challenge header layer and python/ts middleware.',
+    requirements: [
+      'Scraping pipeline or headless browser server (Playwright, Puppeteer, Selenium)',
+      'AIPP API Key'
+    ],
+    limitations: [
+      'Merchant operates the scraping infrastructure and proxy network',
+      'Does not authorize scraping of prohibited or illegal targets',
+      'Funds auto-forward to merchant wallet'
+    ],
+    example_request: 'POST /api/scrape HTTP/1.1\n\n{"url": "https://news.ycombinator.com"}',
+    example_response: 'HTTP/1.1 402 Payment Required\nWWW-Authenticate: L402 invoice="lnbc100u1..."',
+    example_code: `app.post('/api/scrape', l402Paywall({
+  client: aipp,
+  amountUsd: 0.01
+}), async (req, res) => {
+  const content = await fetchPageMarkdown(req.body.url);
+  res.json({ markdown: content });
+});`,
+    example_code_lang: 'typescript',
+    what_aipp_does: [
+      'Provides 402 payment verification layer for data extraction services',
+      'Enables AI scrapers and agents to pay per extracted page programmatically',
+      'Auto-forwards net proceeds to merchant wallet'
+    ],
+    what_aipp_does_not_do: [
+      'Does not scrape websites or manage proxy pools',
+      'Does not bypass anti-bot protections or CAPTCHAs',
+      'Does not authorize scraping that violates terms of service'
+    ],
+    faq: [
+      {
+        question: 'Is this suitable for AI crawler agents?',
+        answer: 'Yes. AI crawler agents can parse the 402 response, pay the Lightning invoice, and consume structured markdown directly.'
+      }
+    ],
+    seo_title: 'Paid Web Scraping & Data Extraction - Monetize Scraper APIs with AIPP',
+    seo_description: 'Monetize web scraping, headless browser rendering, and data extraction per URL with Lightning and Base USDC.',
+    related_scenarios: ['ai-research-agent', 'paid-data-api', 'pay-per-api-call']
+  },
+
+  {
+    slug: 'paid-data-api',
+    title: 'Paid Data API',
+    short_description: 'Sell specialized market data, weather metrics, analytics, and datasets per request.',
+    category: 'apis-developers',
+    category_label: 'APIs & Developers',
+    problem: 'Data providers selling financial metrics, real-time analytics, or specialized search indexes are forced into monthly subscription plans. Machine-to-machine buyers wanting a single lookup bounce due to high upfront costs.',
+    target_user: 'Financial data providers, market analysts, IoT data engineers, and dataset creators.',
+    real_world_example: 'For example, a financial intelligence API could charge $0.05 per stock ticker balance-sheet lookup, allowing machine clients to pay per query.',
+    how_aipp_solves_it: 'Integrate AIPP 402 middleware into your data API server. When a client requests a data lookup, your server issues an HTTP 402 challenge. Once paid, the server executes the DB lookup and returns data.',
+    payment_flow: [
+      { step: '01', title: 'Data Query', description: 'Client submits request (e.g. GET /api/data?ticker=AAPL).' },
+      { step: '02', title: '402 Invoice', description: 'API returns HTTP 402 challenge with invoice.' },
+      { step: '03', title: 'Payment Settlement', description: 'Client settles invoice.' },
+      { step: '04', title: 'Dataset Returned', description: 'Server verifies payment proof and returns JSON data.' }
+    ],
+    supported_rails: ['lightning', 'usdc'],
+    supported_protocols: ['l402', 'x402'],
+    truth_level: 'SUPPORTED',
+    truth_badge_text: 'Supported by AIPP architecture',
+    evidence: 'Supported directly by AIPP L402 / x402 REST API gating and Express/FastAPI middleware.',
+    requirements: [
+      'Data API server (Node.js, Python, Go, Java)',
+      'AIPP API Key'
+    ],
+    limitations: [
+      'AIPP is the payment and verification layer; merchant supplies the dataset',
+      'Funds auto-forward to merchant wallet according to threshold settings'
+    ],
+    example_request: 'GET /api/data/ticker/AAPL HTTP/1.1',
+    example_response: 'HTTP/1.1 402 Payment Required\nWWW-Authenticate: L402 invoice="lnbc500u1..."',
+    example_code: `app.get('/api/data/ticker/:symbol', l402Paywall({
+  client: aipp,
+  amountUsd: 0.05
+}), async (req, res) => {
+  const data = await db.getTickerData(req.params.symbol);
+  res.json({ data });
+});`,
+    example_code_lang: 'typescript',
+    what_aipp_does: [
+      'Allows data API providers to require micro-payments per request',
+      'Supports WebLN browser payments and machine agent auto-pay',
+      'Auto-forwards net earnings to merchant wallet'
+    ],
+    what_aipp_does_not_do: [
+      'Does not supply weather, financial, market, or proprietary datasets',
+      'Does not host dataset databases'
+    ],
+    faq: [
+      {
+        question: 'Can I set different prices for different dataset tiers?',
+        answer: 'Yes. Your API handler specifies the exact USD amount for each endpoint when initializing the paywall middleware.'
+      }
+    ],
+    seo_title: 'Paid Data API - Sell Datasets & Metrics Per Request with AIPP',
+    seo_description: 'Monetize financial metrics, market analytics, and data lookups per request with Lightning and Base USDC.',
+    related_scenarios: ['pay-per-api-call', 'paid-web-scraping', 'ai-research-agent']
+  },
+
+  {
+    slug: 'paid-report-generation',
+    title: 'Paid Report & Document Generation',
+    short_description: 'Sell automated PDF reports, SEO audits, and company analyses on demand.',
+    category: 'content-digital-goods',
+    category_label: 'Content & Digital Goods',
+    problem: 'Automated reporting systems (SEO audit generators, PDF export tools, company research reports) deliver discrete valuable outputs. Forcing customers into monthly subscriptions deters one-off report buyers.',
+    target_user: 'SEO tools, research analysts, PDF automation engineers, and consultancy tools.',
+    real_world_example: 'For example, an automated SEO auditing tool could charge $2.00 per generated audit report PDF instead of requiring a recurring monthly fee.',
+    how_aipp_solves_it: 'Protect your report generator endpoint with an AIPP Smart Tag link or L402 challenge. The customer submits target parameters, pays the report fee via Lightning or USDC, and receives the generated report PDF.',
+    payment_flow: [
+      { step: '01', title: 'Submit Parameters', description: 'Customer enters target domain for audit report.' },
+      { step: '02', title: 'Payment Required', description: 'AIPP presents checkout card or 402 challenge.' },
+      { step: '03', title: 'Payment Settlement', description: 'Customer pays via WebLN, mobile wallet, or USDC.' },
+      { step: '04', title: 'PDF Delivered', description: 'Server verifies payment proof, compiles PDF, and triggers download.' }
+    ],
+    supported_rails: ['lightning', 'usdc'],
+    supported_protocols: ['l402', 'x402'],
+    truth_level: 'SUPPORTED',
+    truth_badge_text: 'Supported by AIPP architecture',
+    evidence: 'Supported directly by Smart Tag link unlock and L402 402 challenge verification.',
+    requirements: [
+      'Report generation engine (Puppeteer PDF, Typst, LaTeX, or report API)',
+      'AIPP API Key'
+    ],
+    limitations: [
+      'Merchant operates the report generator and PDF rendering script',
+      'Funds auto-forward to merchant wallet according to threshold settings'
+    ],
+    example_request: 'POST /api/reports/seo HTTP/1.1\n\n{"domain": "example.com"}',
+    example_response: 'HTTP/1.1 402 Payment Required\nWWW-Authenticate: L402 invoice="lnbc20m1..."',
+    example_code: `app.post('/api/reports/seo', l402Paywall({
+  client: aipp,
+  amountUsd: 2.00
+}), async (req, res) => {
+  const pdfBuffer = await generateSeoReportPdf(req.body.domain);
+  res.setHeader('Content-Type', 'application/pdf');
+  res.send(pdfBuffer);
+});`,
+    example_code_lang: 'typescript',
+    what_aipp_does: [
+      'Verifies payment settlement before report compilation or file delivery',
+      'Supports human web checkout and AI agent manifest discovery',
+      'Auto-forwards net earnings to merchant wallet'
+    ],
+    what_aipp_does_not_do: [
+      'Does not generate PDF files or run SEO/financial audits',
+      'Does not host PDF rendering software'
+    ],
+    faq: [
+      {
+        question: 'Can I deliver the report via email after payment?',
+        answer: 'Yes. Upon payment confirmation from AIPP, your server can trigger an email dispatch node or direct download.'
+      }
+    ],
+    seo_title: 'Paid Report Generation - Sell PDF Audits & Reports with AIPP',
+    seo_description: 'Monetize automated PDF report generation, SEO audits, and company research per report with payments.',
+    related_scenarios: ['digital-download', 'paid-n8n-workflow', 'paid-transcription']
+  },
+
+  {
+    slug: 'usage-based-ai-agent',
+    title: 'Usage-Based AI Agent Tasks',
+    short_description: 'Charge for variable AI agent tasks per execution without forced subscriptions.',
+    category: 'ai-agents',
+    category_label: 'AI & Agents',
+    problem: 'AI agent workloads have variable execution costs depending on task complexity. Forcing users into a single monthly subscription limits power users while turning away light users.',
+    target_user: 'AI agent builders, autonomous workflow authors, and LLM task automation engineers.',
+    real_world_example: 'For example, an AI coding agent could charge $0.25 per multi-step task run, allowing users to pay per execution rather than committing to a monthly plan.',
+    how_aipp_solves_it: 'Set upfront task pricing for agent execution runs using AIPP Smart Tags or L402 header negotiation. The requesting agent or user pays the specified task fee before execution starts.',
+    payment_flow: [
+      { step: '01', title: 'Task Submission', description: 'User or agent submits task goal to agent server.' },
+      { step: '02', title: 'Task Fee 402', description: 'Agent server responds HTTP 402 with task execution fee.' },
+      { step: '03', title: 'Task Payment', description: 'Client pays fee via Lightning or Base USDC.' },
+      { step: '04', title: 'Agent Runs', description: 'Server verifies payment and executes multi-step LLM task.' }
+    ],
+    supported_rails: ['lightning', 'usdc'],
+    supported_protocols: ['l402', 'x402'],
+    truth_level: 'SUPPORTED',
+    truth_badge_text: 'Supported by AIPP architecture',
+    evidence: 'Supported by AIPP pre-execution 402 challenge gating and manifest pricing negotiation.',
+    requirements: [
+      'AI agent server or task runner',
+      'AIPP API Key'
+    ],
+    limitations: [
+      'AIPP requires a known price before task execution; it does NOT currently perform dynamic post-execution token metering or variable billing',
+      'Merchant sets the task price upfront based on expected workload'
+    ],
+    example_request: 'POST /api/agent/run HTTP/1.1\n\n{"task": "Refactor python module for async"}',
+    example_response: 'HTTP/1.1 402 Payment Required\nWWW-Authenticate: L402 invoice="lnbc2500u1..."',
+    example_code: `from aipp import l402_decorator
+
+@app.route("/api/agent/run", methods=["POST"])
+@l402_decorator(amount_usd=0.25)
+def run_agent_task():
+    task = request.json.get("task")
+    result = execute_agent_loop(task)
+    return jsonify({"output": result})`,
+    example_code_lang: 'python',
+    what_aipp_does: [
+      'Gates AI agent task runs behind verified micropayments',
+      'Provides machine-readable manifests for agent tool negotiation',
+      'Auto-forwards net proceeds to developer wallet'
+    ],
+    what_aipp_does_not_do: [
+      'Does not perform dynamic post-execution token metering or variable bill-back',
+      'Does not calculate LLM compute costs after execution (task price is set upfront)',
+      'Does not host the LLM or agent orchestration engine'
+    ],
+    faq: [
+      {
+        question: 'Can I specify different task prices for simple vs complex tasks?',
+        answer: 'Yes. Your server evaluates task complexity upfront and requests the corresponding invoice amount from AIPP before execution starts.'
+      }
+    ],
+    seo_title: 'Usage-Based AI Agent Tasks - Monetize AI Agents with AIPP',
+    seo_description: 'Monetize AI agent task executions per run with Lightning and Base USDC micropayments.',
+    related_scenarios: ['ai-agent-execution', 'paid-mcp-tool', 'paid-document-query']
+  },
+
+  {
+    slug: 'paid-document-query',
+    title: 'Paid Document & RAG Query',
+    short_description: 'Monetize queries against private document collections, RAG pipelines, and Vector DBs.',
+    category: 'data-research',
+    category_label: 'Data & Research',
+    problem: 'Exposing a private document collection or Retrieval-Augmented Generation (RAG) system incurs embedding, vector search, and LLM synthesis costs per question. Offering RAG queries for free leads to API budget exhaustion.',
+    target_user: 'RAG developers, vector database operators, knowledge base authors, and technical researchers.',
+    real_world_example: 'For example, a legal knowledge base or RAG service could charge $0.05 per question query against its private corpus.',
+    how_aipp_solves_it: 'Protect your RAG query endpoint with AIPP L402 middleware. The user or requesting LLM submits a question, receives a 402 challenge for the set price, pays, and receives the retrieved answer with citations.',
+    payment_flow: [
+      { step: '01', title: 'Submit Question', description: 'Client submits question to RAG endpoint.' },
+      { step: '02', title: 'Query Fee 402', description: 'Server issues HTTP 402 challenge for query fee.' },
+      { step: '03', title: 'Payment Settlement', description: 'Client wallet settles invoice.' },
+      { step: '04', title: 'RAG Answer Delivered', description: 'Server verifies payment proof, executes vector retrieval, and returns answer.' }
+    ],
+    supported_rails: ['lightning', 'usdc'],
+    supported_protocols: ['l402', 'x402'],
+    truth_level: 'SUPPORTED',
+    truth_badge_text: 'Supported by AIPP architecture',
+    evidence: 'Supported directly by L402 HTTP 402 query challenge gating and preimage verification.',
+    requirements: [
+      'Vector DB / RAG backend (Pinecone, Qdrant, Chroma, LlamaIndex, LangChain)',
+      'AIPP API Key'
+    ],
+    limitations: [
+      'Merchant operates the vector database and RAG pipeline',
+      'Funds auto-forward to merchant wallet according to threshold settings'
+    ],
+    example_request: 'POST /api/rag/query HTTP/1.1\n\n{"question": "What is the warranty policy?"}',
+    example_response: 'HTTP/1.1 402 Payment Required\nWWW-Authenticate: L402 invoice="lnbc500u1..."',
+    example_code: `app.post('/api/rag/query', l402Paywall({
+  client: aipp,
+  amountUsd: 0.05
+}), async (req, res) => {
+  const answer = await ragPipeline.query(req.body.question);
+  res.json({ answer });
+});`,
+    example_code_lang: 'typescript',
+    what_aipp_does: [
+      'Gates RAG queries and knowledge base lookups behind verified micropayments',
+      'Verifies payment preimages before allowing protected access',
+      'Auto-forwards net proceeds to developer wallet'
+    ],
+    what_aipp_does_not_do: [
+      'Does not host vector databases, perform embeddings, or host private documents',
+      'Does not build RAG retrieval pipelines',
+      'Does not store document collections'
+    ],
+    faq: [
+      {
+        question: 'Can AI agents query my RAG system automatically?',
+        answer: 'Yes. Autonomous agents can parse the L402 402 challenge, pay the Lightning invoice, and consume answers programmatically.'
+      }
+    ],
+    seo_title: 'Paid Document & RAG Query - Monetize RAG Systems with AIPP',
+    seo_description: 'Charge per query on private document collections, RAG pipelines, and Vector DBs with Lightning and Base USDC.',
+    related_scenarios: ['ai-research-agent', 'usage-based-ai-agent', 'paid-data-api']
+  },
+
+  {
+    slug: 'get-paid-before-delivery',
+    title: 'Get Paid Before Digital Delivery',
+    short_description: 'Require verified Lightning or Base USDC payment before releasing custom digital deliverables to clients.',
+    category: 'creators-independent-work',
+    category_label: 'Creators & Independent Work',
+    problem: 'Freelancers, independent designers, and custom script writers produce custom digital deliverables (custom code scripts, vector designs, data research files), but sending files before payment exposes creators to unpaid work or delayed client invoices.',
+    target_user: 'Freelance developers, independent designers, custom researchers, and technical contractors.',
+    real_world_example: 'For example, a developer completing a custom Python script can upload the deliverable to an unlisted URL and send an AIPP Smart Tag link for $25. Once the client pays via USDC or Lightning, the file download unlocks.',
+    how_aipp_solves_it: 'AIPP provides a payment gate link. Your client views the job title and price, pays using supported Lightning or Base USDC wallets, and AIPP verifies the payment proof before redirecting to the deliverable download URL.',
+    payment_flow: [
+      { step: '01', title: 'Send Payment Link', description: 'Creator sends AIPP Smart Tag URL (e.g. aipp.dev/t/p_job123) to client.' },
+      { step: '02', title: 'Client Reviews Job', description: 'Client sees job title, deliverable description, and USD price.' },
+      { step: '03', title: 'Payment Settlement', description: 'Client pays with Lightning QR code or Base USDC.' },
+      { step: '04', title: 'Deliverable Unlocked', description: 'AIPP verifies payment proof and unlocks the download link.' }
+    ],
+    supported_rails: ['lightning', 'usdc'],
+    supported_protocols: ['l402', 'x402'],
+    truth_level: 'SUPPORTED',
+    truth_badge_text: 'Supported by AIPP architecture',
+    evidence: 'Supported directly by AIPP Smart Tag redirect gating and settlement proof verification.',
+    requirements: [
+      'Target digital deliverable hosted on an unlisted/secure storage URL (S3, Drive, Dropbox)',
+      'Supported Bitcoin Lightning wallet or Base USDC EVM wallet'
+    ],
+    limitations: [
+      'AIPP does NOT provide escrow, arbitrate work quality disputes, or guarantee delivery',
+      'Client must pay using supported Lightning or Base USDC payment rails'
+    ],
+    example_request: 'GET /t/p_job123 HTTP/1.1\nHost: aipp.dev',
+    example_response: 'HTTP/1.1 200 OK\n<!-- AIPP Web Checkout with Deliverable Unlock Gate -->',
+    example_code: `// Create a "Pay Before Delivery" Smart Tag via cURL
+curl -X POST https://aipp.dev/merchant/links/create \
+  -H "X-Api-Key: aipp_merch_your_key_here" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "title": "Custom Scraping Script Deliverable",
+    "amount_usd": 25.00,
+    "redirect_url": "https://storage.example.com/final_script.zip",
+    "capability_type": "link"
+  }'`,
+    example_code_lang: 'bash',
+    what_aipp_does: [
+      'Creates a payment gate URL for custom digital deliverables',
+      'Verifies Lightning or Base USDC payment settlement before releasing the download link',
+      'Auto-forwards net proceeds directly to your merchant wallet address'
+    ],
+    what_aipp_does_not_do: [
+      'Does not provide escrow services or arbitrate client disputes regarding work quality',
+      'Does not guarantee contract completion or find freelance clients',
+      'Does not accept credit cards, PayPal, or bank wire transfers'
+    ],
+    faq: [
+      {
+        question: 'Is AIPP an escrow service?',
+        answer: 'No. AIPP is a payment verification gate, not an escrow agent. It verifies payment settlement before unlocking access to your file URL.'
+      },
+      {
+        question: 'What payment methods can my client use?',
+        answer: 'If your client can pay with Lightning (Bitcoin) or Base USDC, AIPP provides a payment gate for your digital deliverable.'
+      }
+    ],
+    seo_title: 'Get Paid Before Digital Delivery - Pay-to-Unlock Gate with AIPP',
+    seo_description: 'Protect custom freelancer deliverables, code scripts, and design assets behind verified Lightning and Base USDC payments.',
+    related_scenarios: ['sell-digital-service', 'sell-digital-product', 'paid-report-generation']
+  },
+
+  {
+    slug: 'sell-digital-service',
+    title: 'Sell a Small Digital Service',
+    short_description: 'Charge one-time fees for small online jobs, document processing, script runs, or data conversions.',
+    category: 'creators-independent-work',
+    category_label: 'Creators & Independent Work',
+    problem: 'Independent operators selling small online services (for file conversion, dataset cleaning, script execution, or custom document processing) lose revenue to monthly subscription tools or high fixed transaction minimums that make low-ticket jobs unviable.',
+    target_user: 'Independent service providers, technical freelancers, tool operators, and digital micro-entrepreneurs.',
+    real_world_example: 'For example, a developer building a web utility to convert raw PDF invoices into clean CSV tables could charge $1.00 per file job without requiring account creation or subscription sign-ups.',
+    how_aipp_solves_it: 'Protect your service endpoint with an AIPP Smart Tag or 402 challenge. The customer pays for the specific job being performed. AIPP verifies payment and your server runs the service logic.',
+    payment_flow: [
+      { step: '01', title: 'Submit Job Request', description: 'Customer uploads file or enters job parameters.' },
+      { step: '02', title: 'One-Time Payment Card', description: 'AIPP presents $1.00 checkout card (Lightning or USDC).' },
+      { step: '03', title: 'Payment Settlement', description: 'Customer pays via WebLN, mobile wallet, or USDC.' },
+      { step: '04', title: 'Job Result Delivered', description: 'AIPP verifies payment proof and server executes job.' }
+    ],
+    supported_rails: ['lightning', 'usdc'],
+    supported_protocols: ['l402', 'x402'],
+    truth_level: 'SUPPORTED',
+    truth_badge_text: 'Supported by AIPP architecture',
+    evidence: 'Supported directly by AIPP Smart Tag payment verification and L402 402 challenge handling.',
+    requirements: [
+      'Web service handler or serverless function',
+      'AIPP API Key or Smart Tag',
+      'Client with supported Lightning or Base USDC wallet'
+    ],
+    limitations: [
+      'AIPP provides payment verification; merchant hosts and executes the digital service',
+      'Customers must pay using supported Lightning or Base USDC payment rails'
+    ],
+    example_request: 'POST /api/convert-pdf HTTP/1.1\n\n{"file_id": "pdf_987"}',
+    example_response: 'HTTP/1.1 402 Payment Required\nWWW-Authenticate: L402 invoice="lnbc10m1..."',
+    example_code: `app.post('/api/convert-pdf', l402Paywall({
+  client: aipp,
+  amountUsd: 1.00
+}), async (req, res) => {
+  const csvData = await convertPdfToCsv(req.body.file_id);
+  res.json({ result: csvData });
+});`,
+    example_code_lang: 'typescript',
+    what_aipp_does: [
+      'Enables one-time micropayments for single digital jobs without subscription friction',
+      'Verifies settlement proof before service execution',
+      'Auto-forwards net earnings to your specified wallet'
+    ],
+    what_aipp_does_not_do: [
+      'Does not execute the digital service logic or host your application',
+      'Does not find clients or market your service',
+      'Does not provide bank card acquiring or fiat payment processing'
+    ],
+    faq: [
+      {
+        question: 'Do customers need to subscribe to use my service?',
+        answer: 'No subscription required. Customers pay once for the job that actually runs.'
+      }
+    ],
+    seo_title: 'Sell a Small Digital Service - Pay per Job with AIPP',
+    seo_description: 'Charge one-time micropayments for file conversion, script runs, and small online jobs with Lightning and Base USDC.',
+    related_scenarios: ['get-paid-before-delivery', 'pay-per-api-call', 'paid-n8n-workflow']
+  },
+
+  {
+    slug: 'sell-digital-product',
+    title: 'Sell a Digital Product',
+    short_description: 'Sell downloadable guides, templates, code packages, and AI prompt packs without building an e-commerce storefront.',
+    category: 'creators-independent-work',
+    category_label: 'Creators & Independent Work',
+    problem: 'Creators selling digital products (PDF guides, Notion templates, code packages, design assets, AI prompt packs) encounter high fixed fees and complex store setup overhead when selling single digital assets.',
+    target_user: 'Digital creators, template authors, designers, technical writers, and AI prompt engineers.',
+    real_world_example: 'For example, a creator selling a Notion template or AI prompt library for $2.00 can share an AIPP Smart Tag link that unlocks the asset upon payment settlement.',
+    how_aipp_solves_it: 'Generate an AIPP Smart Tag URL pointing to your deliverable download link. Share the URL on social media, blogs, or newsletters. Buyers pay with Lightning or USDC and immediately unlock the product.',
+    payment_flow: [
+      { step: '01', title: 'Click Product Link', description: 'Buyer clicks your AIPP Smart Tag link.' },
+      { step: '02', title: 'Pay Checkout', description: 'Buyer scans Lightning QR code or pays with Base USDC.' },
+      { step: '03', title: 'Settlement Verified', description: 'AIPP verifies payment proof.' },
+      { step: '04', title: 'Product Unlocked', description: 'Browser automatically redirects to the target download URL.' }
+    ],
+    supported_rails: ['lightning', 'usdc'],
+    supported_protocols: ['l402', 'x402'],
+    truth_level: 'SUPPORTED',
+    truth_badge_text: 'Supported by AIPP architecture',
+    evidence: 'Supported directly by Smart Tag link unlock gating and payment verification.',
+    requirements: [
+      'Digital product file hosted on external URL (S3, Drive, Dropbox, Notion link)',
+      'Supported Lightning Address or Base USDC wallet'
+    ],
+    limitations: [
+      'External file hosting is required for deliverable asset hosting',
+      'Does not provide shopping carts, multi-item checkout, or automated tax calculation'
+    ],
+    example_request: 'GET /t/p_notion123 HTTP/1.1\nHost: aipp.dev',
+    example_response: 'HTTP/1.1 200 OK\n<!-- AIPP Checkout Page for Notion Template -->',
+    example_code: `// Create a Digital Product Smart Tag via cURL
+curl -X POST https://aipp.dev/merchant/links/create \
+  -H "X-Api-Key: aipp_merch_your_key_here" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "title": "AI Prompt Engineering Pack & Templates",
+    "amount_usd": 2.00,
+    "redirect_url": "https://notion.so/my-template-duplicate-link",
+    "capability_type": "link"
+  }'`,
+    example_code_lang: 'bash',
+    what_aipp_does: [
+      'Provides pay-to-unlock link gating for digital products',
+      'Supports human web checkout and AI agent manifest discovery',
+      'Auto-forwards net proceeds to your payout wallet'
+    ],
+    what_aipp_does_not_do: [
+      'Does not provide shopping carts, product catalog management, or tax handling',
+      'Does not host heavy deliverable file binaries directly',
+      'Does not accept credit card or bank payments'
+    ],
+    faq: [
+      {
+        question: 'Can I sell AI prompt packs and Notion templates with this?',
+        answer: 'Yes. AI prompt packs, Notion templates, code packages, and PDF guides can be sold directly using Smart Tag links.'
+      }
+    ],
+    seo_title: 'Sell a Digital Product - No Storefront Required with AIPP',
+    seo_description: 'Sell PDFs, Notion templates, code scripts, and AI prompt packs with instant Lightning and Base USDC payment gates.',
+    related_scenarios: ['digital-download', 'get-paid-before-delivery', 'content-paywall']
+  },
+  {
+    slug: 'get-paid-before-compute',
+    title: 'Get Paid Before Compute',
+    short_description: 'Require payment before triggering expensive AI models, APIs, GPU inference, or compute jobs.',
+    category: 'apis-developers',
+    category_label: 'APIs & Developers',
+    problem: 'Executing digital actions (LLM tokens, GPU inference, third-party API calls, proxy scraping, data processing) creates immediate provider expense. In conventional billing models, providers fund compute execution first and attempt to bill customers later, taking on financial risk.',
+    target_user: 'AI developers, API providers, cloud engineers, serverless architects, and automation operators.',
+    real_world_example: 'For example, an AI generation API or automated research tool could require payment before invoking GPU inference or third-party paid APIs, ensuring compute costs are funded before execution.',
+    how_aipp_solves_it: 'AIPP gates your compute handler with an HTTP 402 challenge header or Smart Tag. When a client requests execution, AIPP returns a payment requirement. Once the Lightning or USDC payment is verified, your backend executes the compute job.',
+    payment_flow: [
+      { step: '01', title: 'Compute Request', description: 'Client submits parameters for a resource-intensive job.' },
+      { step: '02', title: '402 Invoice', description: 'Server issues HTTP 402 challenge with upfront job price.' },
+      { step: '03', title: 'Payment Settlement', description: 'Client settles invoice via Lightning or Base USDC.' },
+      { step: '04', title: 'Compute Execution', description: 'Server verifies payment proof and executes the compute work.' }
+    ],
+    supported_rails: ['lightning', 'usdc'],
+    supported_protocols: ['l402', 'x402'],
+    truth_level: 'SUPPORTED',
+    truth_badge_text: 'Supported by AIPP architecture',
+    evidence: 'Supported directly by AIPP 402 challenge header generation and preimage verification middleware.',
+    requirements: [
+      'Backend server or serverless function executing compute jobs',
+      'Known upfront price for the discrete compute action',
+      'AIPP API Key'
+    ],
+    limitations: [
+      'AIPP requires a known price before execution; it does NOT perform dynamic post-execution token metering or variable bill-back',
+      'Merchant defines the price and hosts the compute infrastructure',
+      'Not appropriate for continuous or unpredictable stream consumption'
+    ],
+    example_request: 'POST /api/compute-job HTTP/1.1\n\n{"action": "process_dataset"}',
+    example_response: 'HTTP/1.1 402 Payment Required\nWWW-Authenticate: L402 invoice="lnbc500u1..."',
+    example_code: `import { Aipp, l402Paywall } from 'aipp-sdk';
+
+// Require upfront payment before executing expensive compute
+app.post('/api/compute-job', l402Paywall({
+  client: aipp,
+  amountUsd: 0.10
+}), async (req, res) => {
+  const result = await executeExpensiveCompute(req.body);
+  res.json({ result });
+});`,
+    example_code_lang: 'typescript',
+    what_aipp_does: [
+      'Exposes a payment requirement before expensive execution starts',
+      'Verifies Lightning or Base USDC payment settlement proof',
+      'Allows the protected application to execute after successful verification',
+      'Auto-forwards net earnings to merchant wallet'
+    ],
+    what_aipp_does_not_do: [
+      'Does not provide LLMs, GPU hardware, proxies, or compute resources',
+      'Does not calculate underlying cloud costs or meter tokens after execution',
+      'Does not automatically determine what an action should cost (merchant defines price)',
+      'Does not perform dynamic post-execution variable bill-back'
+    ],
+    faq: [
+      {
+        question: 'How is this different from Get Paid Before Delivery?',
+        answer: 'Get Paid Before Delivery protects an existing file or asset. Get Paid Before Compute gates the resource invocation itself so providers do not fund execution costs upfront.'
+      },
+      {
+        question: 'Does AIPP track token usage during execution?',
+        answer: 'No. AIPP requires a known price set by the merchant before execution starts. It does not perform dynamic post-execution token metering.'
+      }
+    ],
+    seo_title: 'Get Paid Before Compute - Gate Expensive Work with AIPP',
+    seo_description: 'Require payment before triggering GPU models, AI tasks, scraping, or API calls with Lightning and Base USDC.',
+    related_scenarios: ['paid-ai-image-generation', 'paid-web-scraping', 'paid-transcription', 'paid-report-generation', 'paid-data-api', 'pay-per-api-call', 'get-paid-before-delivery']
+  }
+];
+
+export function getScenarioBySlug(slug: string): Scenario | undefined {
+  return SCENARIOS.find(s => s.slug === slug);
+}
+
+export function getScenariosByCategory(category: ScenarioCategory): Scenario[] {
+  return SCENARIOS.filter(s => s.category === category);
+}

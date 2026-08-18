@@ -1,0 +1,33 @@
+{
+  "name": "aipp-sdk",
+  "version": "1.1.0",
+  "description": "Official Node.js / TypeScript SDK for AIPP Smart Tag payments (L402 & x402)",
+  "main": "dist/index.js",
+  "module": "dist/index.mjs",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsup src/index.ts --format cjs,esm --dts",
+    "test": "vitest run"
+  },
+  "keywords": [
+    "aipp",
+    "bitcoin",
+    "lightning",
+    "payments",
+    "l402",
+    "x402",
+    "ai"
+  ],
+  "author": "AIPP",
+  "license": "MIT",
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "tsup": "^8.0.0",
+    "typescript": "^5.0.0",
+    "vitest": "^1.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/botofrk/satsgate.git"
+  }
+}

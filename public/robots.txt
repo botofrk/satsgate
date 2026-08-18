@@ -1,0 +1,6 @@
+# Allow all Web Crawlers and AI Agents (GPTBot, ClaudeBot, Gemini, Perplexity)
+User-agent: *
+Allow: /
+
+# LLM Documentation Standards
+Sitemap: https://aipp.dev/sitemap.xml

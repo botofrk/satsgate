@@ -1,0 +1,1887 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>AIPP — Smart Tags Studio Console</title>
+<link rel="icon" type="image/x-icon" href="favicon.ico">
+<link rel="icon" type="image/svg+xml" href="favicon.svg">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap');
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+  --bg: #faf8f5;
+  --sub-bg: #f3efea;
+  --card-bg: #ffffff;
+  --fg: #1a1918;
+  --fg-muted: #6b6964;
+  --fg-subtle: #999690;
+  --border: #e6e2dc;
+  --border-subtle: #eeeae4;
+  --brand: #ffc700;
+  --accent: #806300;
+  --accent-light: #fffbdf;
+  --accent-hover: #eab600;
+  --green: #15803d;
+  --green-bg: #ecfdf5;
+  --red: #b91c1c;
+  --red-bg: #fef2f2;
+  --gold: #d97706;
+  --gold-light: #fef3c7;
+  --radius-sm: 8px;
+  --radius-md: 14px;
+  --radius-lg: 20px;
+  --sidebar-w: 260px;
+  --shadow-subtle: 0 1px 3px rgba(26,25,24,0.03), 0 6px 20px rgba(26,25,24,0.03);
+  --shadow-card: 0 4px 20px rgba(26,25,24,0.06), 0 16px 40px rgba(26,25,24,0.06);
+}
+
+body {
+  background: var(--bg);
+  color: var(--fg);
+  font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  min-height: 100vh;
+}
+
+a { color: inherit; text-decoration: none; }
+button { font-family: inherit; }
+
+/* ── LOGIN SCREEN ── */
+.login-screen {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg);
+  padding: 24px;
+}
+.login-card {
+  width: 100%;
+  max-width: 440px;
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 48px 36px;
+  box-shadow: var(--shadow-card);
+  text-align: center;
+}
+.login-logo {
+  display: flex; align-items: center; justify-content: center;
+  gap: 10px; margin-bottom: 24px;
+  font-weight: 700; font-size: 18px;
+}
+.login-logo-icon {
+  width: 24px; height: 24px; display: block;
+}
+.login-card h1 {
+  font-family: 'Instrument Serif', Georgia, serif;
+  font-size: 32px; font-weight: 400; margin-bottom: 8px;
+  color: var(--fg);
+}
+.login-card p { color: var(--fg-muted); font-size: 14px; margin-bottom: 28px; line-height: 1.5; }
+.login-input {
+  width: 100%; padding: 14px 16px;
+  border: 1px solid var(--border); border-radius: 10px;
+  font-family: 'JetBrains Mono', monospace; font-size: 13px;
+  background: var(--bg); outline: none; margin-bottom: 14px;
+  transition: all 0.15s ease;
+  text-align: center;
+  color: var(--fg);
+}
+.login-input:focus {
+  background: #ffffff;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-light);
+}
+.login-btn {
+  width: 100%; padding: 14px;
+  background: var(--fg); color: #fff;
+  border: 1px solid var(--fg); border-radius: 10px;
+  font-size: 14px; font-weight: 600;
+  cursor: pointer; transition: all 0.2s ease;
+  margin-bottom: 12px;
+}
+.login-btn:hover { background: #33312e; transform: translateY(-1px); }
+
+.demo-btn {
+  width: 100%; padding: 12px;
+  background: var(--sub-bg); color: var(--fg);
+  border: 1px solid var(--border); border-radius: 10px;
+  font-size: 13px; font-weight: 600;
+  cursor: pointer; transition: all 0.15s ease;
+  display: flex; align-items: center; justify-content: center; gap: 6px;
+}
+.demo-btn:hover { background: #eeeae4; }
+
+.login-hint { margin-top: 20px; font-size: 13px; color: var(--fg-muted); }
+.login-hint a { color: var(--accent); font-weight: 700; cursor: pointer; text-decoration: underline; }
+.remember-row {
+  display: flex; align-items: center; justify-content: center;
+  gap: 8px; margin: -2px 0 14px; font-size: 13px; color: var(--fg-muted);
+}
+.remember-row input[type="checkbox"] {
+  width: 15px; height: 15px; accent-color: var(--accent); cursor: pointer;
+}
+.remember-row label { cursor: pointer; user-select: none; }
+
+/* ── APP SHELL ── */
+.app { display: none; min-height: 100vh; }
+.app.visible { display: flex; }
+
+/* ── SIDEBAR ── */
+.sidebar {
+  width: var(--sidebar-w);
+  background: #181716;
+  color: #fff;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  position: sticky;
+  top: 0;
+  border-right: 1px solid #292725;
+}
+.sidebar-logo {
+  display: flex; align-items: center; gap: 10px;
+  padding: 24px 20px;
+  border-bottom: 1px solid #292725;
+  font-weight: 700; font-size: 16px; color: #fff;
+}
+.sidebar-nav { padding: 16px 12px; flex: 1; overflow-y: auto; }
+.nav-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 14px; border-radius: 8px;
+  font-size: 13px; font-weight: 600; color: #a3a099;
+  cursor: pointer; transition: all 0.15s;
+  margin-bottom: 4px;
+}
+.nav-item:hover { background: #262422; color: #fff; }
+.nav-item.active { background: var(--brand); color: #0f0f11; }
+.sidebar-section-label {
+  font-size: 10px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 1px; color: #66635d; padding: 16px 14px 6px;
+}
+.sidebar-bottom {
+  padding: 16px 12px 20px;
+  border-top: 1px solid #292725;
+}
+.api-key-pill {
+  background: #242220; border: 1px solid #33302c; border-radius: 8px;
+  padding: 10px 12px; margin-bottom: 10px;
+  cursor: pointer; transition: all 0.15s;
+}
+.api-key-pill:hover { background: #2d2a27; }
+.api-key-pill .label { font-size: 10px; color: #82807a; font-weight: 700; text-transform: uppercase; margin-bottom: 2px; }
+.api-key-pill code {
+  font-family: 'JetBrains Mono', monospace; font-size: 11px;
+  color: #fbbf24; display: block;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.sign-out-btn {
+  width: 100%; padding: 8px 12px;
+  background: transparent; border: 1px solid #33302c;
+  border-radius: 8px; color: #82807a; font-size: 12px; font-weight: 600;
+  cursor: pointer; transition: all 0.15s; text-align: left;
+}
+.sign-out-btn:hover { color: #ffffff; border-color: #555; }
+
+/* ── MAIN CONTENT ── */
+.main {
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+}
+.topbar {
+  padding: 20px 36px;
+  border-bottom: 1px solid var(--border);
+  background: rgba(250, 248, 245, 0.9);
+  backdrop-filter: blur(12px);
+  display: flex; align-items: center; justify-content: space-between;
+  position: sticky; top: 0; z-index: 10;
+}
+.topbar-title {
+  font-family: 'Instrument Serif', Georgia, serif;
+  font-size: 24px; font-weight: 400;
+}
+.topbar-sub { font-size: 13px; color: var(--fg-muted); }
+.topbar-actions { display: flex; gap: 10px; align-items: center; }
+.btn-sm {
+  padding: 8px 16px; border-radius: 8px; font-size: 13px; font-weight: 600;
+  cursor: pointer; border: 1px solid var(--border); transition: all 0.15s;
+}
+.btn-sm-primary { background: var(--fg); color: #ffffff; border-color: var(--fg); }
+.btn-sm-primary:hover { background: #33312e; transform: translateY(-1px); }
+
+/* ── PAGES ── */
+.page { display: none; padding: 36px; flex: 1; }
+.page.active { display: block; }
+
+/* ── STATS GRID ── */
+.stats-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 20px;
+  margin-bottom: 32px;
+}
+.stat-card {
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 22px;
+  box-shadow: var(--shadow-subtle);
+}
+.stat-label { font-size: 12px; font-weight: 600; color: var(--fg-muted); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 6px; }
+.stat-value { font-size: 26px; font-weight: 800; color: var(--fg); letter-spacing: -0.02em; }
+.stat-sub { font-size: 12px; color: var(--green); font-weight: 600; margin-top: 4px; }
+
+/* ── TABLE CARD ── */
+.table-card {
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-subtle);
+  overflow: hidden;
+  margin-bottom: 32px;
+}
+.table-header {
+  padding: 20px 24px;
+  border-bottom: 1px solid var(--border-subtle);
+  display: flex; align-items: center; justify-content: space-between;
+}
+.table-header h3 {
+  font-family: 'Instrument Serif', Georgia, serif;
+  font-size: 20px; font-weight: 400;
+}
+table {
+  width: 100%; border-collapse: collapse; text-align: left; font-size: 13px;
+}
+th, td { padding: 14px 24px; border-bottom: 1px solid var(--border-subtle); }
+th { background: var(--sub-bg); font-size: 11px; font-weight: 700; text-transform: uppercase; color: var(--fg-muted); }
+.badge-status {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 3px 8px; border-radius: 4px; font-size: 11px; font-weight: 700;
+}
+.badge-settled { background: var(--green-bg); color: var(--green); }
+.badge-pending { background: var(--gold-light); color: var(--gold); }
+
+/* ── TAG MINTING FORM IN DASHBOARD ── */
+.form-card {
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 28px;
+  box-shadow: var(--shadow-subtle);
+  margin-bottom: 32px;
+}
+.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px; }
+.field-label { display: block; font-size: 12px; font-weight: 600; color: var(--fg-muted); margin-bottom: 6px; }
+.field-input {
+  width: 100%; padding: 12px 14px;
+  background: var(--bg); border: 1px solid var(--border);
+  border-radius: 8px; font-size: 13px; color: var(--fg); outline: none;
+}
+.field-input:focus { background: #fff; border-color: var(--accent); }
+
+/* ── MOBILE BOTTOM TAB BAR ── */
+.mobile-tab-bar {
+  display: none;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 62px;
+  background: rgba(255, 255, 255, 0.96);
+  backdrop-filter: blur(12px);
+  border-top: 1px solid var(--border);
+  z-index: 999;
+  justify-content: space-around;
+  align-items: center;
+  padding: 0 4px;
+  box-shadow: 0 -4px 16px rgba(26,25,24,0.06);
+}
+.mobile-tab-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--fg-muted);
+  cursor: pointer;
+  padding: 6px 10px;
+  border-radius: 8px;
+  transition: all 0.15s ease;
+  text-decoration: none;
+}
+.mobile-tab-item svg {
+  width: 18px;
+  height: 18px;
+  stroke: currentColor;
+}
+.mobile-tab-item.active {
+  color: var(--accent);
+  font-weight: 700;
+}
+
+@media(max-width: 800px) {
+  body { overflow-x: hidden; }
+  .sidebar { display: none; }
+  .mobile-tab-bar { display: flex; }
+  .form-grid { grid-template-columns: 1fr; gap: 14px; }
+  .page { padding: 16px 14px 80px; }
+  .topbar { padding: 14px 16px; flex-wrap: wrap; gap: 10px; }
+  .topbar-title { font-size: 20px; }
+  .topbar-actions { gap: 6px; width: 100%; justify-content: flex-start; }
+  .btn-sm { padding: 6px 12px; font-size: 11.5px; }
+  .stats-row { grid-template-columns: 1fr; gap: 14px; margin-bottom: 20px; }
+  .stat-card { padding: 18px 16px; }
+  .stat-value { font-size: 22px; }
+  .table-card { overflow-x: auto; -webkit-overflow-scrolling: touch; border-radius: 12px; }
+  table { min-width: 480px; }
+  th, td { padding: 12px 14px; font-size: 12px; }
+  .login-card { padding: 24px 18px; margin: 16px; max-width: 360px; }
+  .login-input { font-size: 16px; }
+}
+</style>
+</head>
+<body>
+
+<!-- ── LOGIN SCREEN ── -->
+<div class="login-screen" id="login-screen">
+  <div class="login-card" style="text-align:center;">
+    <div class="login-logo" style="justify-content:center; align-items:center; gap:8px; margin-bottom:16px;">
+      <svg class="login-logo-icon" width="32" height="32" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg" style="vertical-align:middle;"><circle cx="20" cy="20" r="14" stroke="#0F0F11" stroke-width="3.8" stroke-dasharray="67 21" stroke-linecap="round" transform="rotate(-65 20 20)"/><g transform="rotate(-38 20 20)"><path d="M 15 13.5 L 20 7.5 L 25 13.5 L 25 27 C 25 29 23.5 30.5 21.5 30.5 L 18.5 30.5 C 16.5 30.5 15 29 15 27 Z" fill="#F59E0B"/><circle cx="20" cy="13" r="2.2" fill="#FAF9F6"/></g></svg>
+      <span style="font-weight:800; font-size:22px; letter-spacing:-0.5px;">ai<span style="color:#f59e0b;">pp</span> <span style="font-weight:400; opacity:0.6; font-size:16px;">studio</span></span>
+    </div>
+
+    <h1 style="font-size:22px; margin-bottom:8px;">Studio Console Access</h1>
+    <p style="font-size:13px; color:var(--fg-muted); margin-bottom:24px; line-height:1.5;">
+      Sign in securely using fingerprint, face recognition, or device PIN. Zero keys to remember.
+    </p>
+
+    <button class="login-btn" id="passkey-login-btn" onclick="loginWithPasskey()" style="width:100%; padding:14px; background:#000; color:#fff; font-size:15px; font-weight:700; border-radius:10px; border:none; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px;">
+      <span>🔑 Passkey ile devam et</span>
+    </button>
+
+    <div style="margin-top:20px; font-size:12.5px; color:var(--fg-muted);">
+      New merchant? <a onclick="openPasskeyRegisterModal()" style="color:#2563eb; font-weight:600; cursor:pointer;">Register with Passkey →</a>
+    </div>
+    <div style="margin-top:10px; font-size:11.5px; color:var(--fg-muted);">
+      Existing merchant with API Key? <a onclick="openPasskeyMigrateModal()" style="color:var(--fg); font-weight:500; cursor:pointer; text-decoration:underline;">Migrate to Passkey</a>
+    </div>
+  </div>
+</div>
+
+<!-- ── RECOVERY MODAL OVERLAY ── -->
+<div id="recovery-modal" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,0.6); backdrop-filter:blur(6px); z-index:9999; align-items:center; justify-content:center;">
+  <div style="background:#ffffff; width:90%; max-width:480px; border-radius:16px; padding:32px; box-shadow:0 24px 48px rgba(0,0,0,0.2); border:1px solid #e2e8f0; position:relative; font-family:'Inter', sans-serif;">
+    <button onclick="closeRecoveryModal()" style="position:absolute; top:20px; right:20px; border:none; background:none; font-size:20px; cursor:pointer; color:#64748b;">✕</button>
+    <div style="text-align:center; margin-bottom:24px;">
+      <div style="width:48px; height:48px; background:#eff6ff; color:#2563eb; border-radius:12px; display:inline-flex; align-items:center; justify-content:center; font-size:24px; margin-bottom:12px;">🔐</div>
+      <h3 style="font-size:20px; font-weight:700; color:#0f172a; margin:0 0 6px 0;">Cryptographic Key Recovery</h3>
+      <p style="font-size:13px; color:#64748b; margin:0;">Automated wallet settlement verification & instant key rotation</p>
+    </div>
+
+    <div id="recovery-step-1">
+      <label style="font-size:12px; font-weight:600; color:#475569; display:block; margin-bottom:6px;">Registered Wallet Address</label>
+      <input type="text" id="rec-address-input" placeholder="you@wallet.com or 0x..." style="width:100%; padding:12px; border-radius:8px; border:1px solid #cbd5e1; font-size:14px; margin-bottom:16px; outline:none; box-sizing:border-box;">
+      <button onclick="submitRecoveryRequest()" id="rec-btn-step1" style="width:100%; padding:12px; background:#0f172a; color:#fff; border:none; border-radius:8px; font-size:14px; font-weight:600; cursor:pointer;">Generate Challenge →</button>
+    </div>
+
+    <div id="recovery-step-2" style="display:none;">
+      <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:14px; margin-bottom:16px; font-size:12px; color:#334155;">
+        <div style="font-weight:700; color:#0f172a; margin-bottom:4px;">Cryptographic Challenge Issued</div>
+        <div id="rec-challenge-info" style="font-family:monospace; word-break:break-all; font-size:11px; color:#475569; max-height:100px; overflow-y:auto; background:#ffffff; padding:8px; border-radius:6px; border:1px solid #cbd5e1; user-select:all;"></div>
+      </div>
+
+      <div id="rec-evm-actions" style="display:none; margin-bottom:16px;">
+        <button onclick="signWithMetaMask()" style="width:100%; padding:12px; background:#2563eb; color:#fff; border:none; border-radius:8px; font-size:14px; font-weight:600; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px;">
+          <span>🦊 Sign 1-Click with MetaMask / Web3</span>
+        </button>
+      </div>
+
+      <div id="rec-ln-actions" style="display:none; margin-bottom:16px;">
+        <button onclick="signWithWebLN()" style="width:100%; padding:12px; background:#f59e0b; color:#fff; border:none; border-radius:8px; font-size:14px; font-weight:600; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px;">
+          <span>⚡ Sign 1-Click with WebLN / Alby</span>
+        </button>
+      </div>
+
+      <div id="rec-manual-sig">
+        <label style="font-size:12px; font-weight:600; color:#475569; display:block; margin-bottom:6px;">Paste Wallet Signature</label>
+        <textarea id="rec-sig-input" rows="3" placeholder="Paste signature (0x...)" style="width:100%; padding:10px; border-radius:8px; border:1px solid #cbd5e1; font-size:12px; font-family:monospace; margin-bottom:16px; box-sizing:border-box;"></textarea>
+      </div>
+
+      <button onclick="verifyAndRotateKey()" id="rec-btn-step2" style="width:100%; padding:12px; background:#10b981; color:#fff; border:none; border-radius:8px; font-size:14px; font-weight:600; cursor:pointer;">Verify & Rotate Key ✨</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── PASSKEY REGISTER MODAL ── -->
+<div id="passkey-register-modal" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,0.6); backdrop-filter:blur(6px); z-index:9999; align-items:center; justify-content:center;">
+  <div style="background:#ffffff; width:90%; max-width:440px; border-radius:16px; padding:32px; box-shadow:0 24px 48px rgba(0,0,0,0.2); border:1px solid #e2e8f0; position:relative; font-family:'Inter', sans-serif;">
+    <button onclick="closePasskeyRegisterModal()" style="position:absolute; top:20px; right:20px; border:none; background:none; font-size:20px; cursor:pointer; color:#64748b;">✕</button>
+    <div style="text-align:center; margin-bottom:20px;">
+      <div style="width:48px; height:48px; background:#eff6ff; color:#2563eb; border-radius:12px; display:inline-flex; align-items:center; justify-content:center; font-size:24px; margin-bottom:12px;">🔑</div>
+      <h3 style="font-size:20px; font-weight:700; color:#0f172a; margin:0 0 6px 0;">New Merchant Onboarding</h3>
+      <p style="font-size:13px; color:#64748b; margin:0;">Create your Passkey for zero-key biometric access</p>
+    </div>
+
+    <label style="font-size:12px; font-weight:600; color:#475569; display:block; margin-bottom:6px;">Lightning or Base USDC Address</label>
+    <input type="text" id="reg-wallet-input" placeholder="you@walletofsatoshi.com or 0x..." style="width:100%; padding:12px; border-radius:8px; border:1px solid #cbd5e1; font-size:14px; margin-bottom:16px; outline:none; box-sizing:border-box;">
+
+    <button onclick="submitPasskeyRegistration()" id="reg-submit-btn" style="width:100%; padding:14px; background:#000; color:#fff; border:none; border-radius:8px; font-size:14px; font-weight:600; cursor:pointer;">🔑 Register & Create Passkey</button>
+
+    <div id="reg-api-key-box" style="display:none; margin-top:20px; background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:16px; text-align:left;">
+      <div style="font-weight:700; font-size:13px; color:#0f172a; margin-bottom:4px;">Merchant API Key (Programmatic Entegrasyon)</div>
+      <div style="font-size:11px; color:#64748b; margin-bottom:10px;">Sayfa girişiniz Passkey ile açılır. Bu API anahtarını yalnızca SDK ve Agent entegrasyonlarınız için saklayın:</div>
+      <div id="reg-api-key-text" style="font-family:monospace; background:#fff; padding:10px; border-radius:6px; border:1px solid #cbd5e1; font-size:12px; word-break:break-all; user-select:all; font-weight:700; color:#2563eb;"></div>
+      <button onclick="finishPasskeyRegistration()" style="width:100%; margin-top:12px; padding:10px; background:#10b981; color:#fff; border:none; border-radius:6px; font-size:13px; font-weight:600; cursor:pointer;">Oturumu Aç & Konsola Git →</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── PASSKEY MIGRATE MODAL ── -->
+<div id="passkey-migrate-modal" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,0.6); backdrop-filter:blur(6px); z-index:9999; align-items:center; justify-content:center;">
+  <div style="background:#ffffff; width:90%; max-width:440px; border-radius:16px; padding:32px; box-shadow:0 24px 48px rgba(0,0,0,0.2); border:1px solid #e2e8f0; position:relative; font-family:'Inter', sans-serif;">
+    <button onclick="closePasskeyMigrateModal()" style="position:absolute; top:20px; right:20px; border:none; background:none; font-size:20px; cursor:pointer; color:#64748b;">✕</button>
+    <div style="text-align:center; margin-bottom:20px;">
+      <div style="width:48px; height:48px; background:#fef3c7; color:#d97706; border-radius:12px; display:inline-flex; align-items:center; justify-content:center; font-size:24px; margin-bottom:12px;">🛡️</div>
+      <h3 style="font-size:20px; font-weight:700; color:#0f172a; margin:0 0 6px 0;">Existing Merchant Passkey Migration</h3>
+      <p style="font-size:13px; color:#64748b; margin:0;">Verify your API key once to generate your Passkey</p>
+    </div>
+
+    <label style="font-size:12px; font-weight:600; color:#475569; display:block; margin-bottom:6px;">Your Merchant API Key</label>
+    <input type="text" id="mig-key-input" placeholder="aipp_merch_..." style="width:100%; padding:12px; border-radius:8px; border:1px solid #cbd5e1; font-size:13px; font-family:monospace; margin-bottom:16px; outline:none; box-sizing:border-box;">
+
+    <button onclick="submitPasskeyMigration()" id="mig-submit-btn" style="width:100%; padding:14px; background:#0f172a; color:#fff; border:none; border-radius:8px; font-size:14px; font-weight:600; cursor:pointer;">🔑 Verify & Create Passkey</button>
+  </div>
+</div>
+
+<!-- ── APP SHELL ── -->
+<div class="app" id="app">
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <img src="/assets/aipp-mark-dark.svg" width="26" height="26" alt="AIPP">
+      <span style="font-family:'Plus Jakarta Sans',sans-serif; font-weight:800; font-size:19px; letter-spacing:-0.5px; color:#ffffff;">ai<span style="color:#f59e0b;">pp</span> <span style="font-weight:400; opacity:0.6; font-size:14px;">studio</span></span>
+    </div>
+
+    <div class="sidebar-nav">
+      <div class="sidebar-section-label">Management</div>
+      <div class="nav-item active" id="nav-overview" onclick="showPage('overview')">Overview</div>
+      <div class="nav-item" id="nav-links" onclick="showPage('links')">Smart Tags (Links)</div>
+      <div class="nav-item" id="nav-transactions" onclick="showPage('transactions')">Transactions</div>
+
+      <div class="sidebar-section-label">Account</div>
+      <div class="nav-item" id="nav-settings" onclick="showPage('settings')">Wallet Settings</div>
+
+      <div class="sidebar-section-label">Developer</div>
+      <div class="nav-item" id="nav-integrate" onclick="showPage('integrate')">SDK & API Keys</div>
+    </div>
+
+    <div class="sidebar-bottom">
+      <button class="sign-out-btn" onclick="logout()">← Sign Out</button>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <main class="main">
+    <div class="topbar">
+      <div>
+        <div class="topbar-title" id="topbar-title">Overview</div>
+        <div class="topbar-sub" id="topbar-sub">Monetization and settlement metrics</div>
+      </div>
+      <div class="topbar-actions">
+        <select id="time-range-select" onchange="setGlobalRange(this.value)" style="padding: 6px 12px; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; border: 1px solid var(--border); background: var(--card-bg); margin-right: 10px;">
+          <option value="1">Today</option>
+          <option value="7">Last 7 Days</option>
+          <option value="30" selected>Last 30 Days</option>
+          <option value="all">All Time</option>
+        </select>
+        <span id="last-updated-text" style="font-size: 11px; color: var(--fg-muted); margin-right: 12px; min-width: 100px; text-align: right;">Updated just now</span>
+        <button class="btn-sm btn-sm-primary" onclick="showPage('links')">+ Create Smart Tag</button>
+        <button class="btn-sm" onclick="logout()" style="background:#fef2f2; color:#dc2626; border-color:#fecaca; font-weight:700; margin-left:6px;">← Sign Out</button>
+      </div>
+    </div>
+
+    <!-- ── OVERVIEW PAGE ── -->
+    <div class="page active" id="page-overview">
+      <div class="stats-row">
+        <div class="stat-card">
+          <div class="stat-label" style="display:flex; justify-content:space-between;">
+            <span>Gross Volume</span>
+            <span id="wallet-status-ln" style="font-size:10px; font-weight:700; color:var(--fg-muted); background:var(--sub-bg); padding:2px 6px; border-radius:4px;">LN: Not Configured</span>
+          </div>
+          <div class="stat-value" id="volume-ln-sats">0 sats</div>
+          <div class="stat-sub" style="color:var(--fg-muted); font-size:13px; font-weight:500; margin-top:8px;">
+            <div id="volume-base-usd" style="color:#2563eb; font-weight:700; margin-bottom:4px;">$0.00 USDC</div>
+            <div style="font-size:11px; color:var(--fg-muted); display:flex; justify-content:space-between;">
+              <span>Base Wallet</span>
+              <span id="wallet-status-base" style="font-weight:700; background:var(--sub-bg); padding:1px 4px; border-radius:3px;">Not Configured</span>
+            </div>
+          </div>
+        </div>
+        
+        <div class="stat-card">
+          <div class="stat-label">AIPP Fees</div>
+          <div class="stat-value" id="volume-commission" style="color:var(--accent);">0 sats</div>
+          <div class="stat-sub" style="color:var(--fg-muted); margin-top:8px; line-height:1.4;">
+            <span style="font-size:11px;">Lightning: 1% + 5 sats per successful payment</span>
+          </div>
+        </div>
+        
+        <div class="stat-card" style="display:flex; flex-direction:column; justify-content:space-between;">
+          <div>
+            <div class="stat-label">Automatic Payout</div>
+            <div class="stat-value" id="volume-available">0 sats</div>
+          </div>
+          <div style="margin-top:12px;">
+            <div style="font-size:11px; color:var(--fg-muted); margin-bottom:12px; line-height:1.6;">
+              <div style="display:flex; justify-content:space-between; margin-bottom:4px;">
+                <span id="payout-mode-text" style="font-weight:700;">Manual Settlement</span>
+                <span id="threshold-progress-text" style="font-weight:700;">0 / 50 sats</span>
+              </div>
+              <div id="threshold-progress-container" style="height:4px; background:var(--sub-bg); border-radius:2px; overflow:hidden; margin-bottom:8px; display:none;">
+                <div id="threshold-progress-bar" style="height:100%; width:0%; background:var(--accent); transition:width 0.3s;"></div>
+              </div>
+              <div style="display:flex; justify-content:space-between;">
+                <span>Total Net Earnings:</span>
+                <span id="volume-net" style="font-weight:600; color:var(--fg);">0 sats</span>
+              </div>
+              <div style="display:flex; justify-content:space-between;">
+                <span>Already Sent:</span>
+                <span id="volume-sent" style="font-weight:600; color:var(--fg);">0 sats</span>
+              </div>
+              <div style="display:flex; justify-content:space-between;">
+                <span>Last Sent:</span>
+                <span id="last-sent-text" style="font-weight:600; color:var(--fg);">Not yet</span>
+              </div>
+            </div>
+            
+            <button id="withdraw-btn" onclick="triggerWithdraw(this)" style="display:none; margin-top:8px; width:100%; padding:8px; background:var(--fg); color:#fff; border:none; border-radius:6px; font-weight:600; cursor:pointer;">Send to Wallet</button>
+          </div>
+        </div>
+        
+        <div class="stat-card">
+          <div class="stat-label">Transactions</div>
+          <div class="stat-value" id="tx-count">0</div>
+          <div class="stat-sub" style="margin-top:8px; display:flex; gap:10px; flex-wrap:wrap;">
+            <span style="color:var(--green); font-size:11px;"><span id="tx-successful">0</span> Successful</span>
+            <span style="color:var(--gold); font-size:11px;"><span id="tx-pending">0</span> Pending</span>
+            <span style="color:var(--red); font-size:11px;"><span id="tx-failed">0</span> Failed/Expired</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="table-card">
+        <div class="table-header">
+          <h3>Volume Activity</h3>
+        </div>
+        <div style="height: 220px; padding: 20px;">
+          <canvas id="usageChart"></canvas>
+        </div>
+      </div>
+      
+      <div class="table-card" id="dashboard-tx-table">
+        <div class="table-header">
+          <h3>Recent Transactions</h3>
+          <button class="btn-sm" onclick="showPage('transactions')">View All</button>
+        </div>
+        <div style="overflow-x:auto;">
+          <table>
+            <thead>
+              <tr>
+                <th>Time</th>
+                <th>Hash / ID</th>
+                <th>Network</th>
+                <th>Gross</th>
+                <th>Fee</th>
+                <th>Net</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody id="dashboard-tx-body">
+              <tr><td colspan="7" style="text-align:center; color:var(--fg-muted);">Loading transactions...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── SMART TAGS (LINKS) PAGE ── -->
+    <div class="page" id="page-links">
+      <div class="form-card">
+        <h3 style="font-family:'Instrument Serif', Georgia, serif; font-size:22px; margin-bottom:6px;">Create an Open Tag</h3>
+        <p style="color:var(--fg-muted);font-size:13px;margin:0 0 16px;">One URL becomes a checkout for people and a machine-readable capability for agents.</p>
+        <div class="form-grid">
+          <div>
+            <label class="field-label">Asset / Product Title</label>
+            <input type="text" class="field-input" id="link-title" placeholder="e.g. Exclusive LLM Masterclass">
+          </div>
+          <div>
+            <label class="field-label">Price (USD)</label>
+            <input type="number" class="field-input" id="link-amount" placeholder="0.25" value="0.25" step="0.05" min="0.01">
+          </div>
+        </div>
+
+        <!-- Payout wallet info from merchant account -->
+        <div style="background:var(--sub-bg); border:1px solid var(--border); border-radius:10px; padding:14px 16px; margin-bottom:20px; font-size:13px; color:var(--fg-muted);">
+          <div style="font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.05em; margin-bottom:8px; color:var(--fg-muted);">Payout Wallets <span style="font-weight:500; text-transform:none; letter-spacing:0;">— from your merchant account</span></div>
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+            <div>
+              <div style="font-size:11px; font-weight:700; color:var(--fg); margin-bottom:3px;">⚡ Lightning Address</div>
+              <div id="merchant-ln-display" style="font-family:'JetBrains Mono',monospace; font-size:12px; color:var(--accent);">—</div>
+            </div>
+            <div>
+              <div style="font-size:11px; font-weight:700; color:var(--fg); margin-bottom:3px;">🔵 Base USDC Wallet</div>
+              <div id="merchant-usdc-display" style="font-family:'JetBrains Mono',monospace; font-size:12px; color:#3b82f6;">—</div>
+            </div>
+          </div>
+          <div style="margin-top:10px; font-size:11px; border-top:1px solid var(--border-subtle); padding-top:8px;">
+            To update wallets: <a onclick="showPage('settings')" style="color:var(--accent); font-weight:700; cursor:pointer;">Account Settings →</a>
+          </div>
+        </div>
+
+        <div style="margin-bottom: 20px;">
+          <label class="field-label" style="display:flex; justify-content:space-between;">
+            <span>Fulfillment Redirect URL (Optional)</span>
+            <span style="color:var(--fg-muted); font-weight:500;">Leave blank for on-screen receipt</span>
+          </label>
+          <input type="url" class="field-input" id="link-redirect" placeholder="Optional: https://... (link to unlock after payment)">
+        </div>
+        <button class="btn-sm btn-sm-primary" onclick="createPaymentLink(this)">Create Tag URL →</button>
+      </div>
+
+      <div class="table-card">
+        <div class="table-header">
+          <h3>Active Smart Tags</h3>
+        </div>
+        <table>
+          <thead>
+            <tr>
+              <th>Title</th>
+              <th>Price</th>
+              <th>Public URL</th>
+              <th style="text-align:right;">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="links-body">
+            <tr><td colspan="4" style="text-align:center; color:var(--fg-muted);">Loading active tags...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ── TRANSACTIONS PAGE ── -->
+    <div class="page" id="page-transactions">
+      <div class="table-card">
+        <div class="table-header">
+          <h3>Transactions</h3>
+          <button class="btn-sm" onclick="loadLedger()">Refresh</button>
+        </div>
+        <table>
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Hash / ID</th>
+              <th>Network</th>
+              <th>Gross</th>
+              <th>Fee</th>
+              <th>Net</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody id="ledger-body">
+            <tr><td colspan="4" style="text-align:center; color:var(--fg-muted);">No settlements yet.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ── INTEGRATE & API KEYS PAGE ── -->
+    <div class="page" id="page-integrate">
+      <div class="form-card" style="margin-bottom:24px;">
+        <h3 style="font-family:'Instrument Serif', Georgia, serif; font-size:22px; margin-bottom:12px;">Merchant API Key</h3>
+        <p style="color:var(--fg-muted); font-size:14px; margin-bottom:20px;">Your private API key is required to authenticate requests to the AIPP API and SDK. Keep it secret.</p>
+        
+        <div style="background:var(--sub-bg); padding:16px; border-radius:10px; border:1px solid var(--border); display:flex; align-items:center; justify-content:space-between;">
+          <div style="font-family:'JetBrains Mono',monospace; font-weight:600; font-size:14px; letter-spacing:1px;" id="api-key-hidden-display">
+            aipp_merch_••••••••••••••••
+          </div>
+          <button class="btn-sm btn-sm-primary" onclick="copyFullKey(this)" style="display:inline-flex; align-items:center; gap:7px; font-weight:600; cursor:pointer;">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+            <span>Copy Key</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="form-card">
+        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:12px;">
+          <h3 style="font-family:'Instrument Serif', Georgia, serif; font-size:22px; margin:0;">SDK Integration</h3>
+          <button class="btn-sm btn-sm-primary" onclick="copySdkSnippet(this)" style="display:inline-flex; align-items:center; gap:7px; font-weight:600; cursor:pointer;">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+            <span>Kopyala</span>
+          </button>
+        </div>
+        <p style="color:var(--fg-muted); font-size:14px; margin-bottom:20px;">Integrate Smart Price Tags directly inside your Express, Fastify, Next.js, or Python applications.</p>
+        <pre id="sdk-code-snippet" style="background:#181716; color:#e6e2dc; padding:20px; border-radius:10px; font-family:'JetBrains Mono',monospace; font-size:13px; line-height:1.6; overflow-x:auto;">
+npm install aipp-sdk
+
+import { Aipp } from 'aipp-sdk';
+
+const aipp = new Aipp({ apiKey: process.env.AIPP_API_KEY });
+const tag = await aipp.createTag({
+  title: "LLM Workflow PDF",
+  price: 0.25
+});
+
+console.log(tag.url);</pre>
+      </div>
+    </div>
+
+    <!-- ── SETTINGS PAGE ── -->
+    <div class="page" id="page-settings">
+      <div class="form-card" style="max-width:600px;">
+        <h3 style="font-family:'Instrument Serif', Georgia, serif; font-size:22px; margin-bottom:6px;">Payout Wallet Settings</h3>
+        <p style="color:var(--fg-muted); font-size:14px; margin-bottom:28px;">Configure where payments are sent. Buyers see the rails you've enabled at checkout.</p>
+
+        <!-- Lightning -->
+        <div style="border:1px solid var(--border); border-radius:12px; padding:22px; margin-bottom:18px; background:var(--card-bg);">
+          <div style="display:flex; align-items:center; gap:10px; margin-bottom:16px;">
+            <div style="width:32px; height:32px; background:#fef3c7; border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:16px;">⚡</div>
+            <div>
+              <div style="font-weight:700; font-size:14px;">Bitcoin Lightning</div>
+              <div style="font-size:12px; color:var(--fg-muted);">Instant sats, any Lightning Address</div>
+            </div>
+            <span id="ln-status-badge" style="margin-left:auto; font-size:11px; font-weight:700; padding:3px 10px; border-radius:20px; background:var(--green-bg); color:var(--green);">Active</span>
+          </div>
+          <label class="field-label">Lightning Address</label>
+          <input type="text" class="field-input" id="settings-ln" placeholder="you@walletofsatoshi.com" style="margin-bottom:12px;">
+          <div style="font-size:11px; color:var(--fg-muted);">Wallet of Satoshi, Alby, Blink, Strike, Phoenix, Zeus, Cash App, or any Lightning Address.</div>
+        </div>
+
+        <!-- Base USDC -->
+        <div style="border:1px solid var(--border); border-radius:12px; padding:22px; margin-bottom:24px; background:var(--card-bg);">
+          <div style="display:flex; align-items:center; gap:10px; margin-bottom:16px;">
+            <div style="width:32px; height:32px; background:#eff6ff; border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:16px;">🔵</div>
+            <div>
+              <div style="font-weight:700; font-size:14px;">Base Network (USDC)</div>
+              <div style="font-size:12px; color:var(--fg-muted);">Stablecoin, no volatility — great for larger amounts</div>
+            </div>
+            <span id="usdc-status-badge" style="margin-left:auto; font-size:11px; font-weight:700; padding:3px 10px; border-radius:20px; background:var(--sub-bg); color:var(--fg-muted);">Not Set</span>
+          </div>
+          <label class="field-label">Base Wallet Address (0x...)</label>
+          <input type="text" class="field-input" id="settings-usdc" placeholder="0x00b18f645a3e40802809ff59cb9AAB2225703eeE" style="margin-bottom:6px; font-family:'JetBrains Mono',monospace; font-size:12px;">
+          <div style="font-size:11px; color:var(--fg-muted);">Any EVM address: MetaMask, Coinbase Wallet, Rainbow, Ledger, etc. You don't need gas to receive.</div>
+        </div>
+
+        <div style="display:flex; gap:10px; align-items:center;">
+          <button class="btn-sm btn-sm-primary" style="padding:12px 24px; font-size:14px;" onclick="saveWalletSettings(this)">Save Wallet Settings →</button>
+          <span id="settings-save-msg" style="font-size:13px; color:var(--green); font-weight:600; display:none;">✓ Saved!</span>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- MOBILE BOTTOM TAB BAR -->
+  <nav class="mobile-tab-bar">
+    <a class="mobile-tab-item active" id="mobile-nav-overview" onclick="showPage('overview')">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
+      <span>Overview</span>
+    </a>
+    <a class="mobile-tab-item" id="mobile-nav-links" onclick="showPage('links')">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"></path><line x1="7" y1="7" x2="7.01" y2="7"></line></svg>
+      <span>Tags</span>
+    </a>
+    <a class="mobile-tab-item" id="mobile-nav-transactions" onclick="showPage('transactions')">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
+      <span>Ledger</span>
+    </a>
+    <a class="mobile-tab-item" id="mobile-nav-settings" onclick="showPage('settings')">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+      <span>Wallets</span>
+    </a>
+  </nav>
+</div>
+
+<script>
+const AIPP_API = window.location.origin;
+let activeKey = '';
+let usageChart = null;
+let merchantLnAddress = '';  
+let merchantUsdcAddress = ''; 
+let merchantPayoutMode = 'manual';
+let merchantThreshold = 50;
+let currentRange = '30';
+let refreshInterval = null;
+
+function escapeHtml(value) {
+  return String(value ?? '').replace(/[&<>'"]/g, ch => ({
+    '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;'
+  })[ch]);
+}
+
+// Auto-refresh logic
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible') {
+    startAutoRefresh();
+    loadStats(); loadLedger();
+  } else {
+    stopAutoRefresh();
+  }
+});
+
+function startAutoRefresh() {
+  stopAutoRefresh();
+  refreshInterval = setInterval(() => {
+    if (document.visibilityState === 'visible' && activeKey) {
+      Promise.all([loadStats(true), loadLedger(true)]).catch(()=>{});
+    }
+  }, 10000);
+}
+
+function stopAutoRefresh() {
+  if (refreshInterval) clearInterval(refreshInterval);
+}
+
+function setGlobalRange(val) {
+  currentRange = val;
+  loadStats();
+  loadLedger();
+}
+
+function updateLastUpdated() {
+  const d = new Date();
+  document.getElementById('last-updated-text').textContent = 'Updated ' + d.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit', second:'2-digit'});
+}
+
+
+
+window.onload = () => {
+  // Check localStorage first (remember me), then fallback to sessionStorage
+  const saved = localStorage.getItem('aipp_api_key') || sessionStorage.getItem('aipp_api_key');
+  if (saved) {
+    activeKey = saved;
+    showApp();
+  }
+};
+
+let currentRecoveryChallenge = null;
+
+function openRecoveryModal() {
+  currentRecoveryChallenge = null;
+  document.getElementById('rec-address-input').value = '';
+  document.getElementById('rec-sig-input').value = '';
+  document.getElementById('recovery-step-1').style.display = 'block';
+  document.getElementById('recovery-step-2').style.display = 'none';
+  document.getElementById('recovery-modal').style.display = 'flex';
+}
+
+function closeRecoveryModal() {
+  document.getElementById('recovery-modal').style.display = 'none';
+}
+
+async function submitRecoveryRequest() {
+  const addr = document.getElementById('rec-address-input').value.trim();
+  if (!addr) {
+    alert('Please enter a valid wallet address or Lightning address.');
+    return;
+  }
+  const btn = document.getElementById('rec-btn-step1');
+  btn.disabled = true;
+  btn.innerText = 'Generating Challenge...';
+
+  try {
+    const r1 = await fetch(`${AIPP_API}/merchant/recovery/challenge`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ address: addr })
+    });
+    const d1 = await r1.json();
+    if (!r1.ok || !d1.challenge_id) {
+      alert(d1.error || 'If this address is registered, a challenge was generated. Check wallet.');
+      btn.disabled = false;
+      btn.innerText = 'Generate Challenge →';
+      return;
+    }
+
+    currentRecoveryChallenge = d1;
+    document.getElementById('rec-challenge-info').innerText = d1.message_to_sign;
+    
+    if (d1.address_type === 'evm') {
+      document.getElementById('rec-evm-actions').style.display = 'block';
+      document.getElementById('rec-ln-actions').style.display = 'none';
+    } else {
+      document.getElementById('rec-evm-actions').style.display = 'none';
+      document.getElementById('rec-ln-actions').style.display = 'block';
+    }
+
+    document.getElementById('recovery-step-1').style.display = 'none';
+    document.getElementById('recovery-step-2').style.display = 'block';
+  } catch(e) {
+    alert(e.message || 'Challenge request failed.');
+  } finally {
+    btn.disabled = false;
+    btn.innerText = 'Generate Challenge →';
+  }
+}
+
+async function signWithWebLN() {
+  if (!window.webln || !currentRecoveryChallenge) {
+    alert('WebLN / Alby extension not detected in browser. Please paste your signature manually below.');
+    return;
+  }
+  try {
+    await window.webln.enable();
+    const res = await window.webln.signMessage(currentRecoveryChallenge.nonce);
+    document.getElementById('rec-sig-input').value = res.signature;
+  } catch(e) {
+    alert('WebLN signature cancelled or failed.');
+  }
+}
+
+async function signWithMetaMask() {
+  if (!window.ethereum || !currentRecoveryChallenge) {
+    alert('MetaMask or Web3 wallet extension not detected in browser. Please paste signature manually below.');
+    return;
+  }
+  try {
+    const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+    const sig = await window.ethereum.request({
+      method: 'personal_sign',
+      params: [currentRecoveryChallenge.message_to_sign, accounts[0]]
+    });
+    document.getElementById('rec-sig-input').value = sig;
+  } catch(e) {
+    alert('Signature cancelled or failed.');
+  }
+}
+
+async function verifyAndRotateKey() {
+  const sig = document.getElementById('rec-sig-input').value.trim();
+  if (!sig) {
+    alert('Please enter or generate a wallet signature.');
+    return;
+  }
+  const btn = document.getElementById('rec-btn-step2');
+  btn.disabled = true;
+  btn.innerText = 'Verifying & Rotating...';
+
+  try {
+    const r2 = await fetch(`${AIPP_API}/merchant/recovery/verify`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ challenge_id: currentRecoveryChallenge.challenge_id, signature: sig })
+    });
+    const d2 = await r2.json();
+    if (r2.ok && d2.new_api_key) {
+      closeRecoveryModal();
+      document.getElementById('login-input').value = d2.new_api_key;
+      document.getElementById('remember-me').checked = true;
+      alert(`\u2705 Key Rotated Successfully!\n\nYour old key has been permanently revoked.\nYour NEW merchant key has been auto-filled into login field. Click "Enter Studio Console" to sign in.`);
+    } else {
+      alert(d2.error || 'Cryptographic verification failed. Check signature and try again.');
+    }
+  } catch(e) {
+    alert(e.message || 'Verification failed.');
+  } finally {
+    btn.disabled = false;
+    btn.innerText = 'Verify & Rotate Key ✨';
+  }
+}
+
+async function createInstantAccount() {
+  const ln = prompt('Enter your Lightning Address (e.g. yourname@wallet.com):');
+  if (!ln) return;
+
+  try {
+    const r = await fetch(`${AIPP_API}/merchant/register`, {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ ln_address: ln.trim() })
+    });
+    const d = await r.json();
+    if (!r.ok || !d.api_key) throw new Error(d.error || 'Account could not be created');
+    activeKey = d.api_key;
+    const remember = document.getElementById('remember-me');
+    if (remember && remember.checked) {
+      localStorage.setItem('aipp_api_key', activeKey);
+    } else {
+      sessionStorage.setItem('aipp_api_key', activeKey);
+    }
+    alert('Your merchant key is shown in Developer settings. Save it securely; your wallet address cannot be used to sign in.');
+    showApp();
+  } catch(e) {
+    alert(e.message || 'Account could not be created.');
+  }
+}
+
+async function login() {
+  const val = document.getElementById('login-input').value.trim();
+  if (!val) return;
+  const btn = document.getElementById('login-btn');
+  btn.textContent = 'Signing in...'; btn.disabled = true;
+
+  if (!/^aipp_merch_[a-f0-9]{32}$/i.test(val)) {
+    alert('Enter your private merchant key. Wallet addresses cannot be used to sign in.');
+    btn.textContent = 'Enter Studio Console →'; btn.disabled = false;
+    return;
+  }
+  activeKey = val;
+  try {
+    const check = await fetch(`${AIPP_API}/merchant/stats`, { headers: {'X-Api-Key': activeKey}, cache: 'no-store' });
+    if (!check.ok) throw new Error('Invalid merchant key');
+    const remember = document.getElementById('remember-me');
+    if (remember && remember.checked) {
+      localStorage.setItem('aipp_api_key', activeKey);
+    } else {
+      sessionStorage.setItem('aipp_api_key', activeKey);
+    }
+    btn.textContent = 'Enter Studio Console →'; btn.disabled = false;
+    showApp();
+  } catch (e) {
+    activeKey = '';
+    alert('Invalid merchant key.');
+    btn.textContent = 'Enter Studio Console →'; btn.disabled = false;
+  }
+}
+
+async function logout() {
+  activeKey = '';
+  localStorage.removeItem('aipp_api_key');
+  localStorage.removeItem('aipp_merchant_key');
+  localStorage.removeItem('aipp_session_token');
+  sessionStorage.removeItem('aipp_api_key');
+  sessionStorage.removeItem('aipp_merchant_key');
+  sessionStorage.removeItem('aipp_session_token');
+  sessionStorage.clear();
+
+  try {
+    await fetch('/auth/logout', { method: 'POST', credentials: 'include' });
+  } catch (e) {}
+
+  const appEl = document.getElementById('app');
+  if (appEl) {
+    appEl.classList.remove('visible');
+    appEl.style.display = 'none';
+  }
+
+  const loginScreen = document.getElementById('login-screen');
+  if (loginScreen) {
+    loginScreen.style.display = 'flex';
+  }
+
+  const loginInput = document.getElementById('login-input');
+  if (loginInput) loginInput.value = '';
+
+  stopAutoRefresh();
+  window.scrollTo(0, 0);
+}
+
+async function showApp() {
+  document.getElementById('login-screen').style.display = 'none';
+  document.getElementById('app').classList.add('visible');
+  const sdkKey = document.getElementById('sdk-key-display');
+  if (sdkKey) sdkKey.textContent = activeKey;
+  await Promise.all([loadStats(), loadLedger(), loadPaymentLinks(), loadMerchantInfo()]);
+  startAutoRefresh();
+}
+
+async function loadMerchantInfo() {
+  try {
+    const r = await fetch(`${AIPP_API}/merchant/stats`, { 
+      headers: {'X-Api-Key': activeKey},
+      cache: 'no-store'
+    });
+    if (!r.ok) return;
+    const d = await r.json();
+    merchantLnAddress = d.wallets?.lightning?.address || '';
+    merchantUsdcAddress = d.wallets?.base?.address || '';
+    merchantPayoutMode = d.payoutMode || 'instant';
+    
+    const lnEl = document.getElementById('merchant-ln-display');
+    const usdcEl = document.getElementById('merchant-usdc-display');
+    if (lnEl) lnEl.textContent = merchantLnAddress || '(not set)';
+    if (usdcEl) usdcEl.textContent = merchantUsdcAddress || '(not set)';
+    
+    const lnInput = document.getElementById('settings-ln');
+    const usdcInput = document.getElementById('settings-usdc');
+    if (lnInput) lnInput.value = merchantLnAddress;
+    if (usdcInput) usdcInput.value = merchantUsdcAddress;
+    
+    const lnBadge = document.getElementById('ln-status-badge');
+    const usdcBadge = document.getElementById('usdc-status-badge');
+    if (lnBadge) {
+      if (merchantLnAddress) { lnBadge.textContent = 'Active'; lnBadge.style.background = 'var(--green-bg)'; lnBadge.style.color = 'var(--green)'; }
+      else { lnBadge.textContent = 'Not Set'; lnBadge.style.background = 'var(--sub-bg)'; lnBadge.style.color = 'var(--fg-muted)'; }
+    }
+    if (usdcBadge) {
+      if (merchantUsdcAddress) { usdcBadge.textContent = 'Active'; usdcBadge.style.background = 'var(--green-bg)'; usdcBadge.style.color = 'var(--green)'; }
+      else { usdcBadge.textContent = 'Not Set'; usdcBadge.style.background = 'var(--sub-bg)'; usdcBadge.style.color = 'var(--fg-muted)'; }
+    }
+  } catch(e) {}
+}
+
+async function saveWalletSettings(btn) {
+  const lnInput = document.getElementById('settings-ln').value.trim();
+  const usdcInput = document.getElementById('settings-usdc').value.trim();
+
+  // Use typed value OR fall back to cached server value
+  const ln = lnInput || merchantLnAddress;
+  const usdc = usdcInput || null;
+
+  if (!ln && !usdc) {
+    alert('Please enter at least one wallet address.');
+    return;
+  }
+  if (ln && !ln.includes('@')) {
+    alert('Lightning Address must be in format: you@domain.com');
+    return;
+  }
+  if (usdc && !/^0x[a-fA-F0-9]{40}$/.test(usdc)) {
+    alert('Base wallet must be a valid 0x EVM address (42 characters, starting with 0x).');
+    return;
+  }
+
+  const orig = btn.textContent;
+  btn.disabled = true;
+  btn.textContent = 'Saving...';
+  try {
+    const payload = {};
+    if (ln) payload.ln_address = ln;
+    if (usdc !== null) payload.usdc_address = usdc;
+
+    const r = await fetch(`${AIPP_API}/merchant/settings`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json', 'X-Api-Key': activeKey },
+      body: JSON.stringify(payload)
+    });
+
+    if (!r.ok) {
+      const err = await r.json().catch(() => ({}));
+      throw new Error(err.error || 'Save failed');
+    }
+
+    const msg = document.getElementById('settings-save-msg');
+    msg.style.display = 'inline';
+    setTimeout(() => msg.style.display = 'none', 3000);
+    await loadMerchantInfo();
+  } catch(e) {
+    alert(e.message || 'Error saving. Please try again.');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = orig;
+  }
+}
+
+const pages = ['overview','links','transactions','settings','integrate'];
+const pageTitles = {
+  overview: ['Overview','Monetization and settlement metrics'],
+  links: ['Smart Tags','Manage your active price tags and checkout URLs'],
+  transactions: ['Settlements Ledger','All payment settlement transactions'],
+  settings: ['Wallet Settings','Configure Lightning & Base USDC payout wallets'],
+  integrate: ['SDK Integration','Embed Smart Price Tags in your codebase']
+};
+
+function showPage(name) {
+  pages.forEach(p => {
+    document.getElementById(`page-${p}`)?.classList.toggle('active', p===name);
+    document.getElementById(`nav-${p}`)?.classList.toggle('active', p===name);
+    document.getElementById(`mobile-nav-${p}`)?.classList.toggle('active', p===name);
+  });
+  const [title, sub] = pageTitles[name] || ['Studio',''];
+  document.getElementById('topbar-title').textContent = title;
+  document.getElementById('topbar-sub').textContent = sub;
+}
+
+function copyActiveKey(el) {
+  // Deprecated, removed from UI
+}
+
+async function loadStats(silent = false) {
+  try {
+    const r = await fetch(`${AIPP_API}/merchant/stats?range=${currentRange}`, { 
+      headers: {'X-Api-Key': activeKey},
+      cache: 'no-store'
+    });
+    if (!r.ok) return;
+    const d = await r.json();
+    if (!silent) updateLastUpdated();
+    
+    // Wallets
+    if (d.wallets) {
+      const lnW = document.getElementById('wallet-status-ln');
+      if (lnW) {
+        if (d.wallets.lightning.configured) {
+          lnW.textContent = `LN: Configured`;
+          lnW.style.color = 'var(--green)'; lnW.style.background = 'var(--green-bg)';
+        } else {
+          lnW.textContent = `LN: Not Configured`;
+          lnW.style.color = 'var(--fg-muted)'; lnW.style.background = 'var(--sub-bg)';
+        }
+      }
+      const bW = document.getElementById('wallet-status-base');
+      if (bW) {
+        if (d.wallets.base.configured) {
+          bW.textContent = `Configured`;
+          bW.style.color = 'var(--green)'; bW.style.background = 'var(--green-bg)';
+        } else {
+          bW.textContent = `Not Configured`;
+          bW.style.color = 'var(--fg-muted)'; bW.style.background = 'var(--sub-bg)';
+        }
+      }
+    }
+    
+    // Status Stats
+    const stats = d.statusStats || [];
+    let volSats = 0, volUsd = 0, comSats = 0, txSuccess = 0, txPending = 0, txFailed = 0;
+    
+    stats.forEach(s => {
+      if (s.status === 'settled') {
+        txSuccess += s.count;
+        volSats += (s.volume_sats || 0);
+        volUsd += (s.volume_usd || 0);
+        comSats += (s.commission_sats || 0);
+      } else if (s.status === 'pending') {
+        txPending += s.count;
+      } else {
+        txFailed += s.count;
+      }
+    });
+    
+    const txCount = txSuccess + txPending + txFailed;
+    
+    document.getElementById('volume-ln-sats').textContent = `${volSats.toLocaleString()} sats`;
+    document.getElementById('volume-base-usd').textContent = `$${volUsd.toFixed(2)} USDC`;
+    document.getElementById('volume-commission').textContent = `${comSats.toLocaleString()} sats`;
+    
+    const available = d.availableToSettleSats || 0;
+    const net = d.netEarnedSats || 0;
+    const sent = d.settledToWalletSats || 0;
+    const threshold = d.settlementThresholdSats || 50;
+
+    document.getElementById('volume-available').textContent = `${available.toLocaleString()} sats`;
+    document.getElementById('volume-net').textContent = `${net.toLocaleString()} sats`;
+    document.getElementById('volume-sent').textContent = `${sent.toLocaleString()} sats`;
+    
+    const lastSentEl = document.getElementById('last-sent-text');
+    if (lastSentEl) {
+      if (d.lastSettlementAt) {
+        const dObj = new Date(d.lastSettlementAt);
+        const isToday = dObj.toDateString() === new Date().toDateString();
+        const timeStr = dObj.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+        const dateStr = isToday ? `Today, ${timeStr}` : `${dObj.toLocaleDateString()} ${timeStr}`;
+        lastSentEl.textContent = dateStr;
+        if (d.lastSettlementStatus === 'completed') {
+           lastSentEl.textContent = `✓ ${dateStr}`;
+           lastSentEl.style.color = 'var(--green)';
+        } else {
+           lastSentEl.textContent = `⏳ ${dateStr}`;
+           lastSentEl.style.color = 'var(--accent)';
+        }
+      } else {
+        lastSentEl.textContent = 'Not yet';
+        lastSentEl.style.color = 'var(--fg-muted)';
+      }
+    }
+    
+    document.getElementById('tx-count').textContent = txCount.toLocaleString();
+    document.getElementById('tx-successful').textContent = txSuccess;
+    document.getElementById('tx-pending').textContent = txPending;
+    document.getElementById('tx-failed').textContent = txFailed;
+    
+    // Payout Threshold logic
+    const pct = Math.min(100, Math.round((available / threshold) * 100));
+    const progBar = document.getElementById('threshold-progress-bar');
+    const progContainer = document.getElementById('threshold-progress-container');
+    const progText = document.getElementById('threshold-progress-text');
+    
+    if (progBar) {
+      progBar.style.width = `${pct}%`;
+      progBar.style.background = pct >= 100 ? 'var(--green)' : 'var(--accent)';
+    }
+    
+    const wBtn = document.getElementById('withdraw-btn');
+    const pMode = document.getElementById('payout-mode-text');
+    if (wBtn) {
+      if (merchantPayoutMode === 'manual') {
+        wBtn.style.display = 'block';
+        wBtn.textContent = `Send ${available.toLocaleString()} sats to Wallet`;
+        wBtn.disabled = available < 10;
+        wBtn.style.opacity = available < 10 ? '0.5' : '1';
+        if (pMode) pMode.textContent = 'Manual Settlement';
+        if (progContainer) progContainer.style.display = 'none';
+        if (progText) progText.style.display = 'none';
+      } else if (merchantPayoutMode === 'instant') {
+        wBtn.style.display = 'none';
+        if (pMode) pMode.textContent = 'Automated Settlement Enabled';
+        if (progContainer) progContainer.style.display = 'none';
+        if (progText) progText.style.display = 'none';
+      } else {
+        wBtn.style.display = 'none';
+        if (pMode) pMode.textContent = 'Settlement Threshold';
+        if (progText) {
+          progText.textContent = `${available} / ${threshold} sats`;
+          progText.style.display = 'block';
+        }
+        if (progContainer) progContainer.style.display = 'block';
+      }
+    }
+
+    // Chart
+    if (!d.chart || d.chart.length === 0) return;
+    const labels = d.chart.map(c => {
+      const parts = c.date.split('-');
+      return parts.length === 3 ? `${parts[1]}/${parts[2]}` : c.date;
+    });
+    const data = d.chart.map(c => c.transactions_count);
+
+    const ctx = document.getElementById('usageChart').getContext('2d');
+    if (usageChart) usageChart.destroy();
+    usageChart = new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels: labels,
+        datasets: [{ label: 'Successful Payments', data: data, backgroundColor: '#ffc700', borderRadius: 4 }]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        scales: { y: { title: { display: true, text: 'Payments' }, ticks: { stepSize: 1 } } }
+      }
+    });
+  } catch(e) {}
+}
+
+async function triggerWithdraw(btn) {
+  const orig = btn.textContent;
+  btn.textContent = 'Dispatching...';
+  btn.disabled = true;
+  try {
+    const r = await fetch(`${AIPP_API}/merchant/payout`, {
+      method: 'POST',
+      headers: { 'X-Api-Key': activeKey }
+    });
+    const d = await r.json();
+    if (!r.ok) throw new Error(d.error || 'Withdrawal failed');
+    alert(d.message || 'Withdrawal successfully dispatched to your Lightning Address!');
+    await loadStats();
+    await loadLedger();
+  } catch(e) {
+    alert(e.message || 'Error triggering payout.');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = orig;
+  }
+}
+
+function formatTxRow(tx) {
+  const d = new Date(tx.created_at).toLocaleString([], {month:'short', day:'numeric', hour:'2-digit', minute:'2-digit'});
+  let hashAction = '';
+  if (tx.protocol === 'x402') {
+    const chainHash = /^0x[a-f0-9]{64}$/i.test(tx.preimage || '') ? tx.preimage : '';
+    hashAction = chainHash
+      ? `<a href="https://basescan.org/tx/${chainHash}" target="_blank" rel="noopener" style="color:var(--accent); text-decoration:none;">${chainHash.slice(0, 10)}... ↗</a>`
+      : `<span>${escapeHtml(tx.payment_hash).slice(0, 10)}...</span>`;
+  } else {
+    hashAction = `<span onclick="copyWithFeedback(this, '${tx.payment_hash}', 'Copied Hash')" style="cursor:pointer; color:var(--accent);" title="Click to copy hash">${tx.payment_hash.slice(0, 10)}...</span>`;
+  }
+  
+  const isUsd = tx.protocol === 'x402';
+  const gross = isUsd ? `$${(tx.usdc_amount || 0).toFixed(2)}` : `${tx.amount_sats || 0} sats`;
+  const fee = isUsd ? `$${((tx.usdc_amount||0)*0.01).toFixed(4)}` : `${tx.commission_sats || 0} sats`;
+  const net = isUsd ? `$${((tx.usdc_amount||0)*0.99).toFixed(2)}` : `${tx.forwarded_amount_sats || 0} sats`;
+  const netw = isUsd ? '🔵 Base' : '⚡ LN';
+  
+  let bStatus = 'badge-pending';
+  let displayStatus = tx.status;
+  if (tx.status === 'settled') {
+    bStatus = 'badge-settled';
+    if (tx.payout_status === 'forwarded' || tx.payout_status === 'completed') displayStatus = 'Paid · Sent';
+    else if (tx.payout_status === 'queued') displayStatus = 'Paid · Sending';
+    else displayStatus = 'Paid · Pending payout';
+  }
+  if (tx.status === 'expired' || tx.status === 'failed') bStatus = 'badge-failed';
+  
+  return `<tr>
+    <td>${d}</td>
+    <td style="font-family:'JetBrains Mono',monospace; font-size:12px;">${hashAction}</td>
+    <td>${netw}</td>
+    <td style="font-weight:600;">${gross}</td>
+    <td style="color:var(--fg-muted);">${fee}</td>
+    <td style="font-weight:700; color:var(--green);">${net}</td>
+    <td><span class="badge-status ${bStatus}">${escapeHtml(displayStatus)}</span></td>
+  </tr>`;
+}
+
+async function loadLedger(silent = false) {
+  try {
+    const r = await fetch(`${AIPP_API}/merchant/transactions?range=${currentRange}&limit=50`, { 
+      headers: {'X-Api-Key': activeKey},
+      cache: 'no-store'
+    });
+    if (!r.ok) return;
+    const txs = await r.json();
+    if (!silent) updateLastUpdated();
+    
+    // Update main ledger page
+    const body = document.getElementById('ledger-body');
+    if (!txs || !txs.length) {
+      body.innerHTML = `<tr><td colspan="7" style="text-align:center; color:var(--fg-muted); padding:32px;">No transactions found in this date range.</td></tr>`;
+    } else {
+      body.innerHTML = txs.map(formatTxRow).join('');
+    }
+    
+    // Update dashboard mini table (first 5 txs)
+    const dBody = document.getElementById('dashboard-tx-body');
+    if (dBody) {
+      if (!txs || !txs.length) {
+        dBody.innerHTML = `<tr><td colspan="7" style="text-align:center; color:var(--fg-muted); padding:32px;">No recent transactions.</td></tr>`;
+      } else {
+        dBody.innerHTML = txs.slice(0, 5).map(formatTxRow).join('');
+      }
+    }
+  } catch(e) {}
+}
+
+async function loadPaymentLinks() {
+  try {
+    const r = await fetch(`${AIPP_API}/merchant/links`, { 
+      headers: {'X-Api-Key': activeKey},
+      cache: 'no-store'
+    });
+    if (!r.ok) return;
+    const links = await r.json();
+    const body = document.getElementById('links-body');
+    if (!links || !links.length) {
+      body.innerHTML = `<tr><td colspan="4" style="text-align:center; color:var(--fg-muted); padding:32px;">No tags created yet. Fill the form above to create your first tag.</td></tr>`;
+      return;
+    }
+    body.innerHTML = links.map(l => `
+      <tr>
+        <td style="font-weight:700;">${escapeHtml(l.title)}</td>
+        <td>$${Number(l.amount_usd).toFixed(2)}</td>
+        <td><a href="${escapeHtml(l.url)}" target="_blank" rel="noopener" style="color:var(--accent); font-family:'JetBrains Mono',monospace; font-size:12px;">${escapeHtml(l.url)} ↗</a></td>
+        <td style="text-align:right;">
+          <button class="btn-sm" data-copy-url="${escapeHtml(l.url)}">Copy Tag</button>
+          <button class="btn-sm" data-copy-url="${escapeHtml(l.manifest_url || l.url + '/manifest')}">Agent JSON</button>
+        </td>
+      </tr>
+    `).join('');
+    body.querySelectorAll('[data-copy-url]').forEach(btn => btn.addEventListener('click', () => {
+      copyWithFeedback(btn, btn.dataset.copyUrl || '', 'Kopyalandı!');
+    }));
+  } catch(e) {}
+}
+
+async function createPaymentLink(btn) {
+  const title = document.getElementById('link-title').value.trim();
+  const amount = parseFloat(document.getElementById('link-amount').value);
+  const redirect = document.getElementById('link-redirect').value.trim();
+  if (!title || isNaN(amount) || amount < 0.01) {
+    alert('Please specify a title and valid price.');
+    return;
+  }
+  btn.disabled = true;
+  btn.textContent = 'Creating...';
+  try {
+    const r = await fetch(`${AIPP_API}/merchant/links/create`, {
+      method: 'POST',
+      headers: {'Content-Type':'application/json', 'X-Api-Key': activeKey},
+      body: JSON.stringify({ title, amount_usd: amount, redirect_url: redirect || null })
+    });
+    const d = await r.json();
+    if (!r.ok) throw new Error(d.error || 'Tag could not be created.');
+    document.getElementById('link-title').value = '';
+    await loadPaymentLinks();
+    alert('Tag created!');
+  } catch(e) {
+    alert(e.message || 'Tag could not be created.');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Create Tag URL →';
+  }
+}
+
+const CHECK_SVG = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>`;
+
+function copyWithFeedback(btn, textToCopy, successLabel = 'Kopyalandı!') {
+  navigator.clipboard.writeText(textToCopy).then(() => {
+    const orig = btn.innerHTML;
+    btn.innerHTML = `${CHECK_SVG} <span style="color:#10b981; font-weight:700;">${successLabel}</span>`;
+    setTimeout(() => { btn.innerHTML = orig; }, 2000);
+  });
+}
+
+function copyFullKey(btn) {
+  const key = activeKey || localStorage.getItem('aipp_merchant_key') || localStorage.getItem('aipp_api_key');
+  if (!key) { alert('No API key found.'); return; }
+  copyWithFeedback(btn, key, 'Kopyalandı!');
+}
+
+function copySdkSnippet(btn) {
+  const snippet = document.getElementById('sdk-code-snippet');
+  if (!snippet) return;
+  copyWithFeedback(btn, snippet.innerText, 'Kopyalandı!');
+}
+
+// WebAuthn Base64URL Helpers
+function bufferToBase64Url(buffer) {
+  const bytes = new Uint8Array(buffer);
+  let string = '';
+  for (let i = 0; i < bytes.byteLength; i++) { string += String.fromCharCode(bytes[i]); }
+  return btoa(string).replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
+}
+
+function base64UrlToBuffer(base64url) {
+  let base64 = base64url.replace(/-/g, '+').replace(/_/g, '/');
+  while (base64.length % 4) { base64 += '='; }
+  const string = atob(base64);
+  const buffer = new Uint8Array(string.length);
+  for (let i = 0; i < string.length; i++) { buffer[i] = string.charCodeAt(i); }
+  return buffer.buffer;
+}
+
+// Passkey Authentication Login
+async function loginWithPasskey() {
+  const btn = document.getElementById('passkey-login-btn');
+  if (btn) { btn.disabled = true; btn.innerText = 'Connecting Passkey... 🔑'; }
+  try {
+    const res = await fetch('/auth/passkey/login/options', { method: 'POST' });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Failed to initialize Passkey login.');
+
+    const options = data.options;
+    options.challenge = base64UrlToBuffer(options.challenge);
+    if (options.allowCredentials) {
+      if (options.allowCredentials.length === 0) {
+        alert('Henüz sistemde aktif bir Passkey kaydınız bulunmuyor. Lütfen önce cüzdan adresinizle Passkey oluşturun.');
+        openPasskeyRegisterModal();
+        return;
+      }
+      options.allowCredentials = options.allowCredentials.map(c => ({ ...c, id: base64UrlToBuffer(c.id) }));
+    }
+
+    const credential = await navigator.credentials.get({ publicKey: options });
+    if (!credential) throw new Error('Passkey authentication cancelled.');
+
+    const authResponse = {
+      id: credential.id,
+      rawId: bufferToBase64Url(credential.rawId),
+      type: credential.type,
+      response: {
+        authenticatorData: bufferToBase64Url(credential.response.authenticatorData),
+        clientDataJSON: bufferToBase64Url(credential.response.clientDataJSON),
+        signature: bufferToBase64Url(credential.response.signature),
+        userHandle: credential.response.userHandle ? bufferToBase64Url(credential.response.userHandle) : undefined
+      }
+    };
+
+    const vRes = await fetch('/auth/passkey/login/verify', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ challenge_id: data.challenge_id, response: authResponse })
+    });
+
+    const vData = await vRes.json();
+    if (!vRes.ok) throw new Error(vData.error || 'Passkey verification failed.');
+
+    if (vData.api_key) localStorage.setItem('aipp_merchant_key', vData.api_key);
+    if (vData.session_token) localStorage.setItem('aipp_session_token', vData.session_token);
+    if (vData.api_key) activeKey = vData.api_key;
+
+    document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('app').style.display = 'flex';
+    await checkSessionAndLoadDashboard();
+  } catch (err) {
+    alert(err.message || 'Passkey login failed.');
+  } finally {
+    if (btn) { btn.disabled = false; btn.innerHTML = '<span>🔑 Passkey ile devam et</span>'; }
+  }
+}
+
+// Passkey Registration Modal Functions
+function openPasskeyRegisterModal() {
+  document.getElementById('passkey-register-modal').style.display = 'flex';
+}
+function closePasskeyRegisterModal() {
+  document.getElementById('passkey-register-modal').style.display = 'none';
+}
+
+async function submitPasskeyRegistration() {
+  const input = document.getElementById('reg-wallet-input').value.trim();
+  if (!input) { alert('Please provide a Lightning Address or Base USDC address.'); return; }
+  const btn = document.getElementById('reg-submit-btn');
+  btn.disabled = true; btn.innerText = 'Creating Passkey...';
+
+  try {
+    const isEvm = /^0x[a-fA-F0-9]{40}$/.test(input);
+    const body = isEvm ? { usdc_address: input } : { ln_address: input };
+
+    const optRes = await fetch('/auth/passkey/register/options', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
+    });
+    const optData = await optRes.json();
+    if (!optRes.ok) throw new Error(optData.error || 'Registration initialization failed.');
+
+    const options = optData.options;
+    options.challenge = base64UrlToBuffer(options.challenge);
+    options.user.id = base64UrlToBuffer(options.user.id);
+    if (options.excludeCredentials) {
+      options.excludeCredentials = options.excludeCredentials.map(c => ({ ...c, id: base64UrlToBuffer(c.id) }));
+    }
+
+    const credential = await navigator.credentials.create({ publicKey: options });
+    if (!credential) throw new Error('Passkey creation cancelled.');
+
+    const regResponse = {
+      id: credential.id,
+      rawId: bufferToBase64Url(credential.rawId),
+      type: credential.type,
+      response: {
+        attestationObject: bufferToBase64Url(credential.response.attestationObject),
+        clientDataJSON: bufferToBase64Url(credential.response.clientDataJSON),
+        transports: credential.response.getTransports ? credential.response.getTransports() : undefined
+      }
+    };
+
+    const vRes = await fetch('/auth/passkey/register/verify', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        challenge_id: optData.challenge_id,
+        response: regResponse,
+        device_name: 'Primary Security Key',
+        ln_address: isEvm ? null : input,
+        usdc_address: isEvm ? input : null
+      })
+    });
+
+    const vData = await vRes.json();
+    if (!vRes.ok) throw new Error(vData.error || 'Passkey registration verification failed.');
+
+    if (vData.api_key) localStorage.setItem('aipp_merchant_key', vData.api_key);
+    if (vData.session_token) localStorage.setItem('aipp_session_token', vData.session_token);
+    if (vData.api_key) activeKey = vData.api_key;
+
+    document.getElementById('reg-api-key-text').innerText = vData.api_key;
+    document.getElementById('reg-api-key-box').style.display = 'block';
+  } catch (err) {
+    alert(err.message || 'Passkey registration failed.');
+  } finally {
+    btn.disabled = false; btn.innerText = '🔑 Register & Create Passkey';
+  }
+}
+
+function finishPasskeyRegistration() {
+  closePasskeyRegisterModal();
+  document.getElementById('login-screen').style.display = 'none';
+  document.getElementById('app').style.display = 'flex';
+  checkSessionAndLoadDashboard();
+}
+
+// Existing Merchant Migration Modal
+function openPasskeyMigrateModal() {
+  document.getElementById('passkey-migrate-modal').style.display = 'flex';
+}
+function closePasskeyMigrateModal() {
+  document.getElementById('passkey-migrate-modal').style.display = 'none';
+}
+
+async function submitPasskeyMigration() {
+  const key = document.getElementById('mig-key-input').value.trim();
+  if (!key) { alert('Please enter your Merchant API key.'); return; }
+  const btn = document.getElementById('mig-submit-btn');
+  btn.disabled = true; btn.innerText = 'Creating Passkey...';
+
+  try {
+    const optRes = await fetch('/auth/passkey/migrate/options', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ api_key: key })
+    });
+    const optData = await optRes.json();
+    if (!optRes.ok) throw new Error(optData.error || 'Migration initialization failed.');
+
+    const options = optData.options;
+    options.challenge = base64UrlToBuffer(options.challenge);
+    options.user.id = base64UrlToBuffer(options.user.id);
+
+    const credential = await navigator.credentials.create({ publicKey: options });
+    if (!credential) throw new Error('Passkey creation cancelled.');
+
+    const regResponse = {
+      id: credential.id,
+      rawId: bufferToBase64Url(credential.rawId),
+      type: credential.type,
+      response: {
+        attestationObject: bufferToBase64Url(credential.response.attestationObject),
+        clientDataJSON: bufferToBase64Url(credential.response.clientDataJSON)
+      }
+    };
+
+    const vRes = await fetch('/auth/passkey/migrate/verify', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        challenge_id: optData.challenge_id,
+        response: regResponse,
+        api_key: key,
+        device_name: 'Migrated Security Key'
+      })
+    });
+
+    const vData = await vRes.json();
+    if (!vRes.ok) throw new Error(vData.error || 'Migration failed.');
+
+    if (vData.api_key) localStorage.setItem('aipp_merchant_key', vData.api_key);
+    if (vData.session_token) localStorage.setItem('aipp_session_token', vData.session_token);
+    activeKey = vData.api_key || key;
+
+    alert('Passkey migration completed successfully!');
+    closePasskeyMigrateModal();
+    document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('app').style.display = 'flex';
+    await checkSessionAndLoadDashboard();
+  } catch (err) {
+    alert(err.message || 'Passkey migration failed.');
+  } finally {
+    btn.disabled = false; btn.innerText = '🔑 Verify & Create Passkey';
+  }
+}
+
+// Session Checker
+async function checkSessionAndLoadDashboard() {
+  try {
+    const sessionToken = localStorage.getItem('aipp_session_token');
+    const storedKey = localStorage.getItem('aipp_merchant_key');
+    if (storedKey) activeKey = storedKey;
+
+    const headers = {};
+    if (sessionToken) headers['Authorization'] = 'Bearer ' + sessionToken;
+    if (activeKey) headers['X-Api-Key'] = activeKey;
+
+    const res = await fetch('/auth/session', { headers, credentials: 'include' });
+    if (res.ok) {
+      const data = await res.json();
+      if (data.authenticated) {
+        document.getElementById('login-screen').style.display = 'none';
+        document.getElementById('app').style.display = 'flex';
+        loadOverviewStats();
+        loadPasskeys();
+        return true;
+      }
+    }
+  } catch (e) {}
+
+  if (activeKey) {
+    document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('app').style.display = 'flex';
+    loadOverviewStats();
+    loadPasskeys();
+    return true;
+  }
+
+  document.getElementById('login-screen').style.display = 'flex';
+  document.getElementById('app').style.display = 'none';
+  return false;
+}
+
+// Passkeys Management Table Loader
+async function loadPasskeys() {
+  const tbody = document.getElementById('passkeys-table-body');
+  if (!tbody) return;
+  try {
+    const res = await fetch('/auth/passkeys');
+    if (!res.ok) return;
+    const data = await res.json();
+    const list = data.passkeys || [];
+
+    if (list.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; padding:12px; color:var(--fg-muted);">No passkeys registered.</td></tr>`;
+      return;
+    }
+
+    tbody.innerHTML = list.map(p => `
+      <tr style="border-bottom:1px solid var(--border);">
+        <td style="padding:10px 0; font-weight:600;">${escapeHtml(p.device_name)}</td>
+        <td style="font-size:12px; color:var(--fg-muted);">${new Date(p.created_at).toLocaleDateString()}</td>
+        <td style="font-size:12px; color:var(--fg-muted);">${new Date(p.last_used_at).toLocaleDateString()}</td>
+        <td style="text-align:right;">
+          <button class="btn-sm" style="background:#ef4444; color:#fff;" onclick="deletePasskey('${p.id}')" ${list.length <= 1 ? 'disabled title="Cannot delete your only remaining passkey"' : ''}>Delete</button>
+        </td>
+      </tr>
+    `).join('');
+  } catch (e) {}
+}
+
+async function addNewPasskey() {
+  try {
+    const optRes = await fetch('/auth/passkey/add/options', { method: 'POST' });
+    const optData = await optRes.json();
+    if (!optRes.ok) throw new Error(optData.error || 'Add passkey initialization failed.');
+
+    const options = optData.options;
+    options.challenge = base64UrlToBuffer(options.challenge);
+    options.user.id = base64UrlToBuffer(options.user.id);
+
+    const credential = await navigator.credentials.create({ publicKey: options });
+    if (!credential) throw new Error('Passkey creation cancelled.');
+
+    const regResponse = {
+      id: credential.id,
+      rawId: bufferToBase64Url(credential.rawId),
+      type: credential.type,
+      response: {
+        attestationObject: bufferToBase64Url(credential.response.attestationObject),
+        clientDataJSON: bufferToBase64Url(credential.response.clientDataJSON)
+      }
+    };
+
+    const vRes = await fetch('/auth/passkey/add/verify', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        challenge_id: optData.challenge_id,
+        response: regResponse,
+        device_name: 'Additional Security Key'
+      })
+    });
+
+    const vData = await vRes.json();
+    if (!vRes.ok) throw new Error(vData.error || 'Failed to add passkey.');
+
+    alert('New passkey added successfully!');
+    loadPasskeys();
+  } catch (err) {
+    alert(err.message || 'Failed to add passkey.');
+  }
+}
+
+async function deletePasskey(passkeyId) {
+  if (!confirm('Are you sure you want to remove this Passkey device?')) return;
+  try {
+    const res = await fetch(`/auth/passkeys/${passkeyId}`, { method: 'DELETE' });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Could not delete passkey.');
+    alert('Passkey removed.');
+    loadPasskeys();
+  } catch (err) {
+    alert(err.message || 'Could not delete passkey.');
+  }
+}
+
+window.addEventListener('DOMContentLoaded', async () => {
+  await checkSessionAndLoadDashboard();
+});
+</script>
+</body>
+</html>

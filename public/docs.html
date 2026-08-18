@@ -1,0 +1,583 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>AIPP — Developer Documentation & API Reference</title>
+<meta name="description" content="Create Smart Tags and add pay-per-use Lightning or Base USDC payments to apps and AI workflows.">
+<link rel="icon" type="image/x-icon" href="favicon.ico">
+<link rel="icon" type="image/svg+xml" href="favicon.svg">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap');
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+  --bg: #faf8f5;
+  --sub-bg: #f3efea;
+  --card-bg: #ffffff;
+  --fg: #1a1918;
+  --fg-muted: #6b6964;
+  --fg-subtle: #999690;
+  --border: #e6e2dc;
+  --border-subtle: #eeeae4;
+  --brand: #ffc700;
+  --accent: #806300;
+  --accent-light: #fffbdf;
+  --accent-hover: #eab600;
+  --green: #15803d;
+  --green-bg: #ecfdf5;
+  --radius-sm: 8px;
+  --radius-md: 14px;
+  --radius-lg: 20px;
+  --shadow-subtle: 0 1px 3px rgba(26,25,24,0.03), 0 6px 20px rgba(26,25,24,0.03);
+  --shadow-card: 0 4px 20px rgba(26,25,24,0.06), 0 16px 40px rgba(26,25,24,0.06);
+}
+
+body {
+  background: var(--bg);
+  color: var(--fg);
+  font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  min-height: 100vh;
+}
+
+a { color: inherit; text-decoration: none; }
+
+header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 20px 48px;
+  border-bottom: 1px solid var(--border);
+  position: sticky; top: 0; z-index: 50;
+  background: rgba(250, 248, 245, 0.9);
+  backdrop-filter: blur(12px);
+}
+.logo {
+  font-weight: 800; font-size: 20px;
+  display: flex; align-items: center; gap: 10px;
+  color: var(--fg);
+}
+.logo-icon {
+  width: 28px; height: 28px; display: block;
+}
+.logo span { font-family: 'Plus Jakarta Sans', sans-serif; font-style: normal; }
+
+.nav-links { display: flex; align-items: center; gap: 28px; }
+.nav-links a { font-size: 14px; font-weight: 600; color: var(--fg-muted); transition: color 0.15s; }
+.nav-links a:hover { color: var(--fg); }
+.nav-cta {
+  background: var(--fg); color: #ffffff !important;
+  padding: 9px 18px; border-radius: 8px; font-size: 13px; font-weight: 600;
+  transition: all 0.2s ease;
+}
+.nav-cta:hover { background: #33312e; transform: translateY(-1px); }
+
+/* LAYOUT */
+.docs-layout {
+  max-width: 1140px;
+  margin: 40px auto;
+  display: grid;
+  grid-template-columns: 240px 1fr;
+  gap: 60px;
+  padding: 0 24px;
+}
+
+/* SIDEBAR */
+.docs-sidebar {
+  position: sticky; top: 100px; height: fit-content;
+}
+.sidebar-section { margin-bottom: 24px; }
+.sidebar-title {
+  font-size: 11px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 0.08em; color: var(--fg-subtle); margin-bottom: 10px;
+}
+.sidebar-link {
+  display: block; font-size: 13px; font-weight: 500; color: var(--fg-muted);
+  padding: 6px 0; transition: color 0.15s;
+}
+.sidebar-link:hover, .sidebar-link.active { color: var(--accent); font-weight: 700; }
+
+/* CONTENT */
+.docs-content { max-width: 780px; }
+.docs-title {
+  font-family: 'Instrument Serif', Georgia, serif;
+  font-size: 44px; font-weight: 400; line-height: 1.1; margin-bottom: 12px;
+}
+.docs-sub { font-size: 16px; color: var(--fg-muted); margin-bottom: 40px; line-height: 1.5; }
+
+.section-block {
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 36px;
+  margin-bottom: 32px;
+  box-shadow: var(--shadow-subtle);
+}
+.section-block h2 {
+  font-family: 'Instrument Serif', Georgia, serif;
+  font-size: 26px; font-weight: 400; margin-bottom: 12px;
+}
+.section-block p { font-size: 14px; color: var(--fg-muted); line-height: 1.6; margin-bottom: 16px; }
+
+/* CODE BLOCKS */
+pre {
+  background: #181716; color: #f3efea;
+  padding: 20px; border-radius: 12px;
+  font-family: 'JetBrains Mono', monospace; font-size: 13px;
+  line-height: 1.6; overflow-x: auto; margin-bottom: 20px;
+}
+code { font-family: 'JetBrains Mono', monospace; }
+.inline-code {
+  background: var(--sub-bg); padding: 2px 6px; border-radius: 4px;
+  font-size: 12px; color: var(--accent); font-weight: 600;
+}
+
+/* ENDPOINT CARD */
+.endpoint-badge {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 6px 12px; border-radius: 6px; font-size: 12px; font-weight: 700;
+  font-family: 'JetBrains Mono', monospace; margin-bottom: 14px;
+}
+.badge-post { background: #e0f2fe; color: #0369a1; }
+.badge-get { background: var(--green-bg); color: var(--green); }
+
+html, body {
+  overflow-x: hidden;
+  width: 100%;
+}
+
+@media(max-width: 840px) {
+  header { padding: 12px 16px; }
+  .logo span { display: none; }
+  .nav-links a:not(.nav-cta) { display: none; }
+  .nav-cta { padding: 7px 14px; font-size: 12px; }
+  .docs-layout {
+    display: block !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    padding: 0 14px !important;
+    margin: 12px auto !important;
+    box-sizing: border-box !important;
+  }
+  .docs-sidebar {
+    position: sticky !important;
+    top: 55px !important;
+    z-index: 40 !important;
+    display: flex !important;
+    flex-direction: row !important;
+    flex-wrap: nowrap !important;
+    overflow-x: auto !important;
+    white-space: nowrap !important;
+    padding: 8px 4px !important;
+    margin: 0 -14px 16px -14px !important;
+    padding-left: 14px !important;
+    padding-right: 14px !important;
+    background: rgba(250, 248, 245, 0.95) !important;
+    backdrop-filter: blur(10px) !important;
+    border-bottom: 1px solid var(--border) !important;
+    -webkit-overflow-scrolling: touch !important;
+    gap: 6px !important;
+  }
+  .docs-sidebar::-webkit-scrollbar { display: none; }
+  .sidebar-section {
+    display: inline-flex !important;
+    flex-direction: row !important;
+    gap: 6px !important;
+    margin-bottom: 0 !important;
+  }
+  .sidebar-title { display: none !important; }
+  .sidebar-link {
+    display: inline-block !important;
+    font-size: 11.5px !important;
+    padding: 6px 12px !important;
+    background: var(--card-bg) !important;
+    border: 1px solid var(--border) !important;
+    border-radius: 20px !important;
+    color: var(--fg-muted) !important;
+    white-space: nowrap !important;
+  }
+  .sidebar-link.active {
+    background: var(--fg) !important;
+    color: #ffffff !important;
+    border-color: var(--fg) !important;
+    font-weight: 700 !important;
+  }
+  .docs-content {
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+  }
+  .docs-title { font-size: 26px !important; }
+  .docs-sub { font-size: 13px !important; margin-bottom: 20px !important; }
+  .section-block {
+    padding: 18px 14px !important;
+    border-radius: 12px !important;
+    margin-bottom: 16px !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+    overflow-x: hidden !important;
+  }
+  .section-block h2 { font-size: 22px !important; }
+  .section-block p { font-size: 13px !important; }
+  pre {
+    font-size: 11px !important;
+    padding: 12px 10px !important;
+    border-radius: 8px !important;
+    max-width: 100% !important;
+    overflow-x: auto !important;
+    white-space: pre !important;
+    word-break: normal !important;
+    -webkit-overflow-scrolling: touch !important;
+  }
+  .diagram-grid {
+    grid-template-columns: 1fr !important;
+    gap: 12px !important;
+  }
+  .diagram-wrapper {
+    padding: 16px !important;
+    border-radius: 12px !important;
+  }
+}
+</style>
+</head>
+<body>
+
+<header>
+  <a href="/" class="logo" style="display:flex; align-items:center; gap:10px; text-decoration:none;">
+    <svg class="logo-icon" width="32" height="32" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg" style="vertical-align:middle;"><circle cx="20" cy="20" r="14" stroke="#0F0F11" stroke-width="3.8" stroke-dasharray="67 21" stroke-linecap="round" transform="rotate(-65 20 20)"/><g transform="rotate(-38 20 20)"><path d="M 15 13.5 L 20 7.5 L 25 13.5 L 25 27 C 25 29 23.5 30.5 21.5 30.5 L 18.5 30.5 C 16.5 30.5 15 29 15 27 Z" fill="#F59E0B"/><circle cx="20" cy="13" r="2.2" fill="#FAF9F6"/></g></svg>
+    <div style="font-family:'Plus Jakarta Sans',sans-serif; font-weight:850; font-size:22px; color:var(--fg); letter-spacing:-0.5px; line-height:1;">ai<span style="color:#f59e0b;">pp</span> <span style="font-weight:400; opacity:0.6; font-size:16px;">docs</span></div>
+  </a>
+
+  <div class="nav-links">
+    <a href="/#tag-form">Create Tag</a>
+    <a href="/#uses">Extension</a>
+    <a href="/#uses">Applications</a>
+    <a href="/dashboard.html" class="nav-cta">Studio Console →</a>
+  </div>
+</header>
+
+<div class="docs-layout">
+  <!-- SIDEBAR -->
+  <aside class="docs-sidebar">
+    <div class="sidebar-section">
+      <div class="sidebar-title">Getting Started</div>
+      <a href="#overview" class="sidebar-link active">Overview</a>
+      <a href="#quickstart" class="sidebar-link">Quickstart</a>
+      <a href="#smart-tags" class="sidebar-link">Smart Tags</a>
+    </div>
+    <div class="sidebar-section">
+      <div class="sidebar-title">Client Tools</div>
+      <a href="#extension-guide" class="sidebar-link">Chrome Extension</a>
+      <a href="#smart-tags" class="sidebar-link">Smart Tags</a>
+    </div>
+    <div class="sidebar-section">
+      <div class="sidebar-title">API Reference</div>
+      <a href="#create-tag" class="sidebar-link">Create Smart Tag</a>
+      <a href="#create-invoice" class="sidebar-link">Create Invoice</a>
+      <a href="#check-status" class="sidebar-link">Poll Settlement</a>
+    </div>
+    <div class="sidebar-section">
+      <div class="sidebar-title">No-Code &amp; Creators</div>
+      <a href="#notion-templates" class="sidebar-link">Notion Paywalls &amp; Embeds</a>
+      <a href="#blog-paywalls" class="sidebar-link">Ghost &amp; WordPress Blogs</a>
+      <a href="#n8n-workflows" class="sidebar-link">n8n &amp; Make.com Workflows</a>
+      <a href="#obsidian-vaults" class="sidebar-link">Obsidian Notes &amp; Vaults</a>
+    </div>
+    <div class="sidebar-section">
+      <div class="sidebar-title">AI &amp; Developers</div>
+      <a href="#langchain-agents" class="sidebar-link">LangChain &amp; AI Agents</a>
+      <a href="#huggingface-gradio" class="sidebar-link">Hugging Face &amp; Gradio</a>
+      <a href="#cli-paywalls" class="sidebar-link">Terminal &amp; CLI Paywalls</a>
+    </div>
+    <div class="sidebar-section">
+      <div class="sidebar-title">Protocols</div>
+      <a href="#l402-protocol" class="sidebar-link">Bitcoin Lightning (L402)</a>
+      <a href="#x402-protocol" class="sidebar-link">Base USDC</a>
+    </div>
+  </aside>
+
+  <!-- CONTENT -->
+  <main class="docs-content">
+    <h1 class="docs-title">Developer Documentation</h1>
+    <p class="docs-sub">Guides and API references for adding pay-per-use payments to digital products and AI workflows.</p>
+
+    <!-- SECTION: OVERVIEW -->
+    <div class="section-block" id="overview">
+      <h2>Architecture Overview</h2>
+      <p>AIPP creates payment challenges, verifies successful payments, deducts the disclosed service fee, and automatically forwards the merchant amount to the configured wallet. AIPP does not offer merchant spending accounts or prepaid balances.</p>
+      
+      <!-- Modern Visual Architecture Flow -->
+      <div style="background:#181716; border:1px solid #292725; border-radius:14px; padding:28px; margin:20px 0; color:#fff;">
+        <div class="diagram-grid" style="display:grid; grid-template-columns: 1fr auto 1fr; gap:16px; align-items:center; text-align:center;">
+          
+          <div style="background:#242220; border:1px solid #383532; border-radius:10px; padding:16px;">
+            <div style="font-size:11px; font-weight:700; color:#a3a099; text-transform:uppercase; letter-spacing:0.05em; margin-bottom:4px;">Buyer / AI Agent</div>
+            <div style="font-size:13px; font-weight:600; color:#fff;">Web Browser / MCP Client</div>
+          </div>
+
+          <div style="display:flex; flex-direction:column; align-items:center; gap:4px;">
+            <span style="font-family:'JetBrains Mono',monospace; font-size:10px; color:#fbbf24; background:rgba(251,191,36,0.1); padding:2px 8px; border-radius:4px;">1. HTTP 402 Challenge</span>
+            <div style="width:100px; height:1px; background:#474440; position:relative;">
+              <div style="position:absolute; right:0; top:-3px; width:6px; height:6px; border-top:1px solid #fbbf24; border-right:1px solid #fbbf24; transform:rotate(45deg);"></div>
+            </div>
+            <span style="font-family:'JetBrains Mono',monospace; font-size:10px; color:#34d399; background:rgba(52,211,153,0.1); padding:2px 8px; border-radius:4px;">2. Settle &amp; Preimage</span>
+          </div>
+
+          <div style="background:#242220; border:1px solid #383532; border-radius:10px; padding:16px;">
+            <div style="font-size:11px; font-weight:700; color:#a3a099; text-transform:uppercase; letter-spacing:0.05em; margin-bottom:4px;">aipp Protocol</div>
+            <div style="font-size:13px; font-weight:600; color:#fff;">Smart Tag Router</div>
+          </div>
+
+        </div>
+
+        <div style="display:flex; justify-content:center; margin-top:16px;">
+          <div style="background:rgba(194,97,60,0.15); border:1px solid var(--accent); border-radius:10px; padding:12px 24px; display:inline-flex; align-items:center; gap:10px;">
+            <div style="width:8px; height:8px; border-radius:50%; background:var(--accent);"></div>
+            <div style="font-size:12px; font-weight:600; color:#f3efea;">
+              Automatic Payout ➔ <strong>Creator Wallet</strong> (Lightning / Base)
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SECTION: QUICKSTART -->
+    <div class="section-block" id="quickstart">
+      <h2>SDK Quickstart</h2>
+      <p>Install the SDK, create a client, and protect an Express route:</p>
+
+      <pre>
+// Node.js / Express
+import { Aipp, l402Paywall } from 'aipp-sdk';
+
+const aipp = new Aipp({ apiKey: process.env.AIPP_API_KEY });
+
+app.post('/api/generate-summary', l402Paywall({
+  client: aipp,
+  jwtSecret: process.env.AIPP_JWT_SECRET,
+  resourceId: 'generate-summary',
+  amountUsd: 0.05
+}), async (req, res) => {
+  res.json({ result: "Premium AI analysis completed." });
+});</pre>
+    </div>
+
+    <!-- SECTION: LANGCHAIN & AI AGENTS -->
+    <div class="section-block" id="langchain-agents">
+      <div class="endpoint-badge badge-post">AI M2M PROTOCOL · PYTHON / LANGCHAIN</div>
+      <h2>Autonomous AI Agents &amp; LangChain Tools</h2>
+      <p>Enable autonomous LLM agents (LangChain, CrewAI, LlamaIndex, Claude MCP) to execute machine-to-machine micro-payments with Bitcoin Lightning L402 and cryptographic preimages.</p>
+
+      <p><strong>Key Features:</strong></p>
+      <ul style="margin-left: 20px; font-size: 14px; color: var(--fg-muted); line-height: 1.7; margin-bottom: 20px;">
+        <li><strong>Agent-friendly payments:</strong> AI agents can pay from $0.01 per API inference or database query.</li>
+        <li><strong>Machine-readable receipts:</strong> Settlements include a transaction identifier, timestamp, amounts and available payment proof.</li>
+      </ul>
+
+      <pre>
+# Python: pip install aipp-sdk
+import os
+from aipp import Aipp
+
+client = Aipp(api_key=os.environ["AIPP_API_KEY"])
+
+# 1. Issue an L402 payment challenge for an AI tool
+charge = client.create_charge(amount_usd=0.05, protocol="L402", memo="AI Query")
+print("Invoice for Agent:", charge.payment_request)
+
+# 2. Verify settlement and read the payment receipt
+receipt = client.get_receipt(charge.payment_hash)
+if receipt.status == "settled":
+    print("Transaction:", receipt.transaction_id)</pre>
+    </div>
+
+    <!-- SECTION: NOTION TEMPLATES & EMBEDS -->
+    <div class="section-block" id="notion-templates">
+      <div class="endpoint-badge badge-post">CREATOR MONETIZATION · NOTION / EMBEDS</div>
+      <h2>Monetizing Notion Templates &amp; Pages in 3 Seconds</h2>
+      <p>Sell Notion templates, productivity dashboards, research notes, or digital resources with pay-per-item access instead of requiring a subscription.</p>
+
+      <p><strong>How to Monetize in 3 Steps:</strong></p>
+      <ol style="margin-left: 20px; font-size: 14px; color: var(--fg-muted); line-height: 1.7; margin-bottom: 20px;">
+        <li><strong>Get Your Duplicate Link:</strong> In your Notion page, click <em>Share ➔ Publish ➔ Allow duplicate as template</em> and copy the public link.</li>
+        <li><strong>Create an AIPP Smart Tag:</strong> On <a href="/#tag-form" style="color:var(--accent); font-weight:600;">aipp.dev</a>, set your price, wallet, and paste your Notion duplicate link as the redirect target.</li>
+        <li><strong>Embed or Share:</strong> Paste your checkout URL directly in Notion using the <code>/embed https://aipp.dev/embed/p_...</code> command, or share it on Twitter/Reddit.</li>
+      </ol>
+
+      <div style="background:#f4f4f5; border:1px solid #e4e4e7; border-radius:10px; padding:16px; margin-bottom:20px; font-size:13px; color:var(--fg);">
+        🏷️ <strong>Transparent pricing:</strong> Lightning customers see the merchant price plus the AIPP fee (1% + 5 sats) before paying. Merchant payouts are sent automatically.
+      </div>
+    </div>
+
+    <!-- SECTION: BLOG PAYWALLS -->
+    <div class="section-block" id="blog-paywalls">
+      <div class="endpoint-badge badge-post">PUBLISHING · GHOST / WORDPRESS / SUBSTACK</div>
+      <h2>Pay-Per-Article Paywall Widget for Blogs</h2>
+      <p>Allow readers to unlock individual articles or premium chapters for <strong>$0.01 - $0.50 (16 - 750 Sats)</strong> without forcing a recurring monthly subscription.</p>
+
+      <p><strong>1-Line Embed Code:</strong></p>
+      <pre>
+&lt;!-- Paste inside any Ghost, WordPress, or HTML blog post --&gt;
+&lt;div data-aipp-tag="p_YOUR_TAG_ID"&gt;
+  &lt;p&gt;Paywall preview overlay component for embedding on custom websites. Content is blurred by default and premium article content unlocked upon verified payment.&lt;/p&gt;
+&lt;/div&gt;
+&lt;script src="https://aipp.dev/aipp-widget.js"&gt;&lt;/script&gt;</pre>
+    </div>
+
+    <!-- SECTION: N8N & MAKE AUTOMATION -->
+    <div class="section-block" id="n8n-workflows">
+      <div class="endpoint-badge badge-post">NO-CODE AUTOMATION · N8N / MAKE.COM / ZAPIER</div>
+      <h2>Monetizing n8n &amp; Make.com Workflows</h2>
+      <p>Monetize any n8n or Make.com workflow (e.g. AI Image Generation, Web Scraping, Financial PDF summary) in 3 minutes using AIPP Smart Tags and Webhooks.</p>
+
+      <div style="background:#f4f4f5; border:1px solid #e4e4e7; border-radius:10px; padding:16px; margin-bottom:20px; font-size:13px; color:var(--fg);">
+        ⚡ <strong>Download Templates:</strong>
+        <ul style="margin-left: 20px; margin-top: 8px;">
+          <li><a href="https://github.com/botofrk/satsgate/blob/main/examples/n8n_aipp_monetization_workflow.json" target="_blank" rel="noopener" style="color:var(--accent); font-weight:700;">n8n Workflow JSON</a></li>
+          <li><a href="https://github.com/botofrk/satsgate/blob/main/examples/make_aipp_monetization_blueprint.json" target="_blank" rel="noopener" style="color:var(--accent); font-weight:700;">Make.com Blueprint JSON</a></li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- SECTION: OBSIDIAN VAULTS -->
+    <div class="section-block" id="obsidian-vaults">
+      <div class="endpoint-badge badge-post">PKM &amp; NOTES · OBSIDIAN.MD</div>
+      <h2>Monetizing Obsidian Notes &amp; Vaults</h2>
+      <p>Sell Obsidian vaults, research databases, or interactive canvas notes with transparent fees and automatic satoshi payouts.</p>
+      
+      <pre>
+&lt;!-- Embed in Obsidian Publish or Markdown notes --&gt;
+&lt;iframe src="https://aipp.dev/embed/p_YOUR_TAG_ID" style="width:100%; max-width:360px; height:380px; border:none; border-radius:10px;"&gt;&lt;/iframe&gt;</pre>
+    </div>
+
+    <!-- SECTION: HUGGING FACE & GRADIO -->
+    <div class="section-block" id="huggingface-gradio">
+      <div class="endpoint-badge badge-post">AI MODELS · HUGGING FACE / GRADIO</div>
+      <h2>Monetizing AI Models &amp; Gradio Spaces</h2>
+      <p>Charge users per inference or image generation to cover GPU costs on Hugging Face Spaces using Bitcoin Lightning L402.</p>
+
+      <pre>
+# Python Gradio Example (pip install aipp-sdk)
+from aipp import Aipp
+
+client = Aipp(api_key="aipp_merch_YOUR_KEY")
+
+def generate_image(prompt, preimage=None):
+    if not preimage:
+        charge = client.create_charge(amount_usd=0.02, protocol="L402", memo=f"GPU: {prompt[:20]}")
+        return {"status": "PAYMENT_REQUIRED", "invoice": charge.payment_request, "sats": charge.amount_sats}
+    
+    receipt = client.get_receipt(charge.payment_hash)
+    if receipt.status == "settled":
+        return {"status": "SUCCESS", "image_url": "https://..."}</pre>
+    </div>
+
+    <!-- SECTION: CLI & TERMINAL -->
+    <div class="section-block" id="cli-paywalls">
+      <div class="endpoint-badge badge-post">DEVELOPER UTILITY · BASH / CLI</div>
+      <h2>Terminal &amp; Curl Paywalls</h2>
+      <p>Sell bash scripts, dotfiles, or datasets directly through the terminal with zero browser required.</p>
+
+      <pre>
+# 1. Trigger terminal paywall & get ASCII Lightning Invoice
+curl https://aipp.dev/cli/p_demo
+
+# 2. Pay, then exchange PAYMENT_HASH + ACCESS_CLAIM_SECRET for an access token
+curl -s -X POST https://aipp.dev/t/p_demo/access-token \
+  -H "Content-Type: application/json" \
+  -d '{"payment_hash":"PAYMENT_HASH","access_claim_secret":"ACCESS_CLAIM_SECRET"}'
+
+# 3. Deliver the payload without putting credentials in the URL
+curl -s -H "Authorization: Bearer ACCESS_TOKEN" https://aipp.dev/cli/p_demo</pre>
+    </div>
+
+    <!-- SECTION: EXTENSION GUIDE -->
+    <div class="section-block" id="extension-guide">
+      <div class="endpoint-badge badge-post">CLIENT UTILITY · EXTENSION</div>
+      <h2>1-Click Chrome Extension</h2>
+      <p>The AIPP Extension is a browser companion for creating and attaching Smart Tags to web content.</p>
+      
+      <p><strong>Two Core Operating Modes:</strong></p>
+      <ul style="margin-left: 20px; font-size: 14px; color: var(--fg-muted); line-height: 1.7; margin-bottom: 20px;">
+        <li><strong>Create Tag Mode:</strong> Activates a visual DOM element picker on your active tab. Click text, an image, or a container to attach a paywall snippet.</li>
+        <li><strong>Quick Link Mode:</strong> Packages private links into one Smart Tag (<code>https://aipp.dev/t/p_...</code>). A browser gets checkout; an agent gets the manifest.</li>
+      </ul>
+    </div>
+    <!-- SECTION: API CREATE TAG -->
+    <div class="section-block" id="create-tag">
+      <div class="endpoint-badge badge-post">POST /merchant/links/create</div>
+      <h2>Create an AIPP Smart Tag</h2>
+      <p>Create one priced capability that works for both people and software. The response includes a human URL and an agent manifest URL.</p>
+
+      <pre>
+curl -X POST https://aipp.dev/merchant/links/create \
+  -H "Content-Type: application/json" \
+  -H "X-Api-Key: $AIPP_API_KEY" \
+  -d '{
+    "title": "Autonomous Agent Workflow Pack",
+    "amount_usd": 0.25,
+    "redirect_url": "https://example.com/download",
+    "capability_type": "api",
+    "description": "Summarize one research document",
+    "input_schema": {"type":"object","properties":{"url":{"type":"string"}}},
+    "output_schema": {"type":"object","properties":{"summary":{"type":"string"}}}
+  }'</pre>
+      <h3>One URL, two interfaces</h3>
+      <pre># Friendly checkout for a person
+curl -H "Accept: text/html" https://aipp.dev/t/p_YOUR_TAG
+
+# Stable description for an agent, MCP tool or workflow
+curl -H "Accept: application/json" https://aipp.dev/t/p_YOUR_TAG
+# or GET /t/p_YOUR_TAG/manifest</pre>
+      <p>After settlement, exchange the invoice's private claim at <code>POST /t/:tag/access-token</code>, then call <code>GET /t/:tag/content</code> with <code>Authorization: Bearer &lt;access_token&gt;</code>. Payment hashes identify invoices but never authorize content.</p>
+    </div>
+
+    <!-- SECTION: API CREATE INVOICE -->
+    <div class="section-block" id="create-invoice">
+      <div class="endpoint-badge badge-post">POST /invoice/create</div>
+      <h2>Create a Payment Challenge</h2>
+      <p>Generate a Lightning invoice, Base USDC challenge, or offer both payment methods.</p>
+
+      <pre>
+curl -X POST https://aipp.dev/invoice/create \
+  -H "Content-Type: application/json" \
+  -H "X-Api-Key: $AIPP_API_KEY" \
+  -d '{
+    "amount_usd": 0.25,
+    "protocol": "dual"
+  }'</pre>
+    </div>
+
+    <!-- SECTION: CHECK STATUS -->
+    <div class="section-block" id="check-status">
+      <div class="endpoint-badge badge-get">GET /invoice/status/:hash</div>
+      <h2>Verify Settlement Status</h2>
+      <p>Real-time endpoint called to verify whether a payment hash or EVM signature has achieved network confirmation.</p>
+
+      <pre>
+curl https://aipp.dev/invoice/status/YOUR_PAYMENT_HASH</pre>
+    </div>
+  </main>
+</div>
+
+<footer style="border-top:1px solid var(--border); padding:40px 48px; background:var(--bg); display:flex; flex-direction:column; align-items:center; gap:16px; text-align:center; font-size:13px; color:var(--fg-muted); margin-top:40px;">
+  <div style="display:flex; align-items:center; gap:10px; font-weight:700; font-size:16px;">
+    <div style="width:20px; height:20px; background:var(--fg); border-radius:5px; display:flex; align-items:center; justify-content:center; color:var(--bg);">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/></svg>
+    </div>
+    <span style="font-weight:800; font-size:16px;">aipp</span>
+  </div>
+  <p>Smart Tags and pay-per-use payments for creators and developers.</p>
+  <div style="display:flex; flex-wrap:wrap; justify-content:center; gap:24px; font-weight:600; color:var(--fg);">
+    <a href="/" style="color:inherit;">Home</a>
+    <a href="/dashboard.html" style="color:inherit;">Studio</a>
+    <a href="/docs.html" style="color:inherit;">Documentation</a>
+    <a href="/legal.html" style="color:inherit;">Terms &amp; Privacy</a>
+    <a href="mailto:info@aipp.dev" style="color:var(--accent);">info@aipp.dev</a>
+  </div>
+  <p style="font-size:11px; color:var(--fg-subtle);">© 2026 AIPP.</p>
+</footer>
+
+</body>
+</html>

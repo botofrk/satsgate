@@ -1,11 +1,47 @@
-__pycache__/
-*.pyc
-.venv/
-venv/
+# Environment — NEVER commit real credentials
 .env
-*.egg-info/
-dist/
-*.pyo
-.pytest_cache/
-node_modules/
-.git/
+.env*
+*.env
+!.env.example
+core_env
+.vscode/
+.idea/
+**/node_modules/
+**/*.db
+**/*.db-wal
+**/*.db-shm
+data/
+coverage/
+*.log
+*.zip
+.uploads/
+
+# PM2
+.pm2/
+
+# Python & SDK Build
+**/__pycache__/
+**/*.pyc
+**/venv/
+**/build/
+**/dist/
+**/*.egg-info/
+
+# Scratch / temp files — never commit
+scratch/
+support-archive/
+temp_icon_gen/
+
+# Local one-off diagnostics and generated archives
+/check*.js
+/clear-db.js
+/delete_merchant.js
+/fix_user_wallet.js
+/set_secret.sh
+/test_pay.js
+/test_payout.js
+/test_x402.ts
+/unblock_ip.sh
+/scratch.js
+/extension.zip
+/public/zeus_*.html

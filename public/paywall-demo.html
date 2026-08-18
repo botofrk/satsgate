@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>AIPP — Smart Price Tag Paywall Demo</title>
+<link rel="icon" type="image/x-icon" href="/favicon.ico">
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap');
+  
+  :root {
+    --bg: #faf8f5;
+    --sub-bg: #f3efea;
+    --card-bg: #ffffff;
+    --fg: #1a1918;
+    --fg-muted: #6b6964;
+    --fg-subtle: #999690;
+    --border: #e6e2dc;
+    --border-subtle: #eeeae4;
+    --accent: #806300;
+    --accent-light: #fbeee7;
+    --accent-hover: #b05330;
+    --radius-sm: 8px;
+    --radius-md: 14px;
+    --radius-lg: 20px;
+    --shadow-subtle: 0 1px 3px rgba(26,25,24,0.03), 0 6px 20px rgba(26,25,24,0.03);
+    --shadow-card: 0 4px 20px rgba(26,25,24,0.06), 0 16px 40px rgba(26,25,24,0.06);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  
+  body {
+    background-color: var(--bg);
+    color: var(--fg);
+    font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    line-height: 1.7;
+    -webkit-font-smoothing: antialiased;
+    min-height: 100vh;
+  }
+  
+  header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 20px 48px;
+    border-bottom: 1px solid var(--border);
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    background: rgba(250, 248, 245, 0.9);
+    backdrop-filter: blur(12px);
+  }
+  
+  .logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-weight: 700;
+    font-size: 18px;
+    color: var(--fg);
+    text-decoration: none;
+  }
+  .logo-icon {
+    width: 24px;
+    height: 24px;
+    display: block;
+    color: var(--bg);
+  }
+  .nav-btn {
+    background: var(--fg);
+    color: #ffffff !important;
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 13px;
+    text-decoration: none;
+    transition: all 0.2s ease;
+  }
+  .nav-btn:hover {
+    background: #33312e;
+    transform: translateY(-1px);
+  }
+  
+  .layout {
+    max-width: 780px;
+    margin: 64px auto;
+    padding: 0 24px 80px;
+  }
+
+  .premium-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--accent-light);
+    color: var(--accent);
+    border: 1px solid rgba(194, 97, 60, 0.2);
+    padding: 5px 12px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 20px;
+  }
+
+  h1 {
+    font-family: 'Instrument Serif', Georgia, serif;
+    font-size: clamp(38px, 5vw, 54px);
+    font-weight: 400;
+    line-height: 1.1;
+    letter-spacing: -0.02em;
+    margin-bottom: 20px;
+    color: var(--fg);
+  }
+
+  .author-bar {
+    color: var(--fg-muted);
+    font-size: 14px;
+    margin-bottom: 36px;
+    border-bottom: 1px solid var(--border-subtle);
+    padding-bottom: 24px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+  .avatar {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: var(--sub-bg);
+    border: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    color: var(--accent);
+    font-family: 'Instrument Serif', serif;
+    font-size: 18px;
+  }
+
+  p {
+    color: var(--fg-muted);
+    font-size: 16px;
+    margin-bottom: 24px;
+    line-height: 1.75;
+  }
+
+  /* This div will be replaced/unlocked by the paywall script */
+  [data-aipp-src] {
+    margin-top: 32px;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <a href="/" class="logo">
+    <svg class="logo-icon" width="28" height="28" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg" style="vertical-align:middle;"><circle cx="20" cy="20" r="14" stroke="#0F0F11" stroke-width="3.8" stroke-dasharray="67 21" stroke-linecap="round" transform="rotate(-65 20 20)"/><g transform="rotate(-38 20 20)"><path d="M 15 13.5 L 20 7.5 L 25 13.5 L 25 27 C 25 29 23.5 30.5 21.5 30.5 L 18.5 30.5 C 16.5 30.5 15 29 15 27 Z" fill="#F59E0B"/><circle cx="20" cy="13" r="2.2" fill="#FAF9F6"/></g></svg>
+    <span>aipp protocol</span>
+  </a>
+  <a href="/dashboard.html" class="nav-btn">Studio Console →</a>
+</header>
+
+<div class="layout">
+  <span class="premium-pill">🏷️ Smart Tag Protected</span>
+  <h1>The Future of Autonomous AI &amp; Automated Micropayments</h1>
+  <div class="author-bar">
+    <div class="avatar">SN</div>
+    <div>
+      <strong style="color: var(--fg);">Satoshi Nakamoto</strong><br>
+      <span style="font-size: 13px; color: var(--fg-subtle);">Research Fellow · July 2026</span>
+    </div>
+  </div>
+
+  <p>In the rapidly evolving landscape of artificial intelligence, one of the most significant bottlenecks has been the inability of autonomous agents to interact with the traditional financial system. LLMs can write code, analyze data, and generate creative content, but when faced with a simple API paywall or a subscription requirement, they are stopped dead in their tracks.</p>
+
+  <p>This is where L402-style payment challenges and Smart Tags come into play. AIPP verifies payment before releasing protected content and forwards the merchant amount through its settlement workflow.</p>
+
+  <!-- This div will be replaced/unlocked by the paywall script -->
+  <div data-aipp-src="/premium-article-1">
+    <p style="text-align: center; color: var(--fg-subtle); padding: 40px 0;">Loading smart price tag...</p>
+  </div>
+  
+</div>
+
+<!-- Include the AIPP Paywall Drop-in JS -->
+<script src="/paywall.js?v=11"></script>
+
+</body>
+</html>

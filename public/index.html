@@ -1,0 +1,539 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="description" content="Charge for an API call, AI task, workflow, file, or digital service without forcing it into a subscription. AIPP verifies Lightning and Base USDC payments via HTTP 402, L402, and x402.">
+  <title>aipp — Put a price on digital actions | Lightning &amp; Base USDC</title>
+  <link rel="icon" href="/favicon.ico">
+  <link rel="alternate" type="text/plain" href="/llms.txt" title="LLM Documentation">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@700;800&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root{--ink:#0f0f11;--muted:#625f5a;--paper:#faf9f6;--card:#fffdf9;--line:#e5ded4;--accent:#ffc700;--accent2:#eab600;--green:#16784a;--blue:#2563eb;--red:#dc2626;--shadow:0 12px 36px rgba(38,29,22,.06)}
+    *{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:var(--paper);color:var(--ink);font-family:'Inter',ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;-webkit-font-smoothing:antialiased}
+    button,input{font:inherit}a{color:inherit}.shell{width:min(1080px,calc(100% - 32px));margin:auto}
+    
+    /* Navigation */
+    nav{height:68px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--line)}.brand{display:flex;gap:10px;align-items:center;text-decoration:none;font-family:'Plus Jakarta Sans',sans-serif;font-weight:850;font-size:24px;letter-spacing:-0.04em}.mark{width:32px;height:32px;display:block}.navlinks{display:flex;align-items:center;gap:20px;font-size:13px;color:var(--muted)}.navlinks a{text-decoration:none;transition:color .2s}.navlinks a:hover{color:var(--ink)}.studio{padding:9px 16px;border-radius:10px;background:var(--ink);color:white!important;font-weight:750;transition:all .2s ease}.studio:hover{background:#282624;transform:translateY(-1px)}
+    
+    /* Hero */
+    main{padding:52px 0 12px}.hero{text-align:center;max-width:800px;margin:0 auto 24px}.eyebrow{display:inline-flex;align-items:center;gap:7px;padding:6px 14px;border:1px solid #ead274;background:#fffbdf;color:#625000;border-radius:999px;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.06em}.hero h1{font-family:Georgia,"Times New Roman",serif;font-size:clamp(40px,6.5vw,68px);font-weight:500;line-height:1.02;letter-spacing:-.045em;margin:22px 0 16px;color:#181716}.hero h1 em{color:#9a7600;font-weight:500;font-style:italic}.hero p{font-size:17px;line-height:1.6;color:var(--muted);max-width:680px;margin:auto}.tiny-proof{display:flex;justify-content:center;gap:18px;flex-wrap:wrap;margin-top:20px;font-size:12px;font-weight:700;color:#4e4945}.tiny-proof span:before{content:"✓";color:var(--green);margin-right:6px}
+    
+    /* Agent Demo Banner */
+    .hero-agent-banner{margin-top:26px;display:inline-flex;align-items:center;justify-content:center;gap:10px;background:#111;color:#fff;padding:10px 22px;border-radius:12px;font-size:13px;font-weight:600;border:1px solid #333;box-shadow:0 8px 24px rgba(0,0,0,0.12);max-width:100%}.hero-agent-banner .agent-code{font-family:monospace;color:#f59e0b;background:rgba(245,158,11,0.15);padding:2px 8px;border-radius:5px;font-size:12.5px;word-break:break-all}.hero-agent-banner .agent-try{color:#fff;text-decoration:underline;font-size:11px;opacity:0.85;margin-left:4px;white-space:nowrap}
+    
+    /* Action Showcase Strip */
+    .action-strip{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;max-width:820px;margin:36px auto 44px;text-align:center}.action-pill{background:#fff;border:1.5px solid var(--line);border-radius:14px;padding:14px 10px;box-shadow:0 3px 10px rgba(38,29,22,.02);display:flex;flex-direction:column;align-items:center;gap:5px;transition:all .25s ease}.action-pill:hover{border-color:#d4b200;transform:translateY(-2px);box-shadow:0 6px 18px rgba(38,29,22,.05)}.action-pill small{display:flex;align-items:center;gap:5px;font-size:10.5px;font-weight:800;text-transform:uppercase;letter-spacing:.05em;color:#85817b}.action-pill strong{display:flex;align-items:center;justify-content:center;gap:6px;font-size:13px;color:var(--ink)}.action-pill .flow-arrow{color:#f59e0b;font-weight:850}
+
+    /* Philosophy Section (Manifesto) */
+    .philosophy{max-width:680px;margin:44px auto;background:#fffdf9;border:1.5px solid #e5ded4;border-radius:20px;padding:32px 30px;box-shadow:0 4px 20px rgba(38,29,22,.03);text-align:center}.philosophy h2{font-family:Georgia,serif;font-size:26px;font-weight:500;margin:0 0 12px;color:#181716}.philosophy p{font-size:14.5px;line-height:1.7;color:#524e4a;margin:0 0 12px}.philosophy p:last-child{margin-bottom:0}
+
+    /* Multitool / Implementation Tools Section */
+    .knives-wrapper{max-width:820px;margin:36px auto 48px;background:#f8f5ef;border:1.5px solid #e8ded2;border-radius:24px;padding:36px 26px 30px;box-shadow:0 10px 36px rgba(38,29,22,.04)}.knives-header{text-align:center;margin-bottom:28px}.knives-header h2{font-family:Georgia,serif;font-size:28px;font-weight:500;margin:0 0 6px;color:#181716}.knives-header p{font-size:13px;color:#746e68;margin:0}.multitool-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;position:relative;z-index:2;align-items:stretch}.multitool-card{background:#fff;border:1.5px solid #dfd6cb;border-radius:16px;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 4px 16px rgba(38,29,22,.03);transition:all .3s ease;position:relative}.multitool-card:hover{transform:translateY(-4px);border-color:#f59e0b;box-shadow:0 0 0 3px rgba(245,158,11,.15),0 12px 28px rgba(38,29,22,.07)}.card-stripe{height:5px;background:#f59e0b;width:100%;transition:background .3s}.multitool-card[data-card="1"] .card-stripe{background:#ef4444}.multitool-card[data-card="2"] .card-stripe{background:#f59e0b}.multitool-card[data-card="3"] .card-stripe{background:#10b981}.card-body{padding:18px 16px 14px;flex:1;display:flex;flex-direction:column;gap:10px}.card-icon-header{display:flex;align-items:center;justify-content:space-between}.card-icon-badge{width:40px;height:40px;border-radius:10px;background:#fffbdf;border:1px solid #fef08a;display:flex;align-items:center;justify-content:center;transition:all .3s ease}.multitool-card:hover .card-icon-badge{background:#fef3c7;transform:scale(1.05)}.card-tag-pill{font-size:9.5px;font-weight:800;text-transform:uppercase;letter-spacing:.05em;padding:2.5px 8px;border-radius:20px;background:#f4f4f5;color:#71717a}.card-content h3{font-size:15px;font-weight:800;margin:0 0 6px;color:#181716;font-family:'Plus Jakarta Sans',sans-serif}.card-content p{font-size:12px;line-height:1.55;color:#6f6a65;margin:0}.card-action-btn{margin:0 14px 14px;padding:10px 14px;border-radius:10px;background:#faf9f6;border:1px solid #e8ddd4;text-decoration:none;font-size:11.5px;font-weight:800;color:#705800;display:flex;align-items:center;justify-content:space-between;transition:all .25s ease}.card-action-btn:hover{background:#111;color:#fff;border-color:#111;transform:translateY(-2px);box-shadow:0 4px 12px rgba(0,0,0,.15)}.card-action-btn svg{transition:transform .25s ease}.card-action-btn:hover svg{transform:translateX(4px);stroke:#fff}.multitool-hub-container{margin-top:-6px;position:relative;text-align:center}.connecting-cables-svg{width:100%;height:80px;display:block}.aipp-core-hub{display:inline-flex;align-items:center;gap:16px;background:linear-gradient(145deg,#1f1e1c,#11110f);border:2px solid #34302b;border-radius:18px;padding:14px 30px;box-shadow:0 14px 36px rgba(24,23,22,.35);margin-top:-24px;position:relative;z-index:3;transform:scale(1.15)}.core-brand-text{font-family:'Plus Jakarta Sans',sans-serif;font-weight:850;font-size:20px;color:#fff;letter-spacing:-.5px;line-height:1}.core-sub-label{display:block;font-size:9px;font-weight:850;letter-spacing:1.8px;color:#a1a1aa;margin-top:3px}.core-pulse-dots{display:flex;gap:7px}.core-pulse-dots span{width:9px;height:9px;border-radius:50%;animation:pulseDot 1.6s ease-in-out infinite alternate}.core-pulse-dots span:nth-child(1){background:#ef4444;box-shadow:0 0 8px rgba(239,68,68,.7)}.core-pulse-dots span:nth-child(2){background:#f59e0b;box-shadow:0 0 8px rgba(245,158,11,.7);animation-delay:.3s}.core-pulse-dots span:nth-child(3){background:#10b981;box-shadow:0 0 8px rgba(16,185,129,.7);animation-delay:.6s}@keyframes pulseDot{from{opacity:.45;transform:scale(.85)}to{opacity:1;transform:scale(1.2)}}.multitool-footer-note{text-align:center;font-size:10.5px;font-weight:850;letter-spacing:2px;color:#918a83;margin-top:22px}
+
+    /* Interactive Quick Tag Generator */
+    .tool{max-width:580px;margin:28px auto 0;background:#fff;border:1.5px solid #dcd4c8;border-radius:18px;box-shadow:0 14px 40px rgba(38,29,22,.08);overflow:hidden}.tooltop{display:flex;align-items:center;justify-content:space-between;padding:16px 24px 12px;background:#fffdf9;border-bottom:1px solid #f0e9df}.tooltitle{display:flex;align-items:center;gap:8px;font-size:14.5px;font-weight:850;color:#181716}.tooltitle:before{content:"";width:18px;height:18px;background:url("data:image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Ccircle cx='20' cy='20' r='14' stroke='%230F0F11' stroke-width='3.8' stroke-dasharray='67 21' stroke-linecap='round' transform='rotate(-65 20 20)'/%3E%3Cg transform='rotate(-38 20 20)'%3E%3Cpath d='M 15 13.5 L 20 7.5 L 25 13.5 L 25 27 C 25 29 23.5 30.5 21.5 30.5 L 18.5 30.5 C 16.5 30.5 15 29 15 27 Z' fill='%23F59E0B'/%3E%3Ccircle cx='20' cy='13' r='2.2' fill='%23FAF9F6'/%3E%3C/g%3E%3C/svg%3E") center/contain no-repeat}.steps{font-size:11.5px;font-weight:600;color:#8b8782}.form{padding:14px 24px 24px}.formblock{background:#faf9f7;border:1px solid #efe8de;border-radius:12px;padding:14px;margin-bottom:12px}.types{display:grid;grid-template-columns:repeat(3,1fr);gap:5px}.chip{border:1px solid transparent;background:transparent;padding:9.5px 6px;border-radius:8px;font-size:11.5px;font-weight:750;cursor:pointer;color:#56504b;transition:all .2s}.chip.active{border-color:#d4b200;background:#fffbdf;color:var(--ink);box-shadow:0 1px 4px rgba(0,0,0,.04)}
+    .grid{display:grid;grid-template-columns:1.7fr .55fr;gap:10px}.field{margin:0}.field label,.blocklabel{display:flex;justify-content:space-between;font-size:10.5px;font-weight:800;color:#746e68;margin:0 0 7px;text-transform:uppercase;letter-spacing:.03em}.hint{font-weight:500;color:#99918a;text-transform:none}.field input{width:100%;height:42px;border:1px solid #ddd9d3;background:#fff;border-radius:8px;padding:0 12px;outline:0;font-size:13px}.field input:focus{border-color:#d4b200;box-shadow:0 0 0 3px rgba(255,199,0,.18)}.pricewrap{position:relative}.pricewrap:before{content:"$";position:absolute;left:12px;top:50%;transform:translateY(-50%);color:#77716b;font-weight:700}.pricewrap input{padding-left:25px}
+    .payoutline{display:block;margin:0 0 9px}.payoutline>span{display:block;font-size:10.5px;font-weight:800;color:#746e68;margin-bottom:7px;text-transform:uppercase;letter-spacing:.03em}.rail{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}.rail button{border:1px solid #ddd9d3;background:#fff;padding:9px;border-radius:8px;font-size:10.5px;font-weight:750;color:#5e5954;cursor:pointer;transition:all .2s}.rail button.active{border-color:#74a7f3;background:#e8f1ff;color:#225da8;box-shadow:none}.wallets{display:grid;grid-template-columns:1fr 1fr;gap:10px}.wallets.one{grid-template-columns:1fr}.trustline{font-size:10.5px;color:#7a756f;margin:8px 0 0;line-height:1.45}.hidden{display:none!important}
+    details.keybox{margin:4px 0 0;padding:0 2px}details.keybox summary{cursor:pointer;font-size:10.5px;font-weight:650;color:#8a857f;list-style:none}details.keybox summary::-webkit-details-marker{display:none}.keyinner{margin-top:8px}.cta{width:100%;border:0;border-radius:99px;background:#111;color:#fff;padding:14px;font-weight:850;font-size:14px;cursor:pointer;margin-top:14px;transition:all .2s ease}.cta:hover{background:#292725;transform:translateY(-1px);box-shadow:0 6px 18px rgba(0,0,0,.15)}.cta:disabled{opacity:.6;cursor:wait}.fee{text-align:center;color:var(--muted);font-size:9.5px;margin:10px 0 0}.fee strong{color:var(--ink)}
+    .result{display:none;border-top:1px solid var(--line);padding:22px;background:#f2fbf6}.result.show{display:block}.resulthead{color:var(--green);font-size:12px;font-weight:850;margin-bottom:10px}.resultrow{display:flex;gap:8px}.resultrow input{min-width:0;flex:1;height:44px;border:1px solid #bdd9ca;background:#fff;border-radius:10px;padding:0 11px}.resultrow button,.resultrow a{border:0;border-radius:10px;padding:0 15px;background:var(--ink);color:#fff;font-size:12px;font-weight:800;display:grid;place-items:center;text-decoration:none;cursor:pointer}.keynotice{margin-top:10px;font-size:11px;color:#4d6657;line-height:1.5}
+
+    /* How It Works Flow */
+    .flow{max-width:820px;margin:52px auto 0;text-align:center;background:#fffdf9;border:1.5px solid #e8ded2;border-radius:24px;padding:34px 24px 38px;box-shadow:0 8px 30px rgba(38,29,22,.04)}.flow h3{font:500 28px Georgia,serif;margin:0 0 6px;color:#181716}.flow>p{font-size:13px;color:var(--muted);margin:0 0 26px}.flowtrack{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;position:relative}.flowtrack:before{content:"";position:absolute;z-index:0;left:8%;right:8%;top:36px;height:3px;border-radius:3px;background:linear-gradient(to right,#3b82f6 0%,#ef4444 33%,#f59e0b 66%,#10b981 100%);opacity:.45}.flowtrack:after{content:"";position:absolute;z-index:3;top:30px;left:8%;width:15px;height:15px;border-radius:50%;background:#3b82f6;box-shadow:0 0 0 6px rgba(59,130,246,.25);animation:flowDot 7.2s cubic-bezier(.4,0,.2,1) infinite}.flowstep{position:relative;z-index:2;min-height:96px;padding:16px 10px 14px;background:#fff;border:1.5px solid var(--line);border-radius:16px;box-shadow:0 4px 14px rgba(38,29,22,.03);transition:all .3s ease}.flowstep:nth-child(1){animation:flowPulseBlue 7.2s ease-in-out infinite}.flowstep:nth-child(2){animation:flowPulseRed 7.2s ease-in-out infinite 1.8s}.flowstep:nth-child(3){animation:flowPulseYellow 7.2s ease-in-out infinite 3.6s}.flowstep:nth-child(4){animation:flowPulseGreen 7.2s ease-in-out infinite 5.4s}.flownum{display:grid;place-items:center;width:26px;height:26px;margin:-2px auto 8px;border-radius:50%;background:#eff6ff;color:#1d4ed8;font-size:10px;font-weight:850;transition:all .3s ease}.flowstep:nth-child(2) .flownum{background:#fef2f2;color:#dc2626}.flowstep:nth-child(3) .flownum{background:#fffbeb;color:#b45309}.flowstep:nth-child(4) .flownum{width:30px;height:30px;font-size:14px;font-weight:900;background:#ecfdf5;color:#10b981;box-shadow:0 0 0 2px #10b981;animation:checkmarkPop 7.2s ease-in-out infinite 5.4s}.flowstep strong{display:block;font-size:12.5px}.flowstep small{display:block;color:var(--muted);font-size:9.5px;margin-top:4px}.flowstep:nth-child(1) strong{color:#1d4ed8}.flowstep:nth-child(2) strong{color:#dc2626}.flowstep:nth-child(3) strong{color:#b45309}.flowstep:nth-child(4) strong{color:#10b981}@keyframes flowPulseBlue{0%,22%,100%{transform:translateY(0);border-color:var(--line);box-shadow:0 4px 14px rgba(38,29,22,.03)}5%,18%{transform:translateY(-3px) scale(1.02);border-color:#3b82f6;box-shadow:0 0 0 3px rgba(59,130,246,.2)}}@keyframes flowPulseRed{0%,22%,100%{transform:translateY(0);border-color:var(--line);box-shadow:0 4px 14px rgba(38,29,22,.03)}5%,18%{transform:translateY(-3px) scale(1.02);border-color:#ef4444;box-shadow:0 0 0 3px rgba(239,68,68,.2)}}@keyframes flowPulseYellow{0%,22%,100%{transform:translateY(0);border-color:var(--line);box-shadow:0 4px 14px rgba(38,29,22,.03)}5%,18%{transform:translateY(-3px) scale(1.02);border-color:#f59e0b;box-shadow:0 0 0 3px rgba(245,158,11,.2)}}@keyframes flowPulseGreen{0%,22%,100%{transform:translateY(0);border-color:var(--line);box-shadow:0 4px 14px rgba(38,29,22,.03)}5%,18%{transform:translateY(-3px) scale(1.02);border-color:#10b981;box-shadow:0 0 0 4px rgba(16,185,129,.25)}}@keyframes checkmarkPop{0%,22%,100%{transform:scale(1);background:#ecfdf5;color:#10b981;box-shadow:0 0 0 2px #10b981}8%,15%{transform:scale(1.25);background:#10b981;color:#fff}}@keyframes flowDot{0%{left:8%;background:#3b82f6}33%{left:35%;background:#ef4444}66%{left:62%;background:#f59e0b}100%{left:89%;background:#10b981}}
+    
+    /* Use Cases Showcase (Cleaned & Reduced Density) */
+    .usecase-showcase{max-width:820px;margin:54px auto;text-align:center}.usecase-showcase h2{font-family:Georgia,serif;font-size:30px;font-weight:500;margin:0 0 8px;color:#181716}.usecase-showcase>p{font-size:14px;color:var(--muted);margin:0 0 28px}.usecase-categories{display:grid;grid-template-columns:1fr 1fr;gap:16px;text-align:left}.uc-cat-card{background:#fff;border:1.5px solid #e5ded4;border-radius:18px;padding:22px;box-shadow:0 4px 16px rgba(38,29,22,.03);display:flex;flex-direction:column}.uc-cat-header{font-size:11px;font-weight:850;text-transform:uppercase;letter-spacing:.06em;color:#b45309;margin-bottom:10px;display:flex;align-items:center;gap:8px}.uc-cat-icon-badge{width:30px;height:30px;border-radius:8px;display:flex;align-items:center;justify-content:center}.uc-cat-card h3{font-size:16px;font-weight:800;margin:0 0 12px;color:#181716;font-family:'Plus Jakarta Sans',sans-serif}.uc-link-list{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:9px;flex:1}.uc-link-list a{font-size:12.5px;color:#403d39;text-decoration:none;display:inline-flex;align-items:center;gap:6px;font-weight:600;transition:color .2s}.uc-link-list a:hover{color:#b45309;text-decoration:underline}
+
+    /* Redesigned Two-State Comparison Section */
+    .two-state-section{max-width:820px;margin:56px auto 44px;text-align:center}.two-state-header{margin-bottom:24px}.two-state-header h2{font-family:Georgia,serif;font-size:28px;font-weight:500;margin:0 0 6px;color:#181716}.two-state-header p{font-size:13px;color:var(--muted);margin:0}.two-state-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px;text-align:left}.ts-card{background:#fff;border:1.5px solid #e5ded4;border-radius:18px;padding:26px;box-shadow:0 4px 16px rgba(38,29,22,.03);display:flex;flex-direction:column}.ts-card.ts-aipp{background:#fffdf9;border-color:#ebdcb8;box-shadow:0 6px 22px rgba(245,158,11,.06)}.ts-badge{display:inline-block;padding:3.5px 10px;border-radius:20px;font-size:9.5px;font-weight:850;text-transform:uppercase;letter-spacing:.06em;margin-bottom:12px}.ts-card.ts-before .ts-badge{background:#f4f4f5;color:#71717a}.ts-card.ts-aipp .ts-badge{background:#fffbdf;color:#b45309;border:1px solid #fef08a}.ts-card h3{font-size:17px;font-weight:800;margin:0 0 14px;color:#181716;font-family:'Plus Jakarta Sans',sans-serif}.ts-list{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:10px}.ts-list li{font-size:13px;line-height:1.5;color:#524e4a;display:flex;align-items:flex-start;gap:8px}.ts-list li svg{flex-shrink:0;margin-top:3px}
+
+    /* Final Compact CTA Section */
+    .final-cta{max-width:820px;margin:44px auto 56px;background:#181716;color:#fff;border-radius:22px;padding:40px 28px;text-align:center;box-shadow:0 14px 40px rgba(0,0,0,.15)}.final-cta h2{font-family:Georgia,serif;font-size:32px;font-weight:500;margin:0 0 10px;color:#fff}.final-cta p{font-size:14.5px;color:#a19b93;max-width:540px;margin:0 auto 24px;line-height:1.6}.final-cta-buttons{display:flex;justify-content:center;gap:14px;flex-wrap:wrap}.final-cta-primary{background:#fff;color:#111;padding:12px 26px;border-radius:99px;font-size:13.5px;font-weight:850;text-decoration:none;transition:all .2s ease}.final-cta-primary:hover{background:#f59e0b;color:#111;transform:translateY(-1px)}.final-cta-secondary{background:rgba(255,255,255,0.1);color:#fff;padding:12px 24px;border-radius:99px;font-size:13.5px;font-weight:750;text-decoration:none;border:1px solid rgba(255,255,255,0.2);transition:all .2s ease}.final-cta-secondary:hover{background:rgba(255,255,255,0.2)}
+
+    /* Footer */
+    footer{border-top:1px solid var(--line);padding:28px 0 38px}.foot{display:flex;justify-content:space-between;align-items:center;gap:20px;color:var(--muted);font-size:12.5px}.footlinks{display:flex;gap:18px}.footlinks a{text-decoration:none;transition:color .2s}.footlinks a:hover{color:var(--ink)}.status{min-height:18px;margin-top:10px;text-align:center;font-size:12px;color:#a13725}.noscript{padding:12px;text-align:center;background:#fee2e2;color:#991b1b}
+    
+    .menu-toggle{display:none;background:#faf7f1;border:1.5px solid var(--line);border-radius:10px;width:40px;height:40px;padding:0;cursor:pointer;align-items:center;justify-content:center;transition:all .2s ease}.menu-toggle:hover{background:#fff;border-color:#b45309}
+    
+    @media(max-width:920px){
+      .menu-toggle{display:inline-flex!important}
+      .navlinks{display:none;position:absolute;top:68px;left:0;right:0;background:var(--paper);border:1px solid var(--line);border-radius:16px;padding:20px;flex-direction:column;align-items:flex-start;gap:12px;box-shadow:0 12px 32px rgba(38,29,22,.12);z-index:99;opacity:0;transform:translateY(-8px);transition:opacity .2s ease,transform .2s ease}
+      .navlinks.open{display:flex;opacity:1;transform:translateY(0)}
+      .navlinks a{width:100%;padding:10px 0;font-size:14.5px;font-weight:600;color:var(--ink);border-bottom:1px solid #f0e8dc}
+      .navlinks a:last-child{border-bottom:0}
+      .navlinks a:hover{color:#b45309}
+      .navlinks a.studio{margin-top:6px;text-align:center;justify-content:center;display:flex}
+    }
+    @media(max-width:480px){.studio{padding:8px 12px;font-size:12px}}
+    @media(max-width:720px){main{padding-top:32px}.hero h1{font-size:38px}.hero p{font-size:15px}.hero-agent-banner{flex-direction:column;gap:6px;padding:12px 14px;font-size:12px;text-align:center;width:100%}.form{padding:12px 16px 18px}.tooltop{padding:14px 16px 10px}.grid,.wallets,.action-strip,.usecase-categories,.multitool-grid,.two-state-grid{grid-template-columns:1fr}.multitool-grid{gap:14px}.connecting-cables-svg{display:none}.aipp-core-hub{margin-top:12px;margin-bottom:12px;transform:scale(1)}.steps{display:none}.resultrow{flex-wrap:wrap}.resultrow input{flex-basis:100%}.resultrow button,.resultrow a{height:42px;flex:1}.foot{flex-direction:column;text-align:center;gap:12px}.tiny-proof{gap:9px}.knives-wrapper{padding:22px 16px}.flowtrack{grid-template-columns:1fr 1fr;gap:10px}.flowtrack:before,.flowtrack:after{display:none}.final-cta{padding:30px 18px}.final-cta h2{font-size:26px}}
+    @media(prefers-reduced-motion:reduce){.flowstep,.flowtrack:after{animation:none}.flowtrack:after{display:none}.flowstep:last-child{border-color:#b8d8c7;box-shadow:0 0 0 3px rgba(22,120,74,.08)}}
+  </style>
+</head>
+<body>
+<noscript><div class="noscript">JavaScript is required to create a Smart Tag.</div></noscript>
+<div class="shell">
+  <nav>
+    <a class="brand" href="/"><svg class="mark" width="28" height="28" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><circle cx="20" cy="20" r="14" stroke="#0F0F11" stroke-width="3.8" stroke-dasharray="67 21" stroke-linecap="round" transform="rotate(-65 20 20)"/><g transform="rotate(-38 20 20)"><path d="M 15 13.5 L 20 7.5 L 25 13.5 L 25 27 C 25 29 23.5 30.5 21.5 30.5 L 18.5 30.5 C 16.5 30.5 15 29 15 27 Z" fill="#F59E0B"/><circle cx="20" cy="13" r="2.2" fill="#FAF9F6"/></g></svg> <span>ai<span style="color:#f59e0b;">pp</span></span></a>
+    <div class="nav-right">
+      <div class="navlinks" id="nav-menu">
+        <a href="/use-cases">Use Cases</a>
+        <a href="/store">Store</a>
+        <a href="/aipp-extension.zip" download="aipp-extension.zip" class="ext-link">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#b45309" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
+          Chrome Extension
+        </a>
+        <a href="/docs.html">For developers</a>
+        <a class="studio" href="/dashboard.html">Studio Console →</a>
+      </div>
+      <button class="menu-toggle" id="menu-toggle" aria-label="Toggle Navigation Menu" aria-expanded="false" aria-controls="nav-menu">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#181716" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="icon-burger">
+          <line x1="4" y1="7" x2="20" y2="7"/>
+          <line x1="4" y1="12" x2="20" y2="12"/>
+          <line x1="4" y1="17" x2="20" y2="17"/>
+        </svg>
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#181716" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="icon-close" style="display:none;">
+          <line x1="18" y1="6" x2="6" y2="18"/>
+          <line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+      </button>
+    </div>
+  </nav>
+  <main>
+    <!-- 1. Hero Section -->
+    <section class="hero">
+      <span class="eyebrow">● PAY-PER-ACTION · LIGHTNING + USDC</span>
+      <h1>Put a price on <em>digital actions.</em></h1>
+      <p>Charge for an API call, AI task, workflow, file or digital service — without forcing it into a subscription.</p>
+      <p style="font-size:14px; color:#746e68; max-width:600px; margin:12px auto 0;">AIPP verifies Lightning or Base USDC payment before your application executes the action or unlocks access.</p>
+
+      <div class="tiny-proof"><span>Starts at $0.01</span><span>Lightning + Base USDC</span><span>Human + Agent</span></div>
+      
+      <!-- Showcase Callout for AI Agents -->
+      <div class="hero-agent-banner">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2c.5 3.5 2.5 5.5 6 6-3.5.5-5.5 2.5-6 6-.5-3.5-2.5-5.5-6-6 3.5-.5 5.5-2.5 6-6z"/><path d="M4 17c.3 1.7 1.3 2.7 3 3-1.7.3-2.7 1.3-3 3-.3-1.7-1.3-2.7-3-3 1.7-.3 2.7-1.3 3-3z"/></svg>
+        <span>Give this URL to your AI agent: <code class="agent-code">https://aipp.dev/t/demo</code></span>
+        <a href="/t/demo" target="_blank" class="agent-try">Try ↗</a>
+      </div>
+    </section>
+
+    <!-- Action Showcase Strip with Vector Icons -->
+    <div class="action-strip">
+      <div class="action-pill">
+        <small>
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="2" width="20" height="8" rx="2"/><rect x="2" y="14" width="20" height="8" rx="2"/><line x1="6" y1="6" x2="6.01" y2="6"/><line x1="6" y1="18" x2="6.01" y2="18"/><path d="M18 10v4"/></svg>
+          API Call
+        </small>
+        <strong>Pay <span class="flow-arrow">→</span> Call</strong>
+      </div>
+      <div class="action-pill">
+        <small>
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2c.5 3.5 2.5 5.5 6 6-3.5.5-5.5 2.5-6 6-.5-3.5-2.5-5.5-6-6 3.5-.5 5.5-2.5 6-6z"/><path d="M4 17c.3 1.7 1.3 2.7 3 3-1.7.3-2.7 1.3-3 3-.3-1.7-1.3-2.7-3-3 1.7-.3 2.7-1.3 3-3z"/></svg>
+          AI Task
+        </small>
+        <strong>Pay <span class="flow-arrow">→</span> Run</strong>
+      </div>
+      <div class="action-pill">
+        <small>
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="6" height="6" rx="1.5"/><rect x="15" y="3" width="6" height="6" rx="1.5"/><rect x="9" y="15" width="6" height="6" rx="1.5"/><path d="M6 9v3a2 2 0 0 0 2 2h4m4-5v3a2 2 0 0 1-2 2h-2"/></svg>
+          Workflow
+        </small>
+        <strong>Pay <span class="flow-arrow">→</span> Execute</strong>
+      </div>
+      <div class="action-pill">
+        <small>
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+          Digital File
+        </small>
+        <strong>Pay <span class="flow-arrow">→</span> Unlock</strong>
+      </div>
+    </div>
+  </main>
+
+  <!-- 3. Balanced Philosophy Section (Manifesto) -->
+  <section class="philosophy">
+    <h2>Not everything needs a subscription.</h2>
+    <p>Subscriptions make sense for continuous, recurring membership value. But when value is delivered as a discrete digital action with a known upfront price, requiring a subscription creates unnecessary friction.</p>
+    <p>AIPP provides a simple payment boundary: your application defines the action and sets the price. AIPP handles payment verification via Lightning or Base USDC before execution or access occurs.</p>
+  </section>
+
+  <!-- 4. Implementation Modules & Prominent Smart Tag Hub -->
+  <section class="knives-wrapper" id="uses">
+    <div class="knives-header">
+      <h2>One tag. Three implementation tools.</h2>
+      <p>Choose the mechanism that fits your stack.</p>
+    </div>
+
+    <div class="multitool-grid">
+      <!-- Card 1 -->
+      <div class="multitool-card" data-card="1">
+        <div class="card-stripe"></div>
+        <div class="card-body">
+          <div class="card-icon-header">
+            <div class="card-icon-badge">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#dc2626" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+            </div>
+            <span class="card-tag-pill">Paywall</span>
+          </div>
+          <div class="card-content">
+            <h3>Sell a link or file</h3>
+            <p>One checkout link. Release the destination URL or download after verified payment.</p>
+          </div>
+        </div>
+        <a href="#tag-form" class="card-action-btn">
+          <span>Sell a link or file</span>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+        </a>
+      </div>
+
+      <!-- Card 2 -->
+      <div class="multitool-card" data-card="2">
+        <div class="card-stripe"></div>
+        <div class="card-body">
+          <div class="card-icon-header">
+            <div class="card-icon-badge">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#b45309" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
+            </div>
+            <span class="card-tag-pill">Extension</span>
+          </div>
+          <div class="card-content">
+            <h3>Tag your website</h3>
+            <p>Create and place a visual checkout directly on your website using the Chrome extension.</p>
+          </div>
+        </div>
+        <a href="/aipp-extension.zip" download="aipp-extension.zip" class="card-action-btn">
+          <span>Get the extension</span>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+        </a>
+      </div>
+
+      <!-- Card 3 -->
+      <div class="multitool-card" data-card="3">
+        <div class="card-stripe"></div>
+        <div class="card-body">
+          <div class="card-icon-header">
+            <div class="card-icon-badge">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#059669" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/><polygon points="13 2 9 8 13 8 11 14 17 6 13 6 13 2" fill="#F59E0B"/></svg>
+            </div>
+            <span class="card-tag-pill">402 API</span>
+          </div>
+          <div class="card-content">
+            <h3>Charge API / agent</h3>
+            <p>Return HTTP 402, verify LN or Base USDC payment proof, then execute the job.</p>
+          </div>
+        </div>
+        <a href="/docs.html" class="card-action-btn">
+          <span>Open API docs</span>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+        </a>
+      </div>
+    </div>
+
+    <!-- Connecting Cables & Prominent Core Hub -->
+    <div class="multitool-hub-container">
+      <svg class="connecting-cables-svg" viewBox="0 0 800 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path class="cable-path" id="cable-1" d="M 130 0 C 130 45, 400 20, 400 65"/>
+        <path class="cable-path" id="cable-2" d="M 400 0 V 65"/>
+        <path class="cable-path" id="cable-3" d="M 670 0 C 670 45, 400 20, 400 65"/>
+        <circle r="3.5" fill="#ef4444"><animateMotion path="M 130 0 C 130 45, 400 20, 400 65" dur="2.4s" repeatCount="indefinite"/></circle>
+        <circle r="3.5" fill="#f59e0b"><animateMotion path="M 400 0 V 65" dur="2.4s" repeatCount="indefinite"/></circle>
+        <circle r="3.5" fill="#10b981"><animateMotion path="M 670 0 C 670 45, 400 20, 400 65" dur="2.4s" repeatCount="indefinite"/></circle>
+      </svg>
+
+      <div class="aipp-core-hub">
+        <svg width="30" height="30" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><circle cx="20" cy="20" r="14" stroke="#FAF9F6" stroke-width="3.8" stroke-dasharray="67 21" stroke-linecap="round" transform="rotate(-65 20 20)"/><g transform="rotate(-38 20 20)"><path d="M 15 13.5 L 20 7.5 L 25 13.5 L 25 27 C 25 29 23.5 30.5 21.5 30.5 L 18.5 30.5 C 16.5 30.5 15 29 15 27 Z" fill="#F59E0B"/><circle cx="20" cy="13" r="2.2" fill="#0F0F11"/></g></svg>
+        <div>
+          <div class="core-brand-text">ai<span style="color:#f59e0b;">pp</span></div>
+          <span class="core-sub-label">SMART TAG</span>
+        </div>
+        <div class="core-pulse-dots">
+          <span></span><span></span><span></span>
+        </div>
+      </div>
+    </div>
+
+    <div class="multitool-footer-note">ONE PROTOCOL · THREE IMPLEMENTATION TOOLS</div>
+  </section>
+
+  <!-- 5. Interactive Quick Tag Generator -->
+  <section class="tool" aria-label="Create a Smart Tag">
+    <div class="tooltop"><span class="tooltitle">Quick Tag Generator</span><span class="steps">Set a price in seconds</span></div>
+    <form class="form" id="tag-form">
+      <div class="formblock">
+        <div class="types" id="types">
+          <button type="button" class="chip active" data-type="Link or file">Link / file</button>
+          <button type="button" class="chip" data-type="AI or prompt">AI / prompt</button>
+          <button type="button" class="chip" data-type="API or agent">API / agent</button>
+        </div>
+      </div>
+      <div class="formblock">
+        <div class="blocklabel">What you’re pricing</div>
+        <div class="grid">
+          <div class="field"><input id="title" aria-label="What you are selling" maxlength="110" required placeholder="Research PDF, API action, AI task..."></div>
+          <div class="field pricewrap"><input id="price" aria-label="Price in USD" inputmode="decimal" required placeholder="0.25"></div>
+        </div>
+      </div>
+      <div class="formblock">
+        <div class="field"><label for="target">Target URL or endpoint <span class="hint">optional</span></label><input id="target" type="url" placeholder="https://your-protected-endpoint-or-download"></div>
+      </div>
+      <div class="formblock">
+        <div class="payoutline"><span>Get paid with</span><div class="rail" id="rail"><button type="button" data-rail="ln" class="active">⚡ Lightning</button><button type="button" data-rail="base">● USDC</button><button type="button" data-rail="both">Both</button></div></div>
+        <div class="wallets one" id="wallets">
+          <div class="field" id="ln-field"><input id="ln" aria-label="Lightning Address" autocomplete="off" placeholder="⚡  you@walletofsatoshi.com"></div>
+          <div class="field hidden" id="base-field"><input id="base" aria-label="Base payout address" autocomplete="off" placeholder="●  0x..."></div>
+        </div>
+        <p class="trustline">Funds settle to your configured wallet. No merchant spending balance or manual withdrawal step.</p>
+      </div>
+      <details class="keybox"><summary>Use an existing merchant key</summary><div class="keyinner field"><input id="api-key" type="password" autocomplete="off" placeholder="aipp_merch_..."></div></details>
+      <button class="cta" id="submit" type="submit">Create Smart Tag →</button>
+      <div class="status" id="status" role="status"></div>
+      <p class="fee">No subscription · Lightning fee: <strong>1% + 5 sats</strong></p>
+    </form>
+    <div class="result" id="result"><div class="resulthead">✓ Smart Tag created — ready for humans and agents</div><div class="resultrow"><input id="tag-url" readonly><button id="copy" type="button">Copy</button><a id="open" target="_blank" rel="noopener">Open ↗</a><a id="agent" target="_blank" rel="noopener">Agent JSON ↗</a></div><div class="keynotice" id="key-notice"></div></div>
+  </section>
+
+  <!-- 6. How It Works Flow -->
+  <section class="flow" aria-label="How AIPP payment gating works">
+    <h3>How it works.</h3>
+    <p>HTTP 402 payment verification boundary for humans and AI agents.</p>
+    <div class="flowtrack">
+      <div class="flowstep"><span class="flownum">01</span><strong>Request</strong><small>Client requests action</small></div>
+      <div class="flowstep"><span class="flownum">02</span><strong>402 Challenge</strong><small>AIPP returns payment instructions</small></div>
+      <div class="flowstep"><span class="flownum">03</span><strong>Payment</strong><small>Lightning or USDC</small></div>
+      <div class="flowstep"><span class="flownum">✓</span><strong>Verify &amp; Execute</strong><small>Proof verified, job runs</small></div>
+    </div>
+    <div style="display:flex; gap:10px; justify-content:center; flex-wrap:wrap; margin-top:24px; font-size:11px; font-weight:700; color:#706a62;">
+      <span style="background:#f4f4f5; padding:4px 10px; border-radius:12px;">HTTP 402 Standard</span>
+      <span style="background:#eff6ff; color:#1d4ed8; padding:4px 10px; border-radius:12px; display:inline-flex; align-items:center; gap:4px;">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#1d4ed8" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="13 2 9 13 13 13 11 22 17 9 12 9 13 2"/></svg>
+        Lightning (L402)
+      </span>
+      <span style="background:#f0fdf4; color:#15803d; padding:4px 10px; border-radius:12px; display:inline-flex; align-items:center; gap:4px;">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#15803d" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 6v12M15 9.5c0-1.4-1.3-2.5-3-2.5s-3 1.1-3 2.5 1.3 2.5 3 2.5 3 1.1 3 2.5-1.3 2.5-3 2.5-3-1.1-3-2.5"/></svg>
+        Base USDC (x402)
+      </span>
+      <span style="background:#fffbeb; color:#b45309; padding:4px 10px; border-radius:12px;">Automated Wallet Payouts</span>
+    </div>
+  </section>
+
+  <!-- 7. Use Cases Showcase (Reduced Homepage Visual Density) -->
+  <section class="usecase-showcase" id="use-cases">
+    <h2>What can you put a price on?</h2>
+    <p>Explore documented use cases showing how developers, AI engineers, and creators gate digital value.</p>
+
+    <div class="usecase-categories">
+      <!-- Category 1: APIs & Compute -->
+      <div class="uc-cat-card">
+        <div class="uc-cat-header">
+          <div class="uc-cat-icon-badge" style="background:#eff6ff; border:1px solid #bfdbfe;">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="2" width="20" height="8" rx="2"/><rect x="2" y="14" width="20" height="8" rx="2"/><line x1="6" y1="6" x2="6.01" y2="6"/><line x1="6" y1="18" x2="6.01" y2="18"/><path d="M18 10v4"/></svg>
+          </div>
+          <span style="color:#1d4ed8;">APIs &amp; Compute</span>
+        </div>
+        <h3>APIs &amp; Cloud Workloads</h3>
+        <ul class="uc-link-list">
+          <li><a href="/use-cases/pay-per-api-call">→ Pay per API Call</a></li>
+          <li><a href="/use-cases/paid-data-api">→ Paid Data API</a></li>
+          <li><a href="/use-cases/get-paid-before-compute">→ Get Paid Before Compute</a></li>
+        </ul>
+      </div>
+
+      <!-- Category 2: AI & Autonomous Agents -->
+      <div class="uc-cat-card">
+        <div class="uc-cat-header">
+          <div class="uc-cat-icon-badge" style="background:#fffbeb; border:1px solid #fde68a;">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#b45309" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2c.5 3.5 2.5 5.5 6 6-3.5.5-5.5 2.5-6 6-.5-3.5-2.5-5.5-6-6 3.5-.5 5.5-2.5 6-6z"/><path d="M4 17c.3 1.7 1.3 2.7 3 3-1.7.3-2.7 1.3-3 3-.3-1.7-1.3-2.7-3-3 1.7-.3 2.7-1.3 3-3z"/></svg>
+          </div>
+          <span style="color:#b45309;">AI &amp; Autonomous Agents</span>
+        </div>
+        <h3>LLM Tools &amp; Agent Workflows</h3>
+        <ul class="uc-link-list">
+          <li><a href="/use-cases/ai-agent-execution">→ AI Agent Execution</a></li>
+          <li><a href="/use-cases/paid-mcp-tool">→ Paid MCP Tool &amp; MCP Server</a></li>
+          <li><a href="/use-cases/usage-based-ai-agent">→ Usage-Based AI Agent Tasks</a></li>
+        </ul>
+      </div>
+
+      <!-- Category 3: Automations & Scraping -->
+      <div class="uc-cat-card">
+        <div class="uc-cat-header">
+          <div class="uc-cat-icon-badge" style="background:#eff6ff; border:1px solid #bfdbfe;">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="6" height="6" rx="1.5"/><rect x="15" y="3" width="6" height="6" rx="1.5"/><rect x="9" y="15" width="6" height="6" rx="1.5"/><path d="M6 9v3a2 2 0 0 0 2 2h4m4-5v3a2 2 0 0 1-2 2h-2"/></svg>
+          </div>
+          <span style="color:#1d4ed8;">Automations &amp; Scraping</span>
+        </div>
+        <h3>Workflows &amp; Scraping</h3>
+        <ul class="uc-link-list">
+          <li><a href="/use-cases/paid-n8n-workflow">→ Paid n8n Workflow</a></li>
+          <li><a href="/use-cases/paid-web-scraping">→ Paid Web Scraping</a></li>
+          <li><a href="/use-cases/paid-report-generation">→ Paid Report Generation</a></li>
+        </ul>
+      </div>
+
+      <!-- Category 4: Digital Content & Goods -->
+      <div class="uc-cat-card">
+        <div class="uc-cat-header">
+          <div class="uc-cat-icon-badge" style="background:#fff7ed; border:1px solid #ffedd5;">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#c2410c" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+          </div>
+          <span style="color:#c2410c;">Digital Content &amp; Goods</span>
+        </div>
+        <h3>Files, Articles &amp; Products</h3>
+        <ul class="uc-link-list">
+          <li><a href="/use-cases/digital-download">→ Digital File Download</a></li>
+          <li><a href="/use-cases/content-paywall">→ Content &amp; Article Paywall</a></li>
+          <li><a href="/use-cases/sell-digital-product">→ Sell a Digital Product</a></li>
+        </ul>
+      </div>
+    </div>
+
+    <div style="margin-top:28px;">
+      <a href="/use-cases" style="display:inline-block; background:#111; color:#fff; font-size:13px; font-weight:800; padding:12px 26px; border-radius:10px; text-decoration:none; transition:all .2s;">Explore all 19 documented use cases →</a>
+    </div>
+  </section>
+
+  <!-- 8. Redesigned Two-State Comparison Section (Editorial Conclusion) -->
+  <section class="two-state-section">
+    <div class="two-state-header">
+      <h2>One payment layer for humans and agents.</h2>
+      <p>AIPP bridges human checkouts and programmatic AI agent payments into a single URL.</p>
+    </div>
+
+    <div class="two-state-grid">
+      <!-- Left: Before / Today -->
+      <div class="ts-card ts-before">
+        <span class="ts-badge">TODAY</span>
+        <h3>Siloed Checkouts &amp; Auth</h3>
+        <ul class="ts-list">
+          <li>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+            <span>Separate checkout form required for human web visitors.</span>
+          </li>
+          <li>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+            <span>Complex, separate API keys &amp; OAuth for autonomous agents.</span>
+          </li>
+          <li>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+            <span>Forced recurring subscriptions for one-off digital actions.</span>
+          </li>
+        </ul>
+      </div>
+
+      <!-- Right: With AIPP -->
+      <div class="ts-card ts-aipp">
+        <span class="ts-badge">WITH AIPP</span>
+        <h3>One Unified Payment Tag</h3>
+        <ul class="ts-list">
+          <li>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
+            <span><strong>One URL. One price.</strong> Humans get web checkouts; agents get HTTP 402 challenges.</span>
+          </li>
+          <li>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
+            <span>Automated wallet settlement to Lightning or Base USDC without merchant balances.</span>
+          </li>
+          <li>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
+            <span>Pay per action starting at $0.01 — no forced subscriptions.</span>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- 9. Final Compact CTA Section -->
+  <section class="final-cta">
+    <h2>Put a price on your next digital action.</h2>
+    <p>Create a Smart Tag in seconds or integrate HTTP 402 middleware into your application.</p>
+    <div class="final-cta-buttons">
+      <a href="#tag-form" class="final-cta-primary">Create Smart Tag →</a>
+      <a href="/docs.html" class="final-cta-secondary">Read the API Docs</a>
+    </div>
+  </section>
+
+  <!-- 10. Footer -->
+  <footer>
+    <div class="foot">
+      <span>© 2026 aipp · Open Protocol for Human + Agent Commerce</span>
+      <div class="footlinks">
+        <a href="/use-cases">Use Cases</a>
+        <a href="/store">Store</a>
+        <a href="/docs.html">Docs</a>
+        <a href="/legal.html">Legal</a>
+        <a href="mailto:info@aipp.dev">Contact</a>
+        <a href="/dashboard.html">Studio</a>
+      </div>
+    </div>
+  </footer>
+</div>
+<script>
+  const state={type:'Link or file',rail:'ln'};
+  const $=id=>document.getElementById(id);
+  document.querySelectorAll('.chip').forEach(button=>button.addEventListener('click',()=>{document.querySelectorAll('.chip').forEach(x=>x.classList.remove('active'));button.classList.add('active');state.type=button.dataset.type}));
+  document.querySelectorAll('#rail button').forEach(button=>button.addEventListener('click',()=>{document.querySelectorAll('#rail button').forEach(x=>x.classList.remove('active'));button.classList.add('active');state.rail=button.dataset.rail;$('ln-field').classList.toggle('hidden',state.rail==='base');$('base-field').classList.toggle('hidden',state.rail==='ln');$('wallets').classList.toggle('one',state.rail!=='both')}));
+  const errorMessage=async response=>{const body=await response.json().catch(()=>({}));return body.error||`Request failed (${response.status})`};
+  $('tag-form').addEventListener('submit',async event=>{
+    event.preventDefault();$('status').textContent='';$('result').classList.remove('show');
+    const title=$('title').value.trim(),raw=$('price').value.replace(',','.').trim(),price=Number(raw),target=$('target').value.trim(),ln=$('ln').value.trim(),base=$('base').value.trim();
+    let key=$('api-key').value.trim()||sessionStorage.getItem('aipp_api_key')||'';
+    if(!title||!Number.isFinite(price)||price<.01||price>100){$('status').textContent='Enter a title and a price between $0.01 and $100.';return}
+    if(target){try{const u=new URL(target);if(!['http:','https:'].includes(u.protocol))throw 0}catch{$('status').textContent='The post-payment URL must be a valid http(s) address.';return}}
+    if(!key&&state.rail!=='base'&&!ln){$('status').textContent='Enter your Lightning Address or an existing merchant key.';return}
+    if(!key&&state.rail!=='ln'&&!/^0x[a-fA-F0-9]{40}$/.test(base)){$('status').textContent='Enter a valid Base address or choose Lightning only.';return}
+    const button=$('submit');button.disabled=true;button.textContent='Creating…';
+    try{
+      let newKey=false;
+      if(!key){const registration=await fetch('/merchant/register',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({ln_address:state.rail==='base'?undefined:ln,usdc_address:state.rail==='ln'?undefined:base})});if(!registration.ok)throw new Error(await errorMessage(registration));const merchant=await registration.json();key=merchant.api_key;newKey=true;sessionStorage.setItem('aipp_api_key',key)}
+      const capability={"Link or file":"link","AI or prompt":"ai","API or agent":"api"}[state.type]||"link";const response=await fetch('/merchant/links/create',{method:'POST',headers:{'Content-Type':'application/json','X-Api-Key':key},body:JSON.stringify({title,amount_usd:price,redirect_url:target||null,capability_type:capability})});if(!response.ok)throw new Error(await errorMessage(response));const tag=await response.json();$('tag-url').value=tag.url;$('open').href=tag.human_url||tag.url;$('agent').href=tag.manifest_url||`${tag.url}/manifest`;$('key-notice').textContent=newKey?`Your merchant key was created: ${key} — save it now; a public wallet address cannot recover it.`:'This one URL now works as a checkout for people and a manifest for agents.';$('result').classList.add('show');$('result').scrollIntoView({behavior:'smooth',block:'nearest'});
+    }catch(error){$('status').textContent=error.message||'Smart Tag could not be created.'}finally{button.disabled=false;button.textContent='Create Smart Tag →'}
+  });
+  $('copy').addEventListener('click',async()=>{await navigator.clipboard.writeText($('tag-url').value);$('copy').textContent='Copied ✓';setTimeout(()=>$('copy').textContent='Copy',1400)});
+</script>
+<script>
+  (function(){
+    var toggle = document.getElementById('menu-toggle');
+    var menu = document.getElementById('nav-menu');
+    if(!toggle || !menu) return;
+    
+    function toggleMenu(show){
+      var open = show !== undefined ? show : !menu.classList.contains('open');
+      menu.classList.toggle('open', open);
+      toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+      var burger = toggle.querySelector('.icon-burger');
+      var close = toggle.querySelector('.icon-close');
+      if(burger && close){
+        burger.style.display = open ? 'none' : 'block';
+        close.style.display = open ? 'block' : 'none';
+      }
+    }
+
+    toggle.addEventListener('click', function(e){
+      e.stopPropagation();
+      toggleMenu();
+    });
+
+    document.addEventListener('click', function(e){
+      if(menu.classList.contains('open') && !menu.contains(e.target) && !toggle.contains(e.target)){
+        toggleMenu(false);
+      }
+    });
+
+    document.addEventListener('keydown', function(e){
+      if(e.key === 'Escape' && menu.classList.contains('open')){
+        toggleMenu(false);
+        toggle.focus();
+      }
+    });
+
+    var links = menu.querySelectorAll('a');
+    for(var i=0; i<links.length; i++){
+      links[i].addEventListener('click', function(){
+        toggleMenu(false);
+      });
+    }
+  })();
+</script>
+</body>
+</html>

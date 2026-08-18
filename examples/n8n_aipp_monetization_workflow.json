@@ -1,0 +1,133 @@
+{
+  "name": "AIPP Smart Tag Paywall for n8n Workflows",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "### ⚡ 1. QUICK SETUP GUIDE (3 SECONDS)\n\n**Step 1:** Go to [aipp.dev](https://aipp.dev) (or your self-hosted instance).\n**Step 2:** Create a Smart Price Tag with your price ($0.01 - $100) and your Lightning/USDC payout wallet.\n**Step 3:** Paste your checkout URL inside the **Return HTTP 402 Challenge** node below.\n**Step 4:** Connect your AI node (OpenAI, Claude, Scraper) before **Deliver Premium Content**.",
+        "height": 200,
+        "width": 480,
+        "color": 4
+      },
+      "name": "Setup Instructions",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [240, 40]
+    },
+    {
+      "parameters": {
+        "content": "### 🛡️ 2. AUTOMATED SETTLEMENT VERIFICATION\n\nWhen a user or AI agent calls your webhook with a `payment_hash`, this node queries `https://aipp.dev/invoice/status/:hash`.\nIf settled, the workflow executes; otherwise it returns HTTP 402 with your payment link.",
+        "height": 200,
+        "width": 380,
+        "color": 6
+      },
+      "name": "How It Works",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [760, 40]
+    },
+    {
+      "parameters": {
+        "httpMethod": "GET",
+        "path": "aipp-monetized-workflow",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "name": "Webhook Trigger",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [240, 320]
+    },
+    {
+      "parameters": {
+        "url": "=https://aipp.dev/invoice/status/{{ $json.query.payment_hash || $json.body.payment_hash }}",
+        "options": {}
+      },
+      "name": "Verify AIPP Preimage",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [480, 320]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{ $json.status }}",
+              "value2": "settled"
+            }
+          ]
+        }
+      },
+      "name": "Is Payment Settled?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [720, 320]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"status\": \"success\",\n  \"message\": \"Payment verified via AIPP Lightning Preimage.\",\n  \"data\": {\n    \"output\": \"Here is your premium AI generated workflow output.\",\n    \"preimage\": \"{{ $json.preimage }}\"\n  }\n}",
+        "options": {}
+      },
+      "name": "Deliver Premium Content",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [980, 220]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"error\": \"Payment required\",\n  \"code\": 402,\n  \"message\": \"Please settle the micro-payment to execute this workflow.\",\n  \"open_tag\": \"https://aipp.dev/t/p_YOUR_TAG_ID_FROM_AIPP_DEV\",\n  \"manifest\": \"https://aipp.dev/t/p_YOUR_TAG_ID_FROM_AIPP_DEV/manifest\"\n}",
+        "options": {
+          "responseCode": 402
+        }
+      },
+      "name": "Return HTTP 402 Challenge",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [980, 440]
+    }
+  ],
+  "connections": {
+    "Webhook Trigger": {
+      "main": [
+        [
+          {
+            "node": "Verify AIPP Preimage",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Verify AIPP Preimage": {
+      "main": [
+        [
+          {
+            "node": "Is Payment Settled?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Is Payment Settled?": {
+      "main": [
+        [
+          {
+            "node": "Deliver Premium Content",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Return HTTP 402 Challenge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
+}
