@@ -57,8 +57,8 @@ curl -X POST https://aipp.dev/merchant/register \
 
 - **HTTP 402 Payment Challenge**: Standardized `402 Payment Required` headers containing payment invoice/challenge, enabling autonomous AI agents (Claude, Gemini, OpenAI, LangChain, AutoGPT) to parse price, settle payments, and consume capabilities programmatically.
 - **Dual-Rail Micro-Payments**:
-  - Bitcoin Lightning Network (sats) via Lightning Address (e.g., `user@walletofsatoshi.com`) with 1% + 5 sats fee.
-  - Base Layer-2 Blockchain (USDC) via EVM wallet address (`0x...`) with 1% merchant platform fee (Chain ID 8453, contract `0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913`).
+  - Bitcoin Lightning Network (sats) via Lightning Address (e.g., `user@walletofsatoshi.com`) with 3% + 5 sats fee.
+  - Base Layer-2 Blockchain (USDC) via EVM wallet address (`0x...`) with 3% fee ($0.001 minimum fee, Chain ID 8453, contract `0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913`).
 - **Smart Tag Manifest**: Machine-readable JSON manifest at `https://aipp.dev/t/<TAG_ID>/manifest` detailing pricing, capabilities, schema, and settlement options.
 - **Automated Wallet Forwarding**: AIPP does not maintain merchant balances. Payments are automatically forwarded to the merchant's configured wallet.
 

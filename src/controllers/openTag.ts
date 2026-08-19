@@ -35,7 +35,7 @@ function manifestFor(req: Request, tag: any) {
     methods.push({
       protocol: 'L402',
       network: 'bitcoin-lightning',
-      fee_policy: '1% + 5 sats customer-side fee',
+      fee_policy: '3% + 5 sats per successful transaction',
       address: tag.ln_address
     });
   }
@@ -47,7 +47,7 @@ function manifestFor(req: Request, tag: any) {
       asset: 'USDC',
       contract: '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913',
       receiver: tag.usdc_address,
-      fee_policy: '1% merchant platform fee'
+      fee_policy: '3% per successful transaction ($0.001 minimum fee)'
     });
   }
 

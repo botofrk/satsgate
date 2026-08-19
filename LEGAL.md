@@ -12,9 +12,11 @@ Self-hosted operators and hosted service operators may have different responsibi
 ---
 
 ## 2. Nature of Platform Fees (Software Routing & Licensing Fee)
-AIPP.dev charges a **transparent platform fee** per successful transaction. The amount is shown before payment.
+AIPP.dev charges a **transparent platform fee of 3% per successful transaction** ($0 monthly, $0 setup). The amount is shown before payment.
 * This fee is a **"Software Routing & Licensing Fee"** designed to support the ongoing development, updates, and maintenance of the platform and its ecosystem.
-* Lightning pricing is currently 1% + 5 sats per successful payment.
+* Lightning pricing is 3% + 5 sats per successful payment.
+* Base USDC pricing is 3% per successful payment ($0.001 minimum fee).
+* Failed payments are not charged.
 * Operators remain responsible for determining the legal, tax and licensing requirements applicable to their deployment and jurisdiction.
 
 ---

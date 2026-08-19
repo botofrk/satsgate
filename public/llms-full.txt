@@ -82,7 +82,7 @@ Accept: application/json
     {
       "protocol": "L402",
       "network": "bitcoin-lightning",
-      "fee_policy": "1% + 5 sats customer-side fee",
+      "fee_policy": "3% + 5 sats per successful transaction",
       "address": "demo@walletofsatoshi.com"
     },
     {
@@ -92,7 +92,7 @@ Accept: application/json
       "asset": "USDC",
       "contract": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
       "receiver": "0x00b18f645a3e40802809ff59cb9AAB2225703eeE",
-      "fee_policy": "1% merchant platform fee"
+      "fee_policy": "3% per successful transaction ($0.001 minimum fee)"
     }
   ],
   "interfaces": {

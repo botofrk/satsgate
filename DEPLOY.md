@@ -181,29 +181,111 @@ Defaults are set to automatically rotate logs once they hit 10MB or daily.
 
 ---
 
-## 8. Post-Deployment Verification (Staging Sanity Check)
+## 8. Post-Deployment Verification (Staging Canary Plan)
 
-To verify routing, webhook callbacks and fee accounting before launch, perform the following staging tests:
+To verify routing, webhook callbacks, and canonical 3% fee accounting after deployment, run the following distinct canary checks:
 
-### Step A: Register a Real Test Merchant
-1. Navigate to your live landing page: `https://your-domain.com`
-2. Scroll to the **Live Demo (Setup Shop)** block.
-3. Input a real, active personal Lightning Address (e.g., `yourusername@getalby.com` or your Phoenix wallet address).
-4. Click **Get API Key** and copy your generated API Key (`aipp_merch_...`).
+### Canary 1: Lightning Pricing-Distinction Canary (34 Sats Gross)
+* **Rationale:** Distinctly separates 3% policy from legacy 1% policy.
+  * Legacy 1% policy: $\lceil 34 \times 1\% \rceil + 5 = 1 + 5 = 6\text{ sats fee}$
+  * New 3% policy: $\lceil 34 \times 3\% \rceil + 5 = 2 + 5 = 7\text{ sats fee}$
+* **Gross Customer Payment:** `34 sats`
+* **Persisted AIPP Fee:** `7 sats` ($\lceil 34 \times 3\% \rceil = 2\text{ sats percentage} + 5\text{ sats fixed}$)
+* **Persisted Merchant Net:** `27 sats` ($34 - 7$)
+* **Verification:** Confirm that checkout displays 34 sats gross, receipt reports 7 sats fee / 27 sats net, and dashboard shows authentic persisted breakdown.
 
-### Step B: Perform a Small Real Payment (100-Sat Merchant Price)
-1. Go to the **Checkout** tab on the live demo.
-2. Click **Buy Now** to generate a real BOLT11 invoice.
-3. Open a separate mobile Lightning wallet containing a small balance (e.g., Phoenix, Strike, Alby, Breez).
-4. Confirm that checkout shows a 100-sat merchant price, a 6-sat AIPP fee and a 106-sat buyer total; then pay the invoice.
+### Canary 2: Base USDC Minimum-Fee Canary ($0.010000 Gross)
+* **Gross Customer Payment:** `0.010000 USDC` (`10,000 native units`)
+* **Persisted AIPP Fee:** `0.001000 USDC` (`1,000 units` — minimum fee bound)
+* **Persisted Merchant Net:** `0.009000 USDC` (`9,000 units`)
+* **Verification:** Confirm on-chain ERC-20 payout forwards exactly `9,000 integer units`, leaving `1,000 units` on Gateway.
 
-### Step C: Verify Payout & Ledger Integrity
-1. Once paid, check the **Payout Status** tab to confirm the payment was detected.
-2. Verify that the merchant payout is **100 satoshis**, or that it is visibly queued for retry if the destination is unavailable.
-3. Access your developer dashboard (`https://your-domain.com/dashboard.html`), log in with your API key, and check:
-   * **Merchant Amount**: Should register 100 sats.
-   * **AIPP Fee**: Should register 6 sats (`ceil(1%) + 5`).
-   * **Transactional Ledger**: The transaction status must be marked as `settled` with split details.
+### Canary 3: Base USDC Percentage-Fee Canary ($0.040000 Gross)
+* **Rationale:** Independently validates the 3% calculation above the $0.001 minimum boundary.
+* **Gross Customer Payment:** `0.040000 USDC` (`40,000 native units`)
+* **Persisted AIPP Fee:** `0.001200 USDC` (`1,200 units` — $40,000 \times 3\%$)
+* **Persisted Merchant Net:** `0.038800 USDC` (`38,800 units`)
+* **Verification:** Confirm on-chain ERC-20 payout forwards exactly `38,800 integer units`, leaving `1,200 units` on Gateway.
+
+---
+
+## 9. Safe Production Rollback & Recovery Plan
+
+Under no circumstances execute destructive history rewrites (such as `git reset --hard`) on production servers. Use the following deterministic, non-destructive rollback procedures:
+
+### A. Pre-Deployment Tagging & Database Backup
+Before deploying any release to production, execute:
+
+```bash
+# 1. Tag the active stable release
+git tag -a v1.0.0-pre-3pct-stable -m "Stable pre-deployment checkpoint"
+git push origin v1.0.0-pre-3pct-stable
+
+# 2. Create timestamped SQLite hot backup using safe online backup API
+mkdir -p /home/hermes/backups
+sqlite3 /home/hermes/aipp/aipp-key/data/aipp.db ".backup '/home/hermes/backups/aipp_backup_$(date +%Y%m%d_%H%M%S).db'"
+
+# 3. Tag current running Docker image
+docker tag aipp-key:latest aipp-key:pre-3pct-stable
+```
+
+### B. Recoverable Container Rollback (Preserving Failed Container)
+
+To roll back while preserving the failed container for post-mortem investigation without name collisions:
+
+```bash
+ROLLBACK_STAMP=$(date +%Y%m%d_%H%M%S)
+
+# 1. Stop active container
+docker stop aipp-key
+
+# 2. Rename failed container to preserve state and free name
+docker rename aipp-key "aipp-key-failed-$ROLLBACK_STAMP"
+
+# 3. Launch pre-deployment stable image
+docker run -d \
+  --name aipp-key \
+  --restart unless-stopped \
+  -v /home/hermes/aipp/aipp-key/data:/app/data \
+  -p 3000:3000 \
+  --env-file /home/hermes/aipp/aipp-key/.env \
+  aipp-key:pre-3pct-stable
+```
+
+#### Verification After Rollback
+```bash
+docker ps --filter name=aipp-key
+curl -fsS https://aipp.dev/health
+```
+
+#### Reversing Rollback (If Rollback Was Premature)
+If you need to switch back to the newer deployment without rebuilding:
+```bash
+docker stop aipp-key
+docker rm aipp-key
+docker rename "aipp-key-failed-$ROLLBACK_STAMP" aipp-key
+docker start aipp-key
+```
+
+### C. Git Revert (Audit-Safe Alternative)
+```bash
+# For a normal commit:
+git revert <commit-sha> --no-edit
+
+# For a merge commit only:
+git revert -m 1 <merge-commit-sha> --no-edit
+
+# Rebuild and restart
+npm install
+npm test
+pm2 restart aipp-gateway # (or rebuild docker image)
+```
+
+> [!CAUTION]
+> Never use destructive commands like `git reset --hard` or attempt to checkout detached tags in an active production worktree.
+
+### D. Database Backward Compatibility
+All schema updates for fee versioning are strictly **additive** (`ALTER TABLE ... ADD COLUMN ...`). Previous application versions can safely interact with the database without rolling back migrations or altering existing tables. Database restoration from backup is unnecessary unless unrecoverable corruption occurs.
 
 ---
 

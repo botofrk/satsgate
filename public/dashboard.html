@@ -533,7 +533,7 @@ th { background: var(--sub-bg); font-size: 11px; font-weight: 700; text-transfor
           <div class="stat-label">AIPP Fees</div>
           <div class="stat-value" id="volume-commission" style="color:var(--accent);">0 sats</div>
           <div class="stat-sub" style="color:var(--fg-muted); margin-top:8px; line-height:1.4;">
-            <span style="font-size:11px;">Lightning: 1% + 5 sats per successful payment</span>
+            <span style="font-size:11px;">Lightning: 3% + 5 sats · Base USDC: 3% ($0.001 min)</span>
           </div>
         </div>
         
@@ -1394,9 +1394,9 @@ function formatTxRow(tx) {
   }
   
   const isUsd = tx.protocol === 'x402';
-  const gross = isUsd ? `$${(tx.usdc_amount || 0).toFixed(2)}` : `${tx.amount_sats || 0} sats`;
-  const fee = isUsd ? `$${((tx.usdc_amount||0)*0.01).toFixed(4)}` : `${tx.commission_sats || 0} sats`;
-  const net = isUsd ? `$${((tx.usdc_amount||0)*0.99).toFixed(2)}` : `${tx.forwarded_amount_sats || 0} sats`;
+  const gross = tx.gross_display || (isUsd ? `$${(tx.usdc_amount || 0).toFixed(2)}` : `${tx.amount_sats || 0} sats`);
+  const fee = tx.fee_display || (isUsd ? (tx.service_fee_usdc_units != null ? `$${(Number(tx.service_fee_usdc_units) / 1e6).toFixed(4)}` : `$0.0000`) : `${tx.commission_sats || 0} sats`);
+  const net = tx.net_display || (isUsd ? (tx.net_usdc_units != null ? `$${(Number(tx.net_usdc_units) / 1e6).toFixed(4)}` : `$0.0000`) : `${tx.forwarded_amount_sats || 0} sats`);
   const netw = isUsd ? '🔵 Base' : '⚡ LN';
   
   let bStatus = 'badge-pending';

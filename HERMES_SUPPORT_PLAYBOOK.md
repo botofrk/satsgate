@@ -36,10 +36,12 @@ process. Wallet addresses alone are not dashboard authentication.
 
 ## Pricing response
 
-Lightning has no subscription in the current transaction-fee model. The buyer
-pays the merchant's item price plus `ceil(1%) + 5 sats`. Show merchant price,
-platform fee and buyer total separately. Do not describe the 5 sats as a network
-fee; it is part of AIPP's platform fee formula.
+AIPP charges 3% per successful transaction ($0 monthly, $0 setup).
+Lightning fee: 3% of gross payment + 5 sats (`ceil(gross_sats * 300 / 10000) + 5 sats`).
+Base USDC fee: 3% of gross payment ($0.001 minimum fee).
+AIPP's fee is deducted from the gross payment (`gross = merchant_net + aipp_fee`).
+Show gross price, platform fee and merchant net separately. Do not describe the 5 sats as a network
+fee; it is part of AIPP's platform fee formula. Failed payments are never charged.
 
 ## Rate limiting response
 

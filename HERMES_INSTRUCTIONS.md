@@ -39,7 +39,10 @@ server or construct a shell command from an untrusted invoice.
 
 ## Current commercial and traffic rules
 
-- Lightning buyer total: merchant amount + `ceil(1%) + 5 sats`.
+- Fee policy: 3% per successful transaction ($0 monthly, $0 setup).
+- Lightning: 3% of gross payment + 5 sats (`ceil(gross_sats * 300 / 10000) + 5 sats`).
+- Base USDC: 3% of gross payment ($0.001 minimum fee).
+- Canonical invariant: gross_amount = merchant_net + aipp_fee.
 - Invoice creation: 60/minute per API key or IP.
 - Status checks: 300/minute per API key or IP.
 - Global safety net: 600 requests/minute.

@@ -20,12 +20,12 @@ queued for retry. AIPP may therefore hold funds briefly during forwarding; do
 not describe this flow as completely non-custodial or direct wallet-to-wallet.
 Base USDC follows a separate on-chain settlement flow.
 
-## Lightning pricing
+## Canonical transaction pricing (3% success fee)
 
-- The merchant chooses the item price.
-- The buyer pays the item price plus `ceil(1%) + 5 sats`.
-- The merchant is intended to receive the listed item price; Lightning routing
-  costs or failed payouts may still affect operational settlement.
+- $0 monthly, $0 setup, $0 failed transactions.
+- Lightning: 3% + 5 sats per successful transaction (`percentage_fee_sats = ceil(gross_sats * 300 / 10000)`, `aipp_fee_sats = percentage_fee_sats + 5`, `merchant_net_sats = gross_sats - aipp_fee_sats`).
+- Base USDC: 3% per successful transaction with $0.001 minimum fee (`percentage_fee_units = ceil(gross_units * 300 / 10000)`, `aipp_fee_units = max(percentage_fee_units, 1000)`, `merchant_net_units = gross_units - aipp_fee_units`).
+- The displayed payment price is the gross amount paid by the customer. AIPP's fee is deducted from the gross payment (`gross = merchant_net + aipp_fee`).
 - There is no subscription or setup fee in the current transaction-fee model.
 - Invoice creation is limited to 60/minute per API key or IP. Status checks are
   limited to 300/minute. A global 600 request/minute safety limit also applies.

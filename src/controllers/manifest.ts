@@ -52,8 +52,8 @@ export const getOpenTagSpec = async (req: Request, res: Response) => {
       description: 'optional human-readable description',
       price: { amount_usd: 'USD string (e.g. "0.01")', currency: 'USD' },
       accepts: [
-        { protocol: 'L402', network: 'bitcoin-lightning', fee_policy: '1% + 5 sats customer-side fee', address: 'Lightning Address' },
-        { protocol: 'x402', network: 'base', chain_id: 8453, asset: 'USDC', contract: 'USDC token contract on Base', receiver: '0x... payout receiver', fee_policy: '1% merchant platform fee' }
+        { protocol: 'L402', network: 'bitcoin-lightning', fee_policy: '3% + 5 sats per successful transaction', address: 'Lightning Address' },
+        { protocol: 'x402', network: 'base', chain_id: 8453, asset: 'USDC', contract: 'USDC token contract on Base', receiver: '0x... payout receiver', fee_policy: '3% per successful transaction ($0.001 minimum fee)' }
       ],
       input_schema: 'optional JSON Schema describing expected agent input',
       output_schema: 'optional JSON Schema describing expected output',
@@ -88,8 +88,8 @@ export const getOpenTagSpec = async (req: Request, res: Response) => {
       '401': 'Missing or invalid API key (merchant endpoints)'
     },
     fees: {
-      lightning: '1% + 5 sats, added customer-side and shown on checkout',
-      base_usdc: '1% merchant platform fee (minimum $0.001)',
+      lightning: '3% + 5 sats per successful transaction',
+      base_usdc: '3% per successful transaction; $0.001 minimum fee',
       custody: 'AIPP never stores merchant balances. Hosted flows may receive funds before forwarding to the merchant wallet.',
       settlement: 'Lightning: LNbits/phoenixd → merchant Lightning Address. USDC: Base gateway → merchant payout queue → merchant USDC address.'
     }
@@ -145,8 +145,8 @@ export const getAippAgentManifest = async (req: Request, res: Response) => {
       payment_proof_scope: "exact-tag"
     },
     fees: {
-      base_usdc: "1% merchant platform fee (min $0.001)",
-      lightning_fee: "1% + 5 sats"
+      base_usdc: "3% per successful transaction ($0.001 minimum fee)",
+      lightning_fee: "3% + 5 sats per successful transaction"
     }
   };
 

@@ -337,8 +337,9 @@ export const getMerchantTransactions = async (req: Request, res: Response, next:
     let offset = parseInt(req.query.offset as string, 10);
     if (isNaN(offset) || offset < 0) offset = 0;
 
-    const txs = await db.all(
-      `SELECT i.payment_hash, i.amount_sats, i.commission_sats, i.forwarded_amount_sats, i.status, i.payout_status, i.protocol, i.usdc_amount, i.preimage, i.created_at,
+    const rawTxs = await db.all(
+      `SELECT i.payment_hash, i.amount_sats, i.commission_sats, i.forwarded_amount_sats, i.status, i.payout_status, i.protocol, i.usdc_amount,
+              i.usdc_amount_units, i.service_fee_usdc_units, i.net_usdc_units, i.fee_policy_version, i.fee_bps, i.preimage, i.created_at,
               (SELECT pq.payout_reference FROM payout_queue pq WHERE pq.payment_hash = i.payment_hash AND pq.api_key = i.api_key ORDER BY pq.created_at DESC LIMIT 1) AS payout_reference
        FROM invoices i
        WHERE i.api_key = ? AND (i.created_at >= ? OR ? = 'all') 
@@ -346,6 +347,47 @@ export const getMerchantTransactions = async (req: Request, res: Response, next:
        LIMIT ? OFFSET ?`,
       apiKey, fromDateStr, isAll, limit, offset
     );
+
+    const txs = rawTxs.map((tx: any) => {
+      const isUsd = tx.protocol === 'x402';
+      let grossDisplay = '';
+      let feeDisplay = '';
+      let netDisplay = '';
+      if (isUsd) {
+        const gross = tx.usdc_amount ?? 0;
+        grossDisplay = `$${gross.toFixed(2)}`;
+        if (tx.service_fee_usdc_units !== null && tx.service_fee_usdc_units !== undefined && tx.net_usdc_units !== null && tx.net_usdc_units !== undefined) {
+          feeDisplay = `$${(Number(tx.service_fee_usdc_units) / 1_000_000).toFixed(4)}`;
+          netDisplay = `$${(Number(tx.net_usdc_units) / 1_000_000).toFixed(4)}`;
+        } else {
+          // Version-aware legacy fallback: flat 1% fee with 0 minimum fee
+          const grossUnits = Math.round(gross * 1_000_000);
+          const legacyFeeUnits = Math.floor(grossUnits * 0.01);
+          const legacyNetUnits = grossUnits - legacyFeeUnits;
+          feeDisplay = `$${(legacyFeeUnits / 1_000_000).toFixed(4)}`;
+          netDisplay = `$${(legacyNetUnits / 1_000_000).toFixed(4)}`;
+        }
+      } else {
+        const grossSats = tx.amount_sats ?? 0;
+        grossDisplay = `${grossSats} sats`;
+        if (tx.commission_sats !== null && tx.commission_sats !== undefined && tx.forwarded_amount_sats !== null && tx.forwarded_amount_sats !== undefined) {
+          feeDisplay = `${tx.commission_sats} sats`;
+          netDisplay = `${tx.forwarded_amount_sats} sats`;
+        } else {
+          // Version-aware legacy fallback: 1% + 5 sats
+          const legacyLnFee = Math.ceil(grossSats * 0.01) + 5;
+          const legacyLnNet = grossSats - legacyLnFee;
+          feeDisplay = `${legacyLnFee} sats`;
+          netDisplay = `${legacyLnNet} sats`;
+        }
+      }
+      return {
+        ...tx,
+        gross_display: grossDisplay,
+        fee_display: feeDisplay,
+        net_display: netDisplay
+      };
+    });
 
     res.json(txs);
   } catch (error) {

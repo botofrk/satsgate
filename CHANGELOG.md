@@ -19,10 +19,13 @@
 
 All notable changes to the AIPP Open Tag protocol and application are documented in this file.
 
-## [Unreleased] - 2026-08-13
-### Changed
-- Lightning checkout now charges the buyer the merchant price plus
-  `ceil(1%) + 5 sats`; the listed merchant amount is not reduced by the fee.
+## 2026-08-19 — V1 Transaction Pricing Update (3% Success Fee)
+
+- **Canonical 3% Success Fee**: Updated fee policy to 3% per successful transaction ($0 monthly, $0 setup, $0 failed payments).
+- **Lightning Rail**: Charges 3% + 5 sats per successful transaction (`ceil(gross_sats * 300 / 10000) + 5 sats`).
+- **Base USDC Rail**: Charges 3% per successful transaction with a $0.001 minimum fee (`max(ceil(gross_units * 300 / 10000), 1000)`).
+- **Accounting Invariant**: Enforced `gross_amount = merchant_net + aipp_fee` across all API outputs, manifests, receipts, and database persistence.
+- **Integer Arithmetic Engine**: Standardized all monetary calculations to native integer satoshis and 6-decimal USDC base units, eliminating JavaScript floating-point errors.
 - Invoice creation is limited to 60/minute per API key or IP, status checks to
   300/minute, with a 600/minute global safety net.
 - Dashboard API keys are kept in session storage and all dynamic values are

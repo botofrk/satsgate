@@ -9,8 +9,10 @@ import { LNBITS_INVOICE_KEY, LNBITS_URL, MAX_SINGLE_REQUEST_USD, USDC_ADDRESS, B
 import { getGatewayAddress, verifyUsdcPayment } from '../services/base';
 import { publishInvoiceUpdate, subscribeToInvoice } from '../services/events';
 
+import { ethers } from 'ethers';
 import { generateInvoiceData, InvoiceDomainError } from '../services/invoiceService';
 import { enqueueMerchantPayoutIfEligible } from '../services/payoutService';
+import { calculateBaseUsdcFee, calculateLegacyBaseUsdcFee, calculateLegacyLightningFee } from '../services/fees';
 
 function getLnbitsKey(): string {
   return process.env.LNBITS_INVOICE_KEY || LNBITS_INVOICE_KEY;
@@ -227,7 +229,10 @@ async function settleUsdcInvoice(
   const release = await acquireTransactionLock();
   try {
     await db.run('BEGIN EXCLUSIVE TRANSACTION');
-    const currentInvoice = await db.get('SELECT status, api_key, usdc_amount FROM invoices WHERE payment_hash = ?', hash);
+    const currentInvoice = await db.get(
+      'SELECT status, api_key, usdc_amount, usdc_amount_units, service_fee_usdc_units, net_usdc_units, fee_policy_version FROM invoices WHERE payment_hash = ?',
+      hash
+    );
     if (currentInvoice && currentInvoice.status === 'pending') {
       await db.run(
         "UPDATE invoices SET status = 'settled', preimage = ?, payout_status = 'pending_manual', protocol = 'x402' WHERE payment_hash = ?",
@@ -242,15 +247,38 @@ async function settleUsdcInvoice(
           hash
         );
 
+        let grossUnits = 0n;
+        let feeUnits = 0n;
+        let netUnits = 0n;
+        if (currentInvoice.net_usdc_units !== null && currentInvoice.net_usdc_units !== undefined) {
+          netUnits = BigInt(currentInvoice.net_usdc_units);
+          feeUnits = BigInt(currentInvoice.service_fee_usdc_units ?? 0);
+          grossUnits = BigInt(currentInvoice.usdc_amount_units ?? (netUnits + feeUnits));
+        } else {
+          // Version-aware legacy record fallback: flat 1% fee with 0 minimum fee
+          const totalUnits = BigInt(Math.round((currentInvoice.usdc_amount || usdcAmount) * 1_000_000));
+          const legacy = calculateLegacyBaseUsdcFee(totalUnits);
+          grossUnits = legacy.grossUnits;
+          feeUnits = legacy.aippFeeUnits;
+          netUnits = legacy.merchantNetUnits;
+        }
+
         const jobId = crypto.randomUUID();
         await db.run(
-          "INSERT INTO payout_queue (id, payment_hash, api_key, amount_sats, usdc_address, usdc_amount, protocol, status, next_retry_at, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, 'pending', ?, ?)",
+          `INSERT INTO payout_queue (
+            id, payment_hash, api_key, amount_sats, usdc_address, usdc_amount,
+            net_usdc_units, service_fee_usdc_units, gross_usdc_units,
+            protocol, status, next_retry_at, created_at
+          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', ?, ?)`,
           jobId,
           hash,
           apiKey,
           0,
           merchant.usdc_address,
-          usdcAmount,
+          Number(ethers.formatUnits(netUnits, 6)),
+          netUnits.toString(),
+          feeUnits.toString(),
+          grossUnits.toString(),
           'x402',
           new Date().toISOString(),
           new Date().toISOString()
@@ -413,7 +441,8 @@ export const getReceipt = async (req: Request, res: Response, next: NextFunction
     const invoice = await db.get(`
       SELECT 
         i.payment_hash, i.api_key, i.amount_sats, i.commission_sats, i.forwarded_amount_sats, 
-        i.status, i.protocol, i.usdc_amount, i.created_at, i.preimage, i.tag_id,
+        i.status, i.protocol, i.usdc_amount, i.usdc_amount_units, i.service_fee_usdc_units, i.net_usdc_units,
+        i.fee_policy_version, i.fee_bps, i.created_at, i.preimage, i.tag_id,
         m.ln_address, m.usdc_address
       FROM invoices i
       LEFT JOIN merchants m ON i.api_key = m.api_key
@@ -442,6 +471,36 @@ export const getReceipt = async (req: Request, res: Response, next: NextFunction
       throw new AppError('Receipts are only available for settled invoices', 400, 'NOT_SETTLED');
     }
 
+    const isX402 = invoice.protocol === 'x402';
+    let merchantAmount = 0;
+    let platformFee = 0;
+    let totalAmount = 0;
+
+    if (isX402) {
+      totalAmount = invoice.usdc_amount;
+      if (invoice.net_usdc_units !== null && invoice.net_usdc_units !== undefined && invoice.service_fee_usdc_units !== null && invoice.service_fee_usdc_units !== undefined) {
+        merchantAmount = Number(ethers.formatUnits(BigInt(invoice.net_usdc_units), 6));
+        platformFee = Number(ethers.formatUnits(BigInt(invoice.service_fee_usdc_units), 6));
+      } else {
+        // Version-aware legacy fallback: 1% fee with 0 minimum fee
+        const grossUnits = ethers.parseUnits(Number(invoice.usdc_amount || 0).toFixed(6), 6);
+        const legacy = calculateLegacyBaseUsdcFee(grossUnits);
+        merchantAmount = Number(ethers.formatUnits(legacy.merchantNetUnits, 6));
+        platformFee = Number(ethers.formatUnits(legacy.aippFeeUnits, 6));
+      }
+    } else {
+      totalAmount = invoice.amount_sats;
+      if (invoice.forwarded_amount_sats !== null && invoice.forwarded_amount_sats !== undefined && invoice.commission_sats !== null && invoice.commission_sats !== undefined) {
+        merchantAmount = invoice.forwarded_amount_sats;
+        platformFee = invoice.commission_sats;
+      } else {
+        // Version-aware legacy fallback
+        const legacyLn = calculateLegacyLightningFee(invoice.amount_sats || 0);
+        merchantAmount = legacyLn.merchantNetSats;
+        platformFee = legacyLn.aippFeeSats;
+      }
+    }
+
     const receipt = {
       receipt_id: `rec_${crypto.randomUUID()}`,
       transaction_id: invoice.payment_hash,
@@ -451,18 +510,19 @@ export const getReceipt = async (req: Request, res: Response, next: NextFunction
       status: invoice.status,
       record: {
         type: 'machine-readable payment receipt',
+        fee_policy_version: invoice.fee_policy_version || 'legacy_v1_1pct',
         note: 'This is a technical transaction record and is not a legal compliance certification.'
       },
       payment_details: {
         protocol: invoice.protocol,
         proof: invoice.preimage || null,
-        merchant_destination: invoice.protocol === 'x402' ? invoice.usdc_address : invoice.ln_address,
+        merchant_destination: isX402 ? invoice.usdc_address : invoice.ln_address,
       },
       financials: {
-        currency: invoice.protocol === 'x402' ? 'USDC' : 'SATS',
-        total_amount: invoice.protocol === 'x402' ? invoice.usdc_amount : invoice.amount_sats,
-        merchant_amount: invoice.protocol === 'x402' ? invoice.usdc_amount * 0.99 : invoice.forwarded_amount_sats,
-        platform_fee: invoice.protocol === 'x402' ? invoice.usdc_amount * 0.01 : invoice.commission_sats
+        currency: isX402 ? 'USDC' : 'SATS',
+        total_amount: totalAmount,
+        merchant_amount: merchantAmount,
+        platform_fee: platformFee
       }
     };
 

@@ -15,8 +15,8 @@ The zero-context autonomous AI agent test script was executed against the live p
 
 ### B. Deterministic Manifest & Base USDC / x402 Parameters
 - Enhanced `manifestFor` in `src/controllers/openTag.ts` to output exact parameters:
-  - **Base USDC**: Chain ID `8453`, Contract `0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913`, Receiver address, and `1% merchant platform fee`.
-  - **Lightning (L402)**: Address, protocol `L402`, and `1% + 5 sats customer-side fee`.
+  - **Base USDC**: Chain ID `8453`, Contract `0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913`, Receiver address, and `3% per successful transaction ($0.001 minimum fee)`.
+  - **Lightning (L402)**: Address, protocol `L402`, and `3% + 5 sats per successful transaction`.
 
 ### C. Discovery & Sitemap
 - **Created `public/sitemap.xml`**: Valid XML sitemap including `/`, `/t/demo`, `/llms.txt`, `/llms-full.txt`, `/docs.html`, `/dashboard.html`, `/legal.html`.

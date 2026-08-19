@@ -4,6 +4,9 @@ import { sendEmail } from '../services/email';
 import { sendUsdcPayout } from '../services/base';
 import crypto from 'crypto';
 
+import { calculateLegacyBaseUsdcFee } from '../services/fees';
+import { ethers } from 'ethers';
+
 let isProcessing = false;
 
 export async function processPayoutQueue() {
@@ -49,8 +52,28 @@ export async function processPayoutQueue() {
         const isDemo = !isX402 && (job.payment_hash.startsWith('demo_') || job.payment_hash.startsWith('mock_'));
 
         if (isX402) {
-          console.log(`[Payout Worker] Processing job ${job.id} - ${job.usdc_amount} USDC to ${job.usdc_address}`);
-          const txHash = await sendUsdcPayout(job.usdc_address, job.usdc_amount);
+          let netUnits = 0n;
+          if (job.net_usdc_units !== null && job.net_usdc_units !== undefined && job.net_usdc_units > 0) {
+            netUnits = BigInt(job.net_usdc_units);
+          } else {
+            const inv = await db.get(
+              'SELECT net_usdc_units, usdc_amount_units, usdc_amount, fee_policy_version FROM invoices WHERE payment_hash = ?',
+              job.payment_hash
+            );
+            if (inv && inv.net_usdc_units !== null && inv.net_usdc_units !== undefined) {
+              netUnits = BigInt(inv.net_usdc_units);
+            } else {
+              // Version-aware legacy fallback: flat 1% fee with 0 minimum fee
+              const grossUnits = inv?.usdc_amount_units
+                ? BigInt(inv.usdc_amount_units)
+                : BigInt(Math.round((job.usdc_amount || inv?.usdc_amount || 0) * 1_000_000));
+              const legacy = calculateLegacyBaseUsdcFee(grossUnits);
+              netUnits = legacy.merchantNetUnits;
+            }
+          }
+
+          console.log(`[Payout Worker] Processing job ${job.id} - ${ethers.formatUnits(netUnits, 6)} USDC (${netUnits.toString()} units) to ${job.usdc_address}`);
+          const txHash = await sendUsdcPayout(job.usdc_address, netUnits);
           payoutReference = txHash;
           console.log(`[Payout Worker] ✅ USDC payout successful: ${txHash}`);
         } else {

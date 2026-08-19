@@ -1,5 +1,6 @@
 import { ethers } from 'ethers';
 import { AIPP_BASE_PRIVATE_KEY, BASE_RPC_URL, USDC_ADDRESS } from '../config/env';
+import { calculateBaseUsdcFee } from './fees';
 
 let _providerInstance: ethers.JsonRpcProvider | null = null;
 
@@ -97,15 +98,21 @@ export async function verifyUsdcPayment(txHash: string, expectedUsdcAmount: numb
 
 /**
  * Sends USDC payout on Base to a merchant.
- * Deducts 1% fee using BigInt arithmetic to avoid rounding errors.
+ * Forwards the exact pre-calculated, persisted merchant net integer units.
+ * Never recalculates fees at payout time.
  */
-export async function sendUsdcPayout(toAddress: string, amountUsdc: number): Promise<string> {
+export async function sendUsdcPayout(toAddress: string, netUnits: bigint | number): Promise<string> {
   // [HIGH-3 FIX] Validate Ethereum address before any on-chain operation
   if (!ethers.isAddress(toAddress)) {
     throw new Error(`Invalid Ethereum address for payout: "${toAddress}"`);
   }
   if (toAddress === ethers.ZeroAddress) {
     throw new Error('Payout to zero address is not allowed');
+  }
+
+  const forwardedUnits = typeof netUnits === 'bigint' ? netUnits : BigInt(Math.round(netUnits));
+  if (forwardedUnits <= 0n) {
+    throw new Error(`Payout net amount too small to process: ${forwardedUnits.toString()} units`);
   }
 
   const wallet = getWallet(); // [CRIT-3 FIX] Use module-level singleton
@@ -115,15 +122,6 @@ export async function sendUsdcPayout(toAddress: string, amountUsdc: number): Pro
     "function transfer(address to, uint256 value) returns (bool)",
     "function balanceOf(address owner) view returns (uint256)"
   ], wallet);
-
-  // BigInt calculations in USDC base units (6 decimals)
-  const totalUnits = BigInt(Math.round(amountUsdc * 1_000_000));
-  const commissionUnits = totalUnits / 100n; // Flat 1%
-  const forwardedUnits = totalUnits - commissionUnits;
-
-  if (forwardedUnits <= 0n) {
-    throw new Error(`Payout amount too small to process: ${amountUsdc} USDC`);
-  }
 
   // 1. Gas fee check — require at least 0.0005 ETH for transfer gas
   const ethBalance = await provider.getBalance(wallet.address);
@@ -138,7 +136,7 @@ export async function sendUsdcPayout(toAddress: string, amountUsdc: number): Pro
     throw new Error(`Insufficient USDC balance on Gateway wallet. Has ${ethers.formatUnits(usdcBalance, 6)} USDC, needs ${ethers.formatUnits(forwardedUnits, 6)} USDC`);
   }
 
-  console.log(`[Base Service] Initiating payout: forwarding ${ethers.formatUnits(forwardedUnits, 6)} USDC to ${toAddress} (AIPP fee: ${ethers.formatUnits(commissionUnits, 6)} USDC)`);
+  console.log(`[Base Service] Initiating payout: forwarding exact persisted net ${ethers.formatUnits(forwardedUnits, 6)} USDC (${forwardedUnits.toString()} units) to ${toAddress}`);
 
   const tx = await usdcContract.transfer(toAddress, forwardedUnits);
   const receipt = await tx.wait();

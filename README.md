@@ -21,7 +21,7 @@ the resulting payment proof to the exact resource being unlocked.
 **Revenue Model:** AIPP charges a disclosed per-payment fee. Lightning payments are received by the AIPP gateway and the merchant amount is forwarded automatically to the configured wallet. AIPP does not provide prepaid credits or a spendable merchant balance.
 
 - **Automatic payout.** Merchant proceeds are forwarded to the configured wallet.
-- **Transparent fees.** Lightning costs 1% + 5 sats per successful payment.
+- **Transparent fees.** 3% per successful transaction ($0 monthly, $0 setup). Lightning: 3% + 5 sats per successful payment; Base USDC: 3% per successful payment ($0.001 minimum fee).
 - **No subscription or prepaid credit.** Revenue comes from successful transactions.
 
 ---

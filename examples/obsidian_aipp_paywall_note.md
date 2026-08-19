@@ -27,5 +27,5 @@ Paste the following HTML snippet into any Obsidian Markdown file:
 
 ## 💎 Why AIPP for Obsidian?
 - **Automated Settlement:** Funds settle to your configured wallet with no manual withdrawal step.
-- **Disclosed Protocol Fee:** AIPP charges a 1% + 5 sats fee for Lightning and 1% for Base USDC.
+- **Disclosed Protocol Fee:** AIPP charges a 3% + 5 sats fee for Lightning and 3% ($0.001 min) for Base USDC.
 - **Global Micro-Payments:** Sell $0.25 flash notes to thousands of readers worldwide.

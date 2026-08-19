@@ -43,6 +43,10 @@ export async function initDb(): Promise<Database> {
       usdc_amount_units INTEGER,
       service_fee_usdc_units INTEGER,
       net_usdc_units INTEGER,
+      fee_policy_version TEXT,
+      fee_bps INTEGER,
+      lightning_fixed_fee_sats INTEGER,
+      base_usdc_min_fee_units INTEGER,
       preimage TEXT,
       created_at TEXT NOT NULL
     );
@@ -83,6 +87,9 @@ export async function initDb(): Promise<Database> {
       protocol TEXT NOT NULL DEFAULT 'L402',
       usdc_address TEXT,
       usdc_amount REAL,
+      net_usdc_units INTEGER,
+      service_fee_usdc_units INTEGER,
+      gross_usdc_units INTEGER,
       status TEXT NOT NULL DEFAULT 'pending', -- pending, processing, failed, completed
       payout_reference TEXT,
       last_error TEXT,
@@ -266,8 +273,7 @@ export async function initDb(): Promise<Database> {
     // Ignore
   }
 
-  // Open Tag migrations. Invoices are bound to the exact priced capability so
-  // a proof for one tag cannot unlock another tag owned by the same merchant.
+  // Open Tag & Fee policy migrations. Invoices are bound to the exact priced capability and fee policy
   for (const migration of [
     "ALTER TABLE payment_links ADD COLUMN capability_type TEXT NOT NULL DEFAULT 'link';",
     'ALTER TABLE payment_links ADD COLUMN description TEXT;',
@@ -276,7 +282,17 @@ export async function initDb(): Promise<Database> {
     'ALTER TABLE invoices ADD COLUMN tag_id TEXT;',
     'ALTER TABLE invoices ADD COLUMN access_claim_secret_hash TEXT;',
     'ALTER TABLE invoices ADD COLUMN access_token_hash TEXT;',
-    'ALTER TABLE invoices ADD COLUMN access_token_expires_at TEXT;'
+    'ALTER TABLE invoices ADD COLUMN access_token_expires_at TEXT;',
+    'ALTER TABLE invoices ADD COLUMN usdc_amount_units INTEGER;',
+    'ALTER TABLE invoices ADD COLUMN service_fee_usdc_units INTEGER;',
+    'ALTER TABLE invoices ADD COLUMN net_usdc_units INTEGER;',
+    'ALTER TABLE invoices ADD COLUMN fee_policy_version TEXT;',
+    'ALTER TABLE invoices ADD COLUMN fee_bps INTEGER;',
+    'ALTER TABLE invoices ADD COLUMN lightning_fixed_fee_sats INTEGER;',
+    'ALTER TABLE invoices ADD COLUMN base_usdc_min_fee_units INTEGER;',
+    'ALTER TABLE payout_queue ADD COLUMN net_usdc_units INTEGER;',
+    'ALTER TABLE payout_queue ADD COLUMN service_fee_usdc_units INTEGER;',
+    'ALTER TABLE payout_queue ADD COLUMN gross_usdc_units INTEGER;'
   ]) {
     try {
       await dbInstance.exec(migration);

@@ -4,7 +4,7 @@ import { getBtcUsdRate } from './price';
 import { LNBITS_INVOICE_KEY, LNBITS_URL, LNBITS_WEBHOOK_SECRET, MAX_SINGLE_REQUEST_USD, USDC_ADDRESS, BASE_NETWORK_NAME, API_BASE_URL } from '../config/env';
 import { getGatewayAddress } from './base';
 import { ethers } from 'ethers';
-import { calculateLightningFeeSats } from './fees';
+import { calculateLightningFee, calculateBaseUsdcFee, CURRENT_FEE_POLICY_VERSION, AIPP_FEE_BPS, LIGHTNING_FIXED_FEE_SATS, BASE_USDC_MINIMUM_FEE_UNITS } from './fees';
 
 export class InvoiceDomainError extends Error {
   public code: string;
@@ -111,14 +111,19 @@ export async function generateInvoiceData(options: GenerateInvoiceOptions): Prom
     throw new InvoiceDomainError('USD amount must be between 0.01 and 100.00 USD (or equivalent sats)', 'INVALID_AMOUNT');
   }
 
-  // Minimum invoice amount check
-  const percentageFee = (grossUnits + 99n) / 100n; // 1% rounded up
-  const minimumBaseFeeUnits = 1000n; // $0.001 USDC minimum fee — keeps the disclosed 1% policy and allows $0.01 micro-tags on x402
-  const feeUnits = percentageFee > minimumBaseFeeUnits ? percentageFee : minimumBaseFeeUnits;
-  const netUnits = grossUnits - feeUnits;
-  
-  if (options.protocol !== 'L402' && netUnits <= 0n) {
-    throw new InvoiceDomainError('Invoice amount too small to cover minimum network and service fees', 'INVALID_AMOUNT');
+  // Minimum invoice amount & fee calculation
+  let feeUnits = 0n;
+  let netUnits = 0n;
+  if (grossUnits > 0n) {
+    try {
+      const usdcBreakdown = calculateBaseUsdcFee(grossUnits);
+      feeUnits = usdcBreakdown.aippFeeUnits;
+      netUnits = usdcBreakdown.merchantNetUnits;
+    } catch (err: any) {
+      if (options.protocol !== 'L402') {
+        throw new InvoiceDomainError('Invoice amount too small to cover minimum network and service fees', 'INVALID_AMOUNT');
+      }
+    }
   }
 
   if (options.protocol !== 'X402') {
@@ -139,13 +144,17 @@ export async function generateInvoiceData(options: GenerateInvoiceOptions): Prom
   let finalCommissionSats = 0;
   let finalForwardedSats = 0;
 
-  // Public prices are merchant-net prices. Add the disclosed AIPP fee on top.
-  // This is a pure calculation and intentionally remains outside the lock.
+  // The displayed payment price is the gross amount paid by the customer.
+  // AIPP's fee is deducted from the gross payment: gross = merchant_net + aipp_fee.
   if (options.protocol !== 'X402') {
-    const merchantPriceSats = amount_sats!;
-    finalCommissionSats = calculateLightningFeeSats(merchantPriceSats);
-    finalForwardedSats = merchantPriceSats;
-    amount_sats = merchantPriceSats + finalCommissionSats;
+    const grossSats = amount_sats!;
+    try {
+      const lnBreakdown = calculateLightningFee(grossSats);
+      finalCommissionSats = lnBreakdown.aippFeeSats;
+      finalForwardedSats = lnBreakdown.merchantNetSats;
+    } catch (err: any) {
+      throw new InvoiceDomainError('Invoice amount too small to cover minimum network and service fees', 'INVALID_AMOUNT');
+    }
   }
 
   // The shared lock starts before idempotency lookup and payment generation.
@@ -207,13 +216,15 @@ export async function generateInvoiceData(options: GenerateInvoiceOptions): Prom
     await db.run('BEGIN EXCLUSIVE TRANSACTION');
     transactionStarted = true;
 
-    // Insert actual invoice
+    // Insert actual invoice with permanently bound fee policy metadata
     await db.run(
       `INSERT INTO invoices (
         payment_hash, api_key, amount_sats, commission_sats, forwarded_amount_sats, 
         status, callback_url, protocol, usdc_amount, 
-        usdc_amount_units, service_fee_usdc_units, net_usdc_units, tag_id, created_at
-      ) VALUES (?, ?, ?, ?, ?, 'pending', ?, ?, ?, ?, ?, ?, ?, ?)`,
+        usdc_amount_units, service_fee_usdc_units, net_usdc_units,
+        fee_policy_version, fee_bps, lightning_fixed_fee_sats, base_usdc_min_fee_units,
+        tag_id, created_at
+      ) VALUES (?, ?, ?, ?, ?, 'pending', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       paymentHash, 
       options.apiKey, 
       amount_sats || 0, 
@@ -225,6 +236,10 @@ export async function generateInvoiceData(options: GenerateInvoiceOptions): Prom
       grossUnits.toString(),
       feeUnits.toString(),
       netUnits.toString(),
+      CURRENT_FEE_POLICY_VERSION,
+      AIPP_FEE_BPS,
+      LIGHTNING_FIXED_FEE_SATS,
+      Number(BASE_USDC_MINIMUM_FEE_UNITS),
       options.tagId || null,
       new Date().toISOString()
     );

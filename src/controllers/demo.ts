@@ -31,7 +31,7 @@ export const premiumArticle = async (req: Request, res: Response) => {
             <p>The traditional banking system relies on identity, credit checks, and trusted intermediaries. But an AI agent has no identity, no passport, and no credit score. It exists as a block of code executing in a cloud environment. By utilizing stablecoin networks like Base and the x402 protocol, agents can now stream payments for APIs instantly, with automated settlement and low protocol fees.</p>
             <br>
             <div style="background: rgba(59, 130, 246, 0.1); border-left: 4px solid #3b82f6; padding: 16px; border-radius: 4px;">
-              <strong>🎉 Success!</strong> You just unlocked this premium content using x402 USDC on Base. The publisher received the funds instantly, with a flat 1% fee.
+              <strong>🎉 Success!</strong> You just unlocked this premium content using x402 USDC on Base. The publisher received the funds instantly, with a transparent 3% service fee ($0.001 minimum).
             </div>
           `
         });
@@ -59,7 +59,7 @@ export const premiumArticle = async (req: Request, res: Response) => {
               <p>The traditional banking system relies on identity, credit checks, and trusted intermediaries. But an AI agent has no identity, no passport, and no credit score. It exists as a block of code executing in a cloud environment. By utilizing Lightning Network's bearer-token model, agents can now stream payments for APIs without asking for human permission.</p>
               <br>
               <div style="background: rgba(245, 158, 11, 0.1); border-left: 4px solid #f59e0b; padding: 16px; border-radius: 4px;">
-                <strong>🎉 Success!</strong> You just unlocked this premium content using L402 micropayments. The publisher received the funds instantly, with no middlemen and a flat 1% fee.
+                <strong>🎉 Success!</strong> You just unlocked this premium content using L402 micropayments. The publisher received the funds instantly, with no middlemen and a transparent 3% + 5 sats fee.
               </div>
             `
           });
