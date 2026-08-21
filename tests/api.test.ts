@@ -9,6 +9,9 @@ import fs from 'fs';
 import path from 'path';
 
 const TEST_DB_PATH = path.join(__dirname, '../data/aipp_test.db');
+const RETIRED_MERCHANT_KEY = 'aipp_merch_retired_00000000000000000000000000000000';
+const ACTIVE_MERCHANT_KEY = 'aipp_merch_active_000000000000000000000000000000000';
+const UNKNOWN_MERCHANT_KEY = 'aipp_merch_unknown_00000000000000000000000000000000';
 
 describe('API Integration Tests via Supertest', () => {
   beforeAll(async () => {
@@ -37,6 +40,13 @@ describe('API Integration Tests via Supertest', () => {
       "instant",
       new Date().toISOString()
     );
+    await db.run(
+      "INSERT INTO merchants (api_key, ln_address, payout_mode, created_at) VALUES (?, ?, ?, ?)",
+      ACTIVE_MERCHANT_KEY,
+      "active-stats@aipp.dev",
+      "instant",
+      new Date().toISOString()
+    );
   });
 
   afterAll(async () => {
@@ -57,6 +67,30 @@ describe('API Integration Tests via Supertest', () => {
     expect(res.status).toBe(200);
     expect(res.body).toHaveProperty('status', 'ok');
     expect(res.body).toHaveProperty('db', 'ok');
+  });
+
+  it('returns 401 for GET /merchant/stats without a credential', async () => {
+    const res = await request(app).get('/merchant/stats');
+    expect(res.status).toBe(401);
+    expect(res.body.code).toBe('UNAUTHORIZED');
+  });
+
+  it('returns 401 for GET /merchant/stats with a well-formed unknown credential', async () => {
+    const res = await request(app).get('/merchant/stats').set('X-Api-Key', UNKNOWN_MERCHANT_KEY);
+    expect(res.status).toBe(401);
+    expect(res.body.code).toBe('UNAUTHORIZED');
+  });
+
+  it('returns 401 for GET /merchant/stats with a retired credential', async () => {
+    const res = await request(app).get('/merchant/stats').set('X-Api-Key', RETIRED_MERCHANT_KEY);
+    expect(res.status).toBe(401);
+    expect(res.body.code).toBe('UNAUTHORIZED');
+  });
+
+  it('returns 200 for GET /merchant/stats with the active credential', async () => {
+    const res = await request(app).get('/merchant/stats').set('X-Api-Key', ACTIVE_MERCHANT_KEY);
+    expect(res.status).toBe(200);
+    expect(res.body.payoutMode).toBe('instant');
   });
 
   it('should return PaidMCP manifest on GET /paidmcp.json', async () => {

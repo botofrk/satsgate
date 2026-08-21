@@ -209,6 +209,7 @@ export const getMerchantStats = async (req: Request, res: Response, next: NextFu
     
     const db = getDb();
     const merchant = await db.get('SELECT ln_address, usdc_address, payout_mode, payout_threshold_sats FROM merchants WHERE api_key = ?', apiKey);
+    if (!merchant) throw new AppError('Unauthorized', 401, 'UNAUTHORIZED');
     const rangeParam = req.query.range as string || '30';
     let rangeQuery = '30';
     if (['1', '7', '30', 'all'].includes(rangeParam)) {
