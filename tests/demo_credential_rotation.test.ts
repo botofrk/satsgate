@@ -4,7 +4,7 @@ import fs from 'fs';
 import path from 'path';
 import { afterEach, describe, expect, it } from 'vitest';
 import { closeDb, getDb, initDb } from '../src/config/database';
-import { rotateMerchantCredential, type RotationCounts } from '../src/security/rotateMerchantCredential';
+import { rotateMerchantCredential, sealApprovedPreflight, type RotationCounts } from '../src/security/rotateMerchantCredential';
 
 const oldCredential = ['aipp', 'devtest'].join('_');
 const newCredential = `aipp_merch_${'b'.repeat(32)}`;
@@ -118,5 +118,66 @@ describe('guarded merchant credential rotation', () => {
     const preflight = await rotateMerchantCredential(db, { oldCredential, newCredential });
     const bad = { ...preflight.counts, invoices: preflight.counts.invoices + 1 } as RotationCounts;
     await expect(rotateMerchantCredential(db, { oldCredential, newCredential, apply: true, expectedCounts: bad })).rejects.toThrow('approved preflight');
+  });
+
+  async function addUnrelatedOrphan(db: Awaited<ReturnType<typeof populatedDb>>, suffix = '1') {
+    await db.run(`INSERT INTO invoices(payment_hash,api_key,status,payout_status,created_at) VALUES(?,?,'expired','none',?)`, `orphan-hash-${suffix}`, `missing-merchant-${suffix}`, new Date().toISOString());
+  }
+
+  it('refuses unrelated orphans by default and refuses an allow flag without an approved artifact on apply', async () => {
+    const db = await populatedDb('rotation_orphan_default');
+    await addUnrelatedOrphan(db);
+    await expect(rotateMerchantCredential(db, { oldCredential, newCredential })).rejects.toThrow('Pre-existing unrelated orphan');
+    const approved = await rotateMerchantCredential(db, { oldCredential, newCredential, allowExistingOrphansUnchanged: true });
+    await expect(rotateMerchantCredential(db, { oldCredential, newCredential, apply: true, expectedCounts: approved.counts, allowExistingOrphansUnchanged: true })).rejects.toThrow('approved artifact');
+  });
+
+  it('uses an approved unchanged orphan baseline and preserves every unrelated orphan row', async () => {
+    const db = await populatedDb('rotation_orphan_approved');
+    await addUnrelatedOrphan(db);
+    const before = await db.all('SELECT * FROM invoices WHERE api_key=?', 'missing-merchant-1');
+    const approved = await rotateMerchantCredential(db, { oldCredential, newCredential, allowExistingOrphansUnchanged: true });
+    const result = await rotateMerchantCredential(db, { oldCredential, newCredential, apply: true, expectedCounts: approved.counts, allowExistingOrphansUnchanged: true, approvedPreflight: approved.approvedPreflight });
+    expect(result.applied).toBe(true);
+    expect(await db.all('SELECT * FROM invoices WHERE api_key=?', 'missing-merchant-1')).toEqual(before);
+  });
+
+  it('rolls back when an orphan row changes during the transaction', async () => {
+    const db = await populatedDb('rotation_orphan_changed');
+    await addUnrelatedOrphan(db);
+    const approved = await rotateMerchantCredential(db, { oldCredential, newCredential, allowExistingOrphansUnchanged: true });
+    await expect(rotateMerchantCredential(db, {
+      oldCredential, newCredential, apply: true, expectedCounts: approved.counts, allowExistingOrphansUnchanged: true, approvedPreflight: approved.approvedPreflight,
+      beforeCommit: () => db.run("UPDATE invoices SET status='changed' WHERE payment_hash='orphan-hash-1'")
+    })).rejects.toThrow('orphan baseline changed');
+    expect((await db.get('SELECT status FROM invoices WHERE payment_hash=?', 'orphan-hash-1')).status).toBe('expired');
+    expect((await db.get('SELECT COUNT(*) AS count FROM merchants WHERE api_key=?', oldCredential)).count).toBe(1);
+  });
+
+  it('refuses new or disappeared orphans against the approved baseline', async () => {
+    const db = await populatedDb('rotation_orphan_drift');
+    await addUnrelatedOrphan(db);
+    const approved = await rotateMerchantCredential(db, { oldCredential, newCredential, allowExistingOrphansUnchanged: true });
+    await addUnrelatedOrphan(db, '2');
+    await expect(rotateMerchantCredential(db, { oldCredential, newCredential, apply: true, expectedCounts: approved.counts, allowExistingOrphansUnchanged: true, approvedPreflight: approved.approvedPreflight })).rejects.toThrow('does not match');
+    await db.run("DELETE FROM invoices WHERE payment_hash IN ('orphan-hash-1','orphan-hash-2')");
+    await expect(rotateMerchantCredential(db, { oldCredential, newCredential, apply: true, expectedCounts: approved.counts, allowExistingOrphansUnchanged: true, approvedPreflight: approved.approvedPreflight })).rejects.toThrow('does not match');
+  });
+
+  it('always refuses target-specific orphans', async () => {
+    const db = await populatedDb('rotation_target_orphan');
+    await db.run('DELETE FROM merchants WHERE api_key=?', oldCredential);
+    await expect(rotateMerchantCredential(db, { oldCredential, newCredential, allowExistingOrphansUnchanged: true })).rejects.toThrow('Target-specific orphan');
+  });
+
+  it('refuses tampered and stale approved artifacts', async () => {
+    const db = await populatedDb('rotation_artifact_guards');
+    await addUnrelatedOrphan(db);
+    const approved = await rotateMerchantCredential(db, { oldCredential, newCredential, allowExistingOrphansUnchanged: true });
+    const tampered = structuredClone(approved.approvedPreflight); tampered.payload.counts.invoices++;
+    await expect(rotateMerchantCredential(db, { oldCredential, newCredential, apply: true, expectedCounts: approved.counts, allowExistingOrphansUnchanged: true, approvedPreflight: tampered })).rejects.toThrow('digest');
+    const stalePayload = { ...approved.approvedPreflight.payload, createdAt: new Date(Date.now() - 48 * 60 * 60 * 1000).toISOString() };
+    const stale = sealApprovedPreflight(stalePayload);
+    await expect(rotateMerchantCredential(db, { oldCredential, newCredential, apply: true, expectedCounts: approved.counts, allowExistingOrphansUnchanged: true, approvedPreflight: stale })).rejects.toThrow('stale');
   });
 });
