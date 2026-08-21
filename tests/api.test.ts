@@ -7,11 +7,14 @@ import { app } from '../src/server';
 import { initDb, getDb, closeDb } from '../src/config/database';
 import fs from 'fs';
 import path from 'path';
+import crypto from 'crypto';
 
 const TEST_DB_PATH = path.join(__dirname, '../data/aipp_test.db');
-const RETIRED_MERCHANT_KEY = 'aipp_merch_retired_00000000000000000000000000000000';
-const ACTIVE_MERCHANT_KEY = 'aipp_merch_active_000000000000000000000000000000000';
-const UNKNOWN_MERCHANT_KEY = 'aipp_merch_unknown_00000000000000000000000000000000';
+const syntheticMerchantKey = (label: string) =>
+  `aipp_merch_${label}_${crypto.randomBytes(24).toString('hex')}`;
+const RETIRED_MERCHANT_KEY = syntheticMerchantKey('retired');
+const ACTIVE_MERCHANT_KEY = syntheticMerchantKey('active');
+const UNKNOWN_MERCHANT_KEY = syntheticMerchantKey('unknown');
 
 describe('API Integration Tests via Supertest', () => {
   beforeAll(async () => {
