@@ -9,7 +9,7 @@ The zero-context autonomous AI agent test script was executed against the live p
 ## 1. Summary of Changes
 
 ### A. Live Autonomous Permanent Test Tag & Content Negotiation
-- **Permanent Demo Tag**: Seeded permanent Smart Tag `id = 'demo'` (`amount_usd = 0.01`, `capability_type = 'api'`, `title = 'AIPP Agent Autonomous Test'`) linked to merchant key `aipp_devtest` in `src/config/database.ts`.
+- **Optional Demo Tag**: `demo` is seeded only from server-only environment configuration; no merchant credential is embedded in source or client output.
 - **Content Negotiation**: `GET /t/demo` returns HTML checkout for `Accept: text/html` and JSON manifest for `Accept: application/json`.
 - **Protected Content Challenge Endpoint**: Created `GET /t/demo/content` returning `HTTP 402 Payment Required` with `WWW-Authenticate` and `Link: </t/demo/manifest>; rel="describedby"` headers.
 

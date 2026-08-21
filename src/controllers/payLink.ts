@@ -141,17 +141,8 @@ export const renderPaymentPage = async (req: Request, res: Response, next: NextF
     const db = getDb();
     let link = await db.get('SELECT * FROM payment_links WHERE id = ?', linkId);
     
-    if (!link && IS_PRODUCTION) {
-      throw new AppError('Smart Tag not found', 404, 'NOT_FOUND');
-    }
     if (!link) {
-      link = {
-        id: linkId,
-        api_key: 'aipp_devtest',
-        title: 'Smart Price Tag Specimen',
-        amount_usd: 0.01,
-        redirect_url: null
-      };
+      throw new AppError('Smart Tag not found', 404, 'NOT_FOUND');
     }
 
     // Fetch merchant wallet config to decide which rails to show
@@ -824,25 +815,13 @@ export const createLinkInvoice = async (req: Request, res: Response, next: NextF
 
     const db = getDb();
     let link = await db.get('SELECT * FROM payment_links WHERE id = ?', linkId);
-    if (!link && IS_PRODUCTION) {
-      throw new AppError('Smart Tag not found', 404, 'NOT_FOUND');
-    }
     if (!link) {
-      link = {
-        id: linkId,
-        api_key: 'aipp_devtest',
-        title: 'Smart Price Tag Specimen',
-        amount_usd: 0.01,
-        redirect_url: 'https://aipp.dev/paywall-demo.html'
-      };
+      throw new AppError('Smart Tag not found', 404, 'NOT_FOUND');
     }
 
     let merchant = await db.get('SELECT * FROM merchants WHERE api_key = ?', link.api_key);
-    if (!merchant && IS_PRODUCTION) {
-      throw new AppError('Merchant not found', 404, 'MERCHANT_NOT_FOUND');
-    }
     if (!merchant) {
-      merchant = { api_key: 'aipp_devtest', ln_address: 'longingsavior14@walletofsatoshi.com' };
+      throw new AppError('Merchant not found', 404, 'MERCHANT_NOT_FOUND');
     }
 
     await checkLimit(link.api_key, link.amount_usd);
