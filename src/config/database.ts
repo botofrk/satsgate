@@ -1,7 +1,7 @@
 import sqlite3 from 'sqlite3';
 import { open, Database } from 'sqlite';
 import crypto from 'crypto';
-import { IS_PRODUCTION } from './env';
+import { IS_PRODUCTION, getDemoMerchantConfig } from './env';
 
 let dbInstance: Database | null = null;
 
@@ -305,35 +305,35 @@ export async function initDb(): Promise<Database> {
 
   console.log('⚡ SQLite Database file initialized (aipp.db).');
 
-  // Seed permanent demo merchant and Smart Tag ('demo') for autonomous agent testing
-  const devKey = 'aipp_devtest';
-  await dbInstance.run(
-    'INSERT OR IGNORE INTO merchants (api_key, ln_address, usdc_address, payout_mode, payout_threshold_sats, created_at) VALUES (?, ?, ?, ?, ?, ?)',
-    devKey,
-    'longingsavior14@walletofsatoshi.com',
-    '0x00b18f645a3e40802809ff59cb9AAB2225703eeE',
-    'instant',
-    0,
-    new Date().toISOString()
-  );
-  await dbInstance.run("UPDATE merchants SET ln_address = 'longingsavior14@walletofsatoshi.com', usdc_address = '0x00b18f645a3e40802809ff59cb9AAB2225703eeE', payout_mode = 'instant' WHERE api_key = ?", devKey);
-
-  const existingDemoTag = await dbInstance.get('SELECT * FROM payment_links WHERE id = ?', 'demo');
-  if (!existingDemoTag) {
+  // Demo seeding is opt-in and server-only. Missing configuration fails closed.
+  const demo = getDemoMerchantConfig();
+  if (demo) {
     await dbInstance.run(
-      `INSERT INTO payment_links (id, api_key, title, amount_usd, redirect_url, capability_type, description, input_schema, output_schema, created_at)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      'demo',
-      devKey,
-      'AIPP Agent Autonomous Test',
-      0.01,
-      'https://aipp.dev/t/demo/content',
-      'api',
-      'Test AIPP autonomous HTTP 402 payment flow ($0.01 test tag).',
-      JSON.stringify({ type: 'object', properties: { query: { type: 'string', description: 'Optional test input' } } }),
-      JSON.stringify({ type: 'object', properties: { success: { type: 'boolean' }, message: { type: 'string' } } }),
+      'INSERT OR IGNORE INTO merchants (api_key, ln_address, usdc_address, payout_mode, payout_threshold_sats, created_at) VALUES (?, ?, ?, ?, ?, ?)',
+      demo.apiKey,
+      demo.lnAddress,
+      demo.usdcAddress,
+      'instant',
+      0,
       new Date().toISOString()
     );
+    const seededMerchant = await dbInstance.get('SELECT ln_address, usdc_address FROM merchants WHERE api_key = ?', demo.apiKey);
+    if (!seededMerchant || seededMerchant.ln_address !== demo.lnAddress || seededMerchant.usdc_address?.toLowerCase() !== demo.usdcAddress.toLowerCase()) {
+      throw new Error('Demo merchant configuration conflicts with existing data; refusing to seed.');
+    }
+    const existingDemoTag = await dbInstance.get('SELECT id, api_key FROM payment_links WHERE id = ?', 'demo');
+    if (existingDemoTag && existingDemoTag.api_key !== demo.apiKey) throw new Error('Demo Smart Tag is bound to a different merchant.');
+    if (!existingDemoTag) {
+      await dbInstance.run(
+        `INSERT INTO payment_links (id, api_key, title, amount_usd, redirect_url, capability_type, description, input_schema, output_schema, created_at)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        'demo', demo.apiKey, 'AIPP Agent Autonomous Test', 0.01, 'https://aipp.dev/t/demo/content', 'api',
+        'Test AIPP autonomous HTTP 402 payment flow ($0.01 test tag).',
+        JSON.stringify({ type: 'object', properties: { query: { type: 'string', description: 'Optional test input' } } }),
+        JSON.stringify({ type: 'object', properties: { success: { type: 'boolean' }, message: { type: 'string' } } }),
+        new Date().toISOString()
+      );
+    }
   }
 
   return dbInstance;

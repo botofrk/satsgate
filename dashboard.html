@@ -364,8 +364,8 @@ th { background: var(--sub-bg); font-size: 11px; font-weight: 700; text-transfor
 
     <button class="login-btn" id="login-btn" onclick="login()">Enter Studio Console →</button>
 
-    <button class="demo-btn" onclick="quickLogin()">
-      ⚡ 1-Click Instant Demo Login (aipp_devtest)
+    <button class="demo-btn" onclick="window.location.href='/t/demo'">
+      View Public Payment Demo
     </button>
 
     <p class="login-hint">
@@ -788,11 +788,6 @@ window.onload = () => {
   }
 };
 
-function quickLogin() {
-  document.getElementById('login-input').value = 'aipp_devtest';
-  login();
-}
-
 async function createInstantAccount() {
   const ln = prompt('Enter your Lightning Address (e.g. yourname@walletofsatoshi.com):', 'longingsavior14@walletofsatoshi.com');
   if (!ln) return;
@@ -804,13 +799,12 @@ async function createInstantAccount() {
       body: JSON.stringify({ ln_address: ln.trim() })
     });
     const d = await r.json();
-    activeKey = d.api_key || 'aipp_devtest';
+    if (!r.ok || !d.api_key) throw new Error(d.error || 'Account creation failed');
+    activeKey = d.api_key;
     localStorage.setItem('aipp_api_key', activeKey);
     showApp();
   } catch(e) {
-    activeKey = 'aipp_devtest';
-    localStorage.setItem('aipp_api_key', activeKey);
-    showApp();
+    alert(e.message || 'Account creation is unavailable. Please try again later.');
   }
 }
 

@@ -2,6 +2,7 @@ node_modules
 dist
 .env
 *.db
+release*.tar
 *.sh
 .git
 .gitignore

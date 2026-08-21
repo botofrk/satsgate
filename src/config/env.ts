@@ -84,3 +84,16 @@ export const EXPECTED_ORIGIN = process.env.EXPECTED_ORIGIN || (IS_PRODUCTION ? '
 export const API_BASE_URL = (process.env.API_BASE_URL && !process.env.API_BASE_URL.includes('api.aipp.dev'))
   ? process.env.API_BASE_URL.replace(/\/+$/, '')
   : EXPECTED_ORIGIN;
+
+export interface DemoMerchantConfig { apiKey: string; lnAddress: string; usdcAddress: string; }
+
+export function getDemoMerchantConfig(): DemoMerchantConfig | null {
+  const apiKey = process.env.AIPP_DEMO_MERCHANT_API_KEY?.trim();
+  if (!apiKey) return null;
+  if (!/^aipp_merch_[a-zA-Z0-9_-]{24,128}$/.test(apiKey)) throw new Error('AIPP_DEMO_MERCHANT_API_KEY has an invalid format.');
+  const lnAddress = process.env.AIPP_DEMO_LN_ADDRESS?.trim() || '';
+  const usdcAddress = process.env.AIPP_DEMO_USDC_ADDRESS?.trim() || '';
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(lnAddress)) throw new Error('AIPP_DEMO_LN_ADDRESS is required and invalid.');
+  if (!/^0x[a-fA-F0-9]{40}$/.test(usdcAddress)) throw new Error('AIPP_DEMO_USDC_ADDRESS is required and invalid.');
+  return { apiKey, lnAddress, usdcAddress };
+}
